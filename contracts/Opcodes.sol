@@ -5,10 +5,28 @@ import "./Context.sol";
 import "hardhat/console.sol";
 
 contract Opcodes {
+    struct OpSpec {
+        bytes1 Opcode;
+        bytes4 selector;
+        string name;
+        uint8 pcSize;
+    }
+    
     Context ctx;
+    
+    mapping(bytes1 => OpSpec) public opsByOpcode;
 
     constructor(Context _ctx) {
         ctx = _ctx;
+
+        opsByOpcode[hex"01"] = OpSpec(hex"01", this.opEq.selector, "==", 1);
+        opsByOpcode[hex"02"] = OpSpec(hex"02", this.opNot.selector, "!=", 1);
+        opsByOpcode[hex"03"] = OpSpec(hex"03", this.opLt.selector, "<", 1);
+        opsByOpcode[hex"04"] = OpSpec(hex"04", this.opGt.selector, ">", 1);
+        opsByOpcode[hex"05"] = OpSpec(hex"05", this.opSwap.selector, "swap", 1);
+        opsByOpcode[hex"06"] = OpSpec(hex"06", this.opLe.selector, "<=", 1);
+//        opsByOpcode[hex"07"] = OpSpec(hex"07", this.opGe.selector, ">=", 1);
+        opsByOpcode[hex"08"] = OpSpec(hex"08", this.opBlock.selector, "block", 2);
     }
 
     /**
@@ -91,7 +109,9 @@ contract Opcodes {
     }
     
     function opBlock() public {
+        console.log("opBlock called");
         bytes memory fieldBytes = ctx.programAt(ctx.pc() + 1);
+        console.logBytes(fieldBytes);
         bytes32 fieldb32;
 
         // convert bytes to bytes32
