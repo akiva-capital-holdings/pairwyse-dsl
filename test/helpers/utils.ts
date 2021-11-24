@@ -7,9 +7,9 @@ import {
   Stack,
   ContextMock,
   StackValue,
-} from "../typechain";
+} from "../../typechain";
 import { expect } from "chai";
-import { OpEvalFunc } from "./types";
+import { OpEvalFunc } from "../types";
 
 /**
  * Push values to stack

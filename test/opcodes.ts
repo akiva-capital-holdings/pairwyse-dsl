@@ -11,63 +11,10 @@ import {
   ContextMock__factory,
   ContextMock,
 } from "../typechain";
-import { checkStack, pushToStack, testTwoInputOneOutput } from "./utils";
+import { testLt, testGt, testLe, testAnd, testOr } from "./helpers/testOps";
+import { checkStack, pushToStack, testTwoInputOneOutput } from "./helpers/utils";
 import { TestCaseUint256, TestOp } from './types';
 /* eslint-enable camelcase */
-
-const testLt: TestOp = {
-  opFunc: (opcodes: Opcodes) => opcodes.opLt,
-  testCases: [
-    // 1 < 2 = true
-    { name: "a less than b", value1: 1, value2: 2, result: 1 },
-    // 1 < 1 = false
-    { name: "a the same as b", value1: 1, value2: 1, result: 0 },
-    // 2 < 1 = false
-    { name: "a greater than b", value1: 2, value2: 1, result: 0 },
-  ],
-};
-
-const testGt: TestOp = {
-  opFunc: (opcodes: Opcodes) => opcodes.opGt,
-  testCases: [
-    // 2 > 1 = true
-    { name: "a greater than b", value1: 2, value2: 1, result: 1 },
-    // 1 > 1 = false
-    { name: "a the same as b", value1: 1, value2: 1, result: 0 },
-    // 1 > 2 = false
-    { name: "a less than b", value1: 1, value2: 2, result: 0 },
-  ],
-};
-
-const testLe: TestOp = {
-  opFunc: (opcodes: Opcodes) => opcodes.opLe,
-  testCases: [
-    // 1 < 2 = true
-    { name: "a less than b", value1: 1, value2: 2, result: 1 },
-    // 1 <= 1 = true
-    { name: "a the same as b", value1: 1, value2: 1, result: 1 },
-    // 2 < 1 = false
-    { name: "a greater than b", value1: 2, value2: 1, result: 0 },
-  ],
-};
-
-const testAnd: TestOp = {
-  opFunc: (opcodes: Opcodes) => opcodes.opAnd,
-  testCases: [
-    // 1 && 0 = false
-    { name: "1 && 0 = false", value1: 1, value2: 0, result: 0 },
-    // 1 && 1 = true
-    { name: "1 && 1 = true", value1: 1, value2: 1, result: 1 },
-    // 0 && 1 = false
-    // { name: "0 && 1 = false", value1: 0, value2: 1, result: 0 },
-    // 0 && 0 = false
-    { name: "0 && 0 = false", value1: 0, value2: 0, result: 0 },
-    // 11 && 11 = false
-    { name: "11 && 11 = false", value1: 11, value2: 11, result: 0 },
-    // 3 && 3 = false
-    { name: "3 && 3 = false", value1: 3, value2: 3, result: 0 },
-  ],
-};
 
 describe("Opcode", () => {
   // eslint-disable-next-line camelcase
@@ -198,6 +145,44 @@ describe("Opcode", () => {
     });
 
     it("((1 && 1) && 1) && 0", async () => {
+      const stack = await pushToStack(StackValue, context, Stack, [0, 1, 1, 1]);
+
+      // stack size is 4
+      expect(await stack.length()).to.equal(4);
+
+      // stack.len = 3; stack.pop() = 1
+      await opcodes.opAnd();
+      await checkStack(StackValue, stack, 3, 1);
+
+      // stack.len = 2; stack.pop() = 1
+      await opcodes.opAnd();
+      await checkStack(StackValue, stack, 2, 1);
+
+      // stack.len = 1; stack.pop() = 0
+      await opcodes.opAnd();
+      await checkStack(StackValue, stack, 1, 0);
+    });
+  });
+
+  describe("opOr", () => {
+    describe("two values of uint256", () => {
+      testOr.testCases.forEach((testCase: TestCaseUint256) => {
+        it(testCase.name, async () =>
+          testTwoInputOneOutput(
+            Stack,
+            StackValue,
+            context,
+            opcodes,
+            testOr.opFunc,
+            testCase.value1,
+            testCase.value2,
+            testCase.result
+          )
+        );
+      });
+    });
+
+    it.skip("((1 && 1) && 1) && 0", async () => {
       const stack = await pushToStack(StackValue, context, Stack, [0, 1, 1, 1]);
 
       // stack size is 4
