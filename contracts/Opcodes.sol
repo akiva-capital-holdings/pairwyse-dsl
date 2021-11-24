@@ -107,7 +107,7 @@ contract Opcodes {
             "bad types"
         );
 
-        bool result = (prev.getUint256() == 1) && (last.getUint256() == 1);
+        bool result = (prev.getUint256() > 0) && (last.getUint256() > 0);
 
         StackValue resultValue = new StackValue();
         resultValue.setUint256(result ? 1 : 0);
@@ -128,7 +128,7 @@ contract Opcodes {
             "bad types"
         );
 
-        bool result = (prev.getUint256() == 1) || (last.getUint256() == 1);
+        bool result = (prev.getUint256() > 0) || (last.getUint256() > 0);
 
         StackValue resultValue = new StackValue();
         resultValue.setUint256(result ? 1 : 0);
