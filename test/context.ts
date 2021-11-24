@@ -22,7 +22,7 @@ describe("Context", () => {
       expect(await context.programAt(2), "Wrong bytes slice").to.equal("0x03");
       expect(await context.programAt(3), "Wrong bytes slice").to.equal("0x04");
     });
-    it("index overflow", async () => {
+    it("overflow", async () => {
       await context.setProgram("0x01020304");
 
       await expect(context.programAt(4)).to.be.revertedWith(

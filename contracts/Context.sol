@@ -7,9 +7,9 @@ import "hardhat/console.sol";
 contract Context {
     enum BlockField {
         // current block’s base fee (EIP-3198 and EIP-1559)
-        BASE_FEE,
+        BASE_FEE, // 0x00
         // current chain id
-        CHAIN_ID,
+        CHAIN_ID, // 0x01
         // current block miner’s address
         COINBASE,
         // current block difficulty
@@ -17,7 +17,7 @@ contract Context {
         // current block gaslimit
         GASLIMIT,
         // current block number
-        NUMBER,
+        NUMBER, // 0x05
         // current block timestamp as seconds since unix epoch
         TIMESTAMP
     }
@@ -49,5 +49,13 @@ contract Context {
         
 
         return payload[index:index + 1];
+    }
+    
+    function setPc(uint value) public {
+        pc = value;
+    }
+    
+    function incPc(uint value) public {
+        pc+= value;
     }
 }
