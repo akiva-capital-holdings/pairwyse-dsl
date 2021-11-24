@@ -11,7 +11,8 @@ import {
   ContextMock__factory,
   ContextMock,
 } from "../typechain";
-import { checkStack, pushToStack, TestCaseUint256, TestOp, testTwoInputOneOutput } from "./utils";
+import { checkStack, pushToStack, testTwoInputOneOutput } from "./utils";
+import { TestCaseUint256, TestOp } from './types';
 /* eslint-enable camelcase */
 
 const testLt: TestOp = {
@@ -92,65 +93,17 @@ describe("Opcode", () => {
 
   describe("Eq", () => {
     it("uint256 equal", async () => {
-      const sv1 = await StackValue.deploy();
-      const sv2 = await StackValue.deploy();
-
-      const contextStackAddress = await context.stack();
-      const stack = Stack.attach(contextStackAddress);
-
-      // empty stack
-      expect(await stack.length()).to.equal(0);
-
-      // push two values
-      await sv1.setUint256(500);
-      await stack.push(sv1.address);
-
-      await sv2.setUint256(500);
-      await stack.push(sv2.address);
-
-      // stack size is 2
+      const stack = await pushToStack(StackValue, context, Stack, [500, 500]);
       expect(await stack.length()).to.equal(2);
-
       await opcodes.opEq();
-
-      // stack size is 1
-      expect(await stack.length()).to.equal(1);
-
-      // get result
-      const svResultAddress = await stack.stack(0);
-      const svResult = StackValue.attach(svResultAddress);
-      expect(await svResult.getUint256()).to.equal(1);
+      await checkStack(StackValue, stack, 1, 1);
     });
 
     it("uint256 not equal", async () => {
-      const sv1 = await StackValue.deploy();
-      const sv2 = await StackValue.deploy();
-
-      const contextStackAddress = await context.stack();
-      const stack = Stack.attach(contextStackAddress);
-
-      // empty stack
-      expect(await stack.length()).to.equal(0);
-
-      // push two values
-      await sv1.setUint256(100);
-      await stack.push(sv1.address);
-
-      await sv2.setUint256(200);
-      await stack.push(sv2.address);
-
-      // stack size is 2
+      const stack = await pushToStack(StackValue, context, Stack, [100, 200]);
       expect(await stack.length()).to.equal(2);
-
       await opcodes.opEq();
-
-      // stack size is 1
-      expect(await stack.length()).to.equal(1);
-
-      // get result
-      const svResultAddress = await stack.stack(0);
-      const svResult = StackValue.attach(svResultAddress);
-      expect(await svResult.getUint256()).to.equal(0);
+      await checkStack(StackValue, stack, 1, 0);
     });
   });
 
@@ -213,35 +166,16 @@ describe("Opcode", () => {
 
   describe("opSwap", () => {
     it("uint256", async () => {
-      const sv1 = await StackValue.deploy();
-      const sv2 = await StackValue.deploy();
-
-      const contextStackAddress = await context.stack();
-      const stack = Stack.attach(contextStackAddress);
-
-      // push two values
-      await sv1.setUint256(100);
-      await stack.push(sv1.address);
-
-      await sv2.setUint256(200);
-      await stack.push(sv2.address);
+      const stack = await pushToStack(StackValue, context, Stack, [200, 100]);
 
       // stack size is 2
       expect(await stack.length()).to.equal(2);
 
       await opcodes.opSwap();
 
-      // stack size is 2
-      expect(await stack.length()).to.equal(2);
-
-      // get result
-      const svResultAddress1 = await stack.stack(0);
-      const svResult1 = StackValue.attach(svResultAddress1);
-      expect(await svResult1.getUint256()).to.equal(200);
-
-      const svResultAddress2 = await stack.stack(1);
-      const svResult2 = StackValue.attach(svResultAddress2);
-      expect(await svResult2.getUint256()).to.equal(100);
+      await checkStack(StackValue, stack, 2, 200);
+      stack.pop();
+      await checkStack(StackValue, stack, 1, 100);
     });
   });
 
