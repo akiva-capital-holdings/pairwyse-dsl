@@ -3,10 +3,10 @@ import { ethers } from "hardhat";
 /* eslint-disable camelcase */
 import {
   ContextMock__factory,
-  Context,
-  Eval__factory,
-  Eval,
-  Context__factory,
+  // Context,
+  // Eval__factory,
+  // Eval,
+  // Context__factory,
   EvalMock__factory,
   EvalMock,
   ContextMock,
@@ -16,9 +16,9 @@ import {
 
 describe("Context", () => {
   // eslint-disable-next-line camelcase
-  let Context: ContextMock__factory;
+  let ContextCont: ContextMock__factory;
   let context: ContextMock;
-  let Eval: EvalMock__factory;
+  let EvalCont: EvalMock__factory;
   let evalInstance: EvalMock;
   // eslint-disable-next-line camelcase
   let Stack: Stack__factory;
@@ -26,13 +26,13 @@ describe("Context", () => {
   let StackValue: StackValue__factory;
 
   beforeEach(async () => {
-    Eval = await ethers.getContractFactory("EvalMock");
-    evalInstance = await Eval.deploy();
+    EvalCont = await ethers.getContractFactory("EvalMock");
+    evalInstance = await EvalCont.deploy();
 
     const contextAddress = await evalInstance.ctx();
 
-    Context = await ethers.getContractFactory("ContextMock");
-    context = Context.attach(contextAddress);
+    ContextCont = await ethers.getContractFactory("ContextMock");
+    context = ContextCont.attach(contextAddress);
 
     Stack = await ethers.getContractFactory("Stack");
     StackValue = await ethers.getContractFactory("StackValue");
@@ -41,7 +41,7 @@ describe("Context", () => {
   describe("eval", async () => {
     it("block number", async () => {
       const contextStackAddress = await context.stack();
-      const stack = await Stack.attach(contextStackAddress);
+      const stack = Stack.attach(contextStackAddress);
 
       /**
        * Program is:
@@ -60,6 +60,7 @@ describe("Context", () => {
       const svResult = StackValue.attach(svResultAddress);
       expect(await svResult.getUint256()).to.equal(evalTx.blockNumber);
     });
+
     it("block number < block timestamp", async () => {
       const contextStackAddress = await context.stack();
       const stack = await Stack.attach(contextStackAddress);
