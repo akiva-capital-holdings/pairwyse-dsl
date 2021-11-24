@@ -2,8 +2,8 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 /* eslint-disable camelcase */
 import {
-  Context__factory,
-  Context,
+  // Context__factory,
+  // Context,
   Opcodes__factory,
   Stack__factory,
   StackValue__factory,
@@ -54,7 +54,7 @@ describe("Opcode", () => {
   // eslint-disable-next-line camelcase
   let Context: ContextMock__factory;
   // eslint-disable-next-line camelcase
-  let Opcodes: Opcodes__factory;
+  let OpcodesCont: Opcodes__factory;
   // eslint-disable-next-line camelcase
   let Stack: Stack__factory;
   // eslint-disable-next-line camelcase
@@ -64,20 +64,21 @@ describe("Opcode", () => {
 
   beforeEach(async () => {
     Context = await ethers.getContractFactory("ContextMock");
-    Opcodes = await ethers.getContractFactory("Opcodes");
+    OpcodesCont = await ethers.getContractFactory("Opcodes");
     Stack = await ethers.getContractFactory("Stack");
     StackValue = await ethers.getContractFactory("StackValue");
 
     context = await Context.deploy();
-    opcodes = await Opcodes.deploy(context.address);
+    opcodes = await OpcodesCont.deploy(context.address);
   });
+
   describe("Eq", () => {
-    it("uint256 equal", async function () {
+    it("uint256 equal", async () => {
       const sv1 = await StackValue.deploy();
       const sv2 = await StackValue.deploy();
 
       const contextStackAddress = await context.stack();
-      const stack = await Stack.attach(contextStackAddress);
+      const stack = Stack.attach(contextStackAddress);
 
       // empty stack
       expect(await stack.length()).to.equal(0);
@@ -103,12 +104,12 @@ describe("Opcode", () => {
       expect(await svResult.getUint256()).to.equal(1);
     });
 
-    it("uint256 not equal", async function () {
+    it("uint256 not equal", async () => {
       const sv1 = await StackValue.deploy();
       const sv2 = await StackValue.deploy();
 
       const contextStackAddress = await context.stack();
-      const stack = await Stack.attach(contextStackAddress);
+      const stack = Stack.attach(contextStackAddress);
 
       // empty stack
       expect(await stack.length()).to.equal(0);
@@ -192,13 +193,13 @@ describe("Opcode", () => {
     });
   });
 
-  describe("opSwap", async () => {
-    it("uint256", async function () {
+  describe("opSwap", () => {
+    it("uint256", async () => {
       const sv1 = await StackValue.deploy();
       const sv2 = await StackValue.deploy();
 
       const contextStackAddress = await context.stack();
-      const stack = await Stack.attach(contextStackAddress);
+      const stack = Stack.attach(contextStackAddress);
 
       // push two values
       await sv1.setUint256(100);
@@ -226,10 +227,18 @@ describe("Opcode", () => {
     });
   });
 
-  describe("opBlock", async () => {
-    it("block number", async function () {
+  describe("opAnd", () => {
+    // TODO
+  });
+
+  describe("opNot", () => {
+    // TODO
+  });
+
+  describe("opBlock", () => {
+    it("block number", async () => {
       const contextStackAddress = await context.stack();
-      const stack = await Stack.attach(contextStackAddress);
+      const stack = Stack.attach(contextStackAddress);
 
       // 0x05 is NUMBER
       await context.setProgram("0x0005");
@@ -245,9 +254,10 @@ describe("Opcode", () => {
 
       expect(await svResult.getUint256()).to.equal(opBlockResult.blockNumber);
     });
-    it("chain id", async function () {
+
+    it("chain id", async () => {
       const contextStackAddress = await context.stack();
-      const stack = await Stack.attach(contextStackAddress);
+      const stack = Stack.attach(contextStackAddress);
 
       // 0x01 is ChainID
       await context.setProgram("0x0001");
@@ -263,10 +273,11 @@ describe("Opcode", () => {
 
       expect(await svResult.getUint256()).to.equal(opBlockResult.chainId);
     });
+
     // Block timestamp doesn't work because Hardhat doesn't return timestamp
-    it.skip("block timestamp", async function () {
+    it.skip("block timestamp", async () => {
       const contextStackAddress = await context.stack();
-      const stack = await Stack.attach(contextStackAddress);
+      const stack = Stack.attach(contextStackAddress);
 
       // 0x06 is Timestamp
       await context.setProgram("0x0006");

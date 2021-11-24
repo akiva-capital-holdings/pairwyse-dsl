@@ -92,6 +92,26 @@ contract Opcodes {
         ctx.stack().push(last);
         ctx.stack().push(prev);
     }
+
+    /**
+     * @dev Compares two values in the stack. Put 1 if both of them are 1, put 0 otherwise
+     */
+    function opAnd() public {
+        StackValue last = ctx.stack().pop();
+        StackValue prev = ctx.stack().pop();
+
+        require(
+            last.getType() == prev.getType()
+            && last.getType() == StackValue.StackType.UINT256,
+            "bad types"
+        );
+
+        bool result = (prev.getUint256() == 1) && (last.getUint256() == 1);
+
+        StackValue resultValue = new StackValue();
+        resultValue.setUint256(result ? 1 : 0);
+        ctx.stack().push(resultValue);
+    }
     
     /**
      * @dev Revert last value in the stack
