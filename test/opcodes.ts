@@ -207,7 +207,28 @@ describe("Opcode", () => {
   });
 
   describe("opNot", () => {
-    // TODO
+    it("uint256 is zero", async () => {
+      const stack = await pushToStack(StackValue, context, Stack, [0]);
+      expect(await stack.length()).to.equal(1);
+      await opcodes.opNot();
+      await checkStack(StackValue, stack, 1, 1);
+    });
+
+    describe("uint256 is non-zero", () => {
+      it("1", async () => {
+        const stack = await pushToStack(StackValue, context, Stack, [1]);
+        expect(await stack.length()).to.equal(1);
+        await opcodes.opNot();
+        await checkStack(StackValue, stack, 1, 0);
+      });
+
+      it("3", async () => {
+        const stack = await pushToStack(StackValue, context, Stack, [3]);
+        expect(await stack.length()).to.equal(1);
+        await opcodes.opNot();
+        await checkStack(StackValue, stack, 1, 0);
+      });
+    });
   });
 
   describe("opBlock", () => {
