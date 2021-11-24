@@ -26,7 +26,7 @@ describe("Context", () => {
       await context.setProgram("0x01020304");
 
       await expect(context.programAt(4)).to.be.revertedWith(
-        "payload index overflow"
+        "slicing out of range"
       );
     });
   });
