@@ -12,8 +12,12 @@ import {
   ContextMock,
 } from "../typechain";
 import { testLt, testGt, testLe, testAnd, testOr } from "./helpers/testOps";
-import { checkStack, pushToStack, testTwoInputOneOutput } from "./helpers/utils";
-import { TestCaseUint256, TestOp } from './types';
+import {
+  checkStack,
+  pushToStack,
+  testTwoInputOneOutput,
+} from "./helpers/utils";
+import { TestCaseUint256 } from "./types";
 /* eslint-enable camelcase */
 
 describe("Opcode", () => {
@@ -66,8 +70,8 @@ describe("Opcode", () => {
             testLt.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result
-          )
+            testCase.result,
+          ),
         );
       });
     });
@@ -85,8 +89,8 @@ describe("Opcode", () => {
             testGt.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result
-          )
+            testCase.result,
+          ),
         );
       });
     });
@@ -104,8 +108,8 @@ describe("Opcode", () => {
             testLe.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result
-          )
+            testCase.result,
+          ),
         );
       });
     });
@@ -138,8 +142,8 @@ describe("Opcode", () => {
             testAnd.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result
-          )
+            testCase.result,
+          ),
         );
       });
     });
@@ -176,8 +180,8 @@ describe("Opcode", () => {
             testOr.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result
-          )
+            testCase.result,
+          ),
         );
       });
     });
