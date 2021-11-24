@@ -45,13 +45,11 @@ export const testAnd: TestOp = {
     // 1 && 1 = true
     { name: "1 && 1 = true", value1: 1, value2: 1, result: 1 },
     // 0 && 1 = false
-    { name: "0 /&& 1 = false", value1: 0, value2: 1, result: 0 },
+    { name: "0 && 1 = false", value1: 0, value2: 1, result: 0 },
     // 0 && 0 = false
     { name: "0 && 0 = false", value1: 0, value2: 0, result: 0 },
-    // 11 && 11 = false
-    { name: "11 && 11 = false", value1: 11, value2: 11, result: 0 },
     // 3 && 3 = false
-    { name: "3 && 3 = false", value1: 3, value2: 3, result: 0 },
+    { name: "3 && 3 = false", value1: 3, value2: 3, result: 1 },
   ],
 };
 
@@ -62,13 +60,11 @@ export const testOr: TestOp = {
     { name: "1 || 0 = true", value1: 1, value2: 0, result: 1 },
     // 1 || 1 = true
     { name: "1 || 1 = true", value1: 1, value2: 1, result: 1 },
-    // 0 || 1 = true
-    { name: "0 || 1 = true", value1: 0, value2: 1, result: 1 },
+    // 0 || 5 = true
+    { name: "0 || 5 = true", value1: 0, value2: 5, result: 1 },
     // 0 || 0 = false
     { name: "0 || 0 = false", value1: 0, value2: 0, result: 0 },
-    // 11 || 1 = true
-    { name: "11 || 1 = true", value1: 11, value2: 1, result: 1 },
     // 3 || 3 = false
-    { name: "3 || 3 = false", value1: 3, value2: 3, result: 0 },
+    { name: "3 || 3 = false", value1: 3, value2: 3, result: 1 },
   ],
 };

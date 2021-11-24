@@ -148,8 +148,8 @@ describe("Opcode", () => {
       });
     });
 
-    it("((1 && 1) && 1) && 0", async () => {
-      const stack = await pushToStack(StackValue, context, Stack, [0, 1, 1, 1]);
+    it("((1 && 5) && 7) && 0", async () => {
+      const stack = await pushToStack(StackValue, context, Stack, [0, 7, 5, 1]);
 
       // stack size is 4
       expect(await stack.length()).to.equal(4);
@@ -186,23 +186,18 @@ describe("Opcode", () => {
       });
     });
 
-    it.skip("((1 && 1) && 1) && 0", async () => {
-      const stack = await pushToStack(StackValue, context, Stack, [0, 1, 1, 1]);
+    it("0 || 0 || 3", async () => {
+      const stack = await pushToStack(StackValue, context, Stack, [3, 0, 0]);
 
-      // stack size is 4
-      expect(await stack.length()).to.equal(4);
-
-      // stack.len = 3; stack.pop() = 1
-      await opcodes.opAnd();
-      await checkStack(StackValue, stack, 3, 1);
+      expect(await stack.length()).to.equal(3);
 
       // stack.len = 2; stack.pop() = 1
-      await opcodes.opAnd();
-      await checkStack(StackValue, stack, 2, 1);
+      await opcodes.opOr();
+      await checkStack(StackValue, stack, 2, 0);
 
-      // stack.len = 1; stack.pop() = 0
-      await opcodes.opAnd();
-      await checkStack(StackValue, stack, 1, 0);
+      // stack.len = 1; stack.pop() = 1
+      await opcodes.opOr();
+      await checkStack(StackValue, stack, 1, 1);
     });
   });
 

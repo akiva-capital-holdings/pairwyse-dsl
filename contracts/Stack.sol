@@ -10,9 +10,9 @@ contract StackValue {
     }
 
     StackType private _type;
-    
+
     uint256 private _uint256;
-    
+
     function getUint256() public view returns (uint256) {
         require(_type == StackType.UINT256, "uint256 type mismatch");
         
