@@ -89,6 +89,10 @@ describe("Context", () => {
       const contextStackAddress = await context.stack();
       const stack = await Stack.attach(contextStackAddress);
 
+      // Set NUMBER = 17
+      await context.setNumber(17);
+      console.log((await context.getNumber()).toString());
+
       /**
        * Program is:
        * `

@@ -36,6 +36,24 @@ contract Context {
         pc = 0;
 //        program = bytes(uint8(BlockField.NUMBER));
     }
+
+    function getNumber() public view returns(uint256) {
+        return getStorageUint256(NUMBER);
+    }
+
+    function setNumber(uint256 number) public {
+        setStorageUint256(NUMBER, number);
+    }
+
+    function getStorageUint256(bytes32 position) public view returns (uint256 data) {
+        console.log("getStorageUint256");
+        console.logBytes32(position);
+        assembly { data := sload(position) }
+    }
+
+    function setStorageUint256(bytes32 position, uint256 data) public {
+        assembly { sstore(position, data) }
+    }
     
     function programAt(uint index, uint step) public view returns (bytes memory) {
         bytes memory data = program;
