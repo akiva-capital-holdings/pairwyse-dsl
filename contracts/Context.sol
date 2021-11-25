@@ -23,6 +23,7 @@ contract Context {
     }
 
     bytes4 internal constant NUMBER = bytes4(keccak256("NUMBER"));
+    bytes4 internal constant NUMBER2 = bytes4(keccak256("NUMBER2"));
     
     Stack public stack;
     
@@ -32,6 +33,7 @@ contract Context {
 
     constructor() {
         console.logBytes4(NUMBER);
+        console.logBytes4(NUMBER2);
         stack = new Stack();
         pc = 0;
 //        program = bytes(uint8(BlockField.NUMBER));
@@ -52,6 +54,8 @@ contract Context {
     }
 
     function setStorageUint256(bytes32 position, uint256 data) public {
+        console.log("setStorageUint256");
+        console.logBytes32(position);
         assembly { sstore(position, data) }
     }
     

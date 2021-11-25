@@ -90,18 +90,33 @@ describe("Context", () => {
       const stack = await Stack.attach(contextStackAddress);
 
       // Set NUMBER = 17
-      await context.setNumber(17);
-      console.log((await context.getNumber()).toString());
+      // const bytes32Number = ethers.utils
+      //   .keccak256(ethers.utils.toUtf8Bytes("NUMBER"))
+      //   .slice(0, 10);
+      // NUMBER = 17
+      const bytes32Number =
+        "0x545cbf7700000000000000000000000000000000000000000000000000000000";
+      // await context.setNumber(17);
+      await context.setStorageUint256(bytes32Number, 17);
+      console.log((await context.getStorageUint256(bytes32Number)).toString());
+
+      // NUMBER2 = 10
+      const bytes32Number2 =
+        "0x545cbf7700000000000000000000000000000000000000000000000000000000";
+      // await context.setNumber(17);
+      await context.setStorageUint256(bytes32Number2, 10);
+      console.log((await context.getStorageUint256(bytes32Number2)).toString());
 
       /**
        * Program is:
        * `
-       *  block number
        *  var NUMBER
-       *  <
+       *  var NUMBER2
+       *  >
        * `
        */
-      await context.setProgram("0x080509545cbf7703");
+      // await context.setProgram("0x 09 545cbf77 09 b66353ab 04");
+      await context.setProgram("0x09545cbf7709b66353ab04");
       await evalInstance.eval();
 
       // stack size is 1

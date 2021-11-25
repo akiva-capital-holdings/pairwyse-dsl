@@ -190,35 +190,15 @@ contract Opcodes {
         console.log("opBlock called");
         bytes memory fieldBytes = ctx.programAt(ctx.pc() + 1, 4);
         console.logBytes(fieldBytes);
-        bytes32 fieldb32;
 
         // convert bytes to bytes32
-        assembly {
-            // We shift by 224 bits (256 - 32 [field 4 bytes]) it right since mload will always load 32 bytes (a word).
-            // This will also zero out unused data.
-            // we need to it because mload creates
-            // 0x0500000000000000000000000000000000000000000000000000000000000000
-            // and after bit shifting it becomes
-            // 0x0000000000000000000000000000000000000000000000000000000000000005 which is 5
-            // fieldb32 := shr(0xe0, mload(add(fieldBytes, 0x20)))
-            fieldb32 := mload(add(fieldBytes, 0x20))
-        }
-
+        bytes32 fieldb32;
+        assembly { fieldb32 := mload(add(fieldBytes, 0x20)) }
         console.logBytes32(fieldb32);
-        // Context.BlockField field = Context.BlockField(uint(fieldb32));
-        // console.log("block field %s", uint(field));
-        
+
         // uint result = 999999999;
         uint result = ctx.getStorageUint256(fieldb32);
         console.log("result =", result);
-        
-        // if (field == Context.BlockField.NUMBER) {
-        //     result = block.number;
-        // } else if (field == Context.BlockField.TIMESTAMP) {
-        //     result = block.timestamp;
-        // } else if (field == Context.BlockField.CHAIN_ID) {
-        //     result = block.chainid;
-        // }
 
         StackValue resultValue = new StackValue();
         resultValue.setUint256(result);
