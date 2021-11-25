@@ -153,7 +153,7 @@ contract Opcodes {
     
     function opBlock() public {
         console.log("opBlock called");
-        bytes memory fieldBytes = ctx.programAt(ctx.pc() + 1);
+        bytes memory fieldBytes = ctx.programAt(ctx.pc() + 1, 1);
         console.logBytes(fieldBytes);
         bytes32 fieldb32;
 
@@ -188,7 +188,7 @@ contract Opcodes {
 
     function opVariable() public {
         console.log("opBlock called");
-        bytes memory fieldBytes = ctx.programAt(ctx.pc() + 4);
+        bytes memory fieldBytes = ctx.programAt(ctx.pc() + 4, 4);
         console.logBytes(fieldBytes);
         bytes32 fieldb32;
 

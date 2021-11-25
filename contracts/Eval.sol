@@ -19,7 +19,7 @@ contract Eval {
         
         while (ctx.pc() < ctx.program().length) {
         // for (uint i = 0; i < 4; i++) {
-            bytes memory opcodeBytes = ctx.programAt(ctx.pc());
+            bytes memory opcodeBytes = ctx.programAt(ctx.pc(), 1);
 //            console.logBytes(opcodeBytes);
             bytes1 opcodeByte1;
 

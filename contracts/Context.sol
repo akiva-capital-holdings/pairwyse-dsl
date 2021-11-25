@@ -21,6 +21,8 @@ contract Context {
         // current block timestamp as seconds since unix epoch
         TIMESTAMP
     }
+
+    bytes4 internal constant NUMBER = bytes4(keccak256("NUMBER"));
     
     Stack public stack;
     
@@ -29,18 +31,19 @@ contract Context {
     uint public pc;
 
     constructor() {
+        console.logBytes4(NUMBER);
         stack = new Stack();
         pc = 0;
 //        program = bytes(uint8(BlockField.NUMBER));
     }
     
-    function programAt(uint index) public view returns (bytes memory) {
+    function programAt(uint index, uint step) public view returns (bytes memory) {
         bytes memory data = program;
         
-        return this.programSlice(data, index);
+        return this.programSlice(data, index, step);
     }
     
-    function programSlice(bytes calldata payload, uint index) public pure returns (bytes memory) {
+    function programSlice(bytes calldata payload, uint index, uint step) public pure returns (bytes memory) {
         require(payload.length > index, "slicing out of range");
         
 //        console.log("index %s", index);
@@ -48,7 +51,7 @@ contract Context {
 //        console.logBytes(payload[index:index + 1]);
         
 
-        return payload[index:index + 1];
+        return payload[index:index + step];
     }
     
     function setPc(uint value) public {
