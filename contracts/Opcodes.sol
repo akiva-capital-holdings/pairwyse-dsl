@@ -32,9 +32,10 @@ contract Opcodes {
         opsByOpcode[hex"06"] = OpSpec(hex"06", this.opLe.selector, "<=", 1);
         opsByOpcode[hex"08"] = OpSpec(hex"08", this.opBlock.selector, "block", 1 + 1); // offset: 1 byte block + 1 byte value (timestamp, number, etc)
 
-
-        opsByOpcode[hex"0a"] = OpSpec(hex"0a", this.opLoadLocalUint256.selector, "loadLocalUint256", 1 + 4); // offset: 1 byte var + 4 bytes variable hex name
-        // opsByOpcode[hex"0b"] = OpSpec(hex"0b", this.opLoadRemoteUint256.selector, "loadRemoteUint256", 1 + 4);
+        // offset: 1 byte var + 4 bytes variable hex name
+        opsByOpcode[hex"0a"] = OpSpec(hex"0a", this.opLoadLocalUint256.selector, "loadLocalUint256", 1 + 4);
+        // offset: 1 byte var + 4 bytes variable hex name + 20 bytes address of an external contract
+        opsByOpcode[hex"0b"] = OpSpec(hex"0b", this.opLoadRemoteUint256.selector, "loadRemoteUint256", 1 + 4 + 20);
         opsByOpcode[hex"0c"] = OpSpec(hex"0c", this.opLoadLocalBytes32.selector, "loadLocalBytes32", 1 + 4);
         // opsByOpcode[hex"0d"] = OpSpec(hex"0d", this.opLoadRemoteBytes32.selector, "loadRemoteBytes32", 1 + 4);
         opsByOpcode[hex"0e"] = OpSpec(hex"0e", this.opLoadLocalBool.selector, "loadLocalBool", 1 + 4);
@@ -219,16 +220,59 @@ contract Opcodes {
         opLoadLocal(app, "getStorageAddress(bytes32)");
     }
 
-    function opLoadLocal(address app, string memory funcSignature) internal {
-        bytes memory fieldBytes = ctx.programAt(ctx.pc() + 1, 4);
+    function opLoadRemoteUint256() public {
+        bytes memory varName = ctx.programAt(ctx.pc() + 1, 4);
+        bytes memory contractAddrBytes = ctx.programAt(ctx.pc() + 1 + 4, 20);
 
         // Convert bytes to bytes32
-        bytes32 fieldb32;
-        assembly { fieldb32 := mload(add(fieldBytes, 0x20)) }
+        bytes32 varNameB32;
+        bytes32 contractAddrB32;
+        assembly {
+            varNameB32 := mload(add(varName, 0x20))
+            contractAddrB32 := mload(add(contractAddrBytes, 0x20))
+        }
+        /**
+         * Shift bytes to the left so that 
+         * 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512000000000000000000000000
+         * transforms into
+         * 0x000000000000000000000000e7f1725e7734ce288f8367e1bb143e90bb3f0512
+         * This is needed to later conversion from bytes32 to address
+         */
+        contractAddrB32 >>= 96;
+
+        // console.log("contractAddrB32");
+        // console.logBytes32(contractAddrB32);
+
+        address contractAddr = address(uint160(uint256(contractAddrB32)));
+        // console.log("contractAddr =", contractAddr);
+
+        // Load local value by it's hex
+        (bool success, bytes memory data) = contractAddr.call(
+            abi.encodeWithSignature("getStorageUint256(bytes32)", varNameB32)
+        );
+        require(success, "Can't call a function");
+
+        // Convert bytes to bytes32
+        bytes32 result;
+        assembly { result := mload(add(data, 0x20)) }
+
+        // console.log("variable =", uint(result));
+
+        StackValue resultValue = new StackValue();
+        resultValue.setUint256(uint(result));
+        ctx.stack().push(resultValue);
+    }
+
+    function opLoadLocal(address app, string memory funcSignature) internal {
+        bytes memory varName = ctx.programAt(ctx.pc() + 1, 4);
+
+        // Convert bytes to bytes32
+        bytes32 varNameB32;
+        assembly { varNameB32 := mload(add(varName, 0x20)) }
 
         // Load local value by it's hex
         (bool success, bytes memory data) = app.call(
-            abi.encodeWithSignature(funcSignature, fieldb32)
+            abi.encodeWithSignature(funcSignature, varNameB32)
         );
         require(success, "Can't call a function");
 

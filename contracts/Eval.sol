@@ -24,6 +24,9 @@ contract Eval {
             // convert bytes to bytes1
             assembly { opcodeByte1 := mload(add(opcodeBytes, 0x20)) }
 
+            // console.log("opcodeBytes1");
+            // console.logBytes1(opcodeByte1);
+
             (
                 bytes1 opcode,
                 bytes4 selector,
