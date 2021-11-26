@@ -32,6 +32,7 @@ contract Opcodes {
         opsByOpcode[hex"06"] = OpSpec(hex"06", this.opLe.selector, "<=", 1);
         opsByOpcode[hex"08"] = OpSpec(hex"08", this.opBlock.selector, "block", 1 + 1); // offset: 1 byte block + 1 byte value (timestamp, number, etc)
 
+
         opsByOpcode[hex"0a"] = OpSpec(hex"0a", this.opLoadLocalUint256.selector, "loadLocalUint256", 1 + 4); // offset: 1 byte var + 4 bytes variable hex name
         // opsByOpcode[hex"0b"] = OpSpec(hex"0b", this.opLoadRemoteUint256.selector, "loadRemoteUint256", 1 + 4);
         opsByOpcode[hex"0c"] = OpSpec(hex"0c", this.opLoadLocalBytes32.selector, "loadLocalBytes32", 1 + 4);
@@ -40,6 +41,10 @@ contract Opcodes {
         // opsByOpcode[hex"0f"] = OpSpec(hex"0f", this.opLoadRemoteBool.selector, "loadRemoteBool", 1 + 4);
         opsByOpcode[hex"10"] = OpSpec(hex"10", this.opLoadLocalAddress.selector, "loadLocalAddress", 1 + 4);
         // opsByOpcode[hex"11"] = OpSpec(hex"11", this.opLoadRemoteAddress.selector, "loadRemoteAddress", 1 + 4);
+
+        opsByOpcode[hex"12"] = OpSpec(hex"12", this.opAnd.selector, "and", 1);
+        opsByOpcode[hex"13"] = OpSpec(hex"13", this.opOr.selector, "or", 1);
+        opsByOpcode[hex"13"] = OpSpec(hex"13", this.opNot.selector, "not", 1);
     }
 
     /**

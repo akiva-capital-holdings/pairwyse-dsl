@@ -24,7 +24,7 @@ export const pushToStack = async (
   SV: StackValue__factory,
   context: ContextMock,
   ST: Stack__factory,
-  arr: number[]
+  arr: number[],
 ) => {
   const stackValues: StackValue[] = [];
 
@@ -59,7 +59,7 @@ export const checkStack = async (
   expectedLen: number,
   expectedValue: number,
   badLenErr = "Bad stack length",
-  badValueErr = "Bad stack value"
+  badValueErr = "Bad stack value",
 ) => {
   // stack size is 3
   const stackLen = await stack.length();
@@ -70,7 +70,7 @@ export const checkStack = async (
   const svResult = SV.attach(svResultAddress);
   expect((await svResult.getUint256()).toNumber()).to.equal(
     expectedValue,
-    badValueErr
+    badValueErr,
   );
 };
 
@@ -94,7 +94,7 @@ export const testTwoInputOneOutput = async (
   opFunc: OpEvalFunc,
   value1: number,
   value2: number,
-  result: number
+  result: number,
 ) => {
   const stack = await pushToStack(SV, context, ST, [value1, value2]);
   await opFunc(opcodes)();
