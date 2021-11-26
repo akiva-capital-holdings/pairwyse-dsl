@@ -29,18 +29,16 @@ contract Opcodes {
         opsByOpcode[hex"04"] = OpSpec(hex"04", this.opGt.selector, ">", 1);
         opsByOpcode[hex"05"] = OpSpec(hex"05", this.opSwap.selector, "swap", 1);
         opsByOpcode[hex"06"] = OpSpec(hex"06", this.opLe.selector, "<=", 1);
-//        opsByOpcode[hex"07"] = OpSpec(hex"07", this.opGe.selector, ">=", 1);
         opsByOpcode[hex"08"] = OpSpec(hex"08", this.opBlock.selector, "block", 1 + 1); // offset: 1 byte block + 1 byte value (timestamp, number, etc)
-        // opsByOpcode[hex"09"] = OpSpec(hex"09", this.opVariable.selector, "var", 1 + 4); // offset: 1 byte var + 4 bytes variable hex name
 
-        opsByOpcode[hex"0a"] = OpSpec(hex"10", this.opLoadLocalUint256.selector, "loadLocalUint256", 1 + 4); // offset: 1 byte var + 4 bytes variable hex name
-        // opsByOpcode[hex"0b"] = OpSpec(hex"10", this.opLoadRemoteUint256.selector, "loadRemoteUint256", 1 + 4);
-        // opsByOpcode[hex"0c"] = OpSpec(hex"10", this.opLoadLocalBytes32.selector, "loadLocalBytes32", 1 + 4);
-        // opsByOpcode[hex"0d"] = OpSpec(hex"10", this.opLoadRemoteBytes32.selector, "loadRemoteBytes32", 1 + 4);
-        // opsByOpcode[hex"0e"] = OpSpec(hex"10", this.opLoadLocalBool.selector, "loadLocalBool", 1 + 4);
-        // opsByOpcode[hex"0f"] = OpSpec(hex"10", this.opLoadRemoteBool.selector, "loadRemoteBool", 1 + 4);
+        opsByOpcode[hex"0a"] = OpSpec(hex"0a", this.opLoadLocalUint256.selector, "loadLocalUint256", 1 + 4); // offset: 1 byte var + 4 bytes variable hex name
+        // opsByOpcode[hex"0b"] = OpSpec(hex"0b", this.opLoadRemoteUint256.selector, "loadRemoteUint256", 1 + 4);
+        opsByOpcode[hex"0c"] = OpSpec(hex"0c", this.opLoadLocalBytes32.selector, "loadLocalBytes32", 1 + 4);
+        // opsByOpcode[hex"0d"] = OpSpec(hex"0d", this.opLoadRemoteBytes32.selector, "loadRemoteBytes32", 1 + 4);
+        // opsByOpcode[hex"0e"] = OpSpec(hex"0e", this.opLoadLocalBool.selector, "loadLocalBool", 1 + 4);
+        // opsByOpcode[hex"0f"] = OpSpec(hex"0f", this.opLoadRemoteBool.selector, "loadRemoteBool", 1 + 4);
         // opsByOpcode[hex"10"] = OpSpec(hex"10", this.opLoadLocalAddress.selector, "loadLocalAddress", 1 + 4);
-        // opsByOpcode[hex"11"] = OpSpec(hex"10", this.opLoadRemoteAddress.selector, "loadRemoteAddress", 1 + 4);
+        // opsByOpcode[hex"11"] = OpSpec(hex"11", this.opLoadRemoteAddress.selector, "loadRemoteAddress", 1 + 4);
     }
 
     /**
@@ -199,7 +197,71 @@ contract Opcodes {
         ctx.stack().push(resultValue);
     }
 
+    // function opLoadLocalUint256(address app) public {
+    //     // console.log("app =", app);
+    //     bytes memory fieldBytes = ctx.programAt(ctx.pc() + 1, 4);
+    //     // console.logBytes(fieldBytes);
+
+    //     // convert bytes to bytes32
+    //     bytes32 fieldb32;
+    //     assembly { fieldb32 := mload(add(fieldBytes, 0x20)) }
+    //     // console.logBytes32(fieldb32);
+
+    //     // uint result = IStorage(app).getStorageUint256(fieldb32);
+    //     // console.log("variable =", result);
+
+    //     (bool success, bytes memory data) = app.call(
+    //         abi.encodeWithSignature("getStorageUint256(bytes32)", fieldb32)
+    //     );
+    //     require(success, "Can't call a function");
+
+    //     bytes32 result;
+    //     assembly { result := mload(add(data, 0x20)) }
+
+    //     console.log("bytes32=");
+    //     console.logBytes32(result);
+
+    //     StackValue resultValue = new StackValue();
+    //     resultValue.setUint256(uint(result));
+    //     ctx.stack().push(resultValue);
+    // }
+
+    // function opLoadLocalBytes32(address app) public {
+    //     // console.log("app =", app);
+    //     bytes memory fieldBytes = ctx.programAt(ctx.pc() + 1, 4);
+    //     // console.logBytes(fieldBytes);
+
+    //     // convert bytes to bytes32
+    //     bytes32 fieldb32;
+    //     assembly { fieldb32 := mload(add(fieldBytes, 0x20)) }
+    //     // console.logBytes32(fieldb32);
+
+    //     // bytes32 result = IStorage(app).getStorageBytes32(fieldb32);
+    //     (bool success, bytes memory data) = app.call(
+    //         abi.encodeWithSignature("getStorageBytes32(bytes32)", fieldb32)
+    //     );
+    //     require(success, "Can't call a function");
+
+    //     bytes32 result;
+    //     assembly { result := mload(add(data, 0x20)) }
+
+    //     console.log("bytes32=");
+    //     console.logBytes32(result);
+
+    //     StackValue resultValue = new StackValue();
+    //     resultValue.setUint256(uint(result));
+    //     ctx.stack().push(resultValue);
+    // }
+
     function opLoadLocalUint256(address app) public {
+        opLoadLocal(app, "getStorageUint256(bytes32)");
+    }
+
+    function opLoadLocalBytes32(address app) public {
+        opLoadLocal(app, "getStorageBytes32(bytes32)");
+    }
+
+    function opLoadLocal(address app, string memory funcSignature) internal {
         // console.log("app =", app);
         bytes memory fieldBytes = ctx.programAt(ctx.pc() + 1, 4);
         // console.logBytes(fieldBytes);
@@ -209,11 +271,20 @@ contract Opcodes {
         assembly { fieldb32 := mload(add(fieldBytes, 0x20)) }
         // console.logBytes32(fieldb32);
 
-        uint result = IStorage(app).getStorageUint256(fieldb32);
-        console.log("variable =", result);
+        // bytes32 result = IStorage(app).getStorageBytes32(fieldb32);
+        (bool success, bytes memory data) = app.call(
+            abi.encodeWithSignature(funcSignature, fieldb32)
+        );
+        require(success, "Can't call a function");
+
+        bytes32 result;
+        assembly { result := mload(add(data, 0x20)) }
+
+        console.log("bytes32=");
+        console.logBytes32(result);
 
         StackValue resultValue = new StackValue();
-        resultValue.setUint256(result);
+        resultValue.setUint256(uint(result));
         ctx.stack().push(resultValue);
     }
 }

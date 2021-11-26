@@ -83,7 +83,7 @@ describe("Context", () => {
       expect(await svResult.getUint256()).to.equal(1);
     });
 
-    it("opLoadLocalUint256", async () => {
+    it.only("opLoadLocalUint256", async () => {
       // Set NUMBER = 17
       const bytes32Number = hex4Bytes("NUMBER");
       await app.setStorageUint256(bytes32Number, 17);
@@ -104,6 +104,45 @@ describe("Context", () => {
       const number2 = bytes32Number2.substr(2, 8);
       await context.setProgram(
         `0x 0a ${number} 0a ${number2} 04`.split(" ").join(""),
+      );
+      await app.eval();
+
+      // stack size is 1
+      expect(await stack.length()).to.equal(1);
+
+      // get result
+      const svResultAddress = await stack.stack(0);
+      const svResult = StackValue.attach(svResultAddress);
+      expect(await svResult.getUint256()).to.equal(1);
+    });
+
+    it.only("opLoadLocalBytes32", async () => {
+      // Set BYTES = 0x01
+      const bytes32Bytes = hex4Bytes("BYTES");
+      await app.setStorageBytes32(
+        bytes32Bytes,
+        "0x0000000000000000000000000000000000000000000000000000000000000001",
+      );
+
+      // Set BYTES2 = 0x01
+      const bytes32Bytes2 = hex4Bytes("BYTES2");
+      await app.setStorageBytes32(
+        bytes32Bytes2,
+        "0x0000000000000000000000000000000000000000000000000000000000000001",
+      );
+
+      /**
+       * The program is:
+       * `
+       *  opLoadLocalBytes32 BYTES
+       *  opLoadLocalBytes32 BYTES2
+       *  =
+       * `
+       */
+      const bytes = bytes32Bytes.substr(2, 8);
+      const bytes2 = bytes32Bytes2.substr(2, 8);
+      await context.setProgram(
+        `0x 0c ${bytes} 0c ${bytes2} 01`.split(" ").join(""),
       );
       await app.eval();
 

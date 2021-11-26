@@ -11,6 +11,8 @@ contract ApplicationMock is Eval, Storage {
 
     bytes4 public constant NUMBER = bytes4(keccak256("NUMBER"));
     bytes4 public constant NUMBER2 = bytes4(keccak256("NUMBER2"));
+    bytes4 public constant BYTES = bytes4(keccak256("BYTES"));
+    bytes4 public constant BYTES2 = bytes4(keccak256("BYTES2"));
 
     constructor() {
         ctx = new ContextMock();
