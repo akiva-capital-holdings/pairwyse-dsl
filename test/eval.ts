@@ -154,5 +154,79 @@ describe("Context", () => {
       const svResult = StackValue.attach(svResultAddress);
       expect(await svResult.getUint256()).to.equal(1);
     });
+
+    it("opLoadLocalAddress", async () => {
+      // Set ADDR
+      const bytes32Bytes = hex4Bytes("ADDR");
+      await app.setStorageAddress(
+        bytes32Bytes,
+        "0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5",
+      );
+
+      // Set ADDR2
+      const bytes32Bytes2 = hex4Bytes("ADDR2");
+      await app.setStorageAddress(
+        bytes32Bytes2,
+        "0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5",
+      );
+      // 0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836
+
+      /**
+       * The program is:
+       * `
+       *  opLoadLocalAddress ADDR
+       *  opLoadLocalAddress ADDR2
+       *  =
+       * `
+       */
+      const bytes = bytes32Bytes.substr(2, 8);
+      const bytes2 = bytes32Bytes2.substr(2, 8);
+      await context.setProgram(
+        `0x 10 ${bytes} 10 ${bytes2} 01`.split(" ").join(""),
+      );
+      await app.eval();
+
+      // stack size is 1
+      expect(await stack.length()).to.equal(1);
+
+      // get result
+      const svResultAddress = await stack.stack(0);
+      const svResult = StackValue.attach(svResultAddress);
+      expect(await svResult.getUint256()).to.equal(1);
+    });
+
+    it("opLoadLocalBool", async () => {
+      // Set BOOL
+      const bytes32Bytes = hex4Bytes("BOOL");
+      await app.setStorageBool(bytes32Bytes, true);
+
+      // Set BOOL2
+      const bytes32Bytes2 = hex4Bytes("BOOL2");
+      await app.setStorageBool(bytes32Bytes2, true);
+      // 0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836
+
+      /**
+       * The program is:
+       * `
+       *  opLoadLocalBool BOOL
+       *  opLoadLocalBool BOOL2
+       *  =
+       * `
+       */
+      const bytes = bytes32Bytes.substr(2, 8);
+      const bytes2 = bytes32Bytes2.substr(2, 8);
+      await context.setProgram(
+        `0x 0e ${bytes} 0e ${bytes2} 01`.split(" ").join(""),
+      );
+      await app.eval();
+
+      // stack size is 1
+      expect(await stack.length()).to.equal(1);
+
+      // get result
+      const svResultBool = await stack.stack(0);
+      const svResult = StackValue.attach(svResultBool);
+      expect(await svResult.getUint256()).to.equal(1);
+    });
   });
 });

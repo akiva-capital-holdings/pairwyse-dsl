@@ -36,9 +36,9 @@ contract Opcodes {
         // opsByOpcode[hex"0b"] = OpSpec(hex"0b", this.opLoadRemoteUint256.selector, "loadRemoteUint256", 1 + 4);
         opsByOpcode[hex"0c"] = OpSpec(hex"0c", this.opLoadLocalBytes32.selector, "loadLocalBytes32", 1 + 4);
         // opsByOpcode[hex"0d"] = OpSpec(hex"0d", this.opLoadRemoteBytes32.selector, "loadRemoteBytes32", 1 + 4);
-        // opsByOpcode[hex"0e"] = OpSpec(hex"0e", this.opLoadLocalBool.selector, "loadLocalBool", 1 + 4);
+        opsByOpcode[hex"0e"] = OpSpec(hex"0e", this.opLoadLocalBool.selector, "loadLocalBool", 1 + 4);
         // opsByOpcode[hex"0f"] = OpSpec(hex"0f", this.opLoadRemoteBool.selector, "loadRemoteBool", 1 + 4);
-        // opsByOpcode[hex"10"] = OpSpec(hex"10", this.opLoadLocalAddress.selector, "loadLocalAddress", 1 + 4);
+        opsByOpcode[hex"10"] = OpSpec(hex"10", this.opLoadLocalAddress.selector, "loadLocalAddress", 1 + 4);
         // opsByOpcode[hex"11"] = OpSpec(hex"11", this.opLoadRemoteAddress.selector, "loadRemoteAddress", 1 + 4);
     }
 
@@ -204,6 +204,14 @@ contract Opcodes {
 
     function opLoadLocalBytes32(address app) public {
         opLoadLocal(app, "getStorageBytes32(bytes32)");
+    }
+
+    function opLoadLocalBool(address app) public {
+        opLoadLocal(app, "getStorageBool(bytes32)");
+    }
+
+    function opLoadLocalAddress(address app) public {
+        opLoadLocal(app, "getStorageAddress(bytes32)");
     }
 
     function opLoadLocal(address app, string memory funcSignature) internal {
