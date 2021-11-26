@@ -25,6 +25,19 @@ describe("Context", () => {
   // eslint-disable-next-line camelcase
   let StackValue: StackValue__factory;
 
+  /**
+   * Apply keccak256 to `str`, cut the result to the first 4 bytes, append
+   * 28 bytes (32b - 4b) of zeros
+   * @param str Input string
+   * @returns bytes4(keccak256(str))
+   */
+  const hex4Bytes = (str: string) =>
+    ethers.utils
+      .keccak256(ethers.utils.toUtf8Bytes(str))
+      .split("")
+      .map((x, i) => (i < 10 ? x : "0"))
+      .join("");
+
   beforeEach(async () => {
     EvalCont = await ethers.getContractFactory("EvalMock");
     evalInstance = await EvalCont.deploy();
@@ -63,7 +76,7 @@ describe("Context", () => {
 
     it("block number < block timestamp", async () => {
       const contextStackAddress = await context.stack();
-      const stack = await Stack.attach(contextStackAddress);
+      const stack = Stack.attach(contextStackAddress);
 
       /**
        * Program is:
@@ -87,36 +100,31 @@ describe("Context", () => {
 
     it.only("var", async () => {
       const contextStackAddress = await context.stack();
-      const stack = await Stack.attach(contextStackAddress);
+      const stack = Stack.attach(contextStackAddress);
 
       // Set NUMBER = 17
-      // const bytes32Number = ethers.utils
-      //   .keccak256(ethers.utils.toUtf8Bytes("NUMBER"))
-      //   .slice(0, 10);
-      // NUMBER = 17
-      const bytes32Number =
-        "0x545cbf7700000000000000000000000000000000000000000000000000000000";
-      // await context.setNumber(17);
+      const bytes32Number = hex4Bytes("NUMBER");
       await context.setStorageUint256(bytes32Number, 17);
       console.log((await context.getStorageUint256(bytes32Number)).toString());
 
-      // NUMBER2 = 10
-      const bytes32Number2 =
-        "0x545cbf7700000000000000000000000000000000000000000000000000000000";
-      // await context.setNumber(17);
-      await context.setStorageUint256(bytes32Number2, 10);
+      // Set NUMBER2 = 10
+      const bytes32Number2 = hex4Bytes("NUMBER2");
+      await context.setStorageUint256(bytes32Number2, 16);
       console.log((await context.getStorageUint256(bytes32Number2)).toString());
 
       /**
-       * Program is:
+       * The program is:
        * `
        *  var NUMBER
        *  var NUMBER2
        *  >
        * `
        */
-      // await context.setProgram("0x 09 545cbf77 09 b66353ab 04");
-      await context.setProgram("0x09545cbf7709b66353ab04");
+      const number = bytes32Number.substr(2, 8);
+      const number2 = bytes32Number2.substr(2, 8);
+      await context.setProgram(
+        `0x 09 ${number} 09 ${number2} 04`.split(" ").join(""),
+      );
       await evalInstance.eval();
 
       // stack size is 1
