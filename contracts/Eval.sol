@@ -32,7 +32,9 @@ contract Eval {
             ) = opcodes.opsByOpcode(opcodeByte1);
 
             // console.log(name);
-            address(opcodes).call(abi.encodeWithSelector(selector));
+            // Note: passing address of the contract is necessary only for opLoadLocalUint256 func or
+            // similar ones
+            address(opcodes).call(abi.encodeWithSelector(selector, address(this)));
             
             ctx.incPc(uint(pcSize));
         }

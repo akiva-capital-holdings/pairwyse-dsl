@@ -1,20 +1,17 @@
+/* eslint-disable camelcase */
 import { expect } from "chai";
 import { ethers } from "hardhat";
-/* eslint-disable camelcase */
 import {
-  EvalMock,
   ContextMock,
   StackValue__factory,
-  Storage,
   Stack,
+  ApplicationMock,
 } from "../typechain";
 
 describe("Context", () => {
-  // eslint-disable-next-line camelcase
   let context: ContextMock;
-  let storage: Storage;
-  let evalInstance: EvalMock;
   let stack: Stack;
+  let app: ApplicationMock;
   let StackValue: StackValue__factory;
 
   /**
@@ -31,13 +28,10 @@ describe("Context", () => {
       .join("");
 
   beforeEach(async () => {
-    const EvalCont = await ethers.getContractFactory("EvalMock");
-    evalInstance = await EvalCont.deploy();
+    const ApplicationCont = await ethers.getContractFactory("ApplicationMock");
+    app = await ApplicationCont.deploy();
 
-    const StorageCont = await ethers.getContractFactory("Storage");
-    storage = await StorageCont.deploy();
-
-    const contextAddress = await evalInstance.ctx();
+    const contextAddress = await app.ctx();
     const ContextCont = await ethers.getContractFactory("ContextMock");
     context = ContextCont.attach(contextAddress);
 
@@ -57,7 +51,7 @@ describe("Context", () => {
        * `
        */
       await context.setProgram("0x0805");
-      const evalTx = await evalInstance.eval();
+      const evalTx = await app.eval();
 
       // stack size is 1
       expect(await stack.length()).to.equal(1);
@@ -78,7 +72,7 @@ describe("Context", () => {
        * `
        */
       await context.setProgram("0x0805080603");
-      await evalInstance.eval();
+      await app.eval();
 
       // stack size is 1
       expect(await stack.length()).to.equal(1);
@@ -89,19 +83,14 @@ describe("Context", () => {
       expect(await svResult.getUint256()).to.equal(1);
     });
 
-    it("var", async () => {
+    it("opLoadLocalUint256", async () => {
       // Set NUMBER = 17
       const bytes32Number = hex4Bytes("NUMBER");
-      await storage.setStorageUint256(bytes32Number, 17);
+      await app.setStorageUint256(bytes32Number, 17);
 
       // Set NUMBER2 = 10
       const bytes32Number2 = hex4Bytes("NUMBER2");
-      await storage.setStorageUint256(bytes32Number2, 16);
-
-      // Set storage contract address inside OpCodes
-      const opCodesAddr = await evalInstance.opcodes();
-      const opCodes = await ethers.getContractAt("Opcodes", opCodesAddr);
-      await opCodes.setStorage(storage.address);
+      await app.setStorageUint256(bytes32Number2, 16);
 
       /**
        * The program is:
@@ -114,9 +103,9 @@ describe("Context", () => {
       const number = bytes32Number.substr(2, 8);
       const number2 = bytes32Number2.substr(2, 8);
       await context.setProgram(
-        `0x 09 ${number} 09 ${number2} 04`.split(" ").join(""),
+        `0x 0a ${number} 0a ${number2} 04`.split(" ").join(""),
       );
-      await evalInstance.eval();
+      await app.eval();
 
       // stack size is 1
       expect(await stack.length()).to.equal(1);
