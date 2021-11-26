@@ -1,9 +1,10 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "./Context.sol"; // TODO: make an interface
-import "./lib/UnstructuredStorage.sol";
-import "./IStorage.sol";
+import "./interfaces/IContext.sol";
+import "./interfaces/IStorage.sol";
+import "./libs/UnstructuredStorage.sol";
+import { StackValue } from "./Stack.sol";
 import "hardhat/console.sol";
 
 contract Opcodes {
@@ -16,11 +17,11 @@ contract Opcodes {
         uint8 pcSize;
     }
     
-    Context ctx;
+    IContext ctx;
 
     mapping(bytes1 => OpSpec) public opsByOpcode;
 
-    constructor(Context _ctx) {
+    constructor(IContext _ctx) {
         ctx = _ctx;
 
         opsByOpcode[hex"01"] = OpSpec(hex"01", this.opEq.selector, "==", 1);
@@ -179,16 +180,16 @@ contract Opcodes {
             fieldb32 := shr(0xf8, mload(add(fieldBytes, 0x20)))
         }
 
-        Context.BlockField field = Context.BlockField(uint(fieldb32));
+        IContext.BlockField field = IContext.BlockField(uint(fieldb32));
         // console.log("block field %s", uint(field));
         
         uint result;
         
-        if (field == Context.BlockField.NUMBER) {
+        if (field == IContext.BlockField.NUMBER) {
             result = block.number;
-        } else if (field == Context.BlockField.TIMESTAMP) {
+        } else if (field == IContext.BlockField.TIMESTAMP) {
             result = block.timestamp;
-        } else if (field == Context.BlockField.CHAIN_ID) {
+        } else if (field == IContext.BlockField.CHAIN_ID) {
             result = block.chainid;
         }
 
@@ -196,62 +197,6 @@ contract Opcodes {
         resultValue.setUint256(result);
         ctx.stack().push(resultValue);
     }
-
-    // function opLoadLocalUint256(address app) public {
-    //     // console.log("app =", app);
-    //     bytes memory fieldBytes = ctx.programAt(ctx.pc() + 1, 4);
-    //     // console.logBytes(fieldBytes);
-
-    //     // convert bytes to bytes32
-    //     bytes32 fieldb32;
-    //     assembly { fieldb32 := mload(add(fieldBytes, 0x20)) }
-    //     // console.logBytes32(fieldb32);
-
-    //     // uint result = IStorage(app).getStorageUint256(fieldb32);
-    //     // console.log("variable =", result);
-
-    //     (bool success, bytes memory data) = app.call(
-    //         abi.encodeWithSignature("getStorageUint256(bytes32)", fieldb32)
-    //     );
-    //     require(success, "Can't call a function");
-
-    //     bytes32 result;
-    //     assembly { result := mload(add(data, 0x20)) }
-
-    //     console.log("bytes32=");
-    //     console.logBytes32(result);
-
-    //     StackValue resultValue = new StackValue();
-    //     resultValue.setUint256(uint(result));
-    //     ctx.stack().push(resultValue);
-    // }
-
-    // function opLoadLocalBytes32(address app) public {
-    //     // console.log("app =", app);
-    //     bytes memory fieldBytes = ctx.programAt(ctx.pc() + 1, 4);
-    //     // console.logBytes(fieldBytes);
-
-    //     // convert bytes to bytes32
-    //     bytes32 fieldb32;
-    //     assembly { fieldb32 := mload(add(fieldBytes, 0x20)) }
-    //     // console.logBytes32(fieldb32);
-
-    //     // bytes32 result = IStorage(app).getStorageBytes32(fieldb32);
-    //     (bool success, bytes memory data) = app.call(
-    //         abi.encodeWithSignature("getStorageBytes32(bytes32)", fieldb32)
-    //     );
-    //     require(success, "Can't call a function");
-
-    //     bytes32 result;
-    //     assembly { result := mload(add(data, 0x20)) }
-
-    //     console.log("bytes32=");
-    //     console.logBytes32(result);
-
-    //     StackValue resultValue = new StackValue();
-    //     resultValue.setUint256(uint(result));
-    //     ctx.stack().push(resultValue);
-    // }
 
     function opLoadLocalUint256(address app) public {
         opLoadLocal(app, "getStorageUint256(bytes32)");
@@ -262,26 +207,23 @@ contract Opcodes {
     }
 
     function opLoadLocal(address app, string memory funcSignature) internal {
-        // console.log("app =", app);
         bytes memory fieldBytes = ctx.programAt(ctx.pc() + 1, 4);
-        // console.logBytes(fieldBytes);
 
-        // convert bytes to bytes32
+        // Convert bytes to bytes32
         bytes32 fieldb32;
         assembly { fieldb32 := mload(add(fieldBytes, 0x20)) }
-        // console.logBytes32(fieldb32);
 
-        // bytes32 result = IStorage(app).getStorageBytes32(fieldb32);
+        // Load local value by it's hex
         (bool success, bytes memory data) = app.call(
             abi.encodeWithSignature(funcSignature, fieldb32)
         );
         require(success, "Can't call a function");
 
+        // Convert bytes to bytes32
         bytes32 result;
         assembly { result := mload(add(data, 0x20)) }
 
-        console.log("bytes32=");
-        console.logBytes32(result);
+        // console.logBytes32(result);
 
         StackValue resultValue = new StackValue();
         resultValue.setUint256(uint(result));

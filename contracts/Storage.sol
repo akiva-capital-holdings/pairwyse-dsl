@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "./lib/UnstructuredStorage.sol";
-import "./IStorage.sol";
+import "./libs/UnstructuredStorage.sol";
+import "./interfaces/IStorage.sol";
 
 contract Storage is IStorage {
     using UnstructuredStorage for bytes32;

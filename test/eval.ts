@@ -83,7 +83,7 @@ describe("Context", () => {
       expect(await svResult.getUint256()).to.equal(1);
     });
 
-    it.only("opLoadLocalUint256", async () => {
+    it("opLoadLocalUint256", async () => {
       // Set NUMBER = 17
       const bytes32Number = hex4Bytes("NUMBER");
       await app.setStorageUint256(bytes32Number, 17);
@@ -116,7 +116,7 @@ describe("Context", () => {
       expect(await svResult.getUint256()).to.equal(1);
     });
 
-    it.only("opLoadLocalBytes32", async () => {
+    it("opLoadLocalBytes32", async () => {
       // Set BYTES = 0x01
       const bytes32Bytes = hex4Bytes("BYTES");
       await app.setStorageBytes32(
