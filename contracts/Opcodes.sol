@@ -1,10 +1,14 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "./Context.sol";
+import "./Context.sol"; // TODO: make an interface
+import "./lib/UnstructuredStorage.sol";
+import "./helpers/Storage.sol"; // TODO: make an interface
 import "hardhat/console.sol";
 
 contract Opcodes {
+    using UnstructuredStorage for bytes32;
+
     struct OpSpec {
         bytes1 Opcode;
         bytes4 selector;
@@ -13,6 +17,7 @@ contract Opcodes {
     }
     
     Context ctx;
+    Storage stor;
     
     mapping(bytes1 => OpSpec) public opsByOpcode;
 
@@ -28,6 +33,19 @@ contract Opcodes {
 //        opsByOpcode[hex"07"] = OpSpec(hex"07", this.opGe.selector, ">=", 1);
         opsByOpcode[hex"08"] = OpSpec(hex"08", this.opBlock.selector, "block", 1 + 1); // offset: 1 byte block + 1 byte value (timestamp, number, etc)
         opsByOpcode[hex"09"] = OpSpec(hex"09", this.opVariable.selector, "var", 1 + 4); // offset: 1 byte var + 4 bytes variable hex name
+
+        // opsByOpcode[hex"0a"] = OpSpec(hex"10", this.loadLocalUint256.selector, "loadLocalUint256", 1 + 4); // offset: 1 byte var + 4 bytes variable hex name
+        // opsByOpcode[hex"0b"] = OpSpec(hex"10", this.loadRemoteUint256.selector, "loadRemoteUint256", 1 + 4);
+        // opsByOpcode[hex"0c"] = OpSpec(hex"10", this.loadLocalBytes32.selector, "loadLocalBytes32", 1 + 4);
+        // opsByOpcode[hex"0d"] = OpSpec(hex"10", this.loadRemoteBytes32.selector, "loadRemoteBytes32", 1 + 4);
+        // opsByOpcode[hex"0e"] = OpSpec(hex"10", this.loadLocalBool.selector, "loadLocalBool", 1 + 4);
+        // opsByOpcode[hex"0f"] = OpSpec(hex"10", this.loadRemoteBool.selector, "loadRemoteBool", 1 + 4);
+        // opsByOpcode[hex"10"] = OpSpec(hex"10", this.loadLocalAddress.selector, "loadLocalAddress", 1 + 4);
+        // opsByOpcode[hex"11"] = OpSpec(hex"10", this.loadRemoteAddress.selector, "loadRemoteAddress", 1 + 4);
+    }
+
+    function setStorage(Storage _stor) public {
+        stor = _stor;
     }
 
     /**
@@ -152,9 +170,9 @@ contract Opcodes {
     }
     
     function opBlock() public {
-        console.log("opBlock called");
+        // console.log("opBlock called");
         bytes memory fieldBytes = ctx.programAt(ctx.pc() + 1, 1);
-        console.logBytes(fieldBytes);
+        // console.logBytes(fieldBytes);
         bytes32 fieldb32;
 
         // convert bytes to bytes32
@@ -169,7 +187,7 @@ contract Opcodes {
         }
 
         Context.BlockField field = Context.BlockField(uint(fieldb32));
-        console.log("block field %s", uint(field));
+        // console.log("block field %s", uint(field));
         
         uint result;
         
@@ -187,17 +205,18 @@ contract Opcodes {
     }
 
     function opVariable() public {
-        console.log("opBlock called");
+        console.log("stor address =", address(stor));
+        require(address(stor) != address(0), "Storage contract should be defined");
         bytes memory fieldBytes = ctx.programAt(ctx.pc() + 1, 4);
-        console.logBytes(fieldBytes);
+        // console.logBytes(fieldBytes);
 
         // convert bytes to bytes32
         bytes32 fieldb32;
         assembly { fieldb32 := mload(add(fieldBytes, 0x20)) }
-        console.logBytes32(fieldb32);
+        // console.logBytes32(fieldb32);
 
         // uint result = 999999999;
-        uint result = ctx.getStorageUint256(fieldb32);
+        uint result = stor.getStorageUint256(fieldb32);
         console.log("result =", result);
 
         StackValue resultValue = new StackValue();

@@ -2,27 +2,19 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 /* eslint-disable camelcase */
 import {
-  ContextMock__factory,
-  // Context,
-  // Eval__factory,
-  // Eval,
-  // Context__factory,
-  EvalMock__factory,
   EvalMock,
   ContextMock,
-  Stack__factory,
   StackValue__factory,
+  Storage,
+  Stack,
 } from "../typechain";
 
 describe("Context", () => {
   // eslint-disable-next-line camelcase
-  let ContextCont: ContextMock__factory;
   let context: ContextMock;
-  let EvalCont: EvalMock__factory;
+  let storage: Storage;
   let evalInstance: EvalMock;
-  // eslint-disable-next-line camelcase
-  let Stack: Stack__factory;
-  // eslint-disable-next-line camelcase
+  let stack: Stack;
   let StackValue: StackValue__factory;
 
   /**
@@ -39,23 +31,25 @@ describe("Context", () => {
       .join("");
 
   beforeEach(async () => {
-    EvalCont = await ethers.getContractFactory("EvalMock");
+    const EvalCont = await ethers.getContractFactory("EvalMock");
     evalInstance = await EvalCont.deploy();
 
-    const contextAddress = await evalInstance.ctx();
+    const StorageCont = await ethers.getContractFactory("Storage");
+    storage = await StorageCont.deploy();
 
-    ContextCont = await ethers.getContractFactory("ContextMock");
+    const contextAddress = await evalInstance.ctx();
+    const ContextCont = await ethers.getContractFactory("ContextMock");
     context = ContextCont.attach(contextAddress);
 
-    Stack = await ethers.getContractFactory("Stack");
+    const StackCont = await ethers.getContractFactory("Stack");
+    const contextStackAddress = await context.stack();
+    stack = StackCont.attach(contextStackAddress);
+
     StackValue = await ethers.getContractFactory("StackValue");
   });
 
   describe("eval", async () => {
     it("block number", async () => {
-      const contextStackAddress = await context.stack();
-      const stack = Stack.attach(contextStackAddress);
-
       /**
        * Program is:
        * `
@@ -75,9 +69,6 @@ describe("Context", () => {
     });
 
     it("block number < block timestamp", async () => {
-      const contextStackAddress = await context.stack();
-      const stack = Stack.attach(contextStackAddress);
-
       /**
        * Program is:
        * `
@@ -98,25 +89,25 @@ describe("Context", () => {
       expect(await svResult.getUint256()).to.equal(1);
     });
 
-    it.only("var", async () => {
-      const contextStackAddress = await context.stack();
-      const stack = Stack.attach(contextStackAddress);
-
+    it("var", async () => {
       // Set NUMBER = 17
       const bytes32Number = hex4Bytes("NUMBER");
-      await context.setStorageUint256(bytes32Number, 17);
-      console.log((await context.getStorageUint256(bytes32Number)).toString());
+      await storage.setStorageUint256(bytes32Number, 17);
 
       // Set NUMBER2 = 10
       const bytes32Number2 = hex4Bytes("NUMBER2");
-      await context.setStorageUint256(bytes32Number2, 16);
-      console.log((await context.getStorageUint256(bytes32Number2)).toString());
+      await storage.setStorageUint256(bytes32Number2, 16);
+
+      // Set storage contract address inside OpCodes
+      const opCodesAddr = await evalInstance.opcodes();
+      const opCodes = await ethers.getContractAt("Opcodes", opCodesAddr);
+      await opCodes.setStorage(storage.address);
 
       /**
        * The program is:
        * `
-       *  var NUMBER
-       *  var NUMBER2
+       *  loadLocalUint256 NUMBER
+       *  loadLocalUint256 NUMBER2
        *  >
        * `
        */
