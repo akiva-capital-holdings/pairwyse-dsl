@@ -37,11 +37,11 @@ contract Opcodes {
         // offset: 1 byte var + 4 bytes variable hex name + 20 bytes address of an external contract
         opsByOpcode[hex"0b"] = OpSpec(hex"0b", this.opLoadRemoteUint256.selector, "loadRemoteUint256", 1 + 4 + 20);
         opsByOpcode[hex"0c"] = OpSpec(hex"0c", this.opLoadLocalBytes32.selector, "loadLocalBytes32", 1 + 4);
-        // opsByOpcode[hex"0d"] = OpSpec(hex"0d", this.opLoadRemoteBytes32.selector, "loadRemoteBytes32", 1 + 4);
+        opsByOpcode[hex"0d"] = OpSpec(hex"0d", this.opLoadRemoteBytes32.selector, "loadRemoteBytes32", 1 + 4 + 20);
         opsByOpcode[hex"0e"] = OpSpec(hex"0e", this.opLoadLocalBool.selector, "loadLocalBool", 1 + 4);
-        // opsByOpcode[hex"0f"] = OpSpec(hex"0f", this.opLoadRemoteBool.selector, "loadRemoteBool", 1 + 4);
+        opsByOpcode[hex"0f"] = OpSpec(hex"0f", this.opLoadRemoteBool.selector, "loadRemoteBool", 1 + 4 + 20);
         opsByOpcode[hex"10"] = OpSpec(hex"10", this.opLoadLocalAddress.selector, "loadLocalAddress", 1 + 4);
-        // opsByOpcode[hex"11"] = OpSpec(hex"11", this.opLoadRemoteAddress.selector, "loadRemoteAddress", 1 + 4);
+        opsByOpcode[hex"11"] = OpSpec(hex"11", this.opLoadRemoteAddress.selector, "loadRemoteAddress", 1 + 4 + 20);
 
         opsByOpcode[hex"12"] = OpSpec(hex"12", this.opAnd.selector, "and", 1);
         opsByOpcode[hex"13"] = OpSpec(hex"13", this.opOr.selector, "or", 1);
@@ -221,6 +221,46 @@ contract Opcodes {
     }
 
     function opLoadRemoteUint256() public {
+        opLoadRemote("getStorageUint256(bytes32)");
+    }
+
+    function opLoadRemoteBytes32() public {
+        opLoadRemote("getStorageBytes32(bytes32)");
+    }
+
+    function opLoadRemoteBool() public {
+        opLoadRemote("getStorageBool(bytes32)");
+    }
+
+    function opLoadRemoteAddress() public {
+        opLoadRemote("getStorageAddress(bytes32)");
+    }
+
+    function opLoadLocal(address app, string memory funcSignature) internal {
+        bytes memory varName = ctx.programAt(ctx.pc() + 1, 4);
+
+        // Convert bytes to bytes32
+        bytes32 varNameB32;
+        assembly { varNameB32 := mload(add(varName, 0x20)) }
+
+        // Load local value by it's hex
+        (bool success, bytes memory data) = app.call(
+            abi.encodeWithSignature(funcSignature, varNameB32)
+        );
+        require(success, "Can't call a function");
+
+        // Convert bytes to bytes32
+        bytes32 result;
+        assembly { result := mload(add(data, 0x20)) }
+
+        // console.logBytes32(result);
+
+        StackValue resultValue = new StackValue();
+        resultValue.setUint256(uint(result));
+        ctx.stack().push(resultValue);
+    }
+
+    function opLoadRemote(string memory funcSignature) internal {
         bytes memory varName = ctx.programAt(ctx.pc() + 1, 4);
         bytes memory contractAddrBytes = ctx.programAt(ctx.pc() + 1 + 4, 20);
 
@@ -248,30 +288,6 @@ contract Opcodes {
 
         // Load local value by it's hex
         (bool success, bytes memory data) = contractAddr.call(
-            abi.encodeWithSignature("getStorageUint256(bytes32)", varNameB32)
-        );
-        require(success, "Can't call a function");
-
-        // Convert bytes to bytes32
-        bytes32 result;
-        assembly { result := mload(add(data, 0x20)) }
-
-        // console.log("variable =", uint(result));
-
-        StackValue resultValue = new StackValue();
-        resultValue.setUint256(uint(result));
-        ctx.stack().push(resultValue);
-    }
-
-    function opLoadLocal(address app, string memory funcSignature) internal {
-        bytes memory varName = ctx.programAt(ctx.pc() + 1, 4);
-
-        // Convert bytes to bytes32
-        bytes32 varNameB32;
-        assembly { varNameB32 := mload(add(varName, 0x20)) }
-
-        // Load local value by it's hex
-        (bool success, bytes memory data) = app.call(
             abi.encodeWithSignature(funcSignature, varNameB32)
         );
         require(success, "Can't call a function");
@@ -280,7 +296,7 @@ contract Opcodes {
         bytes32 result;
         assembly { result := mload(add(data, 0x20)) }
 
-        // console.logBytes32(result);
+        // console.log("variable =", uint(result));
 
         StackValue resultValue = new StackValue();
         resultValue.setUint256(uint(result));
