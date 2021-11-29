@@ -518,141 +518,125 @@ describe("Context", () => {
         });
       });
 
-      // describe.only("opLoadRemoteAddress", () => {
-      //   it("addresses are equal", async () => {
-      //     // Set ADDR
-      //     const bytes32Bytes = hex4Bytes("ADDR");
-      //     await externalApp.setStorageAddress(
-      //       bytes32Bytes,
-      //       "0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5",
-      //     );
+      describe("opLoadRemoteBool", () => {
+        it("true == true", async () => {
+          // Set BOOL
+          const boolBytes = hex4Bytes("BOOL");
+          await externalApp.setStorageBool(boolBytes, true);
 
-      //     // Set ADDR2
-      //     const bytes32Bytes2 = hex4Bytes("ADDR2");
-      //     await externalApp.setStorageAddress(
-      //       bytes32Bytes2,
-      //       "0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5",
-      //     );
+          // Set BOOL2
+          const boolBytes2 = hex4Bytes("BOOL2");
+          await externalApp.setStorageBool(boolBytes2, true);
 
-      //     /**
-      //      * The program is:
-      //      * `
-      //      *  opLoadRemoteAddress ADDR
-      //      *  opLoadRemoteAddress ADDR2
-      //      *  =
-      //      * `
-      //      */
-      //     const bytes = bytes32Bytes.substr(2, 8);
-      //     const bytes2 = bytes32Bytes2.substr(2, 8);
-      //     await context.setProgram(`0x11${bytes}11${bytes2}01`);
-      //     await externalApp.eval();
-      //     await checkStack(StackValue, stack, 1, 1);
-      //   });
+          /**
+           * The program is:
+           * `
+           *  opLoadRemoteBool BOOL
+           *  opLoadRemoteBool BOOL2
+           *  =
+           * `
+           */
+          const bool = boolBytes.substr(2, 8);
+          const bool2 = boolBytes2.substr(2, 8);
+          await context.setProgram(
+            `0x0f${bool}${externalAppAddr}0f${bool2}${externalAppAddr}01`,
+          );
+          await externalApp.eval();
+          await checkStack(StackValue, stack, 1, 1);
+        });
 
-      //   it("addresses are not equal", async () => {
-      //     // Set A
-      //     const bytes32Bytes = hex4Bytes("A");
-      //     await externalApp.setStorageAddress(
-      //       bytes32Bytes,
-      //       "0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5",
-      //     );
+        it("true != true", async () => {
+          // Set BOOL
+          const boolBytes = hex4Bytes("BOOL");
+          await externalApp.setStorageBool(boolBytes, true);
 
-      //     // Set A2
-      //     const bytes32Bytes2 = hex4Bytes("A2");
-      //     await externalApp.setStorageAddress(
-      //       bytes32Bytes2,
-      //       "0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836",
-      //     );
+          // Set BOOL2
+          const boolBytes2 = hex4Bytes("BOOL2");
+          await externalApp.setStorageBool(boolBytes2, true);
 
-      //     /**
-      //      * The program is:
-      //      * `
-      //      *  opLoadRemoteAddress A
-      //      *  opLoadRemoteAddress A2
-      //      *  =
-      //      * `
-      //      */
-      //     const bytes = bytes32Bytes.substr(2, 8);
-      //     const bytes2 = bytes32Bytes2.substr(2, 8);
-      //     await context.setProgram(`0x11${bytes}11${bytes2}01`);
-      //     await externalApp.eval();
-      //     await checkStack(StackValue, stack, 1, 0);
-      //   });
-      // });
+          /**
+           * The program is:
+           * `
+           *  opLoadRemoteBool BOOL
+           *  opLoadRemoteBool BOOL2
+           *  !=
+           * `
+           */
+          const bool = boolBytes.substr(2, 8);
+          const bool2 = boolBytes2.substr(2, 8);
+          await context.setProgram(
+            `0x0f${bool}${externalAppAddr}0f${bool2}${externalAppAddr}14`,
+          );
+          await externalApp.eval();
+          await checkStack(StackValue, stack, 1, 0);
+        });
+      });
 
-      // describe.skip("opLoadRemoteBool", () => {
-      //   it("true == true", async () => {
-      //     // Set B
-      //     const bytes32Bytes = hex4Bytes("B");
-      //     await externalApp.setStorageBool(bytes32Bytes, true);
+      describe("opLoadRemoteAddress", () => {
+        it("addresses are equal", async () => {
+          // Set ADDR
+          const addrBytes = hex4Bytes("ADDR");
+          await externalApp.setStorageAddress(
+            addrBytes,
+            "0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5",
+          );
 
-      //     // Set B2
-      //     const bytes32Bytes2 = hex4Bytes("B2");
-      //     await externalApp.setStorageBool(bytes32Bytes2, true);
+          // Set ADDR2
+          const addrBytes2 = hex4Bytes("ADDR2");
+          await externalApp.setStorageAddress(
+            addrBytes2,
+            "0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5",
+          );
 
-      //     /**
-      //      * The program is:
-      //      * `
-      //      *  opLoadRemoteBool B
-      //      *  opLoadRemoteBool B2
-      //      *  =
-      //      * `
-      //      */
-      //     const bytes = bytes32Bytes.substr(2, 8);
-      //     const bytes2 = bytes32Bytes2.substr(2, 8);
-      //     await context.setProgram(`0x0f${bytes}0f${bytes2}01`);
-      //     await externalApp.eval();
-      //     await checkStack(StackValue, stack, 1, 1);
-      //   });
+          /**
+           * The program is:
+           * `
+           *  opLoadRemoteAddress ADDR
+           *  opLoadRemoteAddress ADDR2
+           *  =
+           * `
+           */
+          const addr = addrBytes.substr(2, 8);
+          const addr2 = addrBytes2.substr(2, 8);
+          await context.setProgram(
+            `0x11${addr}${externalAppAddr}11${addr2}${externalAppAddr}01`,
+          );
+          await externalApp.eval();
+          await checkStack(StackValue, stack, 1, 1);
+        });
 
-      //   it("true && true", async () => {
-      //     // Set B
-      //     const bytes32Bytes = hex4Bytes("B");
-      //     await externalApp.setStorageBool(bytes32Bytes, true);
+        it("different addresses are not equal", async () => {
+          // Set A
+          const addrBytes = hex4Bytes("A");
+          await externalApp.setStorageAddress(
+            addrBytes,
+            "0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5",
+          );
 
-      //     // Set B2
-      //     const bytes32Bytes2 = hex4Bytes("B2");
-      //     await externalApp.setStorageBool(bytes32Bytes2, true);
+          // Set A2
+          const addrBytes2 = hex4Bytes("A2");
+          await externalApp.setStorageAddress(
+            addrBytes2,
+            "0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836",
+          );
 
-      //     /**
-      //      * The program is:
-      //      * `
-      //      *  opLoadRemoteBool B
-      //      *  opLoadRemoteBool B2
-      //      *  =
-      //      * `
-      //      */
-      //     const bytes = bytes32Bytes.substr(2, 8);
-      //     const bytes2 = bytes32Bytes2.substr(2, 8);
-      //     await context.setProgram(`0x0f${bytes}0f${bytes2}12`);
-      //     await externalApp.eval();
-      //     await checkStack(StackValue, stack, 1, 1);
-      //   });
-
-      //   it("true == false", async () => {
-      //     // Set B
-      //     const bytes32Bytes = hex4Bytes("B");
-      //     await externalApp.setStorageBool(bytes32Bytes, true);
-
-      //     // Set B2
-      //     const bytes32Bytes2 = hex4Bytes("B2");
-      //     await externalApp.setStorageBool(bytes32Bytes2, false);
-
-      //     /**
-      //      * The program is:
-      //      * `
-      //      *  opLoadRemoteBool B
-      //      *  opLoadRemoteBool B2
-      //      *  =
-      //      * `
-      //      */
-      //     const bytes = bytes32Bytes.substr(2, 8);
-      //     const bytes2 = bytes32Bytes2.substr(2, 8);
-      //     await context.setProgram(`0x0f${bytes}0f${bytes2}01`);
-      //     await externalApp.eval();
-      //     await checkStack(StackValue, stack, 1, 0);
-      //   });
-      // });
+          /**
+           * The program is:
+           * `
+           *  opLoadRemoteAddress A
+           *  opLoadRemoteAddress A2
+           *  =
+           * `
+           */
+          const addr = addrBytes.substr(2, 8);
+          const addr2 = addrBytes2.substr(2, 8);
+          await context.setProgram(
+            `0x11${addr}${externalAppAddr}11${addr2}${externalAppAddr}01`,
+          );
+          await externalApp.eval();
+          await checkStack(StackValue, stack, 1, 0);
+        });
+      });
     });
   });
 });

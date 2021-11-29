@@ -25,7 +25,7 @@ contract Opcodes {
         ctx = _ctx;
 
         opsByOpcode[hex"01"] = OpSpec(hex"01", this.opEq.selector, "==", 1);
-        opsByOpcode[hex"02"] = OpSpec(hex"02", this.opNot.selector, "!=", 1);
+        opsByOpcode[hex"02"] = OpSpec(hex"02", this.opNot.selector, "!", 1);
         opsByOpcode[hex"03"] = OpSpec(hex"03", this.opLt.selector, "<", 1);
         opsByOpcode[hex"04"] = OpSpec(hex"04", this.opGt.selector, ">", 1);
         opsByOpcode[hex"05"] = OpSpec(hex"05", this.opSwap.selector, "swap", 1);
@@ -45,7 +45,7 @@ contract Opcodes {
 
         opsByOpcode[hex"12"] = OpSpec(hex"12", this.opAnd.selector, "and", 1);
         opsByOpcode[hex"13"] = OpSpec(hex"13", this.opOr.selector, "or", 1);
-        opsByOpcode[hex"13"] = OpSpec(hex"13", this.opNot.selector, "not", 1);
+        opsByOpcode[hex"14"] = OpSpec(hex"14", this.opNotEq.selector, "!=", 1);
     }
 
     /**
@@ -66,7 +66,26 @@ contract Opcodes {
         resultValue.setUint256(result ? 1 : 0);
         ctx.stack().push(resultValue);
     }
-    
+
+    /**
+     * @dev Compares two values in the stack. Put 1 to the stack if they are not equal.
+     */
+    function opNotEq() public {
+        StackValue last = ctx.stack().pop();
+        StackValue prev = ctx.stack().pop();
+        
+        require(last.getType() == prev.getType(), "type mismatch");
+        
+        bool result = false;
+        if (last.getType() == StackValue.StackType.UINT256) {
+            result = last.getUint256() != prev.getUint256();
+        }
+        
+        StackValue resultValue = new StackValue();
+        resultValue.setUint256(result ? 1 : 0);
+        ctx.stack().push(resultValue);
+    }
+
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if value1 < value2
      */
