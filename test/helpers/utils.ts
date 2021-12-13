@@ -1,5 +1,7 @@
 /* eslint-disable camelcase */
 
+import { expect } from 'chai';
+import { ethers } from 'ethers';
 import {
   Opcodes,
   Stack__factory,
@@ -7,9 +9,20 @@ import {
   Stack,
   ContextMock,
   StackValue,
-} from "../../typechain";
-import { expect } from "chai";
-import { OpEvalFunc } from "../types";
+} from '../../typechain';
+import { OpEvalFunc } from '../types';
+
+/**
+ * Apply keccak256 to `str`, cut the result to the first 4 bytes, append
+ * 28 bytes (32b - 4b) of zeros
+ * @param str Input string
+ * @returns bytes4(keccak256(str))
+ */
+export const hex4Bytes = (str: string) => ethers.utils
+  .keccak256(ethers.utils.toUtf8Bytes(str))
+  .split('')
+  .map((x, i) => (i < 10 ? x : '0'))
+  .join('');
 
 /**
  * Push values to stack
@@ -58,8 +71,8 @@ export const checkStack = async (
   stack: Stack,
   expectedLen: number,
   expectedValue: number,
-  badLenErr = "Bad stack length",
-  badValueErr = "Bad stack value",
+  badLenErr = 'Bad stack length',
+  badValueErr = 'Bad stack value',
 ) => {
   // stack size is 3
   const stackLen = await stack.length();
@@ -68,10 +81,7 @@ export const checkStack = async (
   // get result
   const svResultAddress = await stack.stack(stackLen.toNumber() - 1);
   const svResult = SV.attach(svResultAddress);
-  expect((await svResult.getUint256()).toNumber()).to.equal(
-    expectedValue,
-    badValueErr,
-  );
+  expect((await svResult.getUint256()).toNumber()).to.equal(expectedValue, badValueErr);
 };
 
 /**

@@ -1,5 +1,5 @@
-import { Opcodes } from "../../typechain";
-import { ContractTransaction } from "ethers";
+import { ContractTransaction } from 'ethers';
+import { Opcodes } from '../../typechain';
 
 export type OpEvalFunc = (
   opcodes: Opcodes

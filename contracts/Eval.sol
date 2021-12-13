@@ -9,37 +9,39 @@ contract Eval {
     Context public ctx;
     Opcodes public opcodes;
 
-    constructor() {
-        ctx = new Context();
-        opcodes = new Opcodes(ctx);
+    constructor(Context _ctx, Opcodes _opcodes) {
+        ctx = _ctx;
+        opcodes = _opcodes;
     }
-    
+
     function eval() public {
+        evalWithStorage(address(this));
+    }
+
+    function evalWithStorage(address storageFrom) public {
         require(ctx.program().length > 0, "empty program");
-        
+
+        ctx.setAppAddress(storageFrom);
+
         while (ctx.pc() < ctx.program().length) {
             bytes memory opcodeBytes = ctx.programAt(ctx.pc(), 1);
             bytes1 opcodeByte1;
 
             // convert bytes to bytes1
-            assembly { opcodeByte1 := mload(add(opcodeBytes, 0x20)) }
+            assembly {
+                opcodeByte1 := mload(add(opcodeBytes, 0x20))
+            }
 
             // console.log("opcodeBytes1");
             // console.logBytes1(opcodeByte1);
 
-            (
-                bytes1 opcode,
-                bytes4 selector,
-                string memory name,
-                uint8 pcSize
-            ) = opcodes.opsByOpcode(opcodeByte1);
+            bytes4 selector = ctx.selectorByOpcode(opcodeByte1);
+            require(selector != 0x0, "not found selector for opcode");
 
-            // console.log(name);
-            // Note: passing address of the contract is necessary only for opLoadLocalUint256 func or
-            // similar ones
-            address(opcodes).call(abi.encodeWithSelector(selector, address(this)));
-            
-            ctx.incPc(uint(pcSize));
+            ctx.incPc(1);
+
+            (bool success,) = address(opcodes).call(abi.encodeWithSelector(selector));
+            require(success, "Eval: call not success");
         }
     }
 }
