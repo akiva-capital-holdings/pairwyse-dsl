@@ -10,6 +10,8 @@ interface IStackValue {
     }
 
     function getUint256() external view returns (uint256);
+
     function setUint256(uint256 value) external;
+
     function getType() external view returns (StackType);
 }

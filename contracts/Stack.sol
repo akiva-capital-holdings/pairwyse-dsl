@@ -15,15 +15,15 @@ contract StackValue {
 
     function getUint256() public view returns (uint256) {
         require(_type == StackType.UINT256, "uint256 type mismatch");
-        
+
         return _uint256;
     }
-    
+
     function setUint256(uint256 value) public {
         _uint256 = value;
         _type = StackType.UINT256;
     }
-    
+
     function getType() public view returns (StackType) {
         return _type;
     }
@@ -31,19 +31,19 @@ contract StackValue {
 
 contract Stack {
     StackValue[] public stack;
-    
-    function length() view public returns (uint) {
+
+    function length() public view returns (uint) {
         return stack.length;
     }
-    
+
     function push(StackValue data) public {
         stack.push(data);
     }
-    
+
     function pop() public returns (StackValue) {
         StackValue data = stack[stack.length - 1];
         stack.pop();
-        
+
         return data;
     }
 }

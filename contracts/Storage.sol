@@ -22,4 +22,20 @@ contract Storage is IStorage {
     function getStorageUint256(bytes32 position) public view override returns (uint256 data) {
         return position.getStorageUint256();
     }
+
+    function setStorageBool(bytes32 position, bool data) public {
+        position.setStorageBool(data);
+    }
+
+    function setStorageAddress(bytes32 position, address data) public {
+        position.setStorageAddress(data);
+    }
+
+    function setStorageBytes32(bytes32 position, bytes32 data) public {
+        position.setStorageBytes32(data);
+    }
+
+    function setStorageUint256(bytes32 position, uint256 data) public {
+        position.setStorageUint256(data);
+    }
 }
