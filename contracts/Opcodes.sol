@@ -93,6 +93,14 @@ contract Opcodes {
     }
 
     /**
+     * @dev Compares two values in the stack. Put 1 to the stack if value1 >= value2
+     */
+    function opGe() public {
+        opLt();
+        opNot();
+    }
+
+    /**
      * @dev Swaps two last element in the stack
      */
     function opSwap() public {

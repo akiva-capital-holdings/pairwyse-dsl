@@ -66,6 +66,7 @@ contract Parser is StringUtils {
         ctx.addOpcode(">", 0x04, opcodes.opGt.selector, 0x0);
         ctx.addOpcode("swap", 0x05, opcodes.opSwap.selector, 0x0);
         ctx.addOpcode("<=", 0x06, opcodes.opLe.selector, 0x0);
+        ctx.addOpcode(">=", 0x07, opcodes.opGe.selector, 0x0);
         ctx.addOpcode("and", 0x12, opcodes.opAnd.selector, 0x0);
         ctx.addOpcode("or", 0x13, opcodes.opOr.selector, 0x0);
         ctx.addOpcode("!=", 0x14, opcodes.opNotEq.selector, 0x0);
