@@ -275,62 +275,6 @@ describe('Parser', () => {
     });
   });
 
-  describe('loadLocal', async () => {
-    it('loadLocal uint256 NUMBER', async () => {
-      await app.setStorageUint256(hex4Bytes('NUMBER'), 777);
-
-      await app.exec(['loadLocal', 'uint256', 'NUMBER']);
-      await checkStack(StackValue, stack, 1, 777);
-    });
-
-    it('loadLocal uint256 NUMBER (1000) > loadLocal uint256 NUMBER2 (15)', async () => {
-      // Set NUMBER
-      const bytes32Number = hex4Bytes('NUMBER');
-      await app.setStorageUint256(bytes32Number, 1000);
-
-      // Set NUMBER2
-      const bytes32Number2 = hex4Bytes('NUMBER2');
-      await app.setStorageUint256(bytes32Number2, 15);
-
-      await app.exec(['loadLocal', 'uint256', 'NUMBER', 'loadLocal', 'uint256', 'NUMBER2', '>']);
-      await checkStack(StackValue, stack, 1, 1);
-    });
-
-    it('blockTimestamp < loadLocal uint256 NEXT_MONTH', async () => {
-      const bytes32Number = hex4Bytes('NEXT_MONTH');
-      await app.setStorageUint256(bytes32Number, NEXT_MONTH);
-
-      await app.exec(['blockTimestamp', 'loadLocal', 'uint256', 'NEXT_MONTH', '<']);
-      await checkStack(StackValue, stack, 1, 1);
-    });
-
-    it('loadLocal bool A (false)', async () => {
-      await app.setStorageBool(hex4Bytes('A'), false);
-
-      await app.exec(['loadLocal', 'bool', 'A']);
-      await checkStack(StackValue, stack, 1, 0);
-    });
-
-    it('loadLocal bool B (true)', async () => {
-      await app.setStorageBool(hex4Bytes('B'), true);
-
-      await app.exec(['loadLocal', 'bool', 'B']);
-      await checkStack(StackValue, stack, 1, 1);
-    });
-
-    it('loadLocal bool A (false) != loadLocal bool B (true)', async () => {
-      await app.setStorageBool(hex4Bytes('A'), false);
-      await app.setStorageBool(hex4Bytes('B'), true);
-
-      await app.exec([
-        'loadLocal', 'bool', 'A',
-        'loadLocal', 'bool', 'B',
-        '!=',
-      ]);
-      await checkStack(StackValue, stack, 1, 1);
-    });
-  });
-
   describe('loadRemote', async () => {
     it('loadRemote uint256 NUMBER', async () => {
       await externalApp.setStorageUint256(hex4Bytes('NUMBER'), 777);
