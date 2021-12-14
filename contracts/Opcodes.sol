@@ -134,6 +134,15 @@ contract Opcodes {
         putUint256ToStack(result ? 1 : 0);
     }
 
+    function opXor() public {
+        StackValue last = ctx.stack().pop();
+        StackValue prev = ctx.stack().pop();
+        require(last.getType() == prev.getType() && last.getType() == StackValue.StackType.UINT256, "bad types");
+        bool result = ((prev.getUint256() > 0) && (last.getUint256() == 0)) ||
+                      ((prev.getUint256() == 0) && (last.getUint256() > 0));
+        putUint256ToStack(result ? 1 : 0);
+    }
+
     /**
      * @dev Revert last value in the stack
      */

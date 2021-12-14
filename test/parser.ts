@@ -174,6 +174,37 @@ describe('Parser', () => {
     });
   });
 
+  describe('Logical XOR', async () => {
+    it('0 xor 0 = false', async () => {
+      await app.exec(['uint256', '0', 'uint256', '0', 'xor']);
+      await checkStack(StackValue, stack, 1, 0);
+    });
+    it('1 xor 0 = true', async () => {
+      await app.exec(['uint256', '1', 'uint256', '0', 'xor']);
+      await checkStack(StackValue, stack, 1, 1);
+    });
+    it('0 xor 1 = true', async () => {
+      await app.exec(['uint256', '0', 'uint256', '1', 'xor']);
+      await checkStack(StackValue, stack, 1, 1);
+    });
+    it('1 xor 1 = false', async () => {
+      await app.exec(['uint256', '1', 'uint256', '1', 'xor']);
+      await checkStack(StackValue, stack, 1, 0);
+    });
+    it('5 xor 0 = true', async () => {
+      await app.exec(['uint256', '5', 'uint256', '0', 'xor']);
+      await checkStack(StackValue, stack, 1, 1);
+    });
+    it('0 xor 5 = true', async () => {
+      await app.exec(['uint256', '0', 'uint256', '5', 'xor']);
+      await checkStack(StackValue, stack, 1, 1);
+    });
+    it('5 xor 6 = false', async () => {
+      await app.exec(['uint256', '5', 'uint256', '6', 'xor']);
+      await checkStack(StackValue, stack, 1, 0);
+    });
+  });
+
   describe('Logical NOT', async () => {
     it('NOT 0 = 1', async () => {
       await app.exec(['uint256', '0', '!']);
@@ -416,64 +447,100 @@ describe('Parser', () => {
   });
 
   describe('Boolean Algebra', async () => {
-    describe('Commutative law: A & B <=> B & A', async () => {
-      async function testCase(a: boolean, b: boolean) {
+    describe('Commutative law', async () => {
+      async function testCase(op: 'and' | 'or' | 'xor', a: boolean, b: boolean) {
         await app.exec([
           'bool', a.toString(),
           'bool', b.toString(),
-          'and',
+          op,
 
           'bool', b.toString(),
           'bool', a.toString(),
-          'and',
+          op,
 
           '==',
         ]);
         await checkStack(StackValue, stack, 1, 1);
       }
 
-      it('T & F <=> F & T', async () => testCase(true, false));
-      it('F & T <=> T & F', async () => testCase(false, true));
+      describe('A & B <=> B & A', async () => {
+        it('T & F <=> F & T', async () => testCase('and', true, false));
+        it('F & T <=> T & F', async () => testCase('and', false, true));
+      });
+
+      describe('A | B <=> B | A', async () => {
+        it('T | F <=> F | T', async () => testCase('or', true, false));
+        it('F | T <=> T | F', async () => testCase('or', false, true));
+      });
+
+      describe('A xor B <=> B xor A', async () => {
+        it('T xor F <=> F xor T', async () => testCase('xor', true, false));
+        it('F xor T <=> T xor F', async () => testCase('xor', false, true));
+      });
     });
 
-    describe('Associative law: (A & B) & C <=> A & (B & C)', async () => {
-      async function testCase(a: boolean, b: boolean, c: boolean) {
+    describe('Associative law', async () => {
+      async function testCase(op: 'and' | 'or' | 'xor', a: boolean, b: boolean, c: boolean) {
         const A = a.toString();
         const B = b.toString();
         const C = c.toString();
         await app.exec([
           'bool', A,
           'bool', B,
-          'and',
+          op,
 
           'bool', C,
-          'and',
+          op,
 
           // <=>
 
           'bool', A,
           'bool', B,
           'bool', C,
-          'and',
-          'and',
+          op,
+          op,
 
           '==',
         ]);
         await checkStack(StackValue, stack, 1, 1);
       }
 
-      it('(F & F) & F <=> F & (F & F)', async () => testCase(false, false, false));
-      it('(F & F) & T <=> F & (F & T)', async () => testCase(false, false, true));
-      it('(F & T) & F <=> F & (T & F)', async () => testCase(false, true, false));
-      it('(F & T) & T <=> F & (T & T)', async () => testCase(false, true, true));
-      it('(T & F) & F <=> T & (F & F)', async () => testCase(true, false, false));
-      it('(T & F) & T <=> T & (F & T)', async () => testCase(true, false, true));
-      it('(T & T) & F <=> T & (T & F)', async () => testCase(true, true, false));
-      it('(T & T) & T <=> T & (T & T)', async () => testCase(true, true, true));
+      describe('(A & B) & C <=> A & (B & C)', async () => {
+        it('(F & F) & F <=> F & (F & F)', async () => testCase('and', false, false, false));
+        it('(F & F) & T <=> F & (F & T)', async () => testCase('and', false, false, true));
+        it('(F & T) & F <=> F & (T & F)', async () => testCase('and', false, true, false));
+        it('(F & T) & T <=> F & (T & T)', async () => testCase('and', false, true, true));
+        it('(T & F) & F <=> T & (F & F)', async () => testCase('and', true, false, false));
+        it('(T & F) & T <=> T & (F & T)', async () => testCase('and', true, false, true));
+        it('(T & T) & F <=> T & (T & F)', async () => testCase('and', true, true, false));
+        it('(T & T) & T <=> T & (T & T)', async () => testCase('and', true, true, true));
+      });
+
+      describe('(A | B) | C <=> A | (B | C)', async () => {
+        it('(F | F) | F <=> F | (F | F)', async () => testCase('or', false, false, false));
+        it('(F | F) | T <=> F | (F | T)', async () => testCase('or', false, false, true));
+        it('(F | T) | F <=> F | (T | F)', async () => testCase('or', false, true, false));
+        it('(F | T) | T <=> F | (T | T)', async () => testCase('or', false, true, true));
+        it('(T | F) | F <=> T | (F | F)', async () => testCase('or', true, false, false));
+        it('(T | F) | T <=> T | (F | T)', async () => testCase('or', true, false, true));
+        it('(T | T) | F <=> T | (T | F)', async () => testCase('or', true, true, false));
+        it('(T | T) | T <=> T | (T | T)', async () => testCase('or', true, true, true));
+      });
+
+      describe('(A xor B) xor C <=> A xor (B xor C)', async () => {
+        it('(F xor F) xor F <=> F xor (F xor F)', async () => testCase('xor', false, false, false));
+        it('(F xor F) xor T <=> F xor (F xor T)', async () => testCase('xor', false, false, true));
+        it('(F xor T) xor F <=> F xor (T xor F)', async () => testCase('xor', false, true, false));
+        it('(F xor T) xor T <=> F xor (T xor T)', async () => testCase('xor', false, true, true));
+        it('(T xor F) xor F <=> T xor (F xor F)', async () => testCase('xor', true, false, false));
+        it('(T xor F) xor T <=> T xor (F xor T)', async () => testCase('xor', true, false, true));
+        it('(T xor T) xor F <=> T xor (T xor F)', async () => testCase('xor', true, true, false));
+        it('(T xor T) xor T <=> T xor (T xor T)', async () => testCase('xor', true, true, true));
+      });
     });
 
-    describe('Distributive law: A & (B | C) <=> (A & B) | (A & C)', async () => {
-      async function testCase(a: boolean, b: boolean, c: boolean) {
+    describe('Distributive law', async () => {
+      async function testCase(op1: string, op2: string, a: boolean, b: boolean, c: boolean) {
         const A = a.toString();
         const B = b.toString();
         const C = c.toString();
@@ -482,62 +549,161 @@ describe('Parser', () => {
           'bool', A,
           'bool', B,
           'bool', C,
-          'or',
-          'and',
+          op2,
+          op1,
 
           // <=>
 
           'bool', A,
           'bool', B,
-          'and',
+          op1,
 
           'bool', A,
           'bool', C,
-          'and',
+          op1,
 
-          'or',
+          op2,
           '==',
         ]);
 
         await checkStack(StackValue, stack, 1, 1);
       }
 
-      it('F & (F | F) <=> (F & F) | (F & F)', async () => testCase(false, false, false));
-      it('F & (F | T) <=> (F & F) | (F & T)', async () => testCase(false, false, true));
-      it('F & (T | F) <=> (F & T) | (F & F)', async () => testCase(false, true, false));
-      it('F & (T | T) <=> (F & T) | (F & T)', async () => testCase(false, true, true));
-      it('T & (F | F) <=> (T & F) | (T & F)', async () => testCase(true, false, false));
-      it('T & (F | T) <=> (T & F) | (T & T)', async () => testCase(true, false, true));
-      it('T & (T | F) <=> (T & T) | (T & F)', async () => testCase(true, true, false));
-      it('T & (T | T) <=> (T & T) | (T & T)', async () => testCase(true, true, true));
+      describe('A & (B | C) <=> (A & B) | (A & C)', async () => {
+        it('F & (F | F) <=> (F & F) | (F & F)', async () => testCase('and', 'or', false, false, false));
+        it('F & (F | T) <=> (F & F) | (F & T)', async () => testCase('and', 'or', false, false, true));
+        it('F & (T | F) <=> (F & T) | (F & F)', async () => testCase('and', 'or', false, true, false));
+        it('F & (T | T) <=> (F & T) | (F & T)', async () => testCase('and', 'or', false, true, true));
+        it('T & (F | F) <=> (T & F) | (T & F)', async () => testCase('and', 'or', true, false, false));
+        it('T & (F | T) <=> (T & F) | (T & T)', async () => testCase('and', 'or', true, false, true));
+        it('T & (T | F) <=> (T & T) | (T & F)', async () => testCase('and', 'or', true, true, false));
+        it('T & (T | T) <=> (T & T) | (T & T)', async () => testCase('and', 'or', true, true, true));
+      });
+
+      describe('A & (B xor C) <=> (A & B) xor (A & C)', async () => {
+        it('F & (F xor F) <=> (F & F) xor (F & F)', async () => testCase('and', 'xor', false, false, false));
+        it('F & (F xor T) <=> (F & F) xor (F & T)', async () => testCase('and', 'xor', false, false, true));
+        it('F & (T xor F) <=> (F & T) xor (F & F)', async () => testCase('and', 'xor', false, true, false));
+        it('F & (T xor T) <=> (F & T) xor (F & T)', async () => testCase('and', 'xor', false, true, true));
+        it('T & (F xor F) <=> (T & F) xor (T & F)', async () => testCase('and', 'xor', true, false, false));
+        it('T & (F xor T) <=> (T & F) xor (T & T)', async () => testCase('and', 'xor', true, false, true));
+        it('T & (T xor F) <=> (T & T) xor (T & F)', async () => testCase('and', 'xor', true, true, false));
+        it('T & (T xor T) <=> (T & T) xor (T & T)', async () => testCase('and', 'xor', true, true, true));
+      });
     });
 
-    describe('DeMorgan\'s Law: !(A | B) <=> (!A) & (!B)', async () => {
-      async function testCase(a: boolean, b: boolean) {
+    describe('DeMorgan\'s Law', async () => {
+      async function testCase(op1: string, op2: string, a: boolean, b: boolean) {
         const A = a.toString();
         const B = b.toString();
 
         await app.exec([
           'bool', A,
           'bool', B,
-          'or',
+          op1,
           '!',
 
           'bool', A,
           '!',
           'bool', B,
           '!',
-          'and',
+          op2,
 
           '==',
         ]);
         await checkStack(StackValue, stack, 1, 1);
       }
 
-      it('!(F | F) <=> (!F) & (!F)', async () => testCase(false, false));
-      it('!(T | F) <=> (!T) & (!F)', async () => testCase(true, false));
-      it('!(F | T) <=> (!F) & (!T)', async () => testCase(false, true));
-      it('!(T | T) <=> (!T) & (!T)', async () => testCase(true, true));
+      describe('!(A | B) <=> (!A) & (!B)', async () => {
+        it('!(F | F) <=> (!F) & (!F)', async () => testCase('or', 'and', false, false));
+        it('!(T | F) <=> (!T) & (!F)', async () => testCase('or', 'and', true, false));
+        it('!(F | T) <=> (!F) & (!T)', async () => testCase('or', 'and', false, true));
+        it('!(T | T) <=> (!T) & (!T)', async () => testCase('or', 'and', true, true));
+      });
+
+      describe('!(A & B) <=> (!A) | (!B)', async () => {
+        it('!(F & F) <=> (!F) | (!F)', async () => testCase('and', 'or', false, false));
+        it('!(T & F) <=> (!T) | (!F)', async () => testCase('and', 'or', true, false));
+        it('!(F & T) <=> (!F) | (!T)', async () => testCase('and', 'or', false, true));
+        it('!(T & T) <=> (!T) | (!T)', async () => testCase('and', 'or', true, true));
+      });
+    });
+
+    describe('Involution Law: !!A == A', async () => {
+      it('!!F == F', async () => {
+        await app.exec(['bool', 'false', '!', '!', 'bool', 'false', '==']);
+        await checkStack(StackValue, stack, 1, 1);
+      });
+
+      it('!!T == T', async () => {
+        await app.exec(['bool', 'true', '!', '!', 'bool', 'true', '==']);
+        await checkStack(StackValue, stack, 1, 1);
+      });
+    });
+
+    describe('Idempotent Law', async () => {
+      describe('(A or A) == A', async () => {
+        async function testCase(A: 'true' | 'false') {
+          await app.exec(['bool', A, 'bool', A, 'or', 'bool', A, '==']);
+          await checkStack(StackValue, stack, 1, 1);
+        }
+        it('(T or T) == T', async () => testCase('true'));
+        it('(F or F) == F', async () => testCase('false'));
+      });
+
+      describe('(A or 1) == 1', async () => {
+        async function testCase(A: 'true' | 'false') {
+          await app.exec(['bool', A, 'bool', 'true', 'or', 'bool', 'true', '==']);
+          await checkStack(StackValue, stack, 1, 1);
+        }
+        it('(T or 1) == 1', async () => testCase('true'));
+        it('(F or 1) == 1', async () => testCase('false'));
+      });
+
+      describe('(A and A) == A', async () => {
+        async function testCase(A: 'true' | 'false') {
+          await app.exec(['bool', A, 'bool', A, 'and', 'bool', A, '==']);
+          await checkStack(StackValue, stack, 1, 1);
+        }
+        it('(T and T) == T', async () => testCase('true'));
+        it('(F and F) == F', async () => testCase('false'));
+      });
+
+      describe('(A and 1) == A', async () => {
+        async function testCase(A: 'true' | 'false') {
+          await app.exec(['bool', A, 'bool', 'true', 'and', 'bool', A, '==']);
+          await checkStack(StackValue, stack, 1, 1);
+        }
+        it('(T and 1) == T', async () => testCase('true'));
+        it('(F and 1) == F', async () => testCase('false'));
+      });
+
+      describe('(A or !A) == 1', async () => {
+        async function testCase(A: 'true' | 'false') {
+          await app.exec(['bool', A, 'bool', A, '!', 'or', 'bool', 'true', '==']);
+          await checkStack(StackValue, stack, 1, 1);
+        }
+        it('(T or !T) == 1', async () => testCase('true'));
+        it('(F or !F) == 1', async () => testCase('false'));
+      });
+
+      describe('(A or 0) == A', async () => {
+        async function testCase(A: 'true' | 'false') {
+          await app.exec(['bool', A, 'bool', 'false', 'or', 'bool', A, '==']);
+          await checkStack(StackValue, stack, 1, 1);
+        }
+        it('(T or 0) == T', async () => testCase('true'));
+        it('(F or 0) == F', async () => testCase('false'));
+      });
+
+      describe('(A and !A) == 0', async () => {
+        async function testCase(A: 'true' | 'false') {
+          await app.exec(['bool', A, 'bool', A, '!', 'and', 'bool', 'false', '==']);
+          await checkStack(StackValue, stack, 1, 1);
+        }
+        it('(T and !T) == 0', async () => testCase('true'));
+        it('(F and !F) == 0', async () => testCase('false'));
+      });
     });
   });
 
