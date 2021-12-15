@@ -5,9 +5,10 @@ import "./Context.sol";
 import "./Opcodes.sol";
 import "./Eval.sol";
 import "./helpers/StringUtils.sol";
+import "./helpers/Storage.sol";
 import "hardhat/console.sol";
 
-contract Parser is StringUtils {
+contract Parser is StringUtils, Storage {
     Context public ctx;
     Opcodes public opcodes;
     Eval public eval;
@@ -15,6 +16,8 @@ contract Parser is StringUtils {
     bytes private program;
     string[] private cmds;
     uint256 private cmdIdx;
+
+    event ExecRes(bool result);
 
     constructor() {
         ctx = new Context();
@@ -24,10 +27,17 @@ contract Parser is StringUtils {
         initOpcodes();
     }
 
-    function exec(string[] memory code) public {
+    /**
+     * @notice Execute an expression written in our custom DSL
+     * @param code string array of commands (expression) in polish notation to be parsed by DSL
+     * ehturn result returns the expression execution result (the last value in stack)
+     */
+    function exec(string[] memory code) public returns(bool result) {
         delete program;
         cmdIdx = 0;
         cmds = code;
+        ctx.stack().clean();
+        ctx.setPc(0);
 
         while(cmdIdx < cmds.length) {
             parseOpcodeWithParams();
@@ -35,6 +45,9 @@ contract Parser is StringUtils {
 
         ctx.setProgram(program);
         eval.evalWithStorage(address(this));
+
+        result = ctx.stack().seeLast().getUint256() == 0 ? false : true;
+        emit ExecRes(result);
     }
 
     function asmLoadLocal() public {

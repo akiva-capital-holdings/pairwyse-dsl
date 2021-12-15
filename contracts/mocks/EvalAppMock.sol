@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "../Storage.sol";
+import "../helpers/Storage.sol";
 import "../Eval.sol";
 import "./ContextMock.sol";
 import "hardhat/console.sol";

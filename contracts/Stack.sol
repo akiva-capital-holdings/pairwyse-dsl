@@ -32,18 +32,26 @@ contract StackValue {
 contract Stack {
     StackValue[] public stack;
 
-    function length() public view returns (uint) {
+    function length() external view returns (uint) {
         return stack.length;
     }
 
-    function push(StackValue data) public {
+    function seeLast() external view returns(StackValue) {
+        return stack[stack.length - 1];
+    }
+
+    function push(StackValue data) external {
         stack.push(data);
     }
 
-    function pop() public returns (StackValue) {
+    function pop() external returns (StackValue) {
         StackValue data = stack[stack.length - 1];
         stack.pop();
 
         return data;
+    }
+
+    function clean() external {
+        delete stack;
     }
 }
