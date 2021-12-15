@@ -93,6 +93,14 @@ contract Opcodes {
     }
 
     /**
+     * @dev Compares two values in the stack. Put 1 to the stack if value1 >= value2
+     */
+    function opGe() public {
+        opLt();
+        opNot();
+    }
+
+    /**
      * @dev Swaps two last element in the stack
      */
     function opSwap() public {
@@ -123,6 +131,15 @@ contract Opcodes {
         StackValue prev = ctx.stack().pop();
         require(last.getType() == prev.getType() && last.getType() == StackValue.StackType.UINT256, "bad types");
         bool result = (prev.getUint256() > 0) || (last.getUint256() > 0);
+        putUint256ToStack(result ? 1 : 0);
+    }
+
+    function opXor() public {
+        StackValue last = ctx.stack().pop();
+        StackValue prev = ctx.stack().pop();
+        require(last.getType() == prev.getType() && last.getType() == StackValue.StackType.UINT256, "bad types");
+        bool result = ((prev.getUint256() > 0) && (last.getUint256() == 0)) ||
+                      ((prev.getUint256() == 0) && (last.getUint256() > 0));
         putUint256ToStack(result ? 1 : 0);
     }
 

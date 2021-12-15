@@ -71,6 +71,7 @@ export const checkStack = async (
   stack: Stack,
   expectedLen: number,
   expectedValue: number,
+  indexFromEnd: number = 0,
   badLenErr = 'Bad stack length',
   badValueErr = 'Bad stack value',
 ) => {
@@ -79,10 +80,23 @@ export const checkStack = async (
   expect(stackLen.toNumber()).to.equal(expectedLen, badLenErr);
 
   // get result
-  const svResultAddress = await stack.stack(stackLen.toNumber() - 1);
+  const svResultAddress = await stack.stack(stackLen.toNumber() - 1 - indexFromEnd);
   const svResult = SV.attach(svResultAddress);
   expect((await svResult.getUint256()).toNumber()).to.equal(expectedValue, badValueErr);
 };
+
+export async function checkStackTail(
+  SV: StackValue__factory,
+  stack: Stack,
+  expectedLen: number,
+  expectedValues: number[],
+  badLenErr = 'Bad stack length',
+  badValueErr = 'Bad stack value',
+) {
+  for (let i = 0; i < expectedValues.length; i++) {
+    await checkStack(SV, stack, expectedLen, expectedValues[expectedValues.length - 1 - i], i, badLenErr, badValueErr);
+  }
+}
 
 /**
  * Test stack with two values that combines into a single value after the
