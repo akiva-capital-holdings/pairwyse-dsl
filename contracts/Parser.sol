@@ -30,7 +30,7 @@ contract Parser is StringUtils, Storage {
     /**
      * @notice Execute an expression written in our custom DSL
      * @param code string array of commands (expression) in polish notation to be parsed by DSL
-     * ehturn result returns the expression execution result (the last value in stack)
+     * @return result returns the expression execution result (the last value in stack)
      */
     function exec(string[] memory code) public returns(bool result) {
         delete program;
