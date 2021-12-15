@@ -9,7 +9,7 @@ import "hardhat/console.sol";
  * @dev This is a simple example of the end user contract that uses our DSL
  */
 contract ClientApp is Parser {
-    using UnstructuredStorage for bytes32;
+    using UnstructuredStorage for bytes4;
 
     bytes4 public constant IS_RISKY = bytes4(keccak256("IS_RISKY"));
     bytes4 public constant MIN_BLOCK = bytes4(keccak256("MIN_BLOCK"));
@@ -17,8 +17,8 @@ contract ClientApp is Parser {
     string[] public withdrawalCond;
 
     constructor() {
-        bytes32(IS_RISKY).setStorageBool(true);
-        bytes32(MIN_BLOCK).setStorageUint256(block.timestamp + 1000);
+        IS_RISKY.setStorageBool(true);
+        MIN_BLOCK.setStorageUint256(block.timestamp + 1000);
     }
 
     function withdraw() external returns (bool) {
@@ -34,7 +34,7 @@ contract ClientApp is Parser {
     receive() external payable {}
 
     function isRisky() public view returns (bool) {
-        return bytes32(IS_RISKY).getStorageBool();
+        return IS_RISKY.getStorageBool();
     }
 
     function currBlock() public view returns (uint256) {
@@ -42,14 +42,14 @@ contract ClientApp is Parser {
     }
 
     function minBlock() public view returns (uint256) {
-        return bytes32(MIN_BLOCK).getStorageUint256();
+        return MIN_BLOCK.getStorageUint256();
     }
 
     function setIsRisky(bool _isRisky) public {
-        bytes32(IS_RISKY).setStorageBool(_isRisky);
+        IS_RISKY.setStorageBool(_isRisky);
     }
 
     function setMinBlock(uint256 _minBlock) public {
-        bytes32(MIN_BLOCK).setStorageUint256(_minBlock);
+        MIN_BLOCK.setStorageUint256(_minBlock);
     }
 }
