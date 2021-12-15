@@ -3,12 +3,7 @@
 import { expect } from 'chai';
 import { ethers } from 'ethers';
 import {
-  Opcodes,
-  Stack__factory,
-  StackValue__factory,
-  Stack,
-  ContextMock,
-  StackValue,
+  Opcodes, Stack__factory, StackValue__factory, Stack, ContextMock, StackValue,
 } from '../../typechain';
 import { OpEvalFunc } from '../types';
 
@@ -33,12 +28,7 @@ export const hex4Bytes = (str: string) => ethers.utils
  *            from the beginning of the array
  * @returns created stack
  */
-export const pushToStack = async (
-  SV: StackValue__factory,
-  context: ContextMock,
-  ST: Stack__factory,
-  arr: number[],
-) => {
+export const pushToStack = async (SV: StackValue__factory, context: ContextMock, ST: Stack__factory, arr: number[]) => {
   const stackValues: StackValue[] = [];
 
   for (let i = 0; i < arr.length; ++i) {
@@ -75,7 +65,7 @@ export const checkStack = async (
   badLenErr = 'Bad stack length',
   badValueErr = 'Bad stack value',
 ) => {
-  // stack size is 3
+  // check stack length
   const stackLen = await stack.length();
   expect(stackLen.toNumber()).to.equal(expectedLen, badLenErr);
 

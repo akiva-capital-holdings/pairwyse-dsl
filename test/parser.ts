@@ -16,7 +16,7 @@ describe('Parser', () => {
   let extAppAddrHex: string;
   let StackValue: StackValue__factory;
 
-  beforeEach(async () => {
+  before(async () => {
     // Create StackValue Factory instance
     StackValue = await ethers.getContractFactory('StackValue');
 
