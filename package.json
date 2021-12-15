@@ -12,6 +12,7 @@
     "lint:ts": "npx eslint test/** --fix",
     "lint:sol": "npx solhint contracts/**/*.sol",
     "prettier:sol": "npx prettier --write 'contracts/**/*.sol'",
+    "build": "yarn hardhat compile",
     "test": "yarn hardhat test"
   },
   "devDependencies": {
