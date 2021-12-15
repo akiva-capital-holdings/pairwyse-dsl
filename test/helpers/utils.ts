@@ -24,6 +24,8 @@ export const hex4Bytes = (str: string) => ethers.utils
   .map((x, i) => (i < 10 ? x : '0'))
   .join('');
 
+export const hex4BytesShort = (str: string) => hex4Bytes(str).slice(2, 2 + 8);
+
 /**
  * Push values to stack
  * @param SV StackValue: StackValue__factory

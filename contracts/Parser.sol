@@ -24,7 +24,7 @@ contract Parser is StringUtils {
         initOpcodes();
     }
 
-    function exec(string[] memory code) public {
+    function parseCode(string[] memory code) public {
         delete program;
         cmdIdx = 0;
         cmds = code;
@@ -34,6 +34,10 @@ contract Parser is StringUtils {
         }
 
         ctx.setProgram(program);
+    }
+
+    function exec(string[] memory code) public {
+        parseCode(code);
         eval.evalWithStorage(address(this));
     }
 
