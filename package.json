@@ -13,7 +13,7 @@
     "lint:sol": "npx solhint contracts/**/*.sol",
     "prettier:sol": "npx prettier --write 'contracts/**/*.sol'",
     "build": "yarn hardhat compile",
-    "test": "yarn build && yarn hardhat test"
+    "test": "yarn hardhat test"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.0",

@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import {
-  AppMock, Context, Stack, StackValue__factory,
+  AppParserMock, Context, Stack, StackValue__factory,
 } from '../typechain';
 import { checkStackTail, hex4Bytes, hex4BytesShort } from './helpers/utils';
 
@@ -15,15 +15,15 @@ async function getChainId() {
 describe('End-to-end', () => {
   let stack: Stack;
   let context: Context;
-  let app: AppMock;
+  let app: AppParserMock;
   let StackValue: StackValue__factory;
 
-  beforeEach(async () => {
+  before(async () => {
     // Create StackValue Factory instance
     StackValue = await ethers.getContractFactory('StackValue');
 
     // Deploy App
-    const AppCont = await ethers.getContractFactory('AppMock');
+    const AppCont = await ethers.getContractFactory('AppParserMock');
     app = await AppCont.deploy();
 
     // Create Context instance
@@ -34,6 +34,8 @@ describe('End-to-end', () => {
     const contextStackAddress = await context.stack();
     stack = StackCont.attach(contextStackAddress);
   });
+
+  afterEach(async () => app.reset());
 
   describe('blockChainId < loadLocal uint256 VAR', async () => {
     const chainId = await getChainId();

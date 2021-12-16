@@ -13,9 +13,9 @@ contract Parser is StringUtils, Storage {
     Opcodes public opcodes;
     Eval public eval;
 
-    bytes private program;
-    string[] private cmds;
-    uint256 private cmdIdx;
+    bytes internal program;
+    string[] internal cmds;
+    uint256 internal cmdIdx;
 
     event ExecRes(bool result);
 
@@ -27,12 +27,11 @@ contract Parser is StringUtils, Storage {
         initOpcodes();
     }
 
-    function parseCode(string[] memory code) public {
+    function parseCode(string[] memory code) public virtual {
         delete program;
         cmdIdx = 0;
         cmds = code;
         ctx.stack().clean();
-        ctx.setPc(0);
 
         while(cmdIdx < cmds.length) {
             parseOpcodeWithParams();
@@ -75,7 +74,7 @@ contract Parser is StringUtils, Storage {
         program = bytes.concat(program, bytes32(value));
     }
 
-    function initOpcodes() private {
+    function initOpcodes() internal {
         // Opcodes
         ctx.addOpcode("==", 0x01, opcodes.opEq.selector, 0x0);
         ctx.addOpcode("!", 0x02, opcodes.opNot.selector, 0x0);
@@ -111,23 +110,23 @@ contract Parser is StringUtils, Storage {
         // TODO: add bytes32
     }
 
-    function nextCmd() private returns (string storage) {
+    function nextCmd() internal returns (string storage) {
         return cmds[cmdIdx++];
     }
 
-    function parseVariable() private {
+    function parseVariable() internal {
         program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(nextCmd()))));
     }
 
-    function parseBranchOf(string memory baseOpName) private {
+    function parseBranchOf(string memory baseOpName) internal {
         program = bytes.concat(program, ctx.branchCodes(baseOpName, nextCmd()));
     }
 
-    function parseAddress() private {
+    function parseAddress() internal {
         program = bytes.concat(program, fromHex(nextCmd()));
     }
 
-    function parseOpcodeWithParams() private {
+    function parseOpcodeWithParams() internal {
         string storage cmd = nextCmd();
         bytes1 opcode = ctx.opCodeByName(cmd);
         require(opcode != 0x0, "Parser: invalid command found");
