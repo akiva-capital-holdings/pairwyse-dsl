@@ -47,6 +47,7 @@ contract Context is IContext {
 
     function setProgram(bytes memory data) public virtual override /*onlyParser*/ {
         program = data;
+        pc = 0;
     }
 
     function programAt(uint256 index, uint256 step) public view override returns (bytes memory) {

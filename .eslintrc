@@ -16,6 +16,7 @@
   "rules": {
     "quotes": ["error", "single"],
     "no-restricted-syntax": ["off"],
+    "no-await-in-loop": ["off"],
     "max-len": ["error", 120]
   }
 }
