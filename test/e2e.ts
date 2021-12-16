@@ -12,7 +12,7 @@ async function getChainId() {
   return ethers.provider.getNetwork().then((network) => network.chainId);
 }
 
-describe('End-to-end', async () => {
+describe('End-to-end', () => {
   let stack: Stack;
   let context: Context;
   let app: AppMock;
