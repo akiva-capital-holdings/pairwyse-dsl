@@ -105,6 +105,7 @@ describe('End-to-end', () => {
     ];
 
     const bytecode = [
+      /* eslint-disable no-multi-spaces */
       `1b01${hex4BytesShort('NOW')}`,     // ['loadLocal', 'uint256', 'NOW'],
       `1b01${hex4BytesShort('INIT')}`,    // ['loadLocal', 'uint256', 'INIT'],
       '04',                               // ['>'], // A
@@ -123,6 +124,7 @@ describe('End-to-end', () => {
       '01',                               // ['=='], // C
 
       '13',                               // ['or'],
+      /* eslint-enable no-multi-spaces */
     ];
 
     async function testCase(
@@ -135,6 +137,7 @@ describe('End-to-end', () => {
       result: number,
     ) {
       const stackStepByStep = [
+        /* eslint-disable no-multi-spaces */
         [NOW],                          // ['loadLocal', 'uint256', 'NOW'],
         [NOW, INIT],                    // ['loadLocal', 'uint256', 'INIT'],
         [A],                            // ['>'], // A
@@ -153,6 +156,7 @@ describe('End-to-end', () => {
         [+(A && B), C],                 // ['=='], // C
 
         [result],                       // ['or'],
+        /* eslint-enable no-multi-spaces */
       ];
 
       await app.setStorageUint256(hex4Bytes('NOW'), NOW);
