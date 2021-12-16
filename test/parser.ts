@@ -235,9 +235,11 @@ describe('Parser', () => {
     await checkStack(StackValue, stack, 1, tx.blockNumber!);
   });
 
-  it.skip('blockTimestamp', async () => {
-    const tx = await app.exec(['blockTimestamp']);
-    await checkStack(StackValue, stack, 1, tx.timestamp!); // tx.timestamp === undefined
+  it('blockTimestamp', async () => {
+    await app.exec(['blockTimestamp']);
+
+    const block = await ethers.provider.getBlock('latest');
+    await checkStack(StackValue, stack, 1, block.timestamp);
   });
 
   it('blockChainId', async () => {

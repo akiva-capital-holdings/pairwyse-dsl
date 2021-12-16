@@ -1,6 +1,5 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
-import _ from 'lodash';
 import {
   AppMock, Context, Stack, StackValue__factory,
 } from '../typechain';
@@ -9,12 +8,15 @@ import { checkStackTail, hex4Bytes, hex4BytesShort } from './helpers/utils';
 const NEXT_MONTH = Math.round((Date.now() + 1000 * 60 * 60 * 24 * 30) / 1000);
 const PREV_MONTH = Math.round((Date.now() - 1000 * 60 * 60 * 24 * 30) / 1000);
 
-describe('End-to-end', () => {
+async function getChainId() {
+  return ethers.provider.getNetwork().then((network) => network.chainId);
+}
+
+describe('End-to-end', async () => {
   let stack: Stack;
   let context: Context;
   let app: AppMock;
   let StackValue: StackValue__factory;
-  const chainId: number = 31337;
 
   beforeEach(async () => {
     // Create StackValue Factory instance
@@ -34,6 +36,7 @@ describe('End-to-end', () => {
   });
 
   describe('blockChainId < loadLocal uint256 VAR', async () => {
+    const chainId = await getChainId();
     const varHashPadded = hex4Bytes('VAR');
     const varHash = varHashPadded.slice(2, 2 + 8);
     const varValue = chainId + 1;
@@ -57,7 +60,7 @@ describe('End-to-end', () => {
     ];
 
     it('bytecode', async () => {
-      await app.parseCode(_.flatten(code));
+      await app.parseCode(code.flat());
 
       const resultBytecode = await context.program();
       expect(resultBytecode).to.be.equal(`0x${bytecode.join('')}`);
@@ -66,7 +69,8 @@ describe('End-to-end', () => {
     it('step-by-step stack', async () => {
       await app.setStorageUint256(varHashPadded, varValue);
 
-      for (const [targetStack, ops] of _.zip(stackStepByStep, code)) {
+      for (let i = 0; i < stackStepByStep.length; i += 1) {
+        const [targetStack, ops] = [stackStepByStep[i], code[i]];
         if (!targetStack || !ops) {
           throw new Error('Invalid bytecode or stack');
         }
@@ -164,7 +168,9 @@ describe('End-to-end', () => {
       await app.setStorageUint256(hex4Bytes('EXPIRY'), EXPIRY);
       await app.setStorageUint256(hex4Bytes('RISK'), RISK);
 
-      for (const [targetStack, ops] of _.zip(stackStepByStep, code)) {
+      for (let i = 0; i < stackStepByStep.length; i += 1) {
+        const [targetStack, ops] = [stackStepByStep[i], code[i]];
+
         if (!targetStack || !ops) {
           throw new Error('Invalid bytecode or stack');
         }
@@ -175,7 +181,7 @@ describe('End-to-end', () => {
     }
 
     it('bytecode', async () => {
-      await app.parseCode(_.flatten(code));
+      await app.parseCode(code.flat());
 
       const resultBytecode = await context.program();
       expect(resultBytecode).to.be.equal(`0x${bytecode.join('')}`);
