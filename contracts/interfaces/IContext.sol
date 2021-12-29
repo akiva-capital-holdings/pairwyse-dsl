@@ -14,6 +14,8 @@ interface IContext {
 
     function appAddress() external returns (address);
 
+    function msgSender() external returns (address);
+
     function addOpcode(
         string memory name,
         bytes1 opcode,

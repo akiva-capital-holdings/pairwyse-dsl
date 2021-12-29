@@ -240,7 +240,7 @@ describe('Opcode', () => {
       const contextStackAddress = await context.stack();
       const stack = Stack.attach(contextStackAddress);
 
-      // 0x01 is ChainID
+      // 0x17 is ChainID
       await context.setProgram('0x17');
 
       const opBlockResult = await opcodes.opBlockChainId();
@@ -260,7 +260,7 @@ describe('Opcode', () => {
       const contextStackAddress = await context.stack();
       const stack = Stack.attach(contextStackAddress);
 
-      // 0x06 is Timestamp
+      // 0x16 is Timestamp
       await context.setProgram('0x16');
 
       const opBlockResult = await opcodes.opBlockTimestamp();

@@ -11,6 +11,7 @@ contract Context is IContext {
     uint256 public override pc;
     address public override parser;
     address public override appAddress;
+    address public override msgSender;
 
     mapping(string => bytes1) public opCodeByName; // name => hex
     mapping(bytes1 => bytes4) public selectorByOpcode;
@@ -74,5 +75,9 @@ contract Context is IContext {
 
     function setAppAddress(address addr) public {
         appAddress = addr;
+    }
+
+    function setMsgSender(address _msgSender) public {
+        msgSender = _msgSender;
     }
 }

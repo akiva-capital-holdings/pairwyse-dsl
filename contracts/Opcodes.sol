@@ -165,6 +165,10 @@ contract Opcodes {
         putUint256ToStack(block.chainid);
     }
 
+    function opMsgSender() public {
+        putUint256ToStack(uint256(uint160(ctx.msgSender())));
+    }
+
     function opLoadLocalUint256() public {
         opLoadLocal("getStorageUint256(bytes32)");
     }

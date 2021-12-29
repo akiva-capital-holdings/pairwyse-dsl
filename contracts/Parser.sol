@@ -48,7 +48,7 @@ contract Parser is StringUtils, Storage {
      */
     function exec(string[] memory code) public returns(bool result) {
         parseCode(code);
-        eval.evalWithStorage(address(this));
+        eval.evalWithContext(address(this), msg.sender);
 
         result = ctx.stack().seeLast().getUint256() == 0 ? false : true;
         emit ExecRes(result);
@@ -93,7 +93,7 @@ contract Parser is StringUtils, Storage {
         ctx.addOpcode("blockChainId", 0x17, opcodes.opBlockChainId.selector, 0x0);
         ctx.addOpcode("bool", 0x18, opcodes.opBool.selector, this.asmBool.selector);
         ctx.addOpcode("uint256", 0x1a, opcodes.opUint256.selector, this.asmUint256.selector);
-        // TODO: add msg.sender
+        ctx.addOpcode("msgSender", 0x1d, opcodes.opMsgSender.selector, 0x0);
 
         // complex opcodes with sub opcodes (branches)
         string memory name = "loadLocal";

@@ -248,6 +248,13 @@ describe('Parser', () => {
     await checkStack(StackValue, stack, 1, tx.chainId);
   });
 
+  it('msgSender', async () => {
+    const [sender] = await ethers.getSigners();
+    await app.setStorageAddress(hex4Bytes('SENDER'), sender.address);
+    await app.connect(sender).exec(['loadLocal', 'address', 'SENDER', 'msgSender', '==']);
+    await checkStack(StackValue, stack, 1, 1);
+  });
+
   it('block number < block timestamp', async () => {
     await app.exec(['blockNumber', 'blockTimestamp', '<']);
     await checkStack(StackValue, stack, 1, 1);
@@ -418,7 +425,6 @@ describe('Parser', () => {
 
     describe('opLoadRemoteAddress', () => {
       it('addresses are equal', async () => {
-        console.log({ extAppAddrHex });
         await externalApp.setStorageAddress(hex4Bytes('ADDR'), '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
         await externalApp.setStorageAddress(hex4Bytes('ADDR2'), '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
 
