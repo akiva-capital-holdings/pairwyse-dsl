@@ -848,6 +848,7 @@ describe('Parser', () => {
   });
 
   it('should throw at unknownExpr', async () => {
-    await expect(app.exec(['unknownExpr'])).to.be.revertedWith('Parser: invalid command found');
+    await expect(app.exec(['unknownExpr'])).to.be.revertedWith('Parser: \'unknownExpr\' command is unknown');
+    await expect(app.exec(['?!'])).to.be.revertedWith('Parser: \'?!\' command is unknown');
   });
 });
