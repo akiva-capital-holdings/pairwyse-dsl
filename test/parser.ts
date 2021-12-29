@@ -3,7 +3,9 @@ import { expect } from 'chai';
 import {
   AppMock, Context, Stack, StackValue__factory,
 } from '../typechain';
-import { checkStack, checkStackTail, hex4Bytes } from './helpers/utils';
+import {
+  checkStack, checkStackTail, hex4Bytes, hex4BytesShort,
+} from './helpers/utils';
 
 const NEXT_MONTH = Math.round((Date.now() + 1000 * 60 * 60 * 24 * 30) / 1000);
 const PREV_MONTH = Math.round((Date.now() - 1000 * 60 * 60 * 24 * 30) / 1000);
@@ -20,12 +22,11 @@ describe('Parser', () => {
     // Create StackValue Factory instance
     StackValue = await ethers.getContractFactory('StackValue');
 
-    externalApp = await ethers.getContractFactory('AppMock').then((o) => o.deploy());
-    extAppAddrHex = externalApp.address.slice(2);
-
     // Deploy App
     const AppCont = await ethers.getContractFactory('AppMock');
     app = await AppCont.deploy();
+    externalApp = app;
+    extAppAddrHex = externalApp.address.slice(2);
 
     // Create Context instance
     context = await ethers.getContractAt('Context', await app.ctx());
@@ -306,6 +307,54 @@ describe('Parser', () => {
       ]);
       await checkStack(StackValue, stack, 1, 1);
     });
+
+    describe('opLoadLocalAddress', () => {
+      it('addresses are equal', async () => {
+        await app.setStorageAddress(hex4Bytes('ADDR'), '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+        await app.setStorageAddress(hex4Bytes('ADDR2'), '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+
+        await app.exec(['loadLocal', 'address', 'ADDR', 'loadLocal', 'address', 'ADDR2', '==']);
+        await checkStack(StackValue, stack, 1, 1);
+      });
+
+      it('addresses are not equal', async () => {
+        await app.setStorageAddress(hex4Bytes('ADDR'), '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+        await app.setStorageAddress(hex4Bytes('ADDR2'), '0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836');
+
+        await app.exec(['loadLocal', 'address', 'ADDR', 'loadLocal', 'address', 'ADDR2', '==']);
+        await checkStack(StackValue, stack, 1, 0);
+      });
+    });
+
+    describe('opLoadLocalBytes32', () => {
+      it('bytes32 are equal', async () => {
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES'),
+          '0x1234500000000000000000000000000000000000000000000000000000000001',
+        );
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES2'),
+          '0x1234500000000000000000000000000000000000000000000000000000000001',
+        );
+
+        await app.exec(['loadLocal', 'bytes32', 'BYTES', 'loadLocal', 'bytes32', 'BYTES2', '==']);
+        await checkStack(StackValue, stack, 1, 1);
+      });
+
+      it('bytes32 are not equal', async () => {
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES'),
+          '0x1234500000000000000000000000000000000000000000000000000000000001',
+        );
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES2'),
+          '0x1234500000000000000000000000000000000000000000000000000000000011',
+        );
+
+        await app.exec(['loadLocal', 'bytes32', 'BYTES', 'loadLocal', 'bytes32', 'BYTES2', '==']);
+        await checkStack(StackValue, stack, 1, 0);
+      });
+    });
   });
 
   describe('loadRemote', async () => {
@@ -365,6 +414,95 @@ describe('Parser', () => {
         '!=',
       ]);
       await checkStack(StackValue, stack, 1, 1);
+    });
+
+    describe('opLoadRemoteAddress', () => {
+      it('addresses are equal', async () => {
+        console.log({ extAppAddrHex });
+        await externalApp.setStorageAddress(hex4Bytes('ADDR'), '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+        await externalApp.setStorageAddress(hex4Bytes('ADDR2'), '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+
+        await app.exec([
+          'loadRemote',
+          'address',
+          'ADDR',
+          extAppAddrHex,
+          'loadRemote',
+          'address',
+          'ADDR2',
+          extAppAddrHex,
+          '==',
+        ]);
+        await checkStack(StackValue, stack, 1, 1);
+      });
+
+      it('different addresses are not equal', async () => {
+        await externalApp.setStorageAddress(hex4Bytes('ADDR'), '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+        await externalApp.setStorageAddress(hex4Bytes('ADDR2'), '0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836');
+
+        await app.exec([
+          'loadRemote',
+          'address',
+          'ADDR',
+          extAppAddrHex,
+          'loadRemote',
+          'address',
+          'ADDR2',
+          extAppAddrHex,
+          '==',
+        ]);
+        await checkStack(StackValue, stack, 1, 0);
+      });
+    });
+
+    describe('opLoadRemoteBytes32', () => {
+      it('bytes32 are equal', async () => {
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES'),
+          '0x1234500000000000000000000000000000000000000000000000000000000001',
+        );
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES2'),
+          '0x1234500000000000000000000000000000000000000000000000000000000001',
+        );
+
+        await app.exec([
+          'loadRemote',
+          'bytes32',
+          'BYTES',
+          extAppAddrHex,
+          'loadRemote',
+          'bytes32',
+          'BYTES2',
+          extAppAddrHex,
+          '==',
+        ]);
+        await checkStack(StackValue, stack, 1, 1);
+      });
+
+      it('bytes32 are not equal', async () => {
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES'),
+          '0x1234500000000000000000000000000000000000000000000000000000000001',
+        );
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES2'),
+          '0x1234500000000000000000000000000000000000000000000000000000000011',
+        );
+
+        await app.exec([
+          'loadRemote',
+          'bytes32',
+          'BYTES',
+          extAppAddrHex,
+          'loadRemote',
+          'bytes32',
+          'BYTES2',
+          extAppAddrHex,
+          '==',
+        ]);
+        await checkStack(StackValue, stack, 1, 0);
+      });
     });
   });
 

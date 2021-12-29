@@ -130,7 +130,7 @@ contract Parser is StringUtils, Storage {
     function parseOpcodeWithParams() internal {
         string storage cmd = nextCmd();
         bytes1 opcode = ctx.opCodeByName(cmd);
-        require(opcode != 0x0, "Parser: invalid command found");
+        require(opcode != 0x0, string(abi.encodePacked("Parser: '", cmd, "' command is unknown")));
         program = bytes.concat(program, opcode);
 
         bytes4 selector = ctx.asmSelectors(cmd);

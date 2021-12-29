@@ -420,6 +420,56 @@ describe('Eval', () => {
         });
       });
 
+      describe('opLoadRemoteAddress', () => {
+        it('addresses are equal', async () => {
+          // Set ADDR
+          const addrBytes = hex4Bytes('ADDR');
+          await app.setStorageAddress(addrBytes, '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+
+          // Set ADDR2
+          const addrBytes2 = hex4Bytes('ADDR2');
+          await app.setStorageAddress(addrBytes2, '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+
+          /**
+           * The program is:
+           * `
+           *  opLoadRemoteAddress ADDR
+           *  opLoadRemoteAddress ADDR2
+           *  =
+           * `
+           */
+          const addr = addrBytes.substring(2, 10);
+          const addr2 = addrBytes2.substring(2, 10);
+          await context.setProgram(`0x1c03${addr}${appAddr}1c03${addr2}${appAddr}01`);
+          await app.eval();
+          await checkStack(StackValue, stack, 1, 1);
+        });
+
+        it('different addresses are not equal', async () => {
+          // Set A
+          const addrBytes = hex4Bytes('A');
+          await app.setStorageAddress(addrBytes, '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+
+          // Set A2
+          const addrBytes2 = hex4Bytes('A2');
+          await app.setStorageAddress(addrBytes2, '0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836');
+
+          /**
+           * The program is:
+           * `
+           *  opLoadRemoteAddress A
+           *  opLoadRemoteAddress A2
+           *  =
+           * `
+           */
+          const addr = addrBytes.substring(2, 10);
+          const addr2 = addrBytes2.substring(2, 10);
+          await context.setProgram(`0x1c03${addr}${appAddr}1c03${addr2}${appAddr}01`);
+          await app.eval();
+          await checkStack(StackValue, stack, 1, 0);
+        });
+      });
+
       describe('opLoadRemoteBytes32', () => {
         it('bytes32 are equal', async () => {
           // Set BYTES
@@ -534,72 +584,6 @@ describe('Eval', () => {
           const bool2 = boolBytes2.substring(2, 10);
           await context.setProgram(
             `0x1c02${bool}${appAddr}1c02${bool2}${appAddr}14`,
-          );
-          await app.eval();
-          await checkStack(StackValue, stack, 1, 0);
-        });
-      });
-
-      describe('opLoadRemoteAddress', () => {
-        it('addresses are equal', async () => {
-          // Set ADDR
-          const addrBytes = hex4Bytes('ADDR');
-          await app.setStorageAddress(
-            addrBytes,
-            '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5',
-          );
-
-          // Set ADDR2
-          const addrBytes2 = hex4Bytes('ADDR2');
-          await app.setStorageAddress(
-            addrBytes2,
-            '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5',
-          );
-
-          /**
-           * The program is:
-           * `
-           *  opLoadRemoteAddress ADDR
-           *  opLoadRemoteAddress ADDR2
-           *  =
-           * `
-           */
-          const addr = addrBytes.substring(2, 10);
-          const addr2 = addrBytes2.substring(2, 10);
-          await context.setProgram(
-            `0x1c03${addr}${appAddr}1c03${addr2}${appAddr}01`,
-          );
-          await app.eval();
-          await checkStack(StackValue, stack, 1, 1);
-        });
-
-        it('different addresses are not equal', async () => {
-          // Set A
-          const addrBytes = hex4Bytes('A');
-          await app.setStorageAddress(
-            addrBytes,
-            '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5',
-          );
-
-          // Set A2
-          const addrBytes2 = hex4Bytes('A2');
-          await app.setStorageAddress(
-            addrBytes2,
-            '0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836',
-          );
-
-          /**
-           * The program is:
-           * `
-           *  opLoadRemoteAddress A
-           *  opLoadRemoteAddress A2
-           *  =
-           * `
-           */
-          const addr = addrBytes.substring(2, 10);
-          const addr2 = addrBytes2.substring(2, 10);
-          await context.setProgram(
-            `0x1c03${addr}${appAddr}1c03${addr2}${appAddr}01`,
           );
           await app.eval();
           await checkStack(StackValue, stack, 1, 0);
