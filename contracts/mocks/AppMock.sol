@@ -8,4 +8,8 @@ contract AppMock is Parser {
     using UnstructuredStorage for bytes32;
 
     bytes4 public constant MIN_BLOCK = bytes4(keccak256("MIN_BLOCK"));
+
+    /* solhint-disable no-empty-blocks */
+    receive() external payable {}
+    /* solhint-enable no-empty-blocks */
 }

@@ -4,7 +4,7 @@ import {
   AppMock, Context, Stack, StackValue__factory,
 } from '../typechain';
 import {
-  checkStack, checkStackTail, hex4Bytes, hex4BytesShort,
+  checkStack, checkStackTail, hex4Bytes,
 } from './helpers/utils';
 
 const NEXT_MONTH = Math.round((Date.now() + 1000 * 60 * 60 * 24 * 30) / 1000);
@@ -252,6 +252,23 @@ describe('Parser', () => {
     const [sender] = await ethers.getSigners();
     await app.setStorageAddress(hex4Bytes('SENDER'), sender.address);
     await app.connect(sender).exec(['loadLocal', 'address', 'SENDER', 'msgSender', '==']);
+    await checkStack(StackValue, stack, 1, 1);
+  });
+
+  it('sendEth', async () => {
+    const [vault, receiver] = await ethers.getSigners();
+    await app.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
+    const oneEthBN = ethers.utils.parseEther('1');
+
+    // No ETH on the contract
+    await app.exec(['sendEth', 'RECEIVER', oneEthBN.toString()]);
+    await checkStack(StackValue, stack, 1, 0);
+
+    // Enough ETH on the contract
+    await vault.sendTransaction({ to: app.address, value: oneEthBN });
+    await expect(
+      await app.exec(['sendEth', 'RECEIVER', oneEthBN.toString()]),
+    ).to.changeEtherBalance(receiver, oneEthBN);
     await checkStack(StackValue, stack, 1, 1);
   });
 

@@ -16,6 +16,9 @@ contract Opcodes {
         ctx = _ctx;
     }
 
+    /* solhint-disable-next-line no-empty-blocks */
+    receive() external payable {}
+
     function opLoadLocalAny() public {
         bytes4 selector = nextBranchSelector("loadLocal");
         mustCall(address(this), abi.encodeWithSelector(selector));
@@ -207,6 +210,16 @@ contract Opcodes {
     }
 
     function opUint256() public {
+        putUint256ToStack(opUint256Get());
+    }
+
+    function opSendEth() public {
+        address payable receiver = payable(address(uint160(uint256(opLoadLocalGet("getStorageAddress(bytes32)")))));
+        uint256 amount = opUint256Get();
+        putUint256ToStack(receiver.send(amount) ? 1 : 0);
+    }
+
+    function opUint256Get() private returns(uint256) {
         bytes memory data = nextBytes(32);
 
         // Convert bytes to bytes32
@@ -215,7 +228,7 @@ contract Opcodes {
             result := mload(add(data, 0x20))
         }
 
-        putUint256ToStack(uint256(result));
+        return uint256(result);
     }
 
     function putUint256ToStack(uint256 result) private {
@@ -243,7 +256,7 @@ contract Opcodes {
         require(success, "call not success");
     }
 
-    function opLoadLocal(string memory funcSignature) private {
+    function opLoadLocalGet(string memory funcSignature) private returns(bytes32 result) {
         bytes memory varName = nextBytes(4);
 
         // Convert bytes to bytes32
@@ -259,13 +272,13 @@ contract Opcodes {
         require(success, "Can't call a function");
 
         // Convert bytes to bytes32
-        bytes32 result;
         assembly {
             result := mload(add(data, 0x20))
         }
+    }
 
-        // console.logBytes32(result);
-
+    function opLoadLocal(string memory funcSignature) private {
+        bytes32 result = opLoadLocalGet(funcSignature);
         putUint256ToStack(uint256(result));
     }
 

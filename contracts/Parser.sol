@@ -75,6 +75,19 @@ contract Parser is StringUtils, Storage {
         program = bytes.concat(program, bytes32(value));
     }
 
+    function asmAddress() public {
+        parseVariable();
+        asmUint256();
+        // Note: this function may cost many gas. But the contract that will execute sendEth function will need to have
+        // that ETH. So one solution is to transfer ETH to Opcodes contract (that executes sendEth function) or to move
+        // all execution (and evaluation logic) of sendEth function to Parser contract (that is less desirable)
+        transferAllEth(payable(address(opcodes)));
+    }
+
+    function transferAllEth(address payable receiver) internal {
+        receiver.transfer(address(this).balance);
+    }
+
     function initOpcodes() internal {
         // Opcodes
         ctx.addOpcode("==", 0x01, opcodes.opEq.selector, 0x0);
@@ -94,6 +107,7 @@ contract Parser is StringUtils, Storage {
         ctx.addOpcode("bool", 0x18, opcodes.opBool.selector, this.asmBool.selector);
         ctx.addOpcode("uint256", 0x1a, opcodes.opUint256.selector, this.asmUint256.selector);
         ctx.addOpcode("msgSender", 0x1d, opcodes.opMsgSender.selector, 0x0);
+        ctx.addOpcode("sendEth", 0x1e, opcodes.opSendEth.selector, this.asmAddress.selector);
 
         // complex opcodes with sub opcodes (branches)
         string memory name = "loadLocal";
@@ -136,7 +150,7 @@ contract Parser is StringUtils, Storage {
         bytes4 selector = ctx.asmSelectors(cmd);
         if (selector != 0x0) {
             (bool success, ) = address(this).delegatecall(abi.encodeWithSelector(selector));
-            require(success, "delegatecall not success");
+            require(success, "Parser: delegatecall to asmSelector failed");
         }
         // if no selector then opcode without params
     }
