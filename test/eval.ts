@@ -4,30 +4,22 @@ import {
   ContextMock,
   StackValue__factory,
   Stack,
-  ExternalEvalAppMock,
   EvalAppMock,
-  Opcodes,
 } from '../typechain';
 import { checkStack, hex4Bytes } from './helpers/utils';
 
-describe('Context', () => {
+describe('Eval', () => {
   let context: ContextMock;
-  let opcodes: Opcodes;
   let stack: Stack;
   let app: EvalAppMock;
-  let externalApp: ExternalEvalAppMock;
   let StackValue: StackValue__factory;
 
   beforeEach(async () => {
     // Create StackValue Factory instance
     StackValue = await ethers.getContractFactory('StackValue');
 
-    // use Parser for init opcodes
-    const parser = await ethers.getContractFactory('Parser').then((o) => o.deploy());
-    const ctxAddress = await parser.ctx();
-    const opcodesAddress = await parser.opcodes();
-
-    externalApp = await ethers.getContractFactory('ExternalEvalAppMock').then((o) => o.deploy(ctxAddress, opcodesAddress));
+    // Deploy Parser
+    const parser = await (await ethers.getContractFactory('Parser')).deploy();
 
     // Deploy App
     const AppCont = await ethers.getContractFactory('EvalAppMock');
@@ -69,7 +61,7 @@ describe('Context', () => {
       await checkStack(StackValue, stack, 1, 1);
     });
 
-    describe.skip('Load local', () => {
+    describe('Load local', () => {
       describe('opLoadLocalUint256', () => {
         it('17 > 15', async () => {
           // Set NUMBER
@@ -88,10 +80,9 @@ describe('Context', () => {
            *  >
            * `
            */
-          const number = bytes32Number.substr(2, 8);
-          const number2 = bytes32Number2.substr(2, 8);
-          // console.log(`0x0a${number}0a${number2}04`);
-          await context.setProgram(`0x0a${number}0a${number2}04`);
+          const number = bytes32Number.substring(2, 10);
+          const number2 = bytes32Number2.substring(2, 10);
+          await context.setProgram(`0x1b01${number}1b01${number2}04`);
           await app.eval();
           await checkStack(StackValue, stack, 1, 1);
         });
@@ -113,9 +104,9 @@ describe('Context', () => {
            *  >
            * `
            */
-          const number = bytes32Number.substr(2, 8);
-          const number2 = bytes32Number2.substr(2, 8);
-          await context.setProgram(`0x0a${number}0a${number2}06`);
+          const number = bytes32Number.substring(2, 10);
+          const number2 = bytes32Number2.substring(2, 10);
+          await context.setProgram(`0x1b01${number}1b01${number2}06`);
           await app.eval();
           await checkStack(StackValue, stack, 1, 0);
         });
@@ -137,9 +128,9 @@ describe('Context', () => {
            *  >
            * `
            */
-          const number = bytes32Number.substr(2, 8);
-          const number2 = bytes32Number2.substr(2, 8);
-          await context.setProgram(`0x0a${number}0a${number2}01`);
+          const number = bytes32Number.substring(2, 10);
+          const number2 = bytes32Number2.substring(2, 10);
+          await context.setProgram(`0x1b01${number}1b01${number2}01`);
           await app.eval();
           await checkStack(StackValue, stack, 1, 1);
         });
@@ -169,9 +160,9 @@ describe('Context', () => {
            *  =
            * `
            */
-          const bytes = bytes32Bytes.substr(2, 8);
-          const bytes2 = bytes32Bytes2.substr(2, 8);
-          await context.setProgram(`0x0c${bytes}0c${bytes2}01`);
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
+          await context.setProgram(`0x1b04${bytes}1b04${bytes2}01`);
           await app.eval();
           await checkStack(StackValue, stack, 1, 1);
         });
@@ -199,9 +190,9 @@ describe('Context', () => {
            *  =
            * `
            */
-          const bytes = bytes32Bytes.substr(2, 8);
-          const bytes2 = bytes32Bytes2.substr(2, 8);
-          await context.setProgram(`0x0c${bytes}0c${bytes2}01`);
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
+          await context.setProgram(`0x1b04${bytes}1b04${bytes2}01`);
           await app.eval();
           await checkStack(StackValue, stack, 1, 0);
         });
@@ -231,9 +222,9 @@ describe('Context', () => {
            *  =
            * `
            */
-          const bytes = bytes32Bytes.substr(2, 8);
-          const bytes2 = bytes32Bytes2.substr(2, 8);
-          await context.setProgram(`0x10${bytes}10${bytes2}01`);
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
+          await context.setProgram(`0x1b03${bytes}1b03${bytes2}01`);
           await app.eval();
           await checkStack(StackValue, stack, 1, 1);
         });
@@ -261,9 +252,9 @@ describe('Context', () => {
            *  =
            * `
            */
-          const bytes = bytes32Bytes.substr(2, 8);
-          const bytes2 = bytes32Bytes2.substr(2, 8);
-          await context.setProgram(`0x10${bytes}10${bytes2}01`);
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
+          await context.setProgram(`0x1b03${bytes}1b03${bytes2}01`);
           await app.eval();
           await checkStack(StackValue, stack, 1, 0);
         });
@@ -287,9 +278,9 @@ describe('Context', () => {
            *  =
            * `
            */
-          const bytes = bytes32Bytes.substr(2, 8);
-          const bytes2 = bytes32Bytes2.substr(2, 8);
-          await context.setProgram(`0x0e${bytes}0e${bytes2}01`);
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
+          await context.setProgram(`0x1b02${bytes}1b02${bytes2}01`);
           await app.eval();
           await checkStack(StackValue, stack, 1, 1);
         });
@@ -311,9 +302,9 @@ describe('Context', () => {
            *  =
            * `
            */
-          const bytes = bytes32Bytes.substr(2, 8);
-          const bytes2 = bytes32Bytes2.substr(2, 8);
-          await context.setProgram(`0x0e${bytes}0e${bytes2}12`);
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
+          await context.setProgram(`0x1b02${bytes}1b02${bytes2}12`);
           await app.eval();
           await checkStack(StackValue, stack, 1, 1);
         });
@@ -335,50 +326,29 @@ describe('Context', () => {
            *  =
            * `
            */
-          const bytes = bytes32Bytes.substr(2, 8);
-          const bytes2 = bytes32Bytes2.substr(2, 8);
-          await context.setProgram(`0x0e${bytes}0e${bytes2}01`);
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
+          await context.setProgram(`0x1b02${bytes}1b02${bytes2}01`);
           await app.eval();
           await checkStack(StackValue, stack, 1, 0);
         });
       });
     });
 
-    describe.skip('Load remote', () => {
-      let externalAppAddr: string;
+    describe('Load remote', () => {
+      let appAddr: string;
 
-      beforeEach(async () => {
-        // Deploy user external application
-        const ExternalAppCont = await ethers.getContractFactory(
-          'ExternalEvalAppMock',
-        );
-        externalApp = await ExternalAppCont.deploy(
-          context.address,
-          opcodes.address,
-        );
-
-        // Create Context instance
-        const contextAddress = await externalApp.ctx();
-        const ContextCont = await ethers.getContractFactory('ContextMock');
-        context = ContextCont.attach(contextAddress);
-
-        // Create Stack instance
-        const StackCont = await ethers.getContractFactory('Stack');
-        const contextStackAddress = await context.stack();
-        stack = StackCont.attach(contextStackAddress);
-
-        externalAppAddr = externalApp.address.substr(2);
-      });
+      beforeEach(() => { appAddr = app.address.substring(2); });
 
       describe('opLoadRemoteUint256', () => {
         it('17 > 15', async () => {
           // Set N
           const bytes32Number = hex4Bytes('N');
-          await externalApp.setStorageUint256(bytes32Number, 17);
+          await app.setStorageUint256(bytes32Number, 17);
 
           // Set N2
           const bytes32Number2 = hex4Bytes('N2');
-          await externalApp.setStorageUint256(bytes32Number2, 15);
+          await app.setStorageUint256(bytes32Number2, 15);
 
           /**
            * The program is:
@@ -388,23 +358,23 @@ describe('Context', () => {
            *  >
            * `
            */
-          const number = bytes32Number.substr(2, 8);
-          const number2 = bytes32Number2.substr(2, 8);
+          const number = bytes32Number.substring(2, 10);
+          const number2 = bytes32Number2.substring(2, 10);
           await context.setProgram(
-            `0x0b${number}${externalAppAddr}0b${number2}${externalAppAddr}04`,
+            `0x1c01${number}${appAddr}1c01${number2}${appAddr}04`,
           );
-          await externalApp.eval();
+          await app.eval();
           await checkStack(StackValue, stack, 1, 1);
         });
 
         it('5 <= 3', async () => {
           // Set N
           const bytes32Number = hex4Bytes('N');
-          await externalApp.setStorageUint256(bytes32Number, 5);
+          await app.setStorageUint256(bytes32Number, 5);
 
           // Set N2
           const bytes32Number2 = hex4Bytes('N2');
-          await externalApp.setStorageUint256(bytes32Number2, 3);
+          await app.setStorageUint256(bytes32Number2, 3);
 
           /**
            * The program is:
@@ -414,23 +384,23 @@ describe('Context', () => {
            *  >
            * `
            */
-          const number = bytes32Number.substr(2, 8);
-          const number2 = bytes32Number2.substr(2, 8);
+          const number = bytes32Number.substring(2, 10);
+          const number2 = bytes32Number2.substring(2, 10);
           await context.setProgram(
-            `0x0b${number}${externalAppAddr}0b${number2}${externalAppAddr}06`,
+            `0x1c01${number}${appAddr}1c01${number2}${appAddr}06`,
           );
-          await externalApp.eval();
+          await app.eval();
           await checkStack(StackValue, stack, 1, 0);
         });
 
         it('12 = 12', async () => {
           // Set N
           const bytes32Number = hex4Bytes('N');
-          await externalApp.setStorageUint256(bytes32Number, 12);
+          await app.setStorageUint256(bytes32Number, 12);
 
           // Set N2
           const bytes32Number2 = hex4Bytes('N2');
-          await externalApp.setStorageUint256(bytes32Number2, 12);
+          await app.setStorageUint256(bytes32Number2, 12);
 
           /**
            * The program is:
@@ -440,12 +410,12 @@ describe('Context', () => {
            *  >
            * `
            */
-          const number = bytes32Number.substr(2, 8);
-          const number2 = bytes32Number2.substr(2, 8);
+          const number = bytes32Number.substring(2, 10);
+          const number2 = bytes32Number2.substring(2, 10);
           await context.setProgram(
-            `0x0b${number}${externalAppAddr}0b${number2}${externalAppAddr}01`,
+            `0x1c01${number}${appAddr}1c01${number2}${appAddr}01`,
           );
-          await externalApp.eval();
+          await app.eval();
           await checkStack(StackValue, stack, 1, 1);
         });
       });
@@ -454,14 +424,14 @@ describe('Context', () => {
         it('bytes32 are equal', async () => {
           // Set BYTES
           const bytes32Bytes = hex4Bytes('BYTES');
-          await externalApp.setStorageBytes32(
+          await app.setStorageBytes32(
             bytes32Bytes,
             '0x1234500000000000000000000000000000000000000000000000000000000001',
           );
 
           // Set BYTES2
           const bytes32Bytes2 = hex4Bytes('BYTES2');
-          await externalApp.setStorageBytes32(
+          await app.setStorageBytes32(
             bytes32Bytes2,
             '0x1234500000000000000000000000000000000000000000000000000000000001',
           );
@@ -474,26 +444,26 @@ describe('Context', () => {
            *  =
            * `
            */
-          const bytes = bytes32Bytes.substr(2, 8);
-          const bytes2 = bytes32Bytes2.substr(2, 8);
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
           await context.setProgram(
-            `0x0d${bytes}${externalAppAddr}0d${bytes2}${externalAppAddr}01`,
+            `0x1c04${bytes}${appAddr}1c04${bytes2}${appAddr}01`,
           );
-          await externalApp.eval();
+          await app.eval();
           await checkStack(StackValue, stack, 1, 1);
         });
 
         it('bytes32 are not equal', async () => {
           // Set BYTES
           const bytes32Bytes = hex4Bytes('BYTES');
-          await externalApp.setStorageBytes32(
+          await app.setStorageBytes32(
             bytes32Bytes,
             '0x1234500000000000000000000000000000000000000000000000000000000001',
           );
 
           // Set BYTES2
           const bytes32Bytes2 = hex4Bytes('BYTES2');
-          await externalApp.setStorageBytes32(
+          await app.setStorageBytes32(
             bytes32Bytes2,
             '0x1234500000000000000000000000000000000000000000000000000000000011',
           );
@@ -506,12 +476,12 @@ describe('Context', () => {
            *  =
            * `
            */
-          const bytes = bytes32Bytes.substr(2, 8);
-          const bytes2 = bytes32Bytes2.substr(2, 8);
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
           await context.setProgram(
-            `0x0d${bytes}${externalAppAddr}0d${bytes2}${externalAppAddr}01`,
+            `0x1c04${bytes}${appAddr}1c04${bytes2}${appAddr}01`,
           );
-          await externalApp.eval();
+          await app.eval();
           await checkStack(StackValue, stack, 1, 0);
         });
       });
@@ -520,11 +490,11 @@ describe('Context', () => {
         it('true == true', async () => {
           // Set BOOL
           const boolBytes = hex4Bytes('BOOL');
-          await externalApp.setStorageBool(boolBytes, true);
+          await app.setStorageBool(boolBytes, true);
 
           // Set BOOL2
           const boolBytes2 = hex4Bytes('BOOL2');
-          await externalApp.setStorageBool(boolBytes2, true);
+          await app.setStorageBool(boolBytes2, true);
 
           /**
            * The program is:
@@ -534,23 +504,23 @@ describe('Context', () => {
            *  =
            * `
            */
-          const bool = boolBytes.substr(2, 8);
-          const bool2 = boolBytes2.substr(2, 8);
+          const bool = boolBytes.substring(2, 10);
+          const bool2 = boolBytes2.substring(2, 10);
           await context.setProgram(
-            `0x0f${bool}${externalAppAddr}0f${bool2}${externalAppAddr}01`,
+            `0x1c02${bool}${appAddr}1c02${bool2}${appAddr}01`,
           );
-          await externalApp.eval();
+          await app.eval();
           await checkStack(StackValue, stack, 1, 1);
         });
 
         it('true != true', async () => {
           // Set BOOL
           const boolBytes = hex4Bytes('BOOL');
-          await externalApp.setStorageBool(boolBytes, true);
+          await app.setStorageBool(boolBytes, true);
 
           // Set BOOL2
           const boolBytes2 = hex4Bytes('BOOL2');
-          await externalApp.setStorageBool(boolBytes2, true);
+          await app.setStorageBool(boolBytes2, true);
 
           /**
            * The program is:
@@ -560,12 +530,12 @@ describe('Context', () => {
            *  !=
            * `
            */
-          const bool = boolBytes.substr(2, 8);
-          const bool2 = boolBytes2.substr(2, 8);
+          const bool = boolBytes.substring(2, 10);
+          const bool2 = boolBytes2.substring(2, 10);
           await context.setProgram(
-            `0x0f${bool}${externalAppAddr}0f${bool2}${externalAppAddr}14`,
+            `0x1c02${bool}${appAddr}1c02${bool2}${appAddr}14`,
           );
-          await externalApp.eval();
+          await app.eval();
           await checkStack(StackValue, stack, 1, 0);
         });
       });
@@ -574,14 +544,14 @@ describe('Context', () => {
         it('addresses are equal', async () => {
           // Set ADDR
           const addrBytes = hex4Bytes('ADDR');
-          await externalApp.setStorageAddress(
+          await app.setStorageAddress(
             addrBytes,
             '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5',
           );
 
           // Set ADDR2
           const addrBytes2 = hex4Bytes('ADDR2');
-          await externalApp.setStorageAddress(
+          await app.setStorageAddress(
             addrBytes2,
             '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5',
           );
@@ -594,26 +564,26 @@ describe('Context', () => {
            *  =
            * `
            */
-          const addr = addrBytes.substr(2, 8);
-          const addr2 = addrBytes2.substr(2, 8);
+          const addr = addrBytes.substring(2, 10);
+          const addr2 = addrBytes2.substring(2, 10);
           await context.setProgram(
-            `0x11${addr}${externalAppAddr}11${addr2}${externalAppAddr}01`,
+            `0x1c03${addr}${appAddr}1c03${addr2}${appAddr}01`,
           );
-          await externalApp.eval();
+          await app.eval();
           await checkStack(StackValue, stack, 1, 1);
         });
 
         it('different addresses are not equal', async () => {
           // Set A
           const addrBytes = hex4Bytes('A');
-          await externalApp.setStorageAddress(
+          await app.setStorageAddress(
             addrBytes,
             '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5',
           );
 
           // Set A2
           const addrBytes2 = hex4Bytes('A2');
-          await externalApp.setStorageAddress(
+          await app.setStorageAddress(
             addrBytes2,
             '0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836',
           );
@@ -626,12 +596,12 @@ describe('Context', () => {
            *  =
            * `
            */
-          const addr = addrBytes.substr(2, 8);
-          const addr2 = addrBytes2.substr(2, 8);
+          const addr = addrBytes.substring(2, 10);
+          const addr2 = addrBytes2.substring(2, 10);
           await context.setProgram(
-            `0x11${addr}${externalAppAddr}11${addr2}${externalAppAddr}01`,
+            `0x1c03${addr}${appAddr}1c03${addr2}${appAddr}01`,
           );
-          await externalApp.eval();
+          await app.eval();
           await checkStack(StackValue, stack, 1, 0);
         });
       });

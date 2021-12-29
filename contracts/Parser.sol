@@ -37,6 +37,7 @@ contract Parser is StringUtils, Storage {
             parseOpcodeWithParams();
         }
 
+        // console.logBytes(program);
         ctx.setProgram(program);
     }
 
@@ -99,15 +100,15 @@ contract Parser is StringUtils, Storage {
         ctx.addOpcode(name, 0x1b, opcodes.opLoadLocalAny.selector, this.asmLoadLocal.selector);
         ctx.addOpcodeBranch(name, "uint256", 0x01, opcodes.opLoadLocalUint256.selector);
         ctx.addOpcodeBranch(name, "bool", 0x02, opcodes.opLoadLocalBool.selector);
-        // TODO: add address
-        // TODO: add bytes32
+        ctx.addOpcodeBranch(name, "address", 0x03, opcodes.opLoadLocalAddress.selector);
+        ctx.addOpcodeBranch(name, "bytes32", 0x04, opcodes.opLoadLocalBytes32.selector);
 
         name = "loadRemote";
         ctx.addOpcode(name, 0x1c, opcodes.opLoadRemoteAny.selector, this.asmLoadRemote.selector);
         ctx.addOpcodeBranch(name, "uint256", 0x01, opcodes.opLoadRemoteUint256.selector);
         ctx.addOpcodeBranch(name, "bool", 0x02, opcodes.opLoadRemoteBool.selector);
-        // TODO: add address
-        // TODO: add bytes32
+        ctx.addOpcodeBranch(name, "address", 0x03, opcodes.opLoadRemoteAddress.selector);
+        ctx.addOpcodeBranch(name, "bytes32", 0x04, opcodes.opLoadRemoteBytes32.selector);
     }
 
     function nextCmd() internal returns (string storage) {

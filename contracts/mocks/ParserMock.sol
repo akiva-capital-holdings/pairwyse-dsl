@@ -8,8 +8,6 @@ contract ParserMock is Parser {
         delete program;
         cmdIdx = 0;
         cmds = code;
-        // ctx.stack().clean();
-        // ctx.setPc(0);
 
         while(cmdIdx < cmds.length) {
             parseOpcodeWithParams();
