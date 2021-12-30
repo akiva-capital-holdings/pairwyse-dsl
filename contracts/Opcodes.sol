@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./interfaces/IContext.sol";
 import "./interfaces/IStorage.sol";
+import "./interfaces/IERC20.sol";
 import "./libs/UnstructuredStorage.sol";
 import {StackValue} from "./Stack.sol";
 import "hardhat/console.sol";
@@ -214,9 +215,33 @@ contract Opcodes {
     }
 
     function opSendEth() public {
-        address payable receiver = payable(address(uint160(uint256(opLoadLocalGet("getStorageAddress(bytes32)")))));
+        address payable recipient = payable(address(uint160(uint256(opLoadLocalGet("getStorageAddress(bytes32)")))));
         uint256 amount = opUint256Get();
-        putUint256ToStack(receiver.send(amount) ? 1 : 0);
+        putUint256ToStack(recipient.send(amount) ? 1 : 0);
+    }
+
+    function opTransfer() public {
+        address token = opAddressGet();
+        address payable recipient = payable(address(uint160(uint256(opLoadLocalGet("getStorageAddress(bytes32)")))));
+        uint256 amount = opUint256Get();
+        console.log("token");
+        console.log(token);
+        console.log("recipient");
+        console.log(recipient);
+        console.log("amount");
+        console.log(amount);
+
+        IERC20(token).transfer(recipient, amount);
+
+        putUint256ToStack(1);
+    }
+
+    function opTransferFrom() public {
+        // TODO
+        // uint256 allowance = IERC20(token).allowance(ctx.msgSender(), address(this));
+        // console.log("allowance");
+        // console.log(allowance);
+        // require(allowance >= amount, "Opcodes: not enought allowance to transfer tokens");
     }
 
     function opUint256Get() private returns(uint256) {
@@ -275,6 +300,29 @@ contract Opcodes {
         assembly {
             result := mload(add(data, 0x20))
         }
+    }
+
+    function opAddressGet() private returns(address) {
+        bytes memory contractAddrBytes = nextBytes(20);
+
+        // Convert bytes to bytes32
+        bytes32 contractAddrB32;
+        assembly {
+            contractAddrB32 := mload(add(contractAddrBytes, 0x20))
+        }
+        /**
+         * Shift bytes to the left so that
+         * 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512000000000000000000000000
+         * transforms into
+         * 0x000000000000000000000000e7f1725e7734ce288f8367e1bb143e90bb3f0512
+         * This is needed to later conversion from bytes32 to address
+         */
+        contractAddrB32 >>= 96;
+
+        // console.log("contractAddrB32");
+        // console.logBytes32(contractAddrB32);
+
+        return address(uint160(uint256(contractAddrB32)));
     }
 
     function opLoadLocal(string memory funcSignature) private {

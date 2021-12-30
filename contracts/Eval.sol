@@ -37,7 +37,7 @@ contract Eval {
             // console.logBytes1(opcodeByte1);
 
             bytes4 selector = ctx.selectorByOpcode(opcodeByte1);
-            require(selector != 0x0, "not found selector for opcode");
+            require(selector != 0x0, "Eval: did not find selector for opcode");
 
             ctx.incPc(1);
 

@@ -272,6 +272,24 @@ describe('Parser', () => {
     await checkStack(StackValue, stack, 1, 1);
   });
 
+  it('transfer', async () => {
+    const [, receiver] = await ethers.getSigners(); // TODO: use real token address
+
+    const Token = await ethers.getContractFactory('Token');
+    const dai = await Token.deploy(ethers.utils.parseEther('1000'));
+
+    const oneDAI = ethers.utils.parseEther('1');
+    await dai.transfer(app.address, oneDAI);
+    expect(await dai.balanceOf(app.address)).to.equal(oneDAI);
+
+    await app.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
+    const DAI = dai.address.substring(2);
+
+    await app.exec(['transfer', DAI, 'RECEIVER', oneDAI.toString()]);
+    expect(await dai.balanceOf(receiver.address)).to.equal(oneDAI);
+    await checkStack(StackValue, stack, 1, 1);
+  });
+
   it('block number < block timestamp', async () => {
     await app.exec(['blockNumber', 'blockTimestamp', '<']);
     await checkStack(StackValue, stack, 1, 1);

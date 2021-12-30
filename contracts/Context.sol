@@ -35,7 +35,10 @@ contract Context is IContext {
     }
 
     function addOpcode(string memory name, bytes1 opcode, bytes4 opSelector, bytes4 asmSelector) public override {
-        require(opCodeByName[name] == bytes1(0) && selectorByOpcode[opcode] == bytes4(0), "Context: duplicate opcode name or code");
+        require(
+            opCodeByName[name] == bytes1(0) && selectorByOpcode[opcode] == bytes4(0),
+            "Context: duplicate opcode name or code"
+        );
         opCodeByName[name] = opcode;
         selectorByOpcode[opcode] = opSelector;
         asmSelectors[name] = asmSelector;

@@ -6,6 +6,7 @@ import "./Opcodes.sol";
 import "./Eval.sol";
 import "./helpers/StringUtils.sol";
 import "./helpers/Storage.sol";
+import "./interfaces/IERC20.sol";
 import "hardhat/console.sol";
 
 contract Parser is StringUtils, Storage {
@@ -75,7 +76,7 @@ contract Parser is StringUtils, Storage {
         program = bytes.concat(program, bytes32(value));
     }
 
-    function asmAddress() public {
+    function asmSend() public {
         parseVariable();
         asmUint256();
         // Note: this function may cost many gas. But the contract that will execute sendEth function will need to have
@@ -84,8 +85,29 @@ contract Parser is StringUtils, Storage {
         transferAllEth(payable(address(opcodes)));
     }
 
+    function asmTransfer() public {
+        address token = getAddress();
+        console.log("token");
+        console.log(token);
+        parseAddress();
+        parseVariable();
+        asmUint256();
+        transferAllERC20(token, address(opcodes));
+    }
+
+    function asmTransferFrom() public {
+        // TODO
+    }
+
     function transferAllEth(address payable receiver) internal {
         receiver.transfer(address(this).balance);
+    }
+
+    function transferAllERC20(address token, address receiver) internal {
+        uint256 balanceThis = IERC20(token).balanceOf(address(this));
+        console.log("balanceThis");
+        console.log(balanceThis);
+        IERC20(token).transfer(receiver, balanceThis);
     }
 
     function initOpcodes() internal {
@@ -107,7 +129,9 @@ contract Parser is StringUtils, Storage {
         ctx.addOpcode("bool", 0x18, opcodes.opBool.selector, this.asmBool.selector);
         ctx.addOpcode("uint256", 0x1a, opcodes.opUint256.selector, this.asmUint256.selector);
         ctx.addOpcode("msgSender", 0x1d, opcodes.opMsgSender.selector, 0x0);
-        ctx.addOpcode("sendEth", 0x1e, opcodes.opSendEth.selector, this.asmAddress.selector);
+        ctx.addOpcode("sendEth", 0x1e, opcodes.opSendEth.selector, this.asmSend.selector);
+        ctx.addOpcode("transfer", 0x1f, opcodes.opTransfer.selector, this.asmTransfer.selector);
+        ctx.addOpcode("transferFrom", 0x20, opcodes.opTransferFrom.selector, this.asmTransferFrom.selector);
 
         // complex opcodes with sub opcodes (branches)
         string memory name = "loadLocal";
@@ -139,6 +163,29 @@ contract Parser is StringUtils, Storage {
 
     function parseAddress() internal {
         program = bytes.concat(program, fromHex(nextCmd()));
+    }
+
+    function getAddress() internal view returns(address) {
+        bytes memory addrBytes = fromHex(cmds[cmdIdx]);
+        bytes32 addrB32;
+        // console.logBytes(addrBytes);
+
+        assembly {
+            addrB32 := mload(add(addrBytes, 0x20))
+        }
+        /**
+         * Shift bytes to the left so that
+         * 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512000000000000000000000000
+         * transforms into
+         * 0x000000000000000000000000e7f1725e7734ce288f8367e1bb143e90bb3f0512
+         * This is needed to later conversion from bytes32 to address
+         */
+        addrB32 >>= 96;
+
+        // console.log("addrB32");
+        // console.logBytes32(addrB32);
+
+        return address(uint160(uint256(addrB32)));
     }
 
     function parseOpcodeWithParams() internal {
