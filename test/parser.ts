@@ -563,7 +563,7 @@ describe('Parser', () => {
     await checkStack(StackValue, stack, 1, 1);
   });
 
-  describe('((time > init) and (time < expiry)) or ((risk == true) == false)', async () => {
+  describe('((time > init) and (time < expiry)) or (risk != true)', async () => {
     // (A & B) | C
     const code = [
       'blockTimestamp',
@@ -578,10 +578,7 @@ describe('Parser', () => {
 
       'loadLocal', 'bool', 'RISK',
       'bool', 'true',
-      '==',
-
-      'bool', 'false',
-      '==', // C
+      '!=', // C
 
       'or',
     ];
