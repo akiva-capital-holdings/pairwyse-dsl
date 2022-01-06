@@ -273,7 +273,7 @@ describe('Parser', () => {
   });
 
   it('transfer', async () => {
-    const [, receiver] = await ethers.getSigners(); // TODO: use real token address
+    const [, receiver] = await ethers.getSigners();
 
     const Token = await ethers.getContractFactory('Token');
     const dai = await Token.deploy(ethers.utils.parseEther('1000'));
