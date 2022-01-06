@@ -10,6 +10,9 @@ import "./helpers/Storage.sol";
 import "./interfaces/IERC20.sol";
 import "hardhat/console.sol";
 
+// TODO: make all quotes single
+// TODO: use only explicit imports i.e. import { X } from "./X.sol"
+
 contract Parser is Storage {
     using StringUtils for string;
 

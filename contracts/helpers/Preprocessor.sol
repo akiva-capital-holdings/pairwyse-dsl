@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import { Stack, StackValue } from "../helpers/Stack.sol";
 import { StringUtils } from "../libs/StringUtils.sol";
 
+import "hardhat/console.sol";
+
 contract Preprocessor {
     using StringUtils for string;
 
@@ -14,6 +16,36 @@ contract Preprocessor {
     constructor() {
         stack = new Stack();
         initOperatorPriorities();
+    }
+
+    function split(string memory program) external returns (string[] memory) {
+        delete result;
+        string memory buffer;
+
+        // console.log("program len: %s", program.length());
+        for (uint256 i = 0; i < program.length(); i++) {
+            string memory char = program.char(i);
+            // console.log("char: %s", char);
+            if (char.equal(" ") || char.equal("\n") || char.equal("(") || char.equal(")")) {
+                if (buffer.length() > 0) {
+                    result.push(buffer);
+                    buffer = "";
+                }
+            } else {
+                buffer = buffer.concat(char);
+            }
+
+            if (char.equal("(") || char.equal(")")) {
+                result.push(char);
+            }
+        }
+
+        if (buffer.length() > 0) {
+            result.push(buffer);
+            buffer = "";
+        }
+
+        return result;
     }
 
     function infixToPostfix(string[] memory code) external returns (string[] memory) {

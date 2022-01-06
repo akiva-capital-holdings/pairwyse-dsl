@@ -18,5 +18,5 @@ export interface TestOp {
 export interface Testcase {
   name: string;
   expr: string;
-  expected: string[];
+  expected: unknown[];
 }

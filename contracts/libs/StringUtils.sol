@@ -2,6 +2,24 @@
 pragma solidity ^0.8.0;
 
 library StringUtils {
+    function char(string memory s, uint256 index) public pure returns (string memory) {
+        bytes memory sBytes = new bytes(1);
+        sBytes[0] = bytes(s)[index];
+        return string(sBytes);
+    }
+
+    function equal(string memory s1, string memory s2) internal pure returns (bool) {
+        return keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2));
+    }
+
+    function length(string memory s) internal pure returns (uint256) {
+        return bytes(s).length;
+    }
+
+    function concat(string memory s1, string memory s2) internal pure returns (string memory) {
+        return string(abi.encodePacked(s1, s2));
+    }
+
     // Convert an hexadecimal string (without "0x" prefix) to raw bytes
     function fromHex(string memory s) public pure returns (bytes memory) {
         bytes memory ss = bytes(s);
@@ -11,10 +29,6 @@ library StringUtils {
             r[i] = bytes1(fromHexChar(uint8(ss[2 * i])) * 16 + fromHexChar(uint8(ss[2 * i + 1])));
         }
         return r;
-    }
-
-    function equal(string memory s1, string memory s2) internal pure returns (bool) {
-        return keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2));
     }
 
     // string decimal number to uint256
