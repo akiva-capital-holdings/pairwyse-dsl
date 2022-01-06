@@ -1,8 +1,6 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import {
-  AppMock, Context, Stack, StackValue__factory,
-} from "../typechain";
+import { AppMock, Context, Stack, StackValue__factory } from "../typechain";
 import { checkStack, checkStackTail, hex4Bytes } from "./utils/utils";
 
 const NEXT_MONTH = Math.round((Date.now() + 1000 * 60 * 60 * 24 * 30) / 1000);
@@ -252,7 +250,7 @@ describe("Parser", () => {
     await vault.sendTransaction({ to: app.address, value: oneEthBN });
     await expect(await app.exec(["sendEth", "RECEIVER", oneEthBN.toString()])).to.changeEtherBalance(
       receiver,
-      oneEthBN,
+      oneEthBN
     );
     await checkStack(StackValue, stack, 1, 1);
   });
@@ -353,11 +351,11 @@ describe("Parser", () => {
       it("bytes32 are equal", async () => {
         await app.setStorageBytes32(
           hex4Bytes("BYTES"),
-          "0x1234500000000000000000000000000000000000000000000000000000000001",
+          "0x1234500000000000000000000000000000000000000000000000000000000001"
         );
         await app.setStorageBytes32(
           hex4Bytes("BYTES2"),
-          "0x1234500000000000000000000000000000000000000000000000000000000001",
+          "0x1234500000000000000000000000000000000000000000000000000000000001"
         );
 
         await app.exec(["loadLocal", "bytes32", "BYTES", "loadLocal", "bytes32", "BYTES2", "=="]);
@@ -367,11 +365,11 @@ describe("Parser", () => {
       it("bytes32 are not equal", async () => {
         await app.setStorageBytes32(
           hex4Bytes("BYTES"),
-          "0x1234500000000000000000000000000000000000000000000000000000000001",
+          "0x1234500000000000000000000000000000000000000000000000000000000001"
         );
         await app.setStorageBytes32(
           hex4Bytes("BYTES2"),
-          "0x1234500000000000000000000000000000000000000000000000000000000011",
+          "0x1234500000000000000000000000000000000000000000000000000000000011"
         );
 
         await app.exec(["loadLocal", "bytes32", "BYTES", "loadLocal", "bytes32", "BYTES2", "=="]);
@@ -483,11 +481,11 @@ describe("Parser", () => {
       it("bytes32 are equal", async () => {
         await app.setStorageBytes32(
           hex4Bytes("BYTES"),
-          "0x1234500000000000000000000000000000000000000000000000000000000001",
+          "0x1234500000000000000000000000000000000000000000000000000000000001"
         );
         await app.setStorageBytes32(
           hex4Bytes("BYTES2"),
-          "0x1234500000000000000000000000000000000000000000000000000000000001",
+          "0x1234500000000000000000000000000000000000000000000000000000000001"
         );
 
         await app.exec([
@@ -507,11 +505,11 @@ describe("Parser", () => {
       it("bytes32 are not equal", async () => {
         await app.setStorageBytes32(
           hex4Bytes("BYTES"),
-          "0x1234500000000000000000000000000000000000000000000000000000000001",
+          "0x1234500000000000000000000000000000000000000000000000000000000001"
         );
         await app.setStorageBytes32(
           hex4Bytes("BYTES2"),
-          "0x1234500000000000000000000000000000000000000000000000000000000011",
+          "0x1234500000000000000000000000000000000000000000000000000000000011"
         );
 
         await app.exec([
@@ -554,7 +552,7 @@ describe("Parser", () => {
     await checkStack(StackValue, stack, 1, 1);
   });
 
-  describe("((time > init) and (time < expiry)) or (risk != true)", async () => {
+  describe("((time > init) and (time < expiry)) or (risk != true)", () => {
     // (A & B) | C
     const code = [
       "blockTimestamp",
@@ -581,13 +579,13 @@ describe("Parser", () => {
       "or",
     ];
 
-    const ITS_RISKY = 1;
-    const NOT_RISKY = 0;
+    const ITS_RISKY = true;
+    const NOT_RISKY = false;
 
-    async function testCase(INIT: number, EXPIRY: number, RISK: number, target: number) {
+    async function testCase(INIT: number, EXPIRY: number, RISK: boolean, target: number) {
       await app.setStorageUint256(hex4Bytes("INIT"), INIT);
       await app.setStorageUint256(hex4Bytes("EXPIRY"), EXPIRY);
-      await app.setStorageUint256(hex4Bytes("RISK"), RISK);
+      await app.setStorageBool(hex4Bytes("RISK"), RISK);
 
       await app.exec(code);
       await checkStack(StackValue, stack, 1, target);
@@ -604,7 +602,42 @@ describe("Parser", () => {
     it("((F & F) | F) == F", async () => testCase(NEXT_MONTH, PREV_MONTH, ITS_RISKY, 0));
   });
 
-  describe("Boolean Algebra", async () => {
+  describe("Execute high-level DSL", () => {
+    it("parenthesis", async () => {
+      await app.execHighLevel("(((uint256 1 or uint256 5) or uint256 7) and uint256 1)");
+      await checkStack(StackValue, stack, 1, 1);
+    });
+
+    it("parenthesis matter", async () => {
+      // no parenthesis
+      await app.execHighLevel("uint256 1 or uint256 0 or uint256 1 and uint256 0");
+      await checkStack(StackValue, stack, 1, 1);
+
+      await app.execHighLevel("((uint256 1 or uint256 0) or uint256 1) and uint256 0");
+      await checkStack(StackValue, stack, 1, 0);
+
+      await app.execHighLevel("(uint256 1 or uint256 0) or (uint256 1 and uint256 0)");
+      await checkStack(StackValue, stack, 1, 1);
+    });
+
+    it("complex expression", async () => {
+      const program = `
+      (((blockTimestamp >    loadLocal uint256 INIT)
+        and
+      (blockTimestamp <   loadLocal uint256 EXPIRY))
+        or
+      loadLocal bool RISK != bool true)`;
+
+      await app.setStorageUint256(hex4Bytes("INIT"), NEXT_MONTH);
+      await app.setStorageUint256(hex4Bytes("EXPIRY"), PREV_MONTH);
+      await app.setStorageBool(hex4Bytes("RISK"), false);
+
+      await app.execHighLevel(program);
+      await checkStack(StackValue, stack, 1, 1);
+    });
+  });
+
+  describe("Boolean Algebra", () => {
     describe("Commutative law", async () => {
       async function testCase(op: "and" | "or" | "xor", a: boolean, b: boolean) {
         await app.exec([

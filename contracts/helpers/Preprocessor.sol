@@ -18,7 +18,12 @@ contract Preprocessor {
         initOperatorPriorities();
     }
 
-    function split(string memory program) external returns (string[] memory) {
+    function transform(string memory program) external returns (string[] memory) {
+        string[] memory code = split(program);
+        return infixToPostfix(code);
+    }
+
+    function split(string memory program) public returns (string[] memory) {
         delete result;
         string memory buffer;
 
@@ -48,7 +53,7 @@ contract Preprocessor {
         return result;
     }
 
-    function infixToPostfix(string[] memory code) external returns (string[] memory) {
+    function infixToPostfix(string[] memory code) public returns (string[] memory) {
         delete result;
         string memory chunk;
         // console.log("\n\n", chunk);

@@ -54,8 +54,8 @@ contract Parser is Storage {
     }
 
     // TODO: test
-    function execInfix(string[] memory infixCode) public returns (bool result) {
-        string[] memory postfixCode = preprocessor.infixToPostfix(infixCode);
+    function execHighLevel(string memory code) public returns (bool result) {
+        string[] memory postfixCode = preprocessor.transform(code);
         return this.exec(postfixCode);
     }
 
