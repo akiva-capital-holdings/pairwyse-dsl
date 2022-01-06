@@ -7,38 +7,17 @@ import { StringUtils } from "../libs/StringUtils.sol";
 contract Preprocessor {
     using StringUtils for string;
 
+    Stack internal stack;
     mapping(string => uint8) internal opsPriors;
     string[] internal result;
 
     constructor() {
+        stack = new Stack();
         initOperatorPriorities();
     }
 
-    function initOperatorPriorities() private {
-        opsPriors["!"] = 4;
-
-        opsPriors["<"] = 3;
-        opsPriors[">"] = 3;
-        opsPriors["<="] = 3;
-        opsPriors[">="] = 3;
-        opsPriors["=="] = 3;
-        opsPriors["!="] = 3;
-
-        opsPriors["swap"] = 2;
-        opsPriors["and"] = 2;
-
-        opsPriors["xor"] = 1;
-        opsPriors["or"] = 1;
-    }
-
-    function pushStringToStack(Stack stack, string memory value) internal {
-        StackValue stackValue = new StackValue();
-        stackValue.setString(value);
-        stack.push(stackValue);
-    }
-
     function infixToPostfix(string[] memory code) external returns (string[] memory) {
-        Stack stack = new Stack();
+        delete result;
         string memory chunk;
         // console.log("\n\n", chunk);
 
@@ -73,6 +52,29 @@ contract Preprocessor {
         }
 
         return result;
+    }
+
+    function initOperatorPriorities() private {
+        opsPriors["!"] = 4;
+
+        opsPriors["<"] = 3;
+        opsPriors[">"] = 3;
+        opsPriors["<="] = 3;
+        opsPriors[">="] = 3;
+        opsPriors["=="] = 3;
+        opsPriors["!="] = 3;
+
+        opsPriors["swap"] = 2;
+        opsPriors["and"] = 2;
+
+        opsPriors["xor"] = 1;
+        opsPriors["or"] = 1;
+    }
+
+    function pushStringToStack(Stack stack_, string memory value) internal {
+        StackValue stackValue = new StackValue();
+        stackValue.setString(value);
+        stack_.push(stackValue);
     }
 
     function isOperator(string memory op) internal pure returns (bool) {

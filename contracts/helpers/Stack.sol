@@ -47,7 +47,6 @@ contract Stack {
         return stack.length;
     }
 
-    // TODO: rename to `view()`
     function seeLast() external view returns (StackValue) {
         return stack[stack.length - 1];
     }
@@ -63,7 +62,7 @@ contract Stack {
         return data;
     }
 
-    function clean() external {
+    function clear() external {
         delete stack;
     }
 }

@@ -17,7 +17,7 @@ contract ParserMock is Parser {
     }
 
     function reset() public {
-        ctx.stack().clean();
+        ctx.stack().clear();
         ctx.setPc(0);
     }
 }

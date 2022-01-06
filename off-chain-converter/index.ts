@@ -11,7 +11,7 @@ class Stack {
   }
 
   pop() {
-    // console.log(`stack pop: ${this.view()}`);
+    // console.log(`stack pop: ${this.seeLast()}`);
     return this.stack.pop();
   }
 
@@ -20,21 +20,22 @@ class Stack {
   }
 }
 
-const isOperator = (op: string) => ['==', '!', '<', '>', 'swap', '<=', '>=', 'xor', 'and', 'or', '!='].includes(op);
+const isOperator = (op: string) => ["==", "!", "<", ">", "swap", "<=", ">=", "xor", "and", "or", "!="].includes(op);
 
 const opsPriors = (op: string) => {
-  if (op === '!') return 4;
-  if (['<', '>', '>=', '<=', '==', '!='].includes(op)) return 3;
-  if (['swap', 'and'].includes(op)) return 2;
-  if (['xor', 'or'].includes(op)) return 1;
+  if (op === "!") return 4;
+  if (["<", ">", ">=", "<=", "==", "!="].includes(op)) return 3;
+  if (["swap", "and"].includes(op)) return 2;
+  if (["xor", "or"].includes(op)) return 1;
   return 0;
 };
 
-const transform = (expr: string) => expr
-  .replaceAll('(', '@(@')
-  .replaceAll(')', '@)@')
-  .split(/[@ \n]/g)
-  .filter((x: string) => !!x);
+const transform = (expr: string) =>
+  expr
+    .replaceAll("(", "@(@")
+    .replaceAll(")", "@)@")
+    .split(/[@ \n]/g)
+    .filter((x: string) => !!x);
 
 function convert(expr: string) {
   const stack = new Stack();
@@ -50,10 +51,10 @@ function convert(expr: string) {
         result.push(stack.pop());
       }
       stack.push(chunk);
-    } else if (chunk === '(') {
+    } else if (chunk === "(") {
       stack.push(chunk);
-    } else if (chunk === ')') {
-      while (stack.view() !== '(') {
+    } else if (chunk === ")") {
+      while (stack.view() !== "(") {
         // console.log(`result push: ${stack.view()}`);
         result.push(stack.pop());
       }

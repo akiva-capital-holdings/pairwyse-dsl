@@ -4,7 +4,8 @@ pragma solidity ^0.8.0;
 import "./Context.sol";
 import "./Opcodes.sol";
 import "./Eval.sol";
-import {StringUtils} from "./libs/StringUtils.sol";
+import { StringUtils } from "./libs/StringUtils.sol";
+import { Preprocessor } from "./helpers/Preprocessor.sol";
 import "./helpers/Storage.sol";
 import "./interfaces/IERC20.sol";
 import "hardhat/console.sol";
@@ -15,6 +16,7 @@ contract Parser is Storage {
     Context public ctx;
     Opcodes public opcodes;
     Eval public eval;
+    Preprocessor public preprocessor;
 
     bytes internal program;
     string[] internal cmds;
@@ -26,15 +28,19 @@ contract Parser is Storage {
         ctx = new Context();
         opcodes = new Opcodes(ctx);
         eval = new Eval(ctx, opcodes);
+        preprocessor = new Preprocessor();
 
         initOpcodes();
     }
+
+    // TODO: embed Preprocessor
+    // TODO: fix other todos
 
     function parseCode(string[] memory code) public virtual {
         delete program;
         cmdIdx = 0;
         cmds = code;
-        ctx.stack().clean();
+        ctx.stack().clear();
 
         while (cmdIdx < cmds.length) {
             parseOpcodeWithParams();
@@ -42,6 +48,12 @@ contract Parser is Storage {
 
         // console.logBytes(program);
         ctx.setProgram(program);
+    }
+
+    // TODO: test
+    function execInfix(string[] memory infixCode) public returns (bool result) {
+        string[] memory postfixCode = preprocessor.infixToPostfix(infixCode);
+        return this.exec(postfixCode);
     }
 
     /**
