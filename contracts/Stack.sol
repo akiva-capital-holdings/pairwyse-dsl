@@ -6,22 +6,33 @@ contract StackValue {
         // NONE in an OpSpec shows that the op pops or yields nothing
         NONE,
         // UINT256 in an OpSpec shows that the op pops or yields a uint256
-        UINT256
+        UINT256,
+        STRING
     }
 
     StackType private _type;
 
     uint256 private _uint256;
+    string private _string;
 
     function getUint256() public view returns (uint256) {
         require(_type == StackType.UINT256, "uint256 type mismatch");
-
         return _uint256;
     }
 
     function setUint256(uint256 value) public {
         _uint256 = value;
         _type = StackType.UINT256;
+    }
+
+    function getString() public view returns(string memory) {
+        require(_type == StackType.STRING, "string type mismatch");
+        return _string;
+    }
+
+    function setString(string memory value) public {
+        _string = value;
+        _type = StackType.STRING;
     }
 
     function getType() public view returns (StackType) {
@@ -36,6 +47,7 @@ contract Stack {
         return stack.length;
     }
 
+    // TODO: rename to `view()`
     function seeLast() external view returns(StackValue) {
         return stack[stack.length - 1];
     }

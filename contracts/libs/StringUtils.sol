@@ -1,8 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-// TODO: kill in favour of libraries/StringUtils
-contract StringUtils {
+library StringUtils {
     // Convert an hexadecimal string (without "0x" prefix) to raw bytes
     function fromHex(string memory s) public pure returns (bytes memory) {
         bytes memory ss = bytes(s);
@@ -14,17 +13,12 @@ contract StringUtils {
         return r;
     }
 
-    // TODO: remove if favour of strEqual
-    function strcmp(string memory a, string memory b) public pure returns (bool) {
-        return keccak256(bytes(a)) == keccak256(bytes(b));
-    }
-
-    function strEqual(string memory s1, string memory s2) internal pure returns(bool) {
+    function equal(string memory s1, string memory s2) internal pure returns(bool) {
         return keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2));
     }
 
     // string decimal number to uint256
-    function atoi(string memory s) public pure returns (uint256) {
+    function toUint256(string memory s) public pure returns (uint256) {
         bytes memory b = bytes(s);
         uint256 value = 0;
         for (uint256 i = 0; i < b.length; i++) {

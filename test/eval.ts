@@ -6,7 +6,7 @@ import {
   Stack,
   EvalAppMock,
 } from '../typechain';
-import { checkStack, hex4Bytes } from './helpers/utils';
+import { checkStack, hex4Bytes } from './utils/utils';
 
 describe('Eval', () => {
   let context: ContextMock;

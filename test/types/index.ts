@@ -16,3 +16,9 @@ export interface TestOp {
   opFunc: OpEvalFunc;
   testCases: TestCaseUint256[];
 }
+
+export interface Testcase {
+  name: string;
+  expr: string;
+  expected: string[];
+}

@@ -5,7 +5,7 @@ import {
 } from '../typechain';
 import {
   checkStack, checkStackTail, hex4Bytes,
-} from './helpers/utils';
+} from './utils/utils';
 
 const NEXT_MONTH = Math.round((Date.now() + 1000 * 60 * 60 * 24 * 30) / 1000);
 const PREV_MONTH = Math.round((Date.now() - 1000 * 60 * 60 * 24 * 30) / 1000);
@@ -295,7 +295,7 @@ describe('Parser', () => {
     await checkStack(StackValue, stack, 1, 1);
   });
 
-  describe('loadLocal', async () => {
+  describe('loadLocal', () => {
     it('loadLocal uint256 NUMBER', async () => {
       await app.setStorageUint256(hex4Bytes('NUMBER'), 777);
 
@@ -399,7 +399,7 @@ describe('Parser', () => {
     });
   });
 
-  describe('loadRemote', async () => {
+  describe('loadRemote', () => {
     it('loadRemote uint256 NUMBER', async () => {
       await externalApp.setStorageUint256(hex4Bytes('NUMBER'), 777);
 

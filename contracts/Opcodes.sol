@@ -224,12 +224,12 @@ contract Opcodes {
         address token = opAddressGet();
         address payable recipient = payable(address(uint160(uint256(opLoadLocalGet("getStorageAddress(bytes32)")))));
         uint256 amount = opUint256Get();
-        console.log("token");
-        console.log(token);
-        console.log("recipient");
-        console.log(recipient);
-        console.log("amount");
-        console.log(amount);
+        // console.log("token");
+        // console.log(token);
+        // console.log("recipient");
+        // console.log(recipient);
+        // console.log("amount");
+        // console.log(amount);
 
         IERC20(token).transfer(recipient, amount);
 

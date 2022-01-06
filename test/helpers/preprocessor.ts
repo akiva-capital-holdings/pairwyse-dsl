@@ -1,8 +1,21 @@
 import { expect } from 'chai';
-import convert from '../converter';
-import { Testcase } from './types';
+import { ethers } from 'hardhat';
+import { Preprocessor } from '../../typechain';
+import { Testcase } from '../types';
 
-describe('Converter', () => {
+describe('Preprocessor', () => {
+  let app: Preprocessor;
+
+  const transform = (expr: string) => expr
+    .replaceAll('(', '@(@')
+    .replaceAll(')', '@)@')
+    .split(/[@ \n]/g)
+    .filter((x: string) => !!x);
+
+  before(async () => {
+    app = await (await ethers.getContractFactory('Preprocessor')).deploy();
+  });
+
   const tests: Testcase[] = [
     {
       name: 'simple',
@@ -51,8 +64,9 @@ describe('Converter', () => {
   ];
 
   function testit({ name, expr, expected }: Testcase) {
-    it(name, () => {
-      const res = convert(expr);
+    it(name, async () => {
+      const inputArr = transform(expr);
+      const res = await app.callStatic.infixToPostfix(inputArr);
       expect(res).to.eql(expected);
     });
   }

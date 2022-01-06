@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import {
   AppParserMock, Context, Stack, StackValue__factory,
 } from '../typechain';
-import { checkStackTail, hex4Bytes, hex4BytesShort } from './helpers/utils';
+import { checkStackTail, hex4Bytes, hex4BytesShort } from './utils/utils';
 
 const NEXT_MONTH = Math.round((Date.now() + 1000 * 60 * 60 * 24 * 30) / 1000);
 const PREV_MONTH = Math.round((Date.now() - 1000 * 60 * 60 * 24 * 30) / 1000);

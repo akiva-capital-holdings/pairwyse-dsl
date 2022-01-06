@@ -6,10 +6,12 @@ class Stack {
   }
 
   push(value: string) {
+    console.log(`stack push: ${value}`);
     this.stack.push(value);
   }
 
   pop() {
+    console.log(`stack pop: ${this.view()}`);
     return this.stack.pop();
   }
 
@@ -21,11 +23,11 @@ class Stack {
 const isOperator = (op: string) => ['==', '!', '<', '>', 'swap', '<=', '>=', 'xor', 'and', 'or', '!='].includes(op);
 
 const opsPriors = (op: string) => {
-  if (op === '!') return 1;
-  if (['<', '>', '>=', '<=', '==', '!='].includes(op)) return 2;
-  if (['swap', 'and'].includes(op)) return 3;
-  if (['xor', 'or'].includes(op)) return 4;
-  return Number.MAX_VALUE;
+  if (op === '!') return 4;
+  if (['<', '>', '>=', '<=', '==', '!='].includes(op)) return 3;
+  if (['swap', 'and'].includes(op)) return 2;
+  if (['xor', 'or'].includes(op)) return 1;
+  return 0;
 };
 
 const transform = (expr: string) => expr
@@ -38,13 +40,14 @@ function convert(expr: string) {
   const stack = new Stack();
   const result = [];
   const exprArr = transform(expr);
-  // console.log({ exprArr });
+  console.log({ exprArr });
 
   exprArr.forEach((chunk) => {
     if (isOperator(chunk)) {
       // console.log(`'${chunk}' is an operator`);
       // +, -, *, /
-      while (stack.length() && opsPriors(chunk) >= opsPriors(stack.view())) {
+      while (stack.length() && opsPriors(chunk) <= opsPriors(stack.view())) {
+        console.log(`result push: ${stack.view()}`);
         result.push(stack.pop());
       }
       stack.push(chunk);
@@ -52,16 +55,19 @@ function convert(expr: string) {
       stack.push(chunk);
     } else if (chunk === ')') {
       while (stack.view() !== '(') {
+        console.log(`result push: ${stack.view()}`);
         result.push(stack.pop());
       }
       stack.pop(); // remove '(' that is left
     } else {
       // operand found
+      console.log(`result push: ${chunk}`);
       result.push(chunk);
     }
   });
 
   while (stack.length()) {
+    console.log(`result push: ${stack.view()}`);
     result.push(stack.pop());
   }
 

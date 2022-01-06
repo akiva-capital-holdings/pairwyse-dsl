@@ -34,7 +34,7 @@ contract Parser is StringUtils, Storage {
         cmds = code;
         ctx.stack().clean();
 
-        while(cmdIdx < cmds.length) {
+        while (cmdIdx < cmds.length) {
             parseOpcodeWithParams();
         }
 
@@ -47,7 +47,7 @@ contract Parser is StringUtils, Storage {
      * @param code string array of commands (expression) in polish notation to be parsed by DSL
      * @return result returns the expression execution result (the last value in stack)
      */
-    function exec(string[] memory code) public returns(bool result) {
+    function exec(string[] memory code) public returns (bool result) {
         parseCode(code);
         eval.evalWithContext(address(this), msg.sender);
 
@@ -165,7 +165,7 @@ contract Parser is StringUtils, Storage {
         program = bytes.concat(program, fromHex(nextCmd()));
     }
 
-    function getAddress() internal view returns(address) {
+    function getAddress() internal view returns (address) {
         bytes memory addrBytes = fromHex(cmds[cmdIdx]);
         bytes32 addrB32;
         // console.logBytes(addrBytes);

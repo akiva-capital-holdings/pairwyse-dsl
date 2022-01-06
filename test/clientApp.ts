@@ -4,7 +4,7 @@ import { parseEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 import { solidity } from 'ethereum-waffle';
 import { ClientApp } from '../typechain';
-import { hex4Bytes } from './helpers/utils';
+import { hex4Bytes } from './utils/utils';
 
 chai.use(solidity);
 

@@ -11,12 +11,12 @@ import {
 } from '../typechain';
 import {
   testLt, testGt, testLe, testAnd, testOr,
-} from './helpers/testOps';
+} from './utils/testOps';
 import {
   checkStack,
   pushToStack,
   testTwoInputOneOutput,
-} from './helpers/utils';
+} from './utils/utils';
 import { TestCaseUint256 } from './types';
 /* eslint-enable camelcase */
 
