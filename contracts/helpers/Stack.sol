@@ -25,7 +25,7 @@ contract StackValue {
         _type = StackType.UINT256;
     }
 
-    function getString() public view returns(string memory) {
+    function getString() public view returns (string memory) {
         require(_type == StackType.STRING, "string type mismatch");
         return _string;
     }
@@ -43,12 +43,12 @@ contract StackValue {
 contract Stack {
     StackValue[] public stack;
 
-    function length() external view returns (uint) {
+    function length() external view returns (uint256) {
         return stack.length;
     }
 
     // TODO: rename to `view()`
-    function seeLast() external view returns(StackValue) {
+    function seeLast() external view returns (StackValue) {
         return stack[stack.length - 1];
     }
 

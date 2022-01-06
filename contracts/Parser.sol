@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./Context.sol";
 import "./Opcodes.sol";
 import "./Eval.sol";
-import { StringUtils } from "./libs/StringUtils.sol";
+import {StringUtils} from "./libs/StringUtils.sol";
 import "./helpers/Storage.sol";
 import "./interfaces/IERC20.sol";
 import "hardhat/console.sol";

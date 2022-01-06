@@ -31,6 +31,7 @@ contract ClientApp is Parser {
         withdrawalCond = _cond;
     }
 
+    /* solhint-disable-next-line no-empty-blocks */
     receive() external payable {}
 
     function isRisky() public view returns (bool) {

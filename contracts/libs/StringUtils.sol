@@ -13,7 +13,7 @@ library StringUtils {
         return r;
     }
 
-    function equal(string memory s1, string memory s2) internal pure returns(bool) {
+    function equal(string memory s1, string memory s2) internal pure returns (bool) {
         return keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2));
     }
 

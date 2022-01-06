@@ -1,11 +1,11 @@
 /* eslint-disable camelcase */
 
-import { expect } from 'chai';
-import { ethers } from 'ethers';
+import { expect } from "chai";
+import { ethers } from "ethers";
 import {
   Opcodes, Stack__factory, StackValue__factory, Stack, ContextMock, StackValue,
-} from '../../typechain';
-import { OpEvalFunc } from '../types';
+} from "../../typechain";
+import { OpEvalFunc } from "../types";
 
 /**
  * Apply keccak256 to `str`, cut the result to the first 4 bytes, append
@@ -15,9 +15,9 @@ import { OpEvalFunc } from '../types';
  */
 export const hex4Bytes = (str: string) => ethers.utils
   .keccak256(ethers.utils.toUtf8Bytes(str))
-  .split('')
-  .map((x, i) => (i < 10 ? x : '0'))
-  .join('');
+  .split("")
+  .map((x, i) => (i < 10 ? x : "0"))
+  .join("");
 
 export const hex4BytesShort = (str: string) => hex4Bytes(str).slice(2, 2 + 8);
 
@@ -64,8 +64,8 @@ export const checkStack = async (
   expectedLen: number,
   expectedValue: number,
   indexFromEnd: number = 0,
-  badLenErr = 'Bad stack length',
-  badValueErr = 'Bad stack value',
+  badLenErr = "Bad stack length",
+  badValueErr = "Bad stack value",
 ) => {
   // check stack length
   const stackLen = await stack.length();
@@ -82,8 +82,8 @@ export async function checkStackTail(
   stack: Stack,
   expectedLen: number,
   expectedValues: number[],
-  badLenErr = 'Bad stack length',
-  badValueErr = 'Bad stack value',
+  badLenErr = "Bad stack length",
+  badValueErr = "Bad stack value",
 ) {
   for (let i = 0; i < expectedValues.length; i++) {
     await checkStack(SV, stack, expectedLen, expectedValues[expectedValues.length - 1 - i], i, badLenErr, badValueErr);

@@ -37,7 +37,7 @@ contract Preprocessor {
         stack.push(stackValue);
     }
 
-    function infixToPostfix(string[] memory code) external returns(string[] memory) {
+    function infixToPostfix(string[] memory code) external returns (string[] memory) {
         Stack stack = new Stack();
         string memory chunk;
         // console.log("\n\n", chunk);

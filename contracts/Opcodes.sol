@@ -5,7 +5,7 @@ import "./interfaces/IContext.sol";
 import "./interfaces/IStorage.sol";
 import "./interfaces/IERC20.sol";
 import "./libs/UnstructuredStorage.sol";
-import {StackValue} from "./helpers/Stack.sol";
+import { StackValue } from "./helpers/Stack.sol";
 import "hardhat/console.sol";
 
 contract Opcodes {
@@ -143,7 +143,7 @@ contract Opcodes {
         StackValue prev = ctx.stack().pop();
         require(last.getType() == prev.getType() && last.getType() == StackValue.StackType.UINT256, "bad types");
         bool result = ((prev.getUint256() > 0) && (last.getUint256() == 0)) ||
-                      ((prev.getUint256() == 0) && (last.getUint256() > 0));
+            ((prev.getUint256() == 0) && (last.getUint256() > 0));
         putUint256ToStack(result ? 1 : 0);
     }
 
@@ -244,7 +244,7 @@ contract Opcodes {
         // require(allowance >= amount, "Opcodes: not enought allowance to transfer tokens");
     }
 
-    function opUint256Get() private returns(uint256) {
+    function opUint256Get() private returns (uint256) {
         bytes memory data = nextBytes(32);
 
         // Convert bytes to bytes32
@@ -277,11 +277,11 @@ contract Opcodes {
     }
 
     function mustCall(address addr, bytes memory data) private {
-        (bool success,) = address(addr).call(data);
+        (bool success, ) = address(addr).call(data);
         require(success, "call not success");
     }
 
-    function opLoadLocalGet(string memory funcSignature) private returns(bytes32 result) {
+    function opLoadLocalGet(string memory funcSignature) private returns (bytes32 result) {
         bytes memory varName = nextBytes(4);
 
         // Convert bytes to bytes32
@@ -291,9 +291,7 @@ contract Opcodes {
         }
 
         // Load local value by it's hex
-        (bool success, bytes memory data) = ctx.appAddress().call(
-            abi.encodeWithSignature(funcSignature, varNameB32)
-        );
+        (bool success, bytes memory data) = ctx.appAddress().call(abi.encodeWithSignature(funcSignature, varNameB32));
         require(success, "Can't call a function");
 
         // Convert bytes to bytes32
@@ -302,7 +300,7 @@ contract Opcodes {
         }
     }
 
-    function opAddressGet() private returns(address) {
+    function opAddressGet() private returns (address) {
         bytes memory contractAddrBytes = nextBytes(20);
 
         // Convert bytes to bytes32

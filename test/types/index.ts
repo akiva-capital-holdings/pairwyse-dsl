@@ -1,9 +1,7 @@
-import { ContractTransaction } from 'ethers';
-import { Opcodes } from '../../typechain';
+import { ContractTransaction } from "ethers";
+import { Opcodes } from "../../typechain";
 
-export type OpEvalFunc = (
-  opcodes: Opcodes
-) => () => Promise<ContractTransaction>;
+export type OpEvalFunc = (opcodes: Opcodes) => () => Promise<ContractTransaction>;
 
 export interface TestCaseUint256 {
   name: string;

@@ -1,19 +1,19 @@
 {
   "name": "dsl-smart-contract",
   "version": "1.0.0",
-  "main": "index.js",
   "license": "NO",
   "private": true,
-  "dependencies": {
-    "hardhat": "^2.6.8"
-  },
   "scripts": {
-    "lint": "yarn lint:js && yarn lint:sol",
+    "lint": "yarn lint:ts && yarn lint:sol",
     "lint:ts": "npx eslint test/** --fix",
     "lint:sol": "npx solhint contracts/**/*.sol",
     "prettier:sol": "npx prettier --write 'contracts/**/*.sol'",
+    "typechain": "npx hardhat typechain",
     "build": "yarn hardhat compile",
     "test": "yarn hardhat test"
+  },
+  "dependencies": {
+    "hardhat": "^2.6.8"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.0",

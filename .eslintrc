@@ -14,9 +14,11 @@
     "sourceType": "module"
   },
   "rules": {
-    "quotes": ["error", "single"],
+    "@typescript-eslint/quotes": ["error", "double"],
+    "quotes": ["error", "double"],
     "no-restricted-syntax": ["off"],
     "no-await-in-loop": ["off"],
-    "max-len": ["error", 120]
+    "max-len": ["error", 120],
+    "no-plusplus": ["off"]
   }
 }
