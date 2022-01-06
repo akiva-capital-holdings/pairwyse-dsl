@@ -18,8 +18,14 @@ describe('Eval', () => {
     // Create StackValue Factory instance
     StackValue = await ethers.getContractFactory('StackValue');
 
+    // Deploy StringUtils library
+    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
+
     // Deploy Parser
-    const parser = await (await ethers.getContractFactory('Parser')).deploy();
+    const ParserCont = await ethers.getContractFactory('Parser', {
+      libraries: { StringUtils: stringLib.address },
+    });
+    const parser = await ParserCont.deploy();
 
     // Deploy App
     const AppCont = await ethers.getContractFactory('EvalAppMock');

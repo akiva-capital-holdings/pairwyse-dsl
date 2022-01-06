@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import { Stack, StackValue } from "../Stack.sol";
+import { Stack, StackValue } from "../helpers/Stack.sol";
 import { StringUtils } from "../libs/StringUtils.sol";
 
 contract Preprocessor {

@@ -14,19 +14,22 @@ describe('Parser', () => {
   let stack: Stack;
   let context: Context;
   let app: AppMock;
-  let externalApp: AppMock;
-  let extAppAddrHex: string;
+  let appAddrHex: string;
   let StackValue: StackValue__factory;
 
   before(async () => {
     // Create StackValue Factory instance
     StackValue = await ethers.getContractFactory('StackValue');
 
+    // Deploy StringUtils library
+    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
+
     // Deploy App
-    const AppCont = await ethers.getContractFactory('AppMock');
+    const AppCont = await ethers.getContractFactory('AppMock', {
+      libraries: { StringUtils: stringLib.address },
+    });
     app = await AppCont.deploy();
-    externalApp = app;
-    extAppAddrHex = externalApp.address.slice(2);
+    appAddrHex = app.address.slice(2);
 
     // Create Context instance
     context = await ethers.getContractAt('Context', await app.ctx());
@@ -401,24 +404,24 @@ describe('Parser', () => {
 
   describe('loadRemote', () => {
     it('loadRemote uint256 NUMBER', async () => {
-      await externalApp.setStorageUint256(hex4Bytes('NUMBER'), 777);
+      await app.setStorageUint256(hex4Bytes('NUMBER'), 777);
 
-      await app.exec(['loadRemote', 'uint256', 'NUMBER', extAppAddrHex]);
+      await app.exec(['loadRemote', 'uint256', 'NUMBER', appAddrHex]);
       await checkStack(StackValue, stack, 1, 777);
     });
 
     it('loadRemote uint256 NUMBER (1000) > loadRemote uint256 NUMBER2 (15)', async () => {
       // Set NUMBER
       const bytes32Number = hex4Bytes('NUMBER');
-      await externalApp.setStorageUint256(bytes32Number, 1000);
+      await app.setStorageUint256(bytes32Number, 1000);
 
       // Set NUMBER2
       const bytes32Number2 = hex4Bytes('NUMBER2');
-      await externalApp.setStorageUint256(bytes32Number2, 15);
+      await app.setStorageUint256(bytes32Number2, 15);
 
       await app.exec([
-        'loadRemote', 'uint256', 'NUMBER', extAppAddrHex,
-        'loadRemote', 'uint256', 'NUMBER2', extAppAddrHex,
+        'loadRemote', 'uint256', 'NUMBER', appAddrHex,
+        'loadRemote', 'uint256', 'NUMBER2', appAddrHex,
         '>',
       ]);
       await checkStack(StackValue, stack, 1, 1);
@@ -426,33 +429,33 @@ describe('Parser', () => {
 
     it('blockTimestamp < loadRemote uint256 NEXT_MONTH', async () => {
       const bytes32Number = hex4Bytes('NEXT_MONTH');
-      await externalApp.setStorageUint256(bytes32Number, NEXT_MONTH);
+      await app.setStorageUint256(bytes32Number, NEXT_MONTH);
 
-      await app.exec(['blockTimestamp', 'loadRemote', 'uint256', 'NEXT_MONTH', extAppAddrHex, '<']);
+      await app.exec(['blockTimestamp', 'loadRemote', 'uint256', 'NEXT_MONTH', appAddrHex, '<']);
       await checkStack(StackValue, stack, 1, 1);
     });
 
     it('loadRemote bool A (false)', async () => {
-      await externalApp.setStorageBool(hex4Bytes('A'), false);
+      await app.setStorageBool(hex4Bytes('A'), false);
 
-      await app.exec(['loadRemote', 'bool', 'A', extAppAddrHex]);
+      await app.exec(['loadRemote', 'bool', 'A', appAddrHex]);
       await checkStack(StackValue, stack, 1, 0);
     });
 
     it('loadRemote bool B (true)', async () => {
-      await externalApp.setStorageBool(hex4Bytes('B'), true);
+      await app.setStorageBool(hex4Bytes('B'), true);
 
-      await app.exec(['loadRemote', 'bool', 'B', extAppAddrHex]);
+      await app.exec(['loadRemote', 'bool', 'B', appAddrHex]);
       await checkStack(StackValue, stack, 1, 1);
     });
 
     it('loadRemote bool A (false) != loadRemote bool B (true)', async () => {
-      await externalApp.setStorageBool(hex4Bytes('A'), false);
-      await externalApp.setStorageBool(hex4Bytes('B'), true);
+      await app.setStorageBool(hex4Bytes('A'), false);
+      await app.setStorageBool(hex4Bytes('B'), true);
 
       await app.exec([
-        'loadRemote', 'bool', 'A', extAppAddrHex,
-        'loadRemote', 'bool', 'B', extAppAddrHex,
+        'loadRemote', 'bool', 'A', appAddrHex,
+        'loadRemote', 'bool', 'B', appAddrHex,
         '!=',
       ]);
       await checkStack(StackValue, stack, 1, 1);
@@ -460,36 +463,36 @@ describe('Parser', () => {
 
     describe('opLoadRemoteAddress', () => {
       it('addresses are equal', async () => {
-        await externalApp.setStorageAddress(hex4Bytes('ADDR'), '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
-        await externalApp.setStorageAddress(hex4Bytes('ADDR2'), '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+        await app.setStorageAddress(hex4Bytes('ADDR'), '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+        await app.setStorageAddress(hex4Bytes('ADDR2'), '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
 
         await app.exec([
           'loadRemote',
           'address',
           'ADDR',
-          extAppAddrHex,
+          appAddrHex,
           'loadRemote',
           'address',
           'ADDR2',
-          extAppAddrHex,
+          appAddrHex,
           '==',
         ]);
         await checkStack(StackValue, stack, 1, 1);
       });
 
       it('different addresses are not equal', async () => {
-        await externalApp.setStorageAddress(hex4Bytes('ADDR'), '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
-        await externalApp.setStorageAddress(hex4Bytes('ADDR2'), '0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836');
+        await app.setStorageAddress(hex4Bytes('ADDR'), '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+        await app.setStorageAddress(hex4Bytes('ADDR2'), '0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836');
 
         await app.exec([
           'loadRemote',
           'address',
           'ADDR',
-          extAppAddrHex,
+          appAddrHex,
           'loadRemote',
           'address',
           'ADDR2',
-          extAppAddrHex,
+          appAddrHex,
           '==',
         ]);
         await checkStack(StackValue, stack, 1, 0);
@@ -511,11 +514,11 @@ describe('Parser', () => {
           'loadRemote',
           'bytes32',
           'BYTES',
-          extAppAddrHex,
+          appAddrHex,
           'loadRemote',
           'bytes32',
           'BYTES2',
-          extAppAddrHex,
+          appAddrHex,
           '==',
         ]);
         await checkStack(StackValue, stack, 1, 1);
@@ -535,11 +538,11 @@ describe('Parser', () => {
           'loadRemote',
           'bytes32',
           'BYTES',
-          extAppAddrHex,
+          appAddrHex,
           'loadRemote',
           'bytes32',
           'BYTES2',
-          extAppAddrHex,
+          appAddrHex,
           '==',
         ]);
         await checkStack(StackValue, stack, 1, 0);

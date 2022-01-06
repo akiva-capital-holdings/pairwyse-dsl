@@ -14,7 +14,11 @@ describe('Client Application', () => {
 
   before(async () => {
     [user1] = await ethers.getSigners();
-    app = await (await ethers.getContractFactory('ClientApp')).deploy();
+    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
+    const ClientAppCont = await ethers.getContractFactory('ClientApp', {
+      libraries: { StringUtils: stringLib.address },
+    });
+    app = await ClientAppCont.deploy();
   });
 
   it('Lifecycle', async () => {

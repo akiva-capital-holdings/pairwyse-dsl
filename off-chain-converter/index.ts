@@ -6,12 +6,12 @@ class Stack {
   }
 
   push(value: string) {
-    console.log(`stack push: ${value}`);
+    // console.log(`stack push: ${value}`);
     this.stack.push(value);
   }
 
   pop() {
-    console.log(`stack pop: ${this.view()}`);
+    // console.log(`stack pop: ${this.view()}`);
     return this.stack.pop();
   }
 
@@ -40,14 +40,13 @@ function convert(expr: string) {
   const stack = new Stack();
   const result = [];
   const exprArr = transform(expr);
-  console.log({ exprArr });
 
   exprArr.forEach((chunk) => {
     if (isOperator(chunk)) {
       // console.log(`'${chunk}' is an operator`);
       // +, -, *, /
       while (stack.length() && opsPriors(chunk) <= opsPriors(stack.view())) {
-        console.log(`result push: ${stack.view()}`);
+        // console.log(`result push: ${stack.view()}`);
         result.push(stack.pop());
       }
       stack.push(chunk);
@@ -55,19 +54,19 @@ function convert(expr: string) {
       stack.push(chunk);
     } else if (chunk === ')') {
       while (stack.view() !== '(') {
-        console.log(`result push: ${stack.view()}`);
+        // console.log(`result push: ${stack.view()}`);
         result.push(stack.pop());
       }
       stack.pop(); // remove '(' that is left
     } else {
       // operand found
-      console.log(`result push: ${chunk}`);
+      // console.log(`result push: ${chunk}`);
       result.push(chunk);
     }
   });
 
   while (stack.length()) {
-    console.log(`result push: ${stack.view()}`);
+    // console.log(`result push: ${stack.view()}`);
     result.push(stack.pop());
   }
 

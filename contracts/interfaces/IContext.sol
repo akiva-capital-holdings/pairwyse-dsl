@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "../Stack.sol";
+import "../helpers/Stack.sol";
 
 interface IContext {
     function stack() external returns (Stack);

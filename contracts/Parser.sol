@@ -4,12 +4,14 @@ pragma solidity ^0.8.0;
 import "./Context.sol";
 import "./Opcodes.sol";
 import "./Eval.sol";
-import "./helpers/StringUtils.sol";
+import { StringUtils } from "./libs/StringUtils.sol";
 import "./helpers/Storage.sol";
 import "./interfaces/IERC20.sol";
 import "hardhat/console.sol";
 
-contract Parser is StringUtils, Storage {
+contract Parser is Storage {
+    using StringUtils for string;
+
     Context public ctx;
     Opcodes public opcodes;
     Eval public eval;
@@ -67,12 +69,12 @@ contract Parser is StringUtils, Storage {
     }
 
     function asmBool() public {
-        bytes1 value = bytes1(strcmp(nextCmd(), "true") ? 0x01 : 0x00);
+        bytes1 value = bytes1(nextCmd().equal("true") ? 0x01 : 0x00);
         program = bytes.concat(program, value);
     }
 
     function asmUint256() public {
-        uint256 value = atoi(nextCmd());
+        uint256 value = nextCmd().toUint256();
         program = bytes.concat(program, bytes32(value));
     }
 
@@ -87,8 +89,8 @@ contract Parser is StringUtils, Storage {
 
     function asmTransfer() public {
         address token = getAddress();
-        console.log("token");
-        console.log(token);
+        // console.log("token");
+        // console.log(token);
         parseAddress();
         parseVariable();
         asmUint256();
@@ -105,8 +107,8 @@ contract Parser is StringUtils, Storage {
 
     function transferAllERC20(address token, address receiver) internal {
         uint256 balanceThis = IERC20(token).balanceOf(address(this));
-        console.log("balanceThis");
-        console.log(balanceThis);
+        // console.log("balanceThis");
+        // console.log(balanceThis);
         IERC20(token).transfer(receiver, balanceThis);
     }
 
@@ -162,11 +164,11 @@ contract Parser is StringUtils, Storage {
     }
 
     function parseAddress() internal {
-        program = bytes.concat(program, fromHex(nextCmd()));
+        program = bytes.concat(program, nextCmd().fromHex());
     }
 
     function getAddress() internal view returns (address) {
-        bytes memory addrBytes = fromHex(cmds[cmdIdx]);
+        bytes memory addrBytes = cmds[cmdIdx].fromHex();
         bytes32 addrB32;
         // console.logBytes(addrBytes);
 

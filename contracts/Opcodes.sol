@@ -5,7 +5,7 @@ import "./interfaces/IContext.sol";
 import "./interfaces/IStorage.sol";
 import "./interfaces/IERC20.sol";
 import "./libs/UnstructuredStorage.sol";
-import {StackValue} from "./Stack.sol";
+import {StackValue} from "./helpers/Stack.sol";
 import "hardhat/console.sol";
 
 contract Opcodes {

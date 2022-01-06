@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import convert from '../converter';
-import { Testcase } from './types';
+import convert from '../../off-chain-converter';
+import { Testcase } from '../types';
 
 describe('Converter', () => {
   const tests: Testcase[] = [

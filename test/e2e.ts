@@ -22,8 +22,13 @@ describe('End-to-end', () => {
     // Create StackValue Factory instance
     StackValue = await ethers.getContractFactory('StackValue');
 
+    // Deploy StringUtils library
+    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
+
     // Deploy App
-    const AppCont = await ethers.getContractFactory('AppParserMock');
+    const AppCont = await ethers.getContractFactory('AppParserMock', {
+      libraries: { StringUtils: stringLib.address },
+    });
     app = await AppCont.deploy();
 
     // Create Context instance
