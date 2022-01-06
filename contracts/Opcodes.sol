@@ -237,11 +237,22 @@ contract Opcodes {
     }
 
     function opTransferFrom() public {
-        // TODO
-        // uint256 allowance = IERC20(token).allowance(ctx.msgSender(), address(this));
-        // console.log("allowance");
-        // console.log(allowance);
-        // require(allowance >= amount, "Opcodes: not enought allowance to transfer tokens");
+        address payable token = payable(address(uint160(uint256(opLoadLocalGet("getStorageAddress(bytes32)")))));
+        address payable from = payable(address(uint160(uint256(opLoadLocalGet("getStorageAddress(bytes32)")))));
+        address payable to = payable(address(uint160(uint256(opLoadLocalGet("getStorageAddress(bytes32)")))));
+        uint256 amount = opUint256Get();
+        // console.log("token");
+        // console.log(token);
+        // console.log("from");
+        // console.log(from);
+        // console.log("to");
+        // console.log(to);
+        // console.log("amount");
+        // console.log(amount);
+
+        IERC20(token).transferFrom(from, to, amount);
+
+        putUint256ToStack(1);
     }
 
     function opUint256Get() private returns (uint256) {

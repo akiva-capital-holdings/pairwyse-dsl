@@ -273,6 +273,26 @@ describe("Parser", () => {
     await checkStack(StackValue, stack, 1, 1);
   });
 
+  it("transferFrom", async () => {
+    const [owner, receiver] = await ethers.getSigners();
+
+    const Token = await ethers.getContractFactory("Token");
+    const dai = await Token.deploy(ethers.utils.parseEther("1000"));
+
+    const oneDAI = ethers.utils.parseEther("1");
+    const opcodesAddr = await app.opcodes();
+    await dai.connect(owner).approve(opcodesAddr, oneDAI); // Note: approve not to app but to opcodes addr
+    expect(await dai.allowance(owner.address, opcodesAddr)).to.equal(oneDAI);
+
+    await app.setStorageAddress(hex4Bytes("DAI"), dai.address);
+    await app.setStorageAddress(hex4Bytes("OWNER"), owner.address);
+    await app.setStorageAddress(hex4Bytes("RECEIVER"), receiver.address);
+
+    await app.exec(["transferFrom", "DAI", "OWNER", "RECEIVER", oneDAI.toString()]);
+    expect(await dai.balanceOf(receiver.address)).to.equal(oneDAI);
+    await checkStack(StackValue, stack, 1, 1);
+  });
+
   it("block number < block timestamp", async () => {
     await app.exec(["blockNumber", "blockTimestamp", "<"]);
     await checkStack(StackValue, stack, 1, 1);

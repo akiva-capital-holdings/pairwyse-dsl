@@ -12,6 +12,7 @@ import "hardhat/console.sol";
 
 // TODO: make all quotes single
 // TODO: use only explicit imports i.e. import { X } from "./X.sol"
+// TODO: fix other todos
 
 contract Parser is Storage {
     using StringUtils for string;
@@ -36,9 +37,6 @@ contract Parser is Storage {
         initOpcodes();
     }
 
-    // TODO: embed Preprocessor
-    // TODO: fix other todos
-
     function parseCode(string[] memory code) public virtual {
         delete program;
         cmdIdx = 0;
@@ -53,7 +51,6 @@ contract Parser is Storage {
         ctx.setProgram(program);
     }
 
-    // TODO: test
     function execHighLevel(string memory code) public returns (bool result) {
         string[] memory postfixCode = preprocessor.transform(code);
         return this.exec(postfixCode);
@@ -113,7 +110,14 @@ contract Parser is Storage {
     }
 
     function asmTransferFrom() public {
-        // TODO
+        // address token = getAddress();
+        // console.log("token");
+        // console.log(token);
+        // parseAddress();
+        parseVariable();
+        parseVariable();
+        parseVariable();
+        asmUint256();
     }
 
     function transferAllEth(address payable receiver) internal {
