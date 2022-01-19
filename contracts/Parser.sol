@@ -63,7 +63,10 @@ contract Parser is Storage {
      */
     function exec(string[] memory code) public returns (bool result) {
         parseCode(code);
-        eval.evalWithContext(address(this), msg.sender);
+
+        ctx.setAppAddress(address(this));
+        ctx.setMsgSender(msg.sender);
+        eval.eval();
 
         result = ctx.stack().seeLast().getUint256() == 0 ? false : true;
         emit ExecRes(result);

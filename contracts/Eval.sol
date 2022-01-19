@@ -15,14 +15,7 @@ contract Eval {
     }
 
     function eval() public {
-        evalWithContext(address(this), msg.sender);
-    }
-
-    function evalWithContext(address storageFrom, address msgSender) public {
         require(ctx.program().length > 0, "empty program");
-
-        ctx.setAppAddress(storageFrom);
-        ctx.setMsgSender(msgSender);
 
         while (ctx.pc() < ctx.program().length) {
             bytes memory opcodeBytes = ctx.programAt(ctx.pc(), 1);

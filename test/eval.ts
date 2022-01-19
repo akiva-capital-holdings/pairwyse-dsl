@@ -1,8 +1,6 @@
 /* eslint-disable camelcase */
 import { ethers } from "hardhat";
-import {
-  ContextMock, StackValue__factory, Stack, EvalAppMock,
-} from "../typechain";
+import { ContextMock, StackValue__factory, Stack, EvalAppMock } from "../typechain";
 import { checkStack, hex4Bytes } from "./utils/utils";
 
 describe("Eval", () => {
@@ -12,6 +10,8 @@ describe("Eval", () => {
   let StackValue: StackValue__factory;
 
   beforeEach(async () => {
+    const [sender] = await ethers.getSigners();
+
     // Create StackValue Factory instance
     StackValue = await ethers.getContractFactory("StackValue");
 
@@ -35,6 +35,9 @@ describe("Eval", () => {
     const StackCont = await ethers.getContractFactory("Stack");
     const contextStackAddress = await context.stack();
     stack = StackCont.attach(contextStackAddress);
+
+    context.setAppAddress(app.address);
+    context.setMsgSender(sender.address);
   });
 
   describe("eval()", async () => {
@@ -145,14 +148,14 @@ describe("Eval", () => {
           const bytes32Bytes = hex4Bytes("BYTES");
           await app.setStorageBytes32(
             bytes32Bytes,
-            "0x1234500000000000000000000000000000000000000000000000000000000001",
+            "0x1234500000000000000000000000000000000000000000000000000000000001"
           );
 
           // Set BYTES2
           const bytes32Bytes2 = hex4Bytes("BYTES2");
           await app.setStorageBytes32(
             bytes32Bytes2,
-            "0x1234500000000000000000000000000000000000000000000000000000000001",
+            "0x1234500000000000000000000000000000000000000000000000000000000001"
           );
 
           /**
@@ -175,14 +178,14 @@ describe("Eval", () => {
           const bytes32Bytes = hex4Bytes("BYTES");
           await app.setStorageBytes32(
             bytes32Bytes,
-            "0x1234500000000000000000000000000000000000000000000000000000000001",
+            "0x1234500000000000000000000000000000000000000000000000000000000001"
           );
 
           // Set BYTES2
           const bytes32Bytes2 = hex4Bytes("BYTES2");
           await app.setStorageBytes32(
             bytes32Bytes2,
-            "0x1234500000000000000000000000000000000000000000000000000000000011",
+            "0x1234500000000000000000000000000000000000000000000000000000000011"
           );
 
           /**
@@ -463,14 +466,14 @@ describe("Eval", () => {
           const bytes32Bytes = hex4Bytes("BYTES");
           await app.setStorageBytes32(
             bytes32Bytes,
-            "0x1234500000000000000000000000000000000000000000000000000000000001",
+            "0x1234500000000000000000000000000000000000000000000000000000000001"
           );
 
           // Set BYTES2
           const bytes32Bytes2 = hex4Bytes("BYTES2");
           await app.setStorageBytes32(
             bytes32Bytes2,
-            "0x1234500000000000000000000000000000000000000000000000000000000001",
+            "0x1234500000000000000000000000000000000000000000000000000000000001"
           );
 
           /**
@@ -493,14 +496,14 @@ describe("Eval", () => {
           const bytes32Bytes = hex4Bytes("BYTES");
           await app.setStorageBytes32(
             bytes32Bytes,
-            "0x1234500000000000000000000000000000000000000000000000000000000001",
+            "0x1234500000000000000000000000000000000000000000000000000000000001"
           );
 
           // Set BYTES2
           const bytes32Bytes2 = hex4Bytes("BYTES2");
           await app.setStorageBytes32(
             bytes32Bytes2,
-            "0x1234500000000000000000000000000000000000000000000000000000000011",
+            "0x1234500000000000000000000000000000000000000000000000000000000011"
           );
 
           /**
