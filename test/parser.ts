@@ -36,6 +36,18 @@ describe("Parser", () => {
     stack = StackCont.attach(contextStackAddress);
   });
 
+  it.only("spawn", async () => {
+    await app.spawn(["uint256", "1122334433"]);
+
+    const condTxs = await app.queryFilter(app.filters.ConditionalTx());
+    const txObjAddr = condTxs[condTxs.length - 1].args.txObj;
+
+    const txObj = await ethers.getContractAt("Eval", txObjAddr);
+    await txObj.eval();
+
+    await checkStack(StackValue, stack, 1, 1122334433);
+  });
+
   it("uint256 1122334433", async () => {
     await app.exec(["uint256", "1122334433"]);
     await checkStack(StackValue, stack, 1, 1122334433);

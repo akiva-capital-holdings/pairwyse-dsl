@@ -19,7 +19,7 @@ contract Parser is Storage {
 
     Context public ctx;
     Opcodes public opcodes;
-    Eval public eval;
+    // Eval public eval;
     Preprocessor public preprocessor;
 
     bytes internal program;
@@ -27,11 +27,12 @@ contract Parser is Storage {
     uint256 internal cmdIdx;
 
     event ExecRes(bool result);
+    event ConditionalTx(address txObj);
 
     constructor() {
         ctx = new Context();
         opcodes = new Opcodes();
-        eval = new Eval(ctx, opcodes);
+        // eval = new Eval(ctx, opcodes);
         preprocessor = new Preprocessor();
 
         initOpcodes();
@@ -56,12 +57,23 @@ contract Parser is Storage {
         return this.exec(postfixCode);
     }
 
+    function spawn(string[] memory code) public returns (Eval txObj) {
+        txObj = new Eval(ctx, opcodes);
+        parseCode(code);
+
+        ctx.setAppAddress(address(this));
+        ctx.setMsgSender(msg.sender);
+
+        emit ConditionalTx(address(txObj));
+    }
+
     /**
      * @notice Execute an expression written in our custom DSL
      * @param code string array of commands (expression) in polish notation to be parsed by DSL
      * @return result returns the expression execution result (the last value in stack)
      */
     function exec(string[] memory code) public returns (bool result) {
+        Eval eval = new Eval(ctx, opcodes);
         parseCode(code);
 
         ctx.setAppAddress(address(this));
