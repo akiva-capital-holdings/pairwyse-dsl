@@ -6,7 +6,7 @@ import { checkStack, checkStackTail, hex4Bytes } from "./utils/utils";
 const NEXT_MONTH = Math.round((Date.now() + 1000 * 60 * 60 * 24 * 30) / 1000);
 const PREV_MONTH = Math.round((Date.now() - 1000 * 60 * 60 * 24 * 30) / 1000);
 
-describe("Parser", () => {
+describe.only("Parser", () => {
   let stack: Stack;
   let context: Context;
   let app: AppMock;

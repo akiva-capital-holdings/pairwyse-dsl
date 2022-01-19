@@ -9,9 +9,7 @@ import {
   ContextMock__factory,
   ContextMock,
 } from "../typechain";
-import {
-  testLt, testGt, testLe, testAnd, testOr,
-} from "./utils/testOps";
+import { testLt, testGt, testLe, testAnd, testOr } from "./utils/testOps";
 import { checkStack, pushToStack, testTwoInputOneOutput } from "./utils/utils";
 import { TestCaseUint256 } from "./types";
 /* eslint-enable camelcase */
@@ -27,6 +25,7 @@ describe("Opcode", () => {
   let StackValue: StackValue__factory;
   let context: ContextMock;
   let opcodes: Opcodes;
+  let ctx: string;
 
   beforeEach(async () => {
     Context = await ethers.getContractFactory("ContextMock");
@@ -35,21 +34,22 @@ describe("Opcode", () => {
     StackValue = await ethers.getContractFactory("StackValue");
 
     context = await Context.deploy();
-    opcodes = await OpcodesCont.deploy(context.address);
+    ctx = context.address;
+    opcodes = await OpcodesCont.deploy();
   });
 
   describe("Eq", () => {
     it("uint256 equal", async () => {
       const stack = await pushToStack(StackValue, context, Stack, [500, 500]);
       expect(await stack.length()).to.equal(2);
-      await opcodes.opEq();
+      await opcodes.opEq(ctx);
       await checkStack(StackValue, stack, 1, 1);
     });
 
     it("uint256 not equal", async () => {
       const stack = await pushToStack(StackValue, context, Stack, [100, 200]);
       expect(await stack.length()).to.equal(2);
-      await opcodes.opEq();
+      await opcodes.opEq(ctx);
       await checkStack(StackValue, stack, 1, 0);
     });
   });
@@ -57,16 +57,18 @@ describe("Opcode", () => {
   describe("Lt", () => {
     describe("uint256", () => {
       testLt.testCases.forEach((testCase: TestCaseUint256) => {
-        it(testCase.name, async () => testTwoInputOneOutput(
-          Stack,
-          StackValue,
-          context,
-          opcodes,
-          testLt.opFunc,
-          testCase.value1,
-          testCase.value2,
-          testCase.result,
-        ));
+        it(testCase.name, async () =>
+          testTwoInputOneOutput(
+            Stack,
+            StackValue,
+            context,
+            opcodes,
+            testLt.opFunc,
+            testCase.value1,
+            testCase.value2,
+            testCase.result
+          )
+        );
       });
     });
   });
@@ -74,16 +76,18 @@ describe("Opcode", () => {
   describe("Gt", () => {
     describe("uint256", () => {
       testGt.testCases.forEach((testCase: TestCaseUint256) => {
-        it(testCase.name, async () => testTwoInputOneOutput(
-          Stack,
-          StackValue,
-          context,
-          opcodes,
-          testGt.opFunc,
-          testCase.value1,
-          testCase.value2,
-          testCase.result,
-        ));
+        it(testCase.name, async () =>
+          testTwoInputOneOutput(
+            Stack,
+            StackValue,
+            context,
+            opcodes,
+            testGt.opFunc,
+            testCase.value1,
+            testCase.value2,
+            testCase.result
+          )
+        );
       });
     });
   });
@@ -91,16 +95,18 @@ describe("Opcode", () => {
   describe("Le", () => {
     describe("uint256", () => {
       testLe.testCases.forEach((testCase: TestCaseUint256) => {
-        it(testCase.name, async () => testTwoInputOneOutput(
-          Stack,
-          StackValue,
-          context,
-          opcodes,
-          testLe.opFunc,
-          testCase.value1,
-          testCase.value2,
-          testCase.result,
-        ));
+        it(testCase.name, async () =>
+          testTwoInputOneOutput(
+            Stack,
+            StackValue,
+            context,
+            opcodes,
+            testLe.opFunc,
+            testCase.value1,
+            testCase.value2,
+            testCase.result
+          )
+        );
       });
     });
   });
@@ -112,7 +118,7 @@ describe("Opcode", () => {
       // stack size is 2
       expect(await stack.length()).to.equal(2);
 
-      await opcodes.opSwap();
+      await opcodes.opSwap(ctx);
 
       await checkStack(StackValue, stack, 2, 200);
       stack.pop();
@@ -123,16 +129,18 @@ describe("Opcode", () => {
   describe("opAnd", () => {
     describe("two values of uint256", () => {
       testAnd.testCases.forEach((testCase: TestCaseUint256) => {
-        it(testCase.name, async () => testTwoInputOneOutput(
-          Stack,
-          StackValue,
-          context,
-          opcodes,
-          testAnd.opFunc,
-          testCase.value1,
-          testCase.value2,
-          testCase.result,
-        ));
+        it(testCase.name, async () =>
+          testTwoInputOneOutput(
+            Stack,
+            StackValue,
+            context,
+            opcodes,
+            testAnd.opFunc,
+            testCase.value1,
+            testCase.value2,
+            testCase.result
+          )
+        );
       });
     });
 
@@ -143,15 +151,15 @@ describe("Opcode", () => {
       expect(await stack.length()).to.equal(4);
 
       // stack.len = 3; stack.pop() = 1
-      await opcodes.opAnd();
+      await opcodes.opAnd(ctx);
       await checkStack(StackValue, stack, 3, 1);
 
       // stack.len = 2; stack.pop() = 1
-      await opcodes.opAnd();
+      await opcodes.opAnd(ctx);
       await checkStack(StackValue, stack, 2, 1);
 
       // stack.len = 1; stack.pop() = 0
-      await opcodes.opAnd();
+      await opcodes.opAnd(ctx);
       await checkStack(StackValue, stack, 1, 0);
     });
   });
@@ -159,16 +167,18 @@ describe("Opcode", () => {
   describe("opOr", () => {
     describe("two values of uint256", () => {
       testOr.testCases.forEach((testCase: TestCaseUint256) => {
-        it(testCase.name, async () => testTwoInputOneOutput(
-          Stack,
-          StackValue,
-          context,
-          opcodes,
-          testOr.opFunc,
-          testCase.value1,
-          testCase.value2,
-          testCase.result,
-        ));
+        it(testCase.name, async () =>
+          testTwoInputOneOutput(
+            Stack,
+            StackValue,
+            context,
+            opcodes,
+            testOr.opFunc,
+            testCase.value1,
+            testCase.value2,
+            testCase.result
+          )
+        );
       });
     });
 
@@ -178,11 +188,11 @@ describe("Opcode", () => {
       expect(await stack.length()).to.equal(3);
 
       // stack.len = 2; stack.pop() = 1
-      await opcodes.opOr();
+      await opcodes.opOr(ctx);
       await checkStack(StackValue, stack, 2, 0);
 
       // stack.len = 1; stack.pop() = 1
-      await opcodes.opOr();
+      await opcodes.opOr(ctx);
       await checkStack(StackValue, stack, 1, 1);
     });
   });
@@ -191,7 +201,7 @@ describe("Opcode", () => {
     it("uint256 is zero", async () => {
       const stack = await pushToStack(StackValue, context, Stack, [0]);
       expect(await stack.length()).to.equal(1);
-      await opcodes.opNot();
+      await opcodes.opNot(ctx);
       await checkStack(StackValue, stack, 1, 1);
     });
 
@@ -199,14 +209,14 @@ describe("Opcode", () => {
       it("1", async () => {
         const stack = await pushToStack(StackValue, context, Stack, [1]);
         expect(await stack.length()).to.equal(1);
-        await opcodes.opNot();
+        await opcodes.opNot(ctx);
         await checkStack(StackValue, stack, 1, 0);
       });
 
       it("3", async () => {
         const stack = await pushToStack(StackValue, context, Stack, [3]);
         expect(await stack.length()).to.equal(1);
-        await opcodes.opNot();
+        await opcodes.opNot(ctx);
         await checkStack(StackValue, stack, 1, 0);
       });
     });
@@ -220,7 +230,7 @@ describe("Opcode", () => {
       // 0x05 is NUMBER
       await context.setProgram("0x15");
 
-      const opBlockResult = await opcodes.opBlockNumber();
+      const opBlockResult = await opcodes.opBlockNumber(ctx);
 
       // stack size is 1
       expect(await stack.length()).to.equal(1);
@@ -239,7 +249,7 @@ describe("Opcode", () => {
       // 0x17 is ChainID
       await context.setProgram("0x17");
 
-      const opBlockResult = await opcodes.opBlockChainId();
+      const opBlockResult = await opcodes.opBlockChainId(ctx);
 
       // stack size is 1
       expect(await stack.length()).to.equal(1);
@@ -259,7 +269,7 @@ describe("Opcode", () => {
       // 0x16 is Timestamp
       await context.setProgram("0x16");
 
-      const opBlockResult = await opcodes.opBlockTimestamp();
+      const opBlockResult = await opcodes.opBlockTimestamp(ctx);
 
       // stack size is 1
       expect(await stack.length()).to.equal(1);

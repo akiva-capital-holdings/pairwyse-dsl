@@ -30,7 +30,7 @@ contract Parser is Storage {
 
     constructor() {
         ctx = new Context();
-        opcodes = new Opcodes(ctx);
+        opcodes = new Opcodes();
         eval = new Eval(ctx, opcodes);
         preprocessor = new Preprocessor();
 

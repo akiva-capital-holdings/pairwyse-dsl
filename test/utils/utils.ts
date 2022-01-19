@@ -2,9 +2,7 @@
 
 import { expect } from "chai";
 import { ethers } from "ethers";
-import {
-  Opcodes, Stack__factory, StackValue__factory, Stack, ContextMock, StackValue,
-} from "../../typechain";
+import { Opcodes, Stack__factory, StackValue__factory, Stack, ContextMock, StackValue } from "../../typechain";
 import { OpEvalFunc } from "../types";
 
 /**
@@ -13,11 +11,12 @@ import { OpEvalFunc } from "../types";
  * @param str Input string
  * @returns bytes4(keccak256(str))
  */
-export const hex4Bytes = (str: string) => ethers.utils
-  .keccak256(ethers.utils.toUtf8Bytes(str))
-  .split("")
-  .map((x, i) => (i < 10 ? x : "0"))
-  .join("");
+export const hex4Bytes = (str: string) =>
+  ethers.utils
+    .keccak256(ethers.utils.toUtf8Bytes(str))
+    .split("")
+    .map((x, i) => (i < 10 ? x : "0"))
+    .join("");
 
 export const hex4BytesShort = (str: string) => hex4Bytes(str).slice(2, 2 + 8);
 
@@ -65,7 +64,7 @@ export const checkStack = async (
   expectedValue: number,
   indexFromEnd: number = 0,
   badLenErr = "Bad stack length",
-  badValueErr = "Bad stack value",
+  badValueErr = "Bad stack value"
 ) => {
   // check stack length
   const stackLen = await stack.length();
@@ -83,7 +82,7 @@ export async function checkStackTail(
   expectedLen: number,
   expectedValues: number[],
   badLenErr = "Bad stack length",
-  badValueErr = "Bad stack value",
+  badValueErr = "Bad stack value"
 ) {
   for (let i = 0; i < expectedValues.length; i++) {
     await checkStack(SV, stack, expectedLen, expectedValues[expectedValues.length - 1 - i], i, badLenErr, badValueErr);
@@ -110,9 +109,9 @@ export const testTwoInputOneOutput = async (
   opFunc: OpEvalFunc,
   value1: number,
   value2: number,
-  result: number,
+  result: number
 ) => {
   const stack = await pushToStack(SV, context, ST, [value1, value2]);
-  await opFunc(opcodes)();
+  await opFunc(opcodes)(context.address);
   await checkStack(SV, stack, 1, result);
 };

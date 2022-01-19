@@ -41,7 +41,7 @@ contract Eval {
 
             ctx.incPc(1);
 
-            (bool success,) = address(opcodes).call(abi.encodeWithSelector(selector));
+            (bool success, ) = address(opcodes).call(abi.encodeWithSelector(selector, address(ctx)));
             require(success, "Eval: call not success");
         }
     }
