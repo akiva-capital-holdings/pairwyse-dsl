@@ -43,9 +43,6 @@ contract Agreement is Storage {
         parser.parse(txn.transactionCtx(), _transactionStr);
         parser.parse(txn.conditionCtx(), _conditionStr);
 
-        // console.logBytes(txn.conditionCtx().program());
-        // ConditionalTx txn = parser.spawnHighLevel(_signatory, _transaction, _condition);
-
         uint256 txId = 1; // TODO: calculate txId, don't hardcode
         txs[txId] = txn;
         return txId;

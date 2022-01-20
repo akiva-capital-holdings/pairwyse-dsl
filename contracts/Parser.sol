@@ -17,9 +17,7 @@ import "hardhat/console.sol";
 contract Parser is Storage {
     using StringUtils for string;
 
-    // Context public ctx;
     Opcodes public opcodes;
-    // ConditionalTx public eval;
     Preprocessor public preprocessor;
 
     bytes internal program;
@@ -33,12 +31,8 @@ contract Parser is Storage {
     receive() external payable {}
 
     constructor() {
-        // ctx = new Context();
         opcodes = new Opcodes();
-        // eval = new ConditionalTx(ctx, opcodes);
         preprocessor = new Preprocessor();
-
-        // initOpcodes();
     }
 
     function parseCode(Context _ctx, string[] memory code) public virtual {
@@ -69,62 +63,10 @@ contract Parser is Storage {
         // if no selector then opcode without params
     }
 
-    // function execHighLevel(string memory code) public returns (bool result) {
-    //     string[] memory postfixCode = preprocessor.transform(code);
-    //     return this.exec(postfixCode);
-    // }
-
     function parse(Context _ctx, string memory _codeRaw) public {
         string[] memory _code = preprocessor.transform(_codeRaw);
         parseCode(_ctx, _code);
     }
-
-    function spawnHighLevel(
-        address _signatory,
-        string memory _transactionStr,
-        string memory _conditionStr
-    ) public returns (ConditionalTx txObj) {
-        // string[] memory _transactionStrArr = preprocessor.transform(_transactionStr);
-        // string[] memory _conditionStrArr = preprocessor.transform(_conditionStr);
-        // txObj = new ConditionalTx(opcodes);
-        // Context conditionCtx = txObj.conditionCtx();
-        // Context transactionCtx = txObj.transactionCtx();
-        // initOpcodes(conditionCtx);
-        // initOpcodes(transactionCtx);
-        // parseCode(conditionCtx, _conditionStrArr); // TODO: also parse `_transactionStrArr`
-        // bytes memory _condition = conditionCtx.program();
-        // bytes memory _transaction = ""; // TODO
-        // conditionCtx.setAppAddress(address(this));
-        // conditionCtx.setMsgSender(msg.sender);
-        // txObj.constructorV2(_signatory, _transaction, _condition, _transactionStr, _conditionStr);
-    }
-
-    // function spawn(string[] memory code) public returns (ConditionalTx txObj) {
-    //     txObj = new ConditionalTx(ctx, opcodes);
-    //     parseCode(code);
-
-    //     ctx.setAppAddress(address(this));
-    //     ctx.setMsgSender(msg.sender);
-
-    //     emit NewConditionalTx(address(txObj));
-    // }
-
-    // /**
-    //  * @notice Execute an expression written in our custom DSL
-    //  * @param code string array of commands (expression) in polish notation to be parsed by DSL
-    //  * @return result returns the expression execution result (the last value in stack)
-    //  */
-    // function exec(string[] memory code) public returns (bool result) {
-    //     ConditionalTx eval = new ConditionalTx(ctx, opcodes);
-    //     parseCode(code);
-
-    //     ctx.setAppAddress(address(this));
-    //     ctx.setMsgSender(msg.sender);
-    //     eval.eval();
-
-    //     result = ctx.stack().seeLast().getUint256() == 0 ? false : true;
-    //     emit ExecRes(result);
-    // }
 
     function asmLoadLocal(Context _ctx) public {
         parseBranchOf(_ctx, "loadLocal");

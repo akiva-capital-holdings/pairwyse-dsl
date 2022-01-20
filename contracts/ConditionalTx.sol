@@ -19,8 +19,6 @@ contract ConditionalTx {
 
     constructor(
         address _signatory,
-        // bytes memory _transaction,
-        // bytes memory _condition,
         string memory _transactionStr,
         string memory _conditionStr,
         Context _transactionCtx,
@@ -28,8 +26,6 @@ contract ConditionalTx {
         Opcodes _opcodes
     ) {
         signatory = _signatory;
-        // transaction = _transaction;
-        // condition = _condition;
         transactionStr = _transactionStr;
         conditionStr = _conditionStr;
 
@@ -37,20 +33,6 @@ contract ConditionalTx {
         conditionCtx = _conditionCtx;
         opcodes = _opcodes;
     }
-
-    // function constructorV2(
-    //     address _signatory,
-    //     bytes memory _transaction,
-    //     bytes memory _condition,
-    //     string memory _transactionStr,
-    //     string memory _conditionStr
-    // ) external {
-    //     signatory = _signatory;
-    //     transaction = _transaction;
-    //     condition = _condition;
-    //     transactionStr = _transactionStr;
-    //     conditionStr = _conditionStr;
-    // }
 
     function checkCondition() external {
         require(conditionCtx.program().length > 0, "ConditionalTx: empty program");
@@ -103,25 +85,4 @@ contract ConditionalTx {
         }
         isExecuted = true;
     }
-
-    // function eval() public {
-    // require(!isExecuted, "ConditionalTx: txn already was executed");
-    // require(ctx.program().length > 0, "ConditionalTx: empty program");
-    // while (ctx.pc() < ctx.program().length) {
-    //     bytes memory opcodeBytes = ctx.programAt(ctx.pc(), 1);
-    //     bytes1 opcodeByte1;
-    //     // convert bytes to bytes1
-    //     assembly {
-    //         opcodeByte1 := mload(add(opcodeBytes, 0x20))
-    //     }
-    //     // console.log("opcodeBytes1");
-    //     // console.logBytes1(opcodeByte1);
-    //     bytes4 selector = ctx.selectorByOpcode(opcodeByte1);
-    //     require(selector != 0x0, "ConditionalTx: did not find selector for opcode");
-    //     ctx.incPc(1);
-    //     (bool success, ) = address(opcodes).call(abi.encodeWithSelector(selector, address(ctx)));
-    //     require(success, "ConditionalTx: call not success");
-    // }
-    // isExecuted = true;
-    // }
 }
