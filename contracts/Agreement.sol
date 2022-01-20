@@ -6,7 +6,7 @@ import { Context } from "./Context.sol";
 import { ConditionalTx } from "./ConditionalTx.sol";
 import { Storage } from "./helpers/Storage.sol";
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract Agreement is Storage {
     Parser public parser;
@@ -22,11 +22,15 @@ contract Agreement is Storage {
         string memory _transactionStr,
         string memory _conditionStr
     ) external returns (uint256) {
-        console.log("Agreement.update");
         Context transactionCtx = new Context();
         Context conditionCtx = new Context();
+
         parser.initOpcodes(transactionCtx);
         parser.initOpcodes(conditionCtx);
+        transactionCtx.setAppAddress(address(this));
+        transactionCtx.setMsgSender(msg.sender);
+        conditionCtx.setAppAddress(address(this));
+        conditionCtx.setMsgSender(msg.sender);
 
         ConditionalTx txn = new ConditionalTx(
             _signatory,

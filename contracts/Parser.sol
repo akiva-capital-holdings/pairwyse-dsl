@@ -29,6 +29,9 @@ contract Parser is Storage {
     event ExecRes(bool result);
     event NewConditionalTx(address txObj);
 
+    // solhint-disable-next-line no-empty-blocks
+    receive() external payable {}
+
     constructor() {
         // ctx = new Context();
         opcodes = new Opcodes();
@@ -60,7 +63,7 @@ contract Parser is Storage {
 
         bytes4 selector = _ctx.asmSelectors(cmd);
         if (selector != 0x0) {
-            (bool success, ) = address(this).delegatecall(abi.encodeWithSelector(selector));
+            (bool success, ) = address(this).delegatecall(abi.encodeWithSelector(selector, _ctx));
             require(success, "Parser: delegatecall to asmSelector failed");
         }
         // if no selector then opcode without params
@@ -74,9 +77,6 @@ contract Parser is Storage {
     function parse(Context _ctx, string memory _codeRaw) public {
         string[] memory _code = preprocessor.transform(_codeRaw);
         parseCode(_ctx, _code);
-
-        _ctx.setAppAddress(address(this));
-        _ctx.setMsgSender(msg.sender);
     }
 
     function spawnHighLevel(
