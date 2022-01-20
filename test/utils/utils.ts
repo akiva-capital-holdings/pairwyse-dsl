@@ -3,7 +3,7 @@
 import { expect } from "chai";
 import { ethers } from "ethers";
 import { Opcodes, Stack__factory, StackValue__factory, Stack, ContextMock, StackValue } from "../../typechain";
-import { OpEvalFunc } from "../types";
+import { OpConditionalTxFunc } from "../types";
 
 /**
  * Apply keccak256 to `str`, cut the result to the first 4 bytes, append
@@ -106,7 +106,7 @@ export const testTwoInputOneOutput = async (
   SV: StackValue__factory,
   context: ContextMock,
   opcodes: Opcodes,
-  opFunc: OpEvalFunc,
+  opFunc: OpConditionalTxFunc,
   value1: number,
   value2: number,
   result: number

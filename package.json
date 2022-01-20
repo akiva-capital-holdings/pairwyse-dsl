@@ -10,10 +10,12 @@
     "prettier:sol": "npx prettier --write 'contracts/**/*.sol'",
     "typechain": "npx hardhat typechain",
     "build": "yarn hardhat compile",
-    "test": "yarn hardhat test"
+    "test": "yarn hardhat test",
+    "size": "yarn hardhat size-contracts"
   },
   "dependencies": {
-    "hardhat": "^2.6.8"
+    "hardhat": "^2.6.8",
+    "hardhat-contract-sizer": "^2.4.0"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.0",

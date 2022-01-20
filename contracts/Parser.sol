@@ -1,13 +1,13 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "./Context.sol";
-import "./Opcodes.sol";
-import "./Eval.sol";
+import { Context } from "./Context.sol";
+import { Opcodes } from "./Opcodes.sol";
+import { ConditionalTx } from "./ConditionalTx.sol";
 import { StringUtils } from "./libs/StringUtils.sol";
 import { Preprocessor } from "./helpers/Preprocessor.sol";
-import "./helpers/Storage.sol";
-import "./interfaces/IERC20.sol";
+import { Storage } from "./helpers/Storage.sol";
+import { IERC20 } from "./interfaces/IERC20.sol";
 import "hardhat/console.sol";
 
 // TODO: make all quotes single
@@ -17,9 +17,9 @@ import "hardhat/console.sol";
 contract Parser is Storage {
     using StringUtils for string;
 
-    Context public ctx;
+    // Context public ctx;
     Opcodes public opcodes;
-    // Eval public eval;
+    // ConditionalTx public eval;
     Preprocessor public preprocessor;
 
     bytes internal program;
@@ -27,70 +27,112 @@ contract Parser is Storage {
     uint256 internal cmdIdx;
 
     event ExecRes(bool result);
-    event ConditionalTx(address txObj);
+    event NewConditionalTx(address txObj);
 
     constructor() {
-        ctx = new Context();
+        // ctx = new Context();
         opcodes = new Opcodes();
-        // eval = new Eval(ctx, opcodes);
+        // eval = new ConditionalTx(ctx, opcodes);
         preprocessor = new Preprocessor();
 
-        initOpcodes();
+        // initOpcodes();
     }
 
-    function parseCode(string[] memory code) public virtual {
+    function parseCode(Context _ctx, string[] memory code) public virtual {
         delete program;
         cmdIdx = 0;
         cmds = code;
-        ctx.stack().clear();
+        _ctx.stack().clear();
 
         while (cmdIdx < cmds.length) {
-            parseOpcodeWithParams();
+            parseOpcodeWithParams(_ctx);
         }
 
         // console.logBytes(program);
-        ctx.setProgram(program);
+        _ctx.setProgram(program);
     }
 
-    function execHighLevel(string memory code) public returns (bool result) {
-        string[] memory postfixCode = preprocessor.transform(code);
-        return this.exec(postfixCode);
+    function parseOpcodeWithParams(Context _ctx) internal {
+        string storage cmd = nextCmd();
+        bytes1 opcode = _ctx.opCodeByName(cmd);
+        require(opcode != 0x0, string(abi.encodePacked("Parser: '", cmd, "' command is unknown")));
+        program = bytes.concat(program, opcode);
+
+        bytes4 selector = _ctx.asmSelectors(cmd);
+        if (selector != 0x0) {
+            (bool success, ) = address(this).delegatecall(abi.encodeWithSelector(selector));
+            require(success, "Parser: delegatecall to asmSelector failed");
+        }
+        // if no selector then opcode without params
     }
 
-    function spawn(string[] memory code) public returns (Eval txObj) {
-        txObj = new Eval(ctx, opcodes);
-        parseCode(code);
+    // function execHighLevel(string memory code) public returns (bool result) {
+    //     string[] memory postfixCode = preprocessor.transform(code);
+    //     return this.exec(postfixCode);
+    // }
 
-        ctx.setAppAddress(address(this));
-        ctx.setMsgSender(msg.sender);
+    function parse(Context _ctx, string memory _codeRaw) public {
+        string[] memory _code = preprocessor.transform(_codeRaw);
+        parseCode(_ctx, _code);
 
-        emit ConditionalTx(address(txObj));
+        _ctx.setAppAddress(address(this));
+        _ctx.setMsgSender(msg.sender);
     }
 
-    /**
-     * @notice Execute an expression written in our custom DSL
-     * @param code string array of commands (expression) in polish notation to be parsed by DSL
-     * @return result returns the expression execution result (the last value in stack)
-     */
-    function exec(string[] memory code) public returns (bool result) {
-        Eval eval = new Eval(ctx, opcodes);
-        parseCode(code);
-
-        ctx.setAppAddress(address(this));
-        ctx.setMsgSender(msg.sender);
-        eval.eval();
-
-        result = ctx.stack().seeLast().getUint256() == 0 ? false : true;
-        emit ExecRes(result);
+    function spawnHighLevel(
+        address _signatory,
+        string memory _transactionStr,
+        string memory _conditionStr
+    ) public returns (ConditionalTx txObj) {
+        // string[] memory _transactionStrArr = preprocessor.transform(_transactionStr);
+        // string[] memory _conditionStrArr = preprocessor.transform(_conditionStr);
+        // txObj = new ConditionalTx(opcodes);
+        // Context conditionCtx = txObj.conditionCtx();
+        // Context transactionCtx = txObj.transactionCtx();
+        // initOpcodes(conditionCtx);
+        // initOpcodes(transactionCtx);
+        // parseCode(conditionCtx, _conditionStrArr); // TODO: also parse `_transactionStrArr`
+        // bytes memory _condition = conditionCtx.program();
+        // bytes memory _transaction = ""; // TODO
+        // conditionCtx.setAppAddress(address(this));
+        // conditionCtx.setMsgSender(msg.sender);
+        // txObj.constructorV2(_signatory, _transaction, _condition, _transactionStr, _conditionStr);
     }
 
-    function asmLoadLocal() public {
-        parseBranchOf("loadLocal");
+    // function spawn(string[] memory code) public returns (ConditionalTx txObj) {
+    //     txObj = new ConditionalTx(ctx, opcodes);
+    //     parseCode(code);
+
+    //     ctx.setAppAddress(address(this));
+    //     ctx.setMsgSender(msg.sender);
+
+    //     emit NewConditionalTx(address(txObj));
+    // }
+
+    // /**
+    //  * @notice Execute an expression written in our custom DSL
+    //  * @param code string array of commands (expression) in polish notation to be parsed by DSL
+    //  * @return result returns the expression execution result (the last value in stack)
+    //  */
+    // function exec(string[] memory code) public returns (bool result) {
+    //     ConditionalTx eval = new ConditionalTx(ctx, opcodes);
+    //     parseCode(code);
+
+    //     ctx.setAppAddress(address(this));
+    //     ctx.setMsgSender(msg.sender);
+    //     eval.eval();
+
+    //     result = ctx.stack().seeLast().getUint256() == 0 ? false : true;
+    //     emit ExecRes(result);
+    // }
+
+    function asmLoadLocal(Context _ctx) public {
+        parseBranchOf(_ctx, "loadLocal");
         parseVariable();
     }
 
-    function asmLoadRemote() public {
-        parseBranchOf("loadRemote");
+    function asmLoadRemote(Context _ctx) public {
+        parseBranchOf(_ctx, "loadRemote");
         parseVariable();
         parseAddress();
     }
@@ -146,43 +188,43 @@ contract Parser is Storage {
         IERC20(token).transfer(receiver, balanceThis);
     }
 
-    function initOpcodes() internal {
+    function initOpcodes(Context _ctx) public {
         // Opcodes
-        ctx.addOpcode("==", 0x01, opcodes.opEq.selector, 0x0);
-        ctx.addOpcode("!", 0x02, opcodes.opNot.selector, 0x0);
-        ctx.addOpcode("<", 0x03, opcodes.opLt.selector, 0x0);
-        ctx.addOpcode(">", 0x04, opcodes.opGt.selector, 0x0);
-        ctx.addOpcode("swap", 0x05, opcodes.opSwap.selector, 0x0);
-        ctx.addOpcode("<=", 0x06, opcodes.opLe.selector, 0x0);
-        ctx.addOpcode(">=", 0x07, opcodes.opGe.selector, 0x0);
-        ctx.addOpcode("xor", 0x11, opcodes.opXor.selector, 0x0);
-        ctx.addOpcode("and", 0x12, opcodes.opAnd.selector, 0x0);
-        ctx.addOpcode("or", 0x13, opcodes.opOr.selector, 0x0);
-        ctx.addOpcode("!=", 0x14, opcodes.opNotEq.selector, 0x0);
-        ctx.addOpcode("blockNumber", 0x15, opcodes.opBlockNumber.selector, 0x0);
-        ctx.addOpcode("blockTimestamp", 0x16, opcodes.opBlockTimestamp.selector, 0x0);
-        ctx.addOpcode("blockChainId", 0x17, opcodes.opBlockChainId.selector, 0x0);
-        ctx.addOpcode("bool", 0x18, opcodes.opBool.selector, this.asmBool.selector);
-        ctx.addOpcode("uint256", 0x1a, opcodes.opUint256.selector, this.asmUint256.selector);
-        ctx.addOpcode("msgSender", 0x1d, opcodes.opMsgSender.selector, 0x0);
-        ctx.addOpcode("sendEth", 0x1e, opcodes.opSendEth.selector, this.asmSend.selector);
-        ctx.addOpcode("transfer", 0x1f, opcodes.opTransfer.selector, this.asmTransfer.selector);
-        ctx.addOpcode("transferFrom", 0x20, opcodes.opTransferFrom.selector, this.asmTransferFrom.selector);
+        _ctx.addOpcode("==", 0x01, opcodes.opEq.selector, 0x0);
+        _ctx.addOpcode("!", 0x02, opcodes.opNot.selector, 0x0);
+        _ctx.addOpcode("<", 0x03, opcodes.opLt.selector, 0x0);
+        _ctx.addOpcode(">", 0x04, opcodes.opGt.selector, 0x0);
+        _ctx.addOpcode("swap", 0x05, opcodes.opSwap.selector, 0x0);
+        _ctx.addOpcode("<=", 0x06, opcodes.opLe.selector, 0x0);
+        _ctx.addOpcode(">=", 0x07, opcodes.opGe.selector, 0x0);
+        _ctx.addOpcode("xor", 0x11, opcodes.opXor.selector, 0x0);
+        _ctx.addOpcode("and", 0x12, opcodes.opAnd.selector, 0x0);
+        _ctx.addOpcode("or", 0x13, opcodes.opOr.selector, 0x0);
+        _ctx.addOpcode("!=", 0x14, opcodes.opNotEq.selector, 0x0);
+        _ctx.addOpcode("blockNumber", 0x15, opcodes.opBlockNumber.selector, 0x0);
+        _ctx.addOpcode("blockTimestamp", 0x16, opcodes.opBlockTimestamp.selector, 0x0);
+        _ctx.addOpcode("blockChainId", 0x17, opcodes.opBlockChainId.selector, 0x0);
+        _ctx.addOpcode("bool", 0x18, opcodes.opBool.selector, this.asmBool.selector);
+        _ctx.addOpcode("uint256", 0x1a, opcodes.opUint256.selector, this.asmUint256.selector);
+        _ctx.addOpcode("msgSender", 0x1d, opcodes.opMsgSender.selector, 0x0);
+        _ctx.addOpcode("sendEth", 0x1e, opcodes.opSendEth.selector, this.asmSend.selector);
+        _ctx.addOpcode("transfer", 0x1f, opcodes.opTransfer.selector, this.asmTransfer.selector);
+        _ctx.addOpcode("transferFrom", 0x20, opcodes.opTransferFrom.selector, this.asmTransferFrom.selector);
 
         // complex opcodes with sub opcodes (branches)
         string memory name = "loadLocal";
-        ctx.addOpcode(name, 0x1b, opcodes.opLoadLocalAny.selector, this.asmLoadLocal.selector);
-        ctx.addOpcodeBranch(name, "uint256", 0x01, opcodes.opLoadLocalUint256.selector);
-        ctx.addOpcodeBranch(name, "bool", 0x02, opcodes.opLoadLocalBool.selector);
-        ctx.addOpcodeBranch(name, "address", 0x03, opcodes.opLoadLocalAddress.selector);
-        ctx.addOpcodeBranch(name, "bytes32", 0x04, opcodes.opLoadLocalBytes32.selector);
+        _ctx.addOpcode(name, 0x1b, opcodes.opLoadLocalAny.selector, this.asmLoadLocal.selector);
+        _ctx.addOpcodeBranch(name, "uint256", 0x01, opcodes.opLoadLocalUint256.selector);
+        _ctx.addOpcodeBranch(name, "bool", 0x02, opcodes.opLoadLocalBool.selector);
+        _ctx.addOpcodeBranch(name, "address", 0x03, opcodes.opLoadLocalAddress.selector);
+        _ctx.addOpcodeBranch(name, "bytes32", 0x04, opcodes.opLoadLocalBytes32.selector);
 
         name = "loadRemote";
-        ctx.addOpcode(name, 0x1c, opcodes.opLoadRemoteAny.selector, this.asmLoadRemote.selector);
-        ctx.addOpcodeBranch(name, "uint256", 0x01, opcodes.opLoadRemoteUint256.selector);
-        ctx.addOpcodeBranch(name, "bool", 0x02, opcodes.opLoadRemoteBool.selector);
-        ctx.addOpcodeBranch(name, "address", 0x03, opcodes.opLoadRemoteAddress.selector);
-        ctx.addOpcodeBranch(name, "bytes32", 0x04, opcodes.opLoadRemoteBytes32.selector);
+        _ctx.addOpcode(name, 0x1c, opcodes.opLoadRemoteAny.selector, this.asmLoadRemote.selector);
+        _ctx.addOpcodeBranch(name, "uint256", 0x01, opcodes.opLoadRemoteUint256.selector);
+        _ctx.addOpcodeBranch(name, "bool", 0x02, opcodes.opLoadRemoteBool.selector);
+        _ctx.addOpcodeBranch(name, "address", 0x03, opcodes.opLoadRemoteAddress.selector);
+        _ctx.addOpcodeBranch(name, "bytes32", 0x04, opcodes.opLoadRemoteBytes32.selector);
     }
 
     function nextCmd() internal returns (string storage) {
@@ -193,8 +235,8 @@ contract Parser is Storage {
         program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(nextCmd()))));
     }
 
-    function parseBranchOf(string memory baseOpName) internal {
-        program = bytes.concat(program, ctx.branchCodes(baseOpName, nextCmd()));
+    function parseBranchOf(Context _ctx, string memory baseOpName) internal {
+        program = bytes.concat(program, _ctx.branchCodes(baseOpName, nextCmd()));
     }
 
     function parseAddress() internal {
@@ -222,19 +264,5 @@ contract Parser is Storage {
         // console.logBytes32(addrB32);
 
         return address(uint160(uint256(addrB32)));
-    }
-
-    function parseOpcodeWithParams() internal {
-        string storage cmd = nextCmd();
-        bytes1 opcode = ctx.opCodeByName(cmd);
-        require(opcode != 0x0, string(abi.encodePacked("Parser: '", cmd, "' command is unknown")));
-        program = bytes.concat(program, opcode);
-
-        bytes4 selector = ctx.asmSelectors(cmd);
-        if (selector != 0x0) {
-            (bool success, ) = address(this).delegatecall(abi.encodeWithSelector(selector));
-            require(success, "Parser: delegatecall to asmSelector failed");
-        }
-        // if no selector then opcode without params
     }
 }

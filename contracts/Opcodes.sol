@@ -211,6 +211,7 @@ contract Opcodes {
     }
 
     function opUint256(IContext ctx) public {
+        console.log("opUint256");
         putUint256ToStack(ctx, opUint256Get(ctx));
     }
 
@@ -260,6 +261,7 @@ contract Opcodes {
     }
 
     function opUint256Get(IContext ctx) private returns (uint256) {
+        console.log("opUint256Get");
         bytes memory data = nextBytes(ctx, 32);
 
         // Convert bytes to bytes32

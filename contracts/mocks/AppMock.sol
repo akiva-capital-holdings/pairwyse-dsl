@@ -1,7 +1,8 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "../Parser.sol";
+import { Parser } from "../Parser.sol";
+import { UnstructuredStorage } from "../libs/UnstructuredStorage.sol";
 import "hardhat/console.sol";
 
 contract AppMock is Parser {
