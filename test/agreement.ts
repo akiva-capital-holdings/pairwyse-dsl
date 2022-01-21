@@ -34,7 +34,7 @@ describe("Agreement", () => {
     agreement = await (await ethers.getContractFactory("Agreement")).deploy(parser.address, executor.address);
   });
 
-  it.only("lifecycle", async () => {
+  it("lifecycle", async () => {
     // Set variables
     await agreement.setStorageAddress(hex4Bytes("RECEIVER"), receiver.address);
     await agreement.setStorageUint256(hex4Bytes("LOCK_TIME"), NEXT_MONTH);

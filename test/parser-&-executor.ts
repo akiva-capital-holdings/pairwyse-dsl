@@ -1,16 +1,17 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { AppMock, Context, Stack, StackValue__factory } from "../typechain";
+import { AppMock, Context, Executor, Stack, StackValue__factory } from "../typechain";
 import { checkStack, checkStackTail, hex4Bytes } from "./utils/utils";
 
 const NEXT_MONTH = Math.round((Date.now() + 1000 * 60 * 60 * 24 * 30) / 1000);
 const PREV_MONTH = Math.round((Date.now() - 1000 * 60 * 60 * 24 * 30) / 1000);
 
-describe("Parser", () => {
+describe.only("Parser & Executor", () => {
   let stack: Stack;
   let ctx: Context;
   let ctxAddr: string;
   let app: AppMock;
+  let executor: Executor;
   let appAddrHex: string;
   let StackValue: StackValue__factory;
 
@@ -28,7 +29,10 @@ describe("Parser", () => {
     app = await AppCont.deploy();
     appAddrHex = app.address.slice(2);
 
-    // Create Context instance & setup
+    // Deploy Executor
+    executor = await (await ethers.getContractFactory("Executor")).deploy(await app.opcodes());
+
+    // Deploy Context & setup
     ctx = await (await ethers.getContractFactory("Context")).deploy();
     ctxAddr = ctx.address;
     app.initOpcodes(ctxAddr);
@@ -41,66 +45,77 @@ describe("Parser", () => {
 
   // TODO: Parser.parse() test
 
-  //   it.only("uint256 1122334433", async () => {
-  //     await app.parse(ctxAddr, "uint256 1122334433");
-  //     console.log(await ctx.program());
-  //     await checkStack(StackValue, stack, 1, 1122334433);
-  //   });
+  it("uint256 1122334433", async () => {
+    await app.parse(ctxAddr, "uint256 1122334433");
+    await executor.execute(ctxAddr);
+    await checkStack(StackValue, stack, 1, 1122334433);
+  });
 
-  //   it("uint256 2 uint256 3 -> 2 3", async () => {
-  //     await app.exec(["uint256", "2", "uint256", "3"]);
-  //     await checkStackTail(StackValue, stack, 2, [2, 3]);
-  //   });
+  it("uint256 2 uint256 3 -> 2 3", async () => {
+    await app.parse(ctxAddr, "uint256 2 uint256 3");
+    await executor.execute(ctxAddr);
+    await checkStackTail(StackValue, stack, 2, [2, 3]);
+  });
 
-  //   it("5 == 5", async () => {
-  //     await app.exec(["uint256", "5", "uint256", "5", "=="]);
-  //     await checkStack(StackValue, stack, 1, 1);
-  //   });
+  it("5 == 5", async () => {
+    await app.parse(ctxAddr, "uint256 5 == uint256 5");
+    await executor.execute(ctxAddr);
+    await checkStack(StackValue, stack, 1, 1);
+  });
 
-  //   it("5 != 6", async () => {
-  //     await app.exec(["uint256", "5", "uint256", "6", "!="]);
-  //     await checkStack(StackValue, stack, 1, 1);
-  //   });
+  it("5 != 6", async () => {
+    await app.parse(ctxAddr, "uint256 5 != uint256 6");
+    await executor.execute(ctxAddr);
+    await checkStack(StackValue, stack, 1, 1);
+  });
 
-  //   it("5 < 6", async () => {
-  //     await app.exec(["uint256", "5", "uint256", "6", "<"]);
-  //     await checkStack(StackValue, stack, 1, 1);
-  //   });
+  it("5 < 6", async () => {
+    await app.parse(ctxAddr, "uint256 5 < uint256 6");
+    await executor.execute(ctxAddr);
+    await checkStack(StackValue, stack, 1, 1);
+  });
 
-  //   it("5 < 5 = false", async () => {
-  //     await app.exec(["uint256", "5", "uint256", "5", "<"]);
-  //     await checkStack(StackValue, stack, 1, 0);
-  //   });
+  it("5 < 5 = false", async () => {
+    await app.parse(ctxAddr, "uint256 5 < uint256 5");
+    await executor.execute(ctxAddr);
+    await checkStack(StackValue, stack, 1, 0);
+  });
 
-  //   it("6 > 5", async () => {
-  //     await app.exec(["uint256", "6", "uint256", "5", ">"]);
-  //     await checkStack(StackValue, stack, 1, 1);
-  //   });
+  it("6 > 5", async () => {
+    await app.parse(ctxAddr, "uint256 6 > uint256 5");
+    await executor.execute(ctxAddr);
+    await checkStack(StackValue, stack, 1, 1);
+  });
 
-  //   it("5 > 5 = false", async () => {
-  //     await app.exec(["uint256", "5", "uint256", "5", ">"]);
-  //     await checkStack(StackValue, stack, 1, 0);
-  //   });
+  it("5 > 5 = false", async () => {
+    await app.parse(ctxAddr, "uint256 5 > uint256 5");
+    await executor.execute(ctxAddr);
+    await checkStack(StackValue, stack, 1, 0);
+  });
 
-  //   it("5 <= 5", async () => {
-  //     await app.exec(["uint256", "5", "uint256", "5", "<="]);
-  //     await checkStack(StackValue, stack, 1, 1);
-  //   });
+  it("5 <= 5", async () => {
+    await app.parse(ctxAddr, "uint256 5 <= uint256 5");
+    await executor.execute(ctxAddr);
+    await checkStack(StackValue, stack, 1, 1);
+  });
 
-  //   it("5 <= 6", async () => {
-  //     await app.exec(["uint256", "5", "uint256", "6", "<="]);
-  //     await checkStack(StackValue, stack, 1, 1);
-  //   });
+  it("5 <= 6", async () => {
+    await app.parse(ctxAddr, "uint256 5 <= uint256 6");
+    await executor.execute(ctxAddr);
+    await checkStack(StackValue, stack, 1, 1);
+  });
 
-  //   it("5 >= 5", async () => {
-  //     await app.exec(["uint256", "5", "uint256", "5", ">="]);
-  //     await checkStack(StackValue, stack, 1, 1);
-  //   });
+  it("5 >= 5", async () => {
+    await app.parse(ctxAddr, "uint256 5 >= uint256 5");
+    await executor.execute(ctxAddr);
+    await checkStack(StackValue, stack, 1, 1);
+  });
 
-  //   it("6 >= 5", async () => {
-  //     await app.exec(["uint256", "6", "uint256", "5", ">="]);
-  //     await checkStack(StackValue, stack, 1, 1);
-  //   });
+  it("6 >= 5", async () => {
+    await app.parse(ctxAddr, "uint256 6 >= uint256 5");
+    await executor.execute(ctxAddr);
+    await checkStack(StackValue, stack, 1, 1);
+  });
 
   //   it("5 6 swap -> 6 5", async () => {
   //     await app.exec(["uint256", "5", "uint256", "6", "swap"]);
