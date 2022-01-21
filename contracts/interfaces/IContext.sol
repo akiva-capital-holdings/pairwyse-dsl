@@ -16,6 +16,8 @@ interface IContext {
 
     function msgSender() external returns (address);
 
+    function selectorByOpcode(bytes1 _opcode) external returns (bytes4 _selecotor);
+
     function addOpcode(
         string memory name,
         bytes1 opcode,

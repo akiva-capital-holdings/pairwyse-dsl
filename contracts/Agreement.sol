@@ -1,22 +1,25 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
 import { Parser } from "./Parser.sol";
 import { Context } from "./Context.sol";
 import { ConditionalTx } from "./ConditionalTx.sol";
+import { Executor } from "./Executor.sol";
 import { Storage } from "./helpers/Storage.sol";
 
 // import "hardhat/console.sol";
 
 contract Agreement is Storage {
     Parser public parser;
+    Executor public executor;
 
     event NewTransaction(bytes32 txId, address signatory, string transaction, string conditionStr);
 
     mapping(bytes32 => ConditionalTx) public txs;
 
-    constructor(Parser _parser) {
+    constructor(Parser _parser, Executor _executor) {
         parser = _parser;
+        executor = _executor;
     }
 
     function update(
@@ -40,7 +43,7 @@ contract Agreement is Storage {
             _conditionStr,
             transactionCtx,
             conditionCtx,
-            parser.opcodes()
+            executor
         );
         parser.parse(txn.transactionCtx(), _transactionStr);
         parser.parse(txn.conditionCtx(), _conditionStr);

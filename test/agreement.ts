@@ -27,8 +27,11 @@ describe("Agreement", () => {
     });
     parser = await ParserCont.deploy();
 
+    // Deploy Executor
+    const executor = await (await ethers.getContractFactory("Executor")).deploy(await parser.opcodes());
+
     // Deploy Agreement
-    agreement = await (await ethers.getContractFactory("Agreement")).deploy(parser.address);
+    agreement = await (await ethers.getContractFactory("Agreement")).deploy(parser.address, executor.address);
   });
 
   it.only("lifecycle", async () => {

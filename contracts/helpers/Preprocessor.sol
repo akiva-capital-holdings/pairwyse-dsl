@@ -6,6 +6,7 @@ import { StringUtils } from "../libs/StringUtils.sol";
 
 import "hardhat/console.sol";
 
+// TODO: make a library
 contract Preprocessor {
     using StringUtils for string;
 

@@ -5,6 +5,9 @@ import "./interfaces/IContext.sol";
 import "./helpers/Stack.sol";
 import "hardhat/console.sol";
 
+// TODO: split Context into:
+//      contract A (holds opCodeByName, selectorByOpcode, and asmSelectors)
+//      contract B (holds particular state variables: stack, program, pc, appAddress, msgSender)
 contract Context is IContext {
     Stack public override stack;
     bytes public override program;
@@ -13,9 +16,9 @@ contract Context is IContext {
     address public override appAddress;
     address public override msgSender;
 
-    mapping(string => bytes1) public opCodeByName; // name => hex
-    mapping(bytes1 => bytes4) public selectorByOpcode;
-    mapping(string => bytes4) public asmSelectors;
+    mapping(string => bytes1) public opCodeByName; // name => hex // used in Parser
+    mapping(bytes1 => bytes4) public selectorByOpcode; // used in ConditionalTx
+    mapping(string => bytes4) public asmSelectors; // used in Parser
 
     // baseOpName -> branchCode -> selector;
     mapping(string => mapping(bytes1 => bytes4)) public override branchSelectors;
@@ -31,7 +34,7 @@ contract Context is IContext {
     constructor() {
         parser = msg.sender;
         stack = new Stack();
-        pc = 0;
+        // pc = 0;
     }
 
     function addOpcode(
