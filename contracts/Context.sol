@@ -1,5 +1,5 @@
-//SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.11;
 
 import "./interfaces/IContext.sol";
 import "./helpers/Stack.sol";
@@ -34,7 +34,12 @@ contract Context is IContext {
         pc = 0;
     }
 
-    function addOpcode(string memory name, bytes1 opcode, bytes4 opSelector, bytes4 asmSelector) public override {
+    function addOpcode(
+        string memory name,
+        bytes1 opcode,
+        bytes4 opSelector,
+        bytes4 asmSelector
+    ) public override {
         require(
             opCodeByName[name] == bytes1(0) && selectorByOpcode[opcode] == bytes4(0),
             "Context: duplicate opcode name or code"
@@ -44,13 +49,19 @@ contract Context is IContext {
         asmSelectors[name] = asmSelector;
     }
 
-    function addOpcodeBranch(string memory baseOpName, string memory branchName,
-                             bytes1 branchCode, bytes4 selector) public {
+    function addOpcodeBranch(
+        string memory baseOpName,
+        string memory branchName,
+        bytes1 branchCode,
+        bytes4 selector
+    ) public {
         branchSelectors[baseOpName][branchCode] = selector;
         branchCodes[baseOpName][branchName] = branchCode;
     }
 
-    function setProgram(bytes memory data) public virtual override /*onlyParser*/ {
+    function setProgram(
+        bytes memory data /*onlyParser*/
+    ) public virtual override {
         program = data;
         pc = 0;
     }

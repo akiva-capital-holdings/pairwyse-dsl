@@ -1,5 +1,5 @@
-//SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.11;
 
 library StringUtils {
     function char(string memory s, uint256 index) public pure returns (string memory) {
