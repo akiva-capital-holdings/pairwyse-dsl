@@ -45,19 +45,20 @@ describe("Agreement", () => {
     const condition = "blockTimestamp > loadLocal uint256 LOCK_TIME";
 
     // Update
+    const txId = await agreement.callStatic.update(signatory, transaction, condition);
     await agreement.update(signatory, transaction, condition);
 
     /**
      * Execute
      */
     // Bad signatory
-    await expect(agreement.connect(anybody).execute(1)).to.be.revertedWith("Agreement: bad tx signatory");
+    await expect(agreement.connect(anybody).execute(txId)).to.be.revertedWith("Agreement: bad tx signatory");
 
     // Condition isn't satisfied
-    await expect(agreement.connect(alice).execute(1)).to.be.revertedWith("Agreement: tx condition is not satisfied");
+    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith("Agreement: tx condition is not satisfied");
 
     // Execute transaction
     await ethers.provider.send("evm_increaseTime", [ONE_MONTH]);
-    await expect(await agreement.connect(alice).execute(1)).to.changeEtherBalance(receiver, oneEthBN);
+    await expect(await agreement.connect(alice).execute(txId)).to.changeEtherBalance(receiver, oneEthBN);
   });
 });

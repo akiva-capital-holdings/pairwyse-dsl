@@ -11,7 +11,9 @@ import { Storage } from "./helpers/Storage.sol";
 contract Agreement is Storage {
     Parser public parser;
 
-    mapping(uint256 => ConditionalTx) public txs;
+    event NewTransaction(bytes32 txId, address signatory, string transaction, string conditionStr);
+
+    mapping(bytes32 => ConditionalTx) public txs;
 
     constructor(Parser _parser) {
         parser = _parser;
@@ -21,7 +23,7 @@ contract Agreement is Storage {
         address _signatory,
         string memory _transactionStr,
         string memory _conditionStr
-    ) external returns (uint256) {
+    ) external returns (bytes32 txId) {
         Context transactionCtx = new Context();
         Context conditionCtx = new Context();
 
@@ -43,12 +45,13 @@ contract Agreement is Storage {
         parser.parse(txn.transactionCtx(), _transactionStr);
         parser.parse(txn.conditionCtx(), _conditionStr);
 
-        uint256 txId = 1; // TODO: calculate txId, don't hardcode
+        txId = hashTx(_signatory, _transactionStr, _conditionStr);
         txs[txId] = txn;
-        return txId;
+
+        emit NewTransaction(txId, _signatory, _transactionStr, _conditionStr);
     }
 
-    function execute(uint256 txId) external {
+    function execute(bytes32 txId) external {
         ConditionalTx txn = txs[txId];
         require(verify(txn.signatory()), "Agreement: bad tx signatory");
         require(validate(txn), "Agreement: tx condition is not satisfied");
@@ -67,5 +70,13 @@ contract Agreement is Storage {
     function fulfil(ConditionalTx _tx) internal returns (bool) {
         _tx.execTransaction();
         return _tx.transactionCtx().stack().seeLast().getUint256() == 0 ? false : true;
+    }
+
+    function hashTx(
+        address _signatory,
+        string memory _transaction,
+        string memory _condition
+    ) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(_signatory, _transaction, _condition));
     }
 }
