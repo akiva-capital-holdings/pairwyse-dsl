@@ -11,7 +11,7 @@ async function getChainId() {
 }
 
 // TODO: make more thorough end-to-end testing
-describe.only("End-to-end", () => {
+describe("End-to-end", () => {
   let stack: Stack;
   let ctx: Context;
   let app: AppMock;
