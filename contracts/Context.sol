@@ -12,7 +12,6 @@ contract Context is IContext {
     Stack public override stack;
     bytes public override program;
     uint256 public override pc;
-    address public override parser;
     address public override appAddress;
     address public override msgSender;
 
@@ -32,9 +31,7 @@ contract Context is IContext {
     // }
 
     constructor() {
-        parser = msg.sender;
         stack = new Stack();
-        // pc = 0;
     }
 
     function addOpcode(

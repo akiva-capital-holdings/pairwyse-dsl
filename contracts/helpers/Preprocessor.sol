@@ -92,21 +92,22 @@ contract Preprocessor {
         return result;
     }
 
+    // bigger number => bigger priority
     function initOperatorPriorities() private {
         opsPriors["!"] = 4;
 
-        opsPriors["<"] = 3;
-        opsPriors[">"] = 3;
-        opsPriors["<="] = 3;
-        opsPriors[">="] = 3;
-        opsPriors["=="] = 3;
-        opsPriors["!="] = 3;
+        opsPriors["swap"] = 3;
+        opsPriors["and"] = 3;
 
-        opsPriors["swap"] = 2;
-        opsPriors["and"] = 2;
+        opsPriors["xor"] = 2;
+        opsPriors["or"] = 2;
 
-        opsPriors["xor"] = 1;
-        opsPriors["or"] = 1;
+        opsPriors["<"] = 1;
+        opsPriors[">"] = 1;
+        opsPriors["<="] = 1;
+        opsPriors[">="] = 1;
+        opsPriors["=="] = 1;
+        opsPriors["!="] = 1;
     }
 
     function pushStringToStack(Stack stack_, string memory value) internal {

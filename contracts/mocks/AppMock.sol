@@ -1,12 +1,34 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
 import { Parser } from "../Parser.sol";
-import { UnstructuredStorage } from "../libs/UnstructuredStorage.sol";
-import "hardhat/console.sol";
+import { Context } from "../Context.sol";
+import { Executor } from "../Executor.sol";
+import { Storage } from "../helpers/Storage.sol";
 
-contract AppMock is Parser {
-    using UnstructuredStorage for bytes32;
+// import "hardhat/console.sol";
 
-    bytes4 public constant MIN_BLOCK = bytes4(keccak256("MIN_BLOCK"));
+contract AppMock is Storage {
+    Parser public parser;
+    Executor public executor;
+
+    receive() external payable {
+        payable(parser.opcodes()).transfer(msg.value);
+    }
+
+    constructor(Parser _parser, Executor _executor) {
+        parser = _parser;
+        executor = _executor;
+    }
+
+    function parse(Context _ctx, string memory _program) external {
+        parser.initOpcodes(_ctx);
+        _ctx.setAppAddress(address(this));
+        _ctx.setMsgSender(msg.sender);
+        parser.parse(_ctx, _program);
+    }
+
+    function execute(Context _ctx) external {
+        executor.execute(_ctx);
+    }
 }

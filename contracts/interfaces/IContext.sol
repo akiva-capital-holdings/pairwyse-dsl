@@ -10,7 +10,7 @@ interface IContext {
 
     function pc() external returns (uint256);
 
-    function parser() external returns (address);
+    // function parser() external returns (address);
 
     function appAddress() external returns (address);
 
@@ -40,4 +40,8 @@ interface IContext {
     function setPc(uint256 value) external;
 
     function incPc(uint256 value) external;
+
+    // function setAppAddress(address addr) external;
+
+    // function setMsgSender(address _msgSender) external;
 }

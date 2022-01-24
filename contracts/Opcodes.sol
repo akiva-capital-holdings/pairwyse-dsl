@@ -219,7 +219,8 @@ contract Opcodes {
             address(uint160(uint256(opLoadLocalGet(ctx, "getStorageAddress(bytes32)"))))
         );
         uint256 amount = opUint256Get(ctx);
-        putUint256ToStack(ctx, recipient.send(amount) ? 1 : 0);
+        recipient.transfer(amount);
+        putUint256ToStack(ctx, 1);
     }
 
     function opTransfer(IContext ctx) public {
