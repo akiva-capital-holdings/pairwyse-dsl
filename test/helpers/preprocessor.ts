@@ -32,11 +32,11 @@ describe("Preprocessor", () => {
       {
         name: "complex",
         expr: `
-      blockTimestamp > loadLocal uint256 INIT
+      (blockTimestamp > loadLocal uint256 INIT)
         and
-      blockTimestamp < loadLocal uint256 EXPIRY
+      (blockTimestamp < loadLocal uint256 EXPIRY)
         or
-      loadLocal bool RISK != bool true
+      (loadLocal bool RISK != bool true)
     `,
         expected: [
           "blockTimestamp",
