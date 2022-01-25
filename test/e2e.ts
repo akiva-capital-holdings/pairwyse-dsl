@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { AppMock, Context, Stack, StackValue__factory } from "../typechain";
+import { App, Context, Stack, StackValue__factory } from "../typechain";
 import { checkStack, hex4Bytes, hex4BytesShort } from "./utils/utils";
 
 async function getChainId() {
@@ -11,7 +11,7 @@ async function getChainId() {
 describe("End-to-end", () => {
   let stack: Stack;
   let ctx: Context;
-  let app: AppMock;
+  let app: App;
   let StackValue: StackValue__factory;
   let NEXT_MONTH: number;
   let PREV_MONTH: number;
@@ -52,7 +52,7 @@ describe("End-to-end", () => {
     stack = StackCont.attach(contextStackAddress);
 
     // Deploy App
-    const AppCont = await ethers.getContractFactory("AppMock");
+    const AppCont = await ethers.getContractFactory("App");
     app = await AppCont.deploy(parser.address, executor.address, ctx.address);
   });
 

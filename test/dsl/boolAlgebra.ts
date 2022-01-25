@@ -1,11 +1,11 @@
 import { ethers } from "hardhat";
-import { AppMock, Context, Executor, Parser, Stack, StackValue__factory } from "../../typechain";
+import { App, Context, Executor, Parser, Stack, StackValue__factory } from "../../typechain";
 import { checkStack } from "../utils/utils";
 
 describe("Boolean Algebra", () => {
   let stack: Stack;
   let ctx: Context;
-  let app: AppMock;
+  let app: App;
   let parser: Parser;
   let executor: Executor;
   let StackValue: StackValue__factory;
@@ -35,7 +35,7 @@ describe("Boolean Algebra", () => {
     stack = StackCont.attach(contextStackAddress);
 
     // Deploy Agreement
-    app = await (await ethers.getContractFactory("AppMock")).deploy(parser.address, executor.address, ctx.address);
+    app = await (await ethers.getContractFactory("App")).deploy(parser.address, executor.address, ctx.address);
   });
 
   describe("Commutative law", async () => {

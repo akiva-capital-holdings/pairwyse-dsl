@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
 import { Stack, StackValue } from "../helpers/Stack.sol";
 import { StringUtils } from "../libs/StringUtils.sol";

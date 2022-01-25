@@ -8,7 +8,7 @@ import { Storage } from "../helpers/Storage.sol";
 
 // import "hardhat/console.sol";
 
-contract AppMock is Storage {
+contract App is Storage {
     Parser public parser;
     Executor public executor;
     Context public ctx;

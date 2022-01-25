@@ -1,12 +1,12 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { AppMock, Context, Executor, Parser, Stack, StackValue__factory } from "../../typechain";
+import { App, Context, Executor, Parser, Stack, StackValue__factory } from "../../typechain";
 import { checkStack, checkStackTail, hex4Bytes } from "../utils/utils";
 
 describe("DSL: basic", () => {
   let stack: Stack;
   let ctx: Context;
-  let app: AppMock;
+  let app: App;
   let parser: Parser;
   let executor: Executor;
   let appAddrHex: string;
@@ -50,7 +50,7 @@ describe("DSL: basic", () => {
     stack = StackCont.attach(contextStackAddress);
 
     // Deploy Application
-    app = await (await ethers.getContractFactory("AppMock")).deploy(parser.address, executor.address, ctx.address);
+    app = await (await ethers.getContractFactory("App")).deploy(parser.address, executor.address, ctx.address);
     appAddrHex = app.address.slice(2);
   });
 
