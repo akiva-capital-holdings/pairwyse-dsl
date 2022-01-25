@@ -41,7 +41,7 @@ describe("DSL: basic", () => {
     // Deploy Executor
     executor = await (await ethers.getContractFactory("Executor")).deploy(await parser.opcodes());
 
-    // Deploy Context & setup
+    // Deploy Context
     ctx = await (await ethers.getContractFactory("Context")).deploy();
 
     // Create Stack instance
@@ -625,15 +625,5 @@ describe("DSL: basic", () => {
     it("((T & F) | F) == F", async () => testCase(PREV_MONTH, PREV_MONTH, ITS_RISKY, 0));
     it("((F & T) | F) == F", async () => testCase(NEXT_MONTH, NEXT_MONTH, ITS_RISKY, 0));
     it("((F & F) | F) == F", async () => testCase(NEXT_MONTH, PREV_MONTH, ITS_RISKY, 0));
-  });
-
-  // TODO: move to parser.ts test
-  describe("should throw at unknownExpr", async () => {
-    it("first", async () => {
-      await expect(app.parse("unknownExpr")).to.be.revertedWith("Parser: 'unknownExpr' command is unknown");
-    });
-    it("second", async () => {
-      await expect(app.parse("?!")).to.be.revertedWith("Parser: '?!' command is unknown");
-    });
   });
 });

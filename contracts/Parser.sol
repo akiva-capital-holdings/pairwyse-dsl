@@ -151,7 +151,7 @@ contract Parser is IParser, Storage {
         delete program;
         cmdIdx = 0;
         cmds = code;
-        _ctx.stack().clear();
+        _ctx.stack().clear(); // TODO: remove or reset context fully
 
         while (cmdIdx < cmds.length) {
             parseOpcodeWithParams(_ctx);

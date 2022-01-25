@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { StackType } from "../src/interfaces";
-import { StackValue } from "../typechain";
+import { StackType } from "../../src/interfaces";
+import { StackValue } from "../../typechain";
 
 describe("Stack", () => {
   let stackValue: StackValue;
