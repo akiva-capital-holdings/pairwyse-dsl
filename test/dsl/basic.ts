@@ -627,53 +627,7 @@ describe("DSL: basic", () => {
     it("((F & F) | F) == F", async () => testCase(NEXT_MONTH, PREV_MONTH, ITS_RISKY, 0));
   });
 
-  describe("Execute high-level DSL", () => {
-    it("parenthesis", async () => {
-      await app.parse("(((uint256 1 or uint256 5) or uint256 7) and uint256 1)");
-      await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
-    });
-
-    describe("parenthesis matter", () => {
-      it("first", async () => {
-        // no parenthesis
-        await app.parse("uint256 1 or uint256 0 or uint256 1 and uint256 0");
-        await app.execute();
-        await checkStack(StackValue, stack, 1, 1);
-      });
-
-      it("second", async () => {
-        await app.parse("((uint256 1 or uint256 0) or uint256 1) and uint256 0");
-        await app.execute();
-        await checkStack(StackValue, stack, 1, 0);
-      });
-
-      it("third", async () => {
-        await app.parse("(uint256 1 or uint256 0) or (uint256 1 and uint256 0)");
-        await app.execute();
-        await checkStack(StackValue, stack, 1, 1);
-      });
-    });
-
-    it("complex expression", async () => {
-      const program = `
-        (((loadLocal uint256 TIMESTAMP >    loadLocal uint256 INIT)
-          and
-        (loadLocal uint256 TIMESTAMP <   loadLocal uint256 EXPIRY))
-          or
-        loadLocal bool RISK != bool true)`;
-
-      await app.setStorageUint256(hex4Bytes("INIT"), NEXT_MONTH);
-      await app.setStorageUint256(hex4Bytes("EXPIRY"), PREV_MONTH);
-      await app.setStorageUint256(hex4Bytes("TIMESTAMP"), lastBlockTimestamp);
-      await app.setStorageBool(hex4Bytes("RISK"), false);
-
-      await app.parse(program);
-      await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
-    });
-  });
-
+  // TODO: move to parser.ts test
   describe("should throw at unknownExpr", async () => {
     it("first", async () => {
       await expect(app.parse("unknownExpr")).to.be.revertedWith("Parser: 'unknownExpr' command is unknown");
