@@ -43,12 +43,6 @@ describe("End-to-end", () => {
     // Deploy Executor
     const executor = await (await ethers.getContractFactory("Executor")).deploy(await parser.opcodes());
 
-    // Deploy App
-    const AppCont = await ethers.getContractFactory("AppMock");
-    app = await AppCont.deploy(parser.address, executor.address);
-  });
-
-  beforeEach(async () => {
     // Deploy Context & setup
     ctx = await (await ethers.getContractFactory("Context")).deploy();
 
@@ -56,6 +50,10 @@ describe("End-to-end", () => {
     const StackCont = await ethers.getContractFactory("Stack");
     const contextStackAddress = await ctx.stack();
     stack = StackCont.attach(contextStackAddress);
+
+    // Deploy App
+    const AppCont = await ethers.getContractFactory("AppMock");
+    app = await AppCont.deploy(parser.address, executor.address, ctx.address);
   });
 
   describe("blockChainId < loadLocal uint256 VAR", () => {
@@ -69,13 +67,13 @@ describe("End-to-end", () => {
 
       // Parse code
       await app.setStorageUint256(varHashPadded, varValue);
-      await app.parse(ctx.address, code);
+      await app.parse(code);
 
       const resultBytecode = await ctx.program();
       expect(resultBytecode).to.be.equal(`0x${bytecode.join("")}`);
 
       // Execute program
-      await app.execute(ctx.address);
+      await app.execute();
 
       await checkStack(StackValue, stack, 1, 1);
     });
@@ -137,12 +135,12 @@ describe("End-to-end", () => {
       await app.setStorageUint256(hex4Bytes("EXPIRY"), EXPIRY);
       await app.setStorageUint256(hex4Bytes("RISK"), RISK);
 
-      await app.execute(ctx.address);
+      await app.execute();
       await checkStack(StackValue, stack, 1, result);
     }
 
     it("bytecode", async () => {
-      await app.parse(ctx.address, code);
+      await app.parse(code);
 
       const resultBytecode = await ctx.program();
       expect(resultBytecode).to.be.equal(`0x${bytecode.join("")}`);
@@ -150,7 +148,7 @@ describe("End-to-end", () => {
 
     describe("step-by-step stack", async () => {
       beforeEach(async () => {
-        await app.parse(ctx.address, code);
+        await app.parse(code);
       });
 
       // T - true, F - false

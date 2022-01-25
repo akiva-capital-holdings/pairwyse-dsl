@@ -5,7 +5,6 @@ import { checkStack } from "../utils/utils";
 describe("Boolean Algebra", () => {
   let stack: Stack;
   let ctx: Context;
-  let ctxAddr: string;
   let app: AppMock;
   let parser: Parser;
   let executor: Executor;
@@ -27,32 +26,28 @@ describe("Boolean Algebra", () => {
     // Deploy Executor
     executor = await (await ethers.getContractFactory("Executor")).deploy(await parser.opcodes());
 
-    // Deploy Agreement
-    app = await (await ethers.getContractFactory("AppMock")).deploy(parser.address, executor.address);
-  });
-
-  beforeEach(async () => {
     // Deploy Context & setup
     ctx = await (await ethers.getContractFactory("Context")).deploy();
-    ctxAddr = ctx.address;
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory("Stack");
     const contextStackAddress = await ctx.stack();
     stack = StackCont.attach(contextStackAddress);
+
+    // Deploy Agreement
+    app = await (await ethers.getContractFactory("AppMock")).deploy(parser.address, executor.address, ctx.address);
   });
 
   describe("Commutative law", async () => {
     async function testCase(op: "and" | "or" | "xor", a: boolean, b: boolean) {
       await app.parse(
-        ctxAddr,
         `
           bool ${a.toString()} ${op} bool ${b.toString()}
           ==
           bool ${b.toString()} ${op} bool ${a.toString()}
           `
       );
-      await app.execute(ctxAddr);
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     }
 
@@ -79,14 +74,13 @@ describe("Boolean Algebra", () => {
       const C = c.toString();
 
       await app.parse(
-        ctxAddr,
         `
           (bool ${A} ${op} bool ${B}) ${op} bool ${C}
           ==
           bool ${A} ${op} (bool ${B} ${op} bool ${C})
           `
       );
-      await app.execute(ctxAddr);
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     }
 
@@ -131,14 +125,13 @@ describe("Boolean Algebra", () => {
       const C = c.toString();
 
       await app.parse(
-        ctxAddr,
         `
           bool ${A} ${op1} (bool ${B} ${op2} bool ${C})
           ==
           (bool ${A} ${op1} bool ${B}) ${op2} (bool ${A} ${op1} bool ${C})
         `
       );
-      await app.execute(ctxAddr);
+      await app.execute();
 
       await checkStack(StackValue, stack, 1, 1);
     }
@@ -171,8 +164,8 @@ describe("Boolean Algebra", () => {
       const A = a.toString();
       const B = b.toString();
 
-      await app.parse(ctxAddr, `! (bool ${A} ${op1} bool ${B}) == ! bool ${A} ${op2} ! bool ${B}`);
-      await app.execute(ctxAddr);
+      await app.parse(`! (bool ${A} ${op1} bool ${B}) == ! bool ${A} ${op2} ! bool ${B}`);
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     }
 
@@ -193,14 +186,14 @@ describe("Boolean Algebra", () => {
 
   describe("Involution Law: !!A == A", async () => {
     it("!!F == F", async () => {
-      await app.parse(ctxAddr, "! (! bool false) == bool false");
-      await app.execute(ctxAddr);
+      await app.parse("! (! bool false) == bool false");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
 
     it("!!T == T", async () => {
-      await app.parse(ctxAddr, "! (! bool true) == bool true");
-      await app.execute(ctxAddr);
+      await app.parse("! (! bool true) == bool true");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
   });
@@ -208,8 +201,8 @@ describe("Boolean Algebra", () => {
   describe("Idempotent Law", async () => {
     describe("(A or A) == A", async () => {
       async function testCase(A: "true" | "false") {
-        await app.parse(ctxAddr, `(bool ${A} or bool ${A}) == bool ${A}`);
-        await app.execute(ctxAddr);
+        await app.parse(`(bool ${A} or bool ${A}) == bool ${A}`);
+        await app.execute();
         await checkStack(StackValue, stack, 1, 1);
       }
       it("(T or T) == T", async () => testCase("true"));
@@ -218,8 +211,8 @@ describe("Boolean Algebra", () => {
 
     describe("(A or true) == true", async () => {
       async function testCase(A: "true" | "false") {
-        await app.parse(ctxAddr, `(bool ${A} or bool true) == bool true`);
-        await app.execute(ctxAddr);
+        await app.parse(`(bool ${A} or bool true) == bool true`);
+        await app.execute();
         await checkStack(StackValue, stack, 1, 1);
       }
       it("(T or 1) == 1", async () => testCase("true"));
@@ -228,8 +221,8 @@ describe("Boolean Algebra", () => {
 
     describe("(A and A) == A", async () => {
       async function testCase(A: "true" | "false") {
-        await app.parse(ctxAddr, `(bool ${A} and bool ${A}) == bool ${A}`);
-        await app.execute(ctxAddr);
+        await app.parse(`(bool ${A} and bool ${A}) == bool ${A}`);
+        await app.execute();
         await checkStack(StackValue, stack, 1, 1);
       }
       it("(T and T) == T", async () => testCase("true"));
@@ -238,8 +231,8 @@ describe("Boolean Algebra", () => {
 
     describe("(A and true) == A", async () => {
       async function testCase(A: "true" | "false") {
-        await app.parse(ctxAddr, `(bool ${A} and bool true) == bool ${A}`);
-        await app.execute(ctxAddr);
+        await app.parse(`(bool ${A} and bool true) == bool ${A}`);
+        await app.execute();
         await checkStack(StackValue, stack, 1, 1);
       }
       it("(T and 1) == T", async () => testCase("true"));
@@ -248,8 +241,8 @@ describe("Boolean Algebra", () => {
 
     describe("(A or !A) == true", async () => {
       async function testCase(A: "true" | "false") {
-        await app.parse(ctxAddr, `(bool ${A} or ! bool ${A}) == bool true`);
-        await app.execute(ctxAddr);
+        await app.parse(`(bool ${A} or ! bool ${A}) == bool true`);
+        await app.execute();
         await checkStack(StackValue, stack, 1, 1);
       }
       it("(T or !T) == 1", async () => testCase("true"));
@@ -258,8 +251,8 @@ describe("Boolean Algebra", () => {
 
     describe("(A or false) == A", async () => {
       async function testCase(A: "true" | "false") {
-        await app.parse(ctxAddr, `(bool ${A} or bool false) == bool ${A}`);
-        await app.execute(ctxAddr);
+        await app.parse(`(bool ${A} or bool false) == bool ${A}`);
+        await app.execute();
         await checkStack(StackValue, stack, 1, 1);
       }
       it("(T or 0) == T", async () => testCase("true"));
@@ -268,8 +261,8 @@ describe("Boolean Algebra", () => {
 
     describe("(A and !A) == false", async () => {
       async function testCase(A: "true" | "false") {
-        await app.parse(ctxAddr, `(bool ${A} and ! bool ${A}) == bool false`);
-        await app.execute(ctxAddr);
+        await app.parse(`(bool ${A} and ! bool ${A}) == bool false`);
+        await app.execute();
         await checkStack(StackValue, stack, 1, 1);
       }
       it("(T and !T) == 0", async () => testCase("true"));

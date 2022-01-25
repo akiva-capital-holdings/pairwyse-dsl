@@ -6,7 +6,6 @@ import { checkStack, checkStackTail, hex4Bytes } from "../utils/utils";
 describe("DSL: basic", () => {
   let stack: Stack;
   let ctx: Context;
-  let ctxAddr: string;
   let app: AppMock;
   let parser: Parser;
   let executor: Executor;
@@ -42,132 +41,129 @@ describe("DSL: basic", () => {
     // Deploy Executor
     executor = await (await ethers.getContractFactory("Executor")).deploy(await parser.opcodes());
 
-    // Deploy Agreement
-    app = await (await ethers.getContractFactory("AppMock")).deploy(parser.address, executor.address);
-    appAddrHex = app.address.slice(2);
-  });
-
-  beforeEach(async () => {
     // Deploy Context & setup
     ctx = await (await ethers.getContractFactory("Context")).deploy();
-    ctxAddr = ctx.address;
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory("Stack");
     const contextStackAddress = await ctx.stack();
     stack = StackCont.attach(contextStackAddress);
+
+    // Deploy Application
+    app = await (await ethers.getContractFactory("AppMock")).deploy(parser.address, executor.address, ctx.address);
+    appAddrHex = app.address.slice(2);
   });
 
   // TODO: Parser.parse() test
   // TODO: Preprocessor: test operator priorities
 
   it("uint256 1122334433", async () => {
-    await app.parse(ctxAddr, "uint256 1122334433");
-    await app.execute(ctxAddr);
+    await app.parse("uint256 1122334433");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1122334433);
   });
 
   it("uint256 2 uint256 3 -> 2 3", async () => {
-    await app.parse(ctxAddr, "uint256 2 uint256 3");
-    await app.execute(ctxAddr);
+    await app.parse("uint256 2 uint256 3");
+    await app.execute();
     await checkStackTail(StackValue, stack, 2, [2, 3]);
   });
 
   it("5 == 5", async () => {
-    await app.parse(ctxAddr, "uint256 5 == uint256 5");
-    await app.execute(ctxAddr);
+    await app.parse("uint256 5 == uint256 5");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it("5 != 6", async () => {
-    await app.parse(ctxAddr, "uint256 5 != uint256 6");
-    await app.execute(ctxAddr);
+    await app.parse("uint256 5 != uint256 6");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it("5 < 6", async () => {
-    await app.parse(ctxAddr, "uint256 5 < uint256 6");
-    await app.execute(ctxAddr);
+    await app.parse("uint256 5 < uint256 6");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it("5 < 5 = false", async () => {
-    await app.parse(ctxAddr, "uint256 5 < uint256 5");
-    await app.execute(ctxAddr);
+    await app.parse("uint256 5 < uint256 5");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 0);
   });
 
   it("6 > 5", async () => {
-    await app.parse(ctxAddr, "uint256 6 > uint256 5");
-    await app.execute(ctxAddr);
+    await app.parse("uint256 6 > uint256 5");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it("5 > 5 = false", async () => {
-    await app.parse(ctxAddr, "uint256 5 > uint256 5");
-    await app.execute(ctxAddr);
+    await app.parse("uint256 5 > uint256 5");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 0);
   });
 
   it("5 <= 5", async () => {
-    await app.parse(ctxAddr, "uint256 5 <= uint256 5");
-    await app.execute(ctxAddr);
+    await app.parse("uint256 5 <= uint256 5");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it("5 <= 6", async () => {
-    await app.parse(ctxAddr, "uint256 5 <= uint256 6");
-    await app.execute(ctxAddr);
+    await app.parse("uint256 5 <= uint256 6");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it("5 >= 5", async () => {
-    await app.parse(ctxAddr, "uint256 5 >= uint256 5");
-    await app.execute(ctxAddr);
+    await app.parse("uint256 5 >= uint256 5");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it("6 >= 5", async () => {
-    await app.parse(ctxAddr, "uint256 6 >= uint256 5");
-    await app.execute(ctxAddr);
+    await app.parse("uint256 6 >= uint256 5");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it("5 6 swap -> 6 5", async () => {
-    await app.parse(ctxAddr, "uint256 5 swap uint256 6");
-    await app.execute(ctxAddr);
+    await app.parse("uint256 5 swap uint256 6");
+    await app.execute();
     await checkStackTail(StackValue, stack, 2, [6, 5]);
   });
 
   describe("Logical AND", async () => {
     it("1 && 0 = false", async () => {
-      await app.parse(ctxAddr, "uint256 1 and uint256 0");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 1 and uint256 0");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
     it("1 && 1 = true", async () => {
-      await app.parse(ctxAddr, "uint256 1 and uint256 1");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 1 and uint256 1");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it("0 && 1 = false", async () => {
-      await app.parse(ctxAddr, "uint256 0 and uint256 1");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 0 and uint256 1");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
     it("0 && 0 = false", async () => {
-      await app.parse(ctxAddr, "uint256 0 and uint256 0");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 0 and uint256 0");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
     it("3 && 3 = false", async () => {
-      await app.parse(ctxAddr, "uint256 3 and uint256 3");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 3 and uint256 3");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it("(((1 && 5) && 7) && 0) = 0", async () => {
-      await app.parse(ctxAddr, "uint256 1 and uint256 5 and uint256 7 and uint256 0");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 1 and uint256 5 and uint256 7 and uint256 0");
+      await app.execute();
 
       await checkStack(StackValue, stack, 1, 0);
     });
@@ -175,33 +171,33 @@ describe("DSL: basic", () => {
 
   describe("Logical OR", async () => {
     it("1 || 0 = true", async () => {
-      await app.parse(ctxAddr, "uint256 1 or uint256 0");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 1 or uint256 0");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it("1 || 1 = true", async () => {
-      await app.parse(ctxAddr, "uint256 1 or uint256 1");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 1 or uint256 1");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it("0 || 5 = true", async () => {
-      await app.parse(ctxAddr, "uint256 0 or uint256 5");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 0 or uint256 5");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it("0 || 0 = false", async () => {
-      await app.parse(ctxAddr, "uint256 0 or uint256 0");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 0 or uint256 0");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
     it("3 || 3 = false", async () => {
-      await app.parse(ctxAddr, "uint256 3 or uint256 3");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 3 or uint256 3");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it("0 || 0 || 3", async () => {
-      await app.parse(ctxAddr, "uint256 0 or uint256 0 or uint256 3");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 0 or uint256 0 or uint256 3");
+      await app.execute();
 
       await checkStack(StackValue, stack, 1, 1);
     });
@@ -209,102 +205,102 @@ describe("DSL: basic", () => {
 
   describe("Logical XOR", async () => {
     it("0 xor 0 = false", async () => {
-      await app.parse(ctxAddr, "uint256 0 xor uint256 0");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 0 xor uint256 0");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
     it("1 xor 0 = true", async () => {
-      await app.parse(ctxAddr, "uint256 1 xor uint256 0");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 1 xor uint256 0");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it("0 xor 1 = true", async () => {
-      await app.parse(ctxAddr, "uint256 0 xor uint256 1");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 0 xor uint256 1");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it("1 xor 1 = false", async () => {
-      await app.parse(ctxAddr, "uint256 1 xor uint256 1");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 1 xor uint256 1");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
     it("5 xor 0 = true", async () => {
-      await app.parse(ctxAddr, "uint256 5 xor uint256 0");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 5 xor uint256 0");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it("0 xor 5 = true", async () => {
-      await app.parse(ctxAddr, "uint256 0 xor uint256 5");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 0 xor uint256 5");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it("5 xor 6 = false", async () => {
-      await app.parse(ctxAddr, "uint256 5 xor uint256 6");
-      await app.execute(ctxAddr);
+      await app.parse("uint256 5 xor uint256 6");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
   });
 
   describe("Logical NOT", async () => {
     it("NOT 0 = 1", async () => {
-      await app.parse(ctxAddr, "! uint256 0");
-      await app.execute(ctxAddr);
+      await app.parse("! uint256 0");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it("NOT 1 = 0", async () => {
-      await app.parse(ctxAddr, "! uint256 1");
-      await app.execute(ctxAddr);
+      await app.parse("! uint256 1");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
     it("NOT 3 = 0", async () => {
-      await app.parse(ctxAddr, "! uint256 3");
-      await app.execute(ctxAddr);
+      await app.parse("! uint256 3");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
   });
 
   it("push false", async () => {
-    await app.parse(ctxAddr, "bool false");
-    await app.execute(ctxAddr);
+    await app.parse("bool false");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 0);
   });
 
   it("push true", async () => {
-    await app.parse(ctxAddr, "bool true");
-    await app.execute(ctxAddr);
+    await app.parse("bool true");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it("blockNumber", async () => {
-    await app.parse(ctxAddr, "blockNumber");
-    const tx = await app.execute(ctxAddr);
+    await app.parse("blockNumber");
+    const tx = await app.execute();
     await checkStack(StackValue, stack, 1, tx.blockNumber!);
   });
 
   it("blockTimestamp", async () => {
-    await app.parse(ctxAddr, "blockTimestamp");
-    await app.execute(ctxAddr);
+    await app.parse("blockTimestamp");
+    await app.execute();
     const block = await ethers.provider.getBlock("latest");
     await checkStack(StackValue, stack, 1, block.timestamp);
   });
 
   it("blockChainId", async () => {
-    await app.parse(ctxAddr, "blockChainId");
-    const tx = await app.execute(ctxAddr);
+    await app.parse("blockChainId");
+    const tx = await app.execute();
     await checkStack(StackValue, stack, 1, tx.chainId);
   });
 
   it("block number < block timestamp", async () => {
-    await app.parse(ctxAddr, "blockNumber < blockTimestamp");
-    await app.execute(ctxAddr);
+    await app.parse("blockNumber < blockTimestamp");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   describe("loadLocal", () => {
     it("loadLocal uint256 NUMBER", async () => {
       await app.setStorageUint256(hex4Bytes("NUMBER"), 777);
-      await app.parse(ctxAddr, "loadLocal uint256 NUMBER");
-      await app.execute(ctxAddr);
+      await app.parse("loadLocal uint256 NUMBER");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 777);
     });
 
@@ -317,8 +313,8 @@ describe("DSL: basic", () => {
       const bytes32Number2 = hex4Bytes("NUMBER2");
       await app.setStorageUint256(bytes32Number2, 15);
 
-      await app.parse(ctxAddr, "loadLocal uint256 NUMBER > loadLocal uint256 NUMBER2");
-      await app.execute(ctxAddr);
+      await app.parse("loadLocal uint256 NUMBER > loadLocal uint256 NUMBER2");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
 
@@ -326,24 +322,24 @@ describe("DSL: basic", () => {
       await app.setStorageUint256(hex4Bytes("NEXT_MONTH"), NEXT_MONTH);
       await app.setStorageUint256(hex4Bytes("TIMESTAMP"), lastBlockTimestamp);
 
-      await app.parse(ctxAddr, "loadLocal uint256 TIMESTAMP < loadLocal uint256 NEXT_MONTH");
-      await app.execute(ctxAddr);
+      await app.parse("loadLocal uint256 TIMESTAMP < loadLocal uint256 NEXT_MONTH");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
 
     it("loadLocal bool A (false)", async () => {
       await app.setStorageBool(hex4Bytes("A"), false);
 
-      await app.parse(ctxAddr, "loadLocal bool A");
-      await app.execute(ctxAddr);
+      await app.parse("loadLocal bool A");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
 
     it("loadLocal bool B (true)", async () => {
       await app.setStorageBool(hex4Bytes("B"), true);
 
-      await app.parse(ctxAddr, "loadLocal bool B");
-      await app.execute(ctxAddr);
+      await app.parse("loadLocal bool B");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
 
@@ -351,8 +347,8 @@ describe("DSL: basic", () => {
       await app.setStorageBool(hex4Bytes("A"), false);
       await app.setStorageBool(hex4Bytes("B"), true);
 
-      await app.parse(ctxAddr, "loadLocal bool A != loadLocal bool B");
-      await app.execute(ctxAddr);
+      await app.parse("loadLocal bool A != loadLocal bool B");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
 
@@ -361,8 +357,8 @@ describe("DSL: basic", () => {
         await app.setStorageAddress(hex4Bytes("ADDR"), "0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5");
         await app.setStorageAddress(hex4Bytes("ADDR2"), "0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5");
 
-        await app.parse(ctxAddr, "loadLocal address ADDR == loadLocal address ADDR2");
-        await app.execute(ctxAddr);
+        await app.parse("loadLocal address ADDR == loadLocal address ADDR2");
+        await app.execute();
         await checkStack(StackValue, stack, 1, 1);
       });
 
@@ -370,8 +366,8 @@ describe("DSL: basic", () => {
         await app.setStorageAddress(hex4Bytes("ADDR"), "0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5");
         await app.setStorageAddress(hex4Bytes("ADDR2"), "0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836");
 
-        await app.parse(ctxAddr, "loadLocal address ADDR == loadLocal address ADDR2");
-        await app.execute(ctxAddr);
+        await app.parse("loadLocal address ADDR == loadLocal address ADDR2");
+        await app.execute();
         await checkStack(StackValue, stack, 1, 0);
       });
     });
@@ -387,8 +383,8 @@ describe("DSL: basic", () => {
           "0x1234500000000000000000000000000000000000000000000000000000000001"
         );
 
-        await app.parse(ctxAddr, "loadLocal bytes32 BYTES == loadLocal bytes32 BYTES2");
-        await app.execute(ctxAddr);
+        await app.parse("loadLocal bytes32 BYTES == loadLocal bytes32 BYTES2");
+        await app.execute();
         await checkStack(StackValue, stack, 1, 1);
       });
 
@@ -402,8 +398,8 @@ describe("DSL: basic", () => {
           "0x1234500000000000000000000000000000000000000000000000000000000011"
         );
 
-        await app.parse(ctxAddr, "loadLocal bytes32 BYTES == loadLocal bytes32 BYTES2");
-        await app.execute(ctxAddr);
+        await app.parse("loadLocal bytes32 BYTES == loadLocal bytes32 BYTES2");
+        await app.execute();
         await checkStack(StackValue, stack, 1, 0);
       });
     });
@@ -413,8 +409,8 @@ describe("DSL: basic", () => {
     it("loadRemote uint256 NUMBER", async () => {
       await app.setStorageUint256(hex4Bytes("NUMBER"), 777);
 
-      await app.parse(ctxAddr, `loadRemote uint256 NUMBER ${appAddrHex}`);
-      await app.execute(ctxAddr);
+      await app.parse(`loadRemote uint256 NUMBER ${appAddrHex}`);
+      await app.execute();
       await checkStack(StackValue, stack, 1, 777);
     });
 
@@ -427,8 +423,8 @@ describe("DSL: basic", () => {
       const bytes32Number2 = hex4Bytes("NUMBER2");
       await app.setStorageUint256(bytes32Number2, 15);
 
-      await app.parse(ctxAddr, `loadRemote uint256 NUMBER ${appAddrHex} > loadRemote uint256 NUMBER2 ${appAddrHex}`);
-      await app.execute(ctxAddr);
+      await app.parse(`loadRemote uint256 NUMBER ${appAddrHex} > loadRemote uint256 NUMBER2 ${appAddrHex}`);
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
 
@@ -436,24 +432,24 @@ describe("DSL: basic", () => {
       await app.setStorageUint256(hex4Bytes("NEXT_MONTH"), NEXT_MONTH);
       await app.setStorageUint256(hex4Bytes("TIMESTAMP"), lastBlockTimestamp);
 
-      await app.parse(ctxAddr, `loadLocal uint256 TIMESTAMP < loadRemote uint256 NEXT_MONTH ${appAddrHex}`);
-      await app.execute(ctxAddr);
+      await app.parse(`loadLocal uint256 TIMESTAMP < loadRemote uint256 NEXT_MONTH ${appAddrHex}`);
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
 
     it("loadRemote bool A (false)", async () => {
       await app.setStorageBool(hex4Bytes("A"), false);
 
-      await app.parse(ctxAddr, `loadRemote bool A ${appAddrHex}`);
-      await app.execute(ctxAddr);
+      await app.parse(`loadRemote bool A ${appAddrHex}`);
+      await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
 
     it("loadRemote bool B (true)", async () => {
       await app.setStorageBool(hex4Bytes("B"), true);
 
-      await app.parse(ctxAddr, `loadRemote bool B ${appAddrHex}`);
-      await app.execute(ctxAddr);
+      await app.parse(`loadRemote bool B ${appAddrHex}`);
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
 
@@ -461,8 +457,8 @@ describe("DSL: basic", () => {
       await app.setStorageBool(hex4Bytes("A"), false);
       await app.setStorageBool(hex4Bytes("B"), true);
 
-      await app.parse(ctxAddr, `loadRemote bool A ${appAddrHex} != loadRemote bool B ${appAddrHex}`);
-      await app.execute(ctxAddr);
+      await app.parse(`loadRemote bool A ${appAddrHex} != loadRemote bool B ${appAddrHex}`);
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
 
@@ -471,8 +467,8 @@ describe("DSL: basic", () => {
         await app.setStorageAddress(hex4Bytes("ADDR"), "0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5");
         await app.setStorageAddress(hex4Bytes("ADDR2"), "0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5");
 
-        await app.parse(ctxAddr, `loadRemote address ADDR ${appAddrHex} == loadRemote address ADDR2 ${appAddrHex}`);
-        await app.execute(ctxAddr);
+        await app.parse(`loadRemote address ADDR ${appAddrHex} == loadRemote address ADDR2 ${appAddrHex}`);
+        await app.execute();
         await checkStack(StackValue, stack, 1, 1);
       });
 
@@ -480,8 +476,8 @@ describe("DSL: basic", () => {
         await app.setStorageAddress(hex4Bytes("ADDR"), "0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5");
         await app.setStorageAddress(hex4Bytes("ADDR2"), "0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836");
 
-        await app.parse(ctxAddr, `loadRemote address ADDR ${appAddrHex} == loadRemote address ADDR2 ${appAddrHex}`);
-        await app.execute(ctxAddr);
+        await app.parse(`loadRemote address ADDR ${appAddrHex} == loadRemote address ADDR2 ${appAddrHex}`);
+        await app.execute();
         await checkStack(StackValue, stack, 1, 0);
       });
     });
@@ -497,8 +493,8 @@ describe("DSL: basic", () => {
           "0x1234500000000000000000000000000000000000000000000000000000000001"
         );
 
-        await app.parse(ctxAddr, `loadRemote bytes32 BYTES ${appAddrHex} == loadRemote bytes32 BYTES2 ${appAddrHex}`);
-        await app.execute(ctxAddr);
+        await app.parse(`loadRemote bytes32 BYTES ${appAddrHex} == loadRemote bytes32 BYTES2 ${appAddrHex}`);
+        await app.execute();
         await checkStack(StackValue, stack, 1, 1);
       });
 
@@ -512,8 +508,8 @@ describe("DSL: basic", () => {
           "0x1234500000000000000000000000000000000000000000000000000000000011"
         );
 
-        await app.parse(ctxAddr, `loadRemote bytes32 BYTES ${appAddrHex} == loadRemote bytes32 BYTES2 ${appAddrHex}`);
-        await app.execute(ctxAddr);
+        await app.parse(`loadRemote bytes32 BYTES ${appAddrHex} == loadRemote bytes32 BYTES2 ${appAddrHex}`);
+        await app.execute();
         await checkStack(StackValue, stack, 1, 0);
       });
     });
@@ -522,8 +518,8 @@ describe("DSL: basic", () => {
   it("msgSender", async () => {
     const [sender] = await ethers.getSigners();
     await app.setStorageAddress(hex4Bytes("SENDER"), sender.address);
-    await app.parse(ctxAddr, "loadLocal address SENDER == msgSender");
-    await app.execute(ctxAddr);
+    await app.parse("loadLocal address SENDER == msgSender");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
@@ -532,14 +528,14 @@ describe("DSL: basic", () => {
     await app.setStorageAddress(hex4Bytes("RECEIVER"), receiver.address);
     const oneEthBN = ethers.utils.parseEther("1");
 
-    await app.parse(ctxAddr, `sendEth RECEIVER ${oneEthBN.toString()}`);
+    await app.parse(`sendEth RECEIVER ${oneEthBN.toString()}`);
 
     // No ETH on the contract
-    await expect(app.execute(ctxAddr)).to.be.revertedWith("Executor: call not success");
+    await expect(app.execute()).to.be.revertedWith("Executor: call not success");
 
     // Enough ETH on the contract
     await vault.sendTransaction({ to: app.address, value: oneEthBN });
-    await expect(await app.execute(ctxAddr)).to.changeEtherBalance(receiver, oneEthBN);
+    await expect(await app.execute()).to.changeEtherBalance(receiver, oneEthBN);
     await checkStack(StackValue, stack, 1, 1);
   });
 
@@ -557,8 +553,8 @@ describe("DSL: basic", () => {
     await app.setStorageAddress(hex4Bytes("RECEIVER"), receiver.address);
     const DAI = dai.address.substring(2);
 
-    await app.parse(ctxAddr, `transfer ${DAI} RECEIVER ${oneDAI.toString()}`);
-    await app.execute(ctxAddr);
+    await app.parse(`transfer ${DAI} RECEIVER ${oneDAI.toString()}`);
+    await app.execute();
     expect(await dai.balanceOf(receiver.address)).to.equal(oneDAI);
     await checkStack(StackValue, stack, 1, 1);
   });
@@ -578,37 +574,37 @@ describe("DSL: basic", () => {
     await app.setStorageAddress(hex4Bytes("OWNER"), owner.address);
     await app.setStorageAddress(hex4Bytes("RECEIVER"), receiver.address);
 
-    await app.parse(ctxAddr, `transferFrom DAI OWNER RECEIVER ${oneDAI.toString()}`);
-    await app.execute(ctxAddr);
+    await app.parse(`transferFrom DAI OWNER RECEIVER ${oneDAI.toString()}`);
+    await app.execute();
     expect(await dai.balanceOf(receiver.address)).to.equal(oneDAI);
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it("T & T == T", async () => {
-    await app.parse(ctxAddr, "bool true and bool true");
-    await app.execute(ctxAddr);
+    await app.parse("bool true and bool true");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it("(T & T) | T == T", async () => {
-    await app.parse(ctxAddr, "bool true and bool true or bool true");
-    await app.execute(ctxAddr);
+    await app.parse("bool true and bool true or bool true");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it("TIMESTAMP > PREV_MONTH", async () => {
     await app.setStorageUint256(hex4Bytes("PREV_MONTH"), PREV_MONTH);
     await app.setStorageUint256(hex4Bytes("TIMESTAMP"), lastBlockTimestamp);
-    await app.parse(ctxAddr, "loadLocal uint256 TIMESTAMP > loadLocal uint256 PREV_MONTH");
-    await app.execute(ctxAddr);
+    await app.parse("loadLocal uint256 TIMESTAMP > loadLocal uint256 PREV_MONTH");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it("TIMESTAMP < NEXT_MONTH", async () => {
     await app.setStorageUint256(hex4Bytes("NEXT_MONTH"), NEXT_MONTH);
     await app.setStorageUint256(hex4Bytes("TIMESTAMP"), lastBlockTimestamp);
-    await app.parse(ctxAddr, "(loadLocal uint256 TIMESTAMP) < (loadLocal uint256 NEXT_MONTH)");
-    await app.execute(ctxAddr);
+    await app.parse("(loadLocal uint256 TIMESTAMP) < (loadLocal uint256 NEXT_MONTH)");
+    await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
@@ -623,7 +619,6 @@ describe("DSL: basic", () => {
       await app.setStorageBool(hex4Bytes("RISK"), RISK);
 
       await app.parse(
-        ctxAddr,
         `
         (loadLocal uint256 TIMESTAMP > loadLocal uint256 INIT)
         and
@@ -632,7 +627,7 @@ describe("DSL: basic", () => {
         (loadLocal bool RISK != bool true)
         `
       );
-      await app.execute(ctxAddr);
+      await app.execute();
       await checkStack(StackValue, stack, 1, target);
     }
 
@@ -649,28 +644,28 @@ describe("DSL: basic", () => {
 
   describe("Execute high-level DSL", () => {
     it("parenthesis", async () => {
-      await app.parse(ctxAddr, "(((uint256 1 or uint256 5) or uint256 7) and uint256 1)");
-      await app.execute(ctxAddr);
+      await app.parse("(((uint256 1 or uint256 5) or uint256 7) and uint256 1)");
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
 
     describe("parenthesis matter", () => {
       it("first", async () => {
         // no parenthesis
-        await app.parse(ctxAddr, "uint256 1 or uint256 0 or uint256 1 and uint256 0");
-        await app.execute(ctxAddr);
+        await app.parse("uint256 1 or uint256 0 or uint256 1 and uint256 0");
+        await app.execute();
         await checkStack(StackValue, stack, 1, 1);
       });
 
       it("second", async () => {
-        await app.parse(ctxAddr, "((uint256 1 or uint256 0) or uint256 1) and uint256 0");
-        await app.execute(ctxAddr);
+        await app.parse("((uint256 1 or uint256 0) or uint256 1) and uint256 0");
+        await app.execute();
         await checkStack(StackValue, stack, 1, 0);
       });
 
       it("third", async () => {
-        await app.parse(ctxAddr, "(uint256 1 or uint256 0) or (uint256 1 and uint256 0)");
-        await app.execute(ctxAddr);
+        await app.parse("(uint256 1 or uint256 0) or (uint256 1 and uint256 0)");
+        await app.execute();
         await checkStack(StackValue, stack, 1, 1);
       });
     });
@@ -688,18 +683,18 @@ describe("DSL: basic", () => {
       await app.setStorageUint256(hex4Bytes("TIMESTAMP"), lastBlockTimestamp);
       await app.setStorageBool(hex4Bytes("RISK"), false);
 
-      await app.parse(ctxAddr, program);
-      await app.execute(ctxAddr);
+      await app.parse(program);
+      await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
   });
 
   describe("should throw at unknownExpr", async () => {
     it("first", async () => {
-      await expect(app.parse(ctxAddr, "unknownExpr")).to.be.revertedWith("Parser: 'unknownExpr' command is unknown");
+      await expect(app.parse("unknownExpr")).to.be.revertedWith("Parser: 'unknownExpr' command is unknown");
     });
     it("second", async () => {
-      await expect(app.parse(ctxAddr, "?!")).to.be.revertedWith("Parser: '?!' command is unknown");
+      await expect(app.parse("?!")).to.be.revertedWith("Parser: '?!' command is unknown");
     });
   });
 });

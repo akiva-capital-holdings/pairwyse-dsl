@@ -11,24 +11,40 @@ import { Storage } from "../helpers/Storage.sol";
 contract AppMock is Storage {
     Parser public parser;
     Executor public executor;
+    Context public ctx;
 
     receive() external payable {
         payable(parser.opcodes()).transfer(msg.value);
     }
 
-    constructor(Parser _parser, Executor _executor) {
+    constructor(
+        Parser _parser,
+        Executor _executor,
+        Context _ctx
+    ) {
         parser = _parser;
         executor = _executor;
+        ctx = _ctx;
+        setupContext();
     }
 
-    function parse(Context _ctx, string memory _program) external {
-        parser.initOpcodes(_ctx);
-        _ctx.setAppAddress(address(this));
-        _ctx.setMsgSender(msg.sender);
-        parser.parse(_ctx, _program);
+    function parse(string memory _program) external {
+        resetContext();
+        parser.parse(ctx, _program);
     }
 
-    function execute(Context _ctx) external {
-        executor.execute(_ctx);
+    function execute() external {
+        executor.execute(ctx);
+    }
+
+    function resetContext() public {
+        ctx.stack().clear();
+        ctx.setPc(0);
+    }
+
+    function setupContext() internal {
+        parser.initOpcodes(ctx);
+        ctx.setAppAddress(address(this));
+        ctx.setMsgSender(msg.sender);
     }
 }
