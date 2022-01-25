@@ -41,18 +41,23 @@ contract Parser is Storage {
     }
 
     function initOpcodes(Context _ctx) external {
-        // Opcodes
-        _ctx.addOpcode("==", 0x01, opcodes.opEq.selector, 0x0);
-        _ctx.addOpcode("!", 0x02, opcodes.opNot.selector, 0x0);
-        _ctx.addOpcode("<", 0x03, opcodes.opLt.selector, 0x0);
-        _ctx.addOpcode(">", 0x04, opcodes.opGt.selector, 0x0);
-        _ctx.addOpcode("swap", 0x05, opcodes.opSwap.selector, 0x0);
-        _ctx.addOpcode("<=", 0x06, opcodes.opLe.selector, 0x0);
-        _ctx.addOpcode(">=", 0x07, opcodes.opGe.selector, 0x0);
-        _ctx.addOpcode("xor", 0x11, opcodes.opXor.selector, 0x0);
-        _ctx.addOpcode("and", 0x12, opcodes.opAnd.selector, 0x0);
-        _ctx.addOpcode("or", 0x13, opcodes.opOr.selector, 0x0);
-        _ctx.addOpcode("!=", 0x14, opcodes.opNotEq.selector, 0x0);
+        // Opcodes for operators
+        addOpcodeForOperator(_ctx, "!", 0x02, opcodes.opNot.selector, 0x0, 4);
+
+        addOpcodeForOperator(_ctx, "swap", 0x05, opcodes.opSwap.selector, 0x0, 3);
+        addOpcodeForOperator(_ctx, "and", 0x12, opcodes.opAnd.selector, 0x0, 3);
+
+        addOpcodeForOperator(_ctx, "xor", 0x11, opcodes.opXor.selector, 0x0, 2);
+        addOpcodeForOperator(_ctx, "or", 0x13, opcodes.opOr.selector, 0x0, 2);
+
+        addOpcodeForOperator(_ctx, "==", 0x01, opcodes.opEq.selector, 0x0, 1);
+        addOpcodeForOperator(_ctx, "<", 0x03, opcodes.opLt.selector, 0x0, 1);
+        addOpcodeForOperator(_ctx, ">", 0x04, opcodes.opGt.selector, 0x0, 1);
+        addOpcodeForOperator(_ctx, "<=", 0x06, opcodes.opLe.selector, 0x0, 1);
+        addOpcodeForOperator(_ctx, ">=", 0x07, opcodes.opGe.selector, 0x0, 1);
+        addOpcodeForOperator(_ctx, "!=", 0x14, opcodes.opNotEq.selector, 0x0, 1);
+
+        // Simple opcodes
         _ctx.addOpcode("blockNumber", 0x15, opcodes.opBlockNumber.selector, 0x0);
         _ctx.addOpcode("blockTimestamp", 0x16, opcodes.opBlockTimestamp.selector, 0x0);
         _ctx.addOpcode("blockChainId", 0x17, opcodes.opBlockChainId.selector, 0x0);
@@ -63,7 +68,7 @@ contract Parser is Storage {
         _ctx.addOpcode("transfer", 0x1f, opcodes.opTransfer.selector, this.asmTransfer.selector);
         _ctx.addOpcode("transferFrom", 0x20, opcodes.opTransferFrom.selector, this.asmTransferFrom.selector);
 
-        // complex opcodes with sub opcodes (branches)
+        // Complex opcodes with sub opcodes (branches)
         string memory name = "loadLocal";
         _ctx.addOpcode(name, 0x1b, opcodes.opLoadLocalAny.selector, this.asmLoadLocal.selector);
         _ctx.addOpcodeBranch(name, "uint256", 0x01, opcodes.opLoadLocalUint256.selector);
@@ -137,6 +142,18 @@ contract Parser is Storage {
     /**
      * Internal functions
      */
+
+    function addOpcodeForOperator(
+        Context _ctx,
+        string memory _name,
+        bytes1 _opcode,
+        bytes4 _opSelector,
+        bytes4 _asmSelector,
+        uint256 _priority
+    ) internal {
+        _ctx.addOpcode(_name, _opcode, _opSelector, _asmSelector);
+        preprocessor.addOperator(_name, _priority);
+    }
 
     function parseCode(Context _ctx, string[] memory code) internal virtual {
         delete program;

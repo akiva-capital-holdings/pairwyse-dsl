@@ -20,6 +20,21 @@ describe("Preprocessor", () => {
         libraries: { StringUtils: stringLib.address },
       })
     ).deploy();
+
+    await app.addOperator("!", 4);
+
+    await app.addOperator("swap", 3);
+    await app.addOperator("and", 3);
+
+    await app.addOperator("xor", 2);
+    await app.addOperator("or", 2);
+
+    await app.addOperator("==", 1);
+    await app.addOperator("<", 1);
+    await app.addOperator(">", 1);
+    await app.addOperator("<=", 1);
+    await app.addOperator(">=", 1);
+    await app.addOperator("!=", 1);
   });
 
   describe("infix to postfix", () => {

@@ -4,19 +4,25 @@ pragma solidity ^0.8.0;
 import { Stack, StackValue } from "../helpers/Stack.sol";
 import { StringUtils } from "../libs/StringUtils.sol";
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 // TODO: make a library
 contract Preprocessor {
     using StringUtils for string;
 
     Stack internal stack;
-    mapping(string => uint8) internal opsPriors;
+    mapping(string => uint256) internal opsPriors;
     string[] internal result;
+    string[] public operators;
 
     constructor() {
         stack = new Stack();
-        initOperatorPriorities();
+    }
+
+    // Note: bigger number => bigger priority
+    function addOperator(string memory _op, uint256 _priority) external {
+        opsPriors[_op] = _priority;
+        operators.push(_op);
     }
 
     function transform(string memory program) external returns (string[] memory) {
@@ -92,32 +98,13 @@ contract Preprocessor {
         return result;
     }
 
-    // bigger number => bigger priority
-    function initOperatorPriorities() private {
-        opsPriors["!"] = 4;
-
-        opsPriors["swap"] = 3;
-        opsPriors["and"] = 3;
-
-        opsPriors["xor"] = 2;
-        opsPriors["or"] = 2;
-
-        opsPriors["<"] = 1;
-        opsPriors[">"] = 1;
-        opsPriors["<="] = 1;
-        opsPriors[">="] = 1;
-        opsPriors["=="] = 1;
-        opsPriors["!="] = 1;
-    }
-
     function pushStringToStack(Stack stack_, string memory value) internal {
         StackValue stackValue = new StackValue();
         stackValue.setString(value);
         stack_.push(stackValue);
     }
 
-    function isOperator(string memory op) internal pure returns (bool) {
-        string[11] memory operators = ["==", "!", "<", ">", "swap", "<=", ">=", "xor", "and", "or", "!="];
+    function isOperator(string memory op) internal view returns (bool) {
         for (uint256 i = 0; i < operators.length; i++) {
             if (op.equal(operators[i])) return true;
         }
