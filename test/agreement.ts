@@ -13,10 +13,19 @@ describe("Agreement", () => {
   let anybody: SignerWithAddress;
 
   const ONE_MONTH = 60 * 60 * 24 * 30;
-  const NEXT_MONTH = Math.round((Date.now() + ONE_MONTH * 1000) / 1000);
+  let NEXT_MONTH: number;
 
   before(async () => {
     [alice, receiver, anybody] = await ethers.getSigners();
+
+    const lastBlockTimestamp = (
+      await ethers.provider.getBlock(
+        // eslint-disable-next-line no-underscore-dangle
+        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
+      )
+    ).timestamp;
+
+    NEXT_MONTH = lastBlockTimestamp + 60 * 60 * 24 * 30;
 
     // Deploy StringUtils library
     const stringLib = await (await ethers.getContractFactory("StringUtils")).deploy();

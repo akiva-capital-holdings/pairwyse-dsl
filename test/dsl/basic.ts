@@ -3,9 +3,6 @@ import { expect } from "chai";
 import { AppMock, Context, Executor, Parser, Stack, StackValue__factory } from "../../typechain";
 import { checkStack, checkStackTail, hex4Bytes } from "../utils/utils";
 
-const NEXT_MONTH = Math.round((Date.now() + 1000 * 60 * 60 * 24 * 30) / 1000);
-const PREV_MONTH = Math.round((Date.now() - 1000 * 60 * 60 * 24 * 30) / 1000);
-
 describe("DSL: basic", () => {
   let stack: Stack;
   let ctx: Context;
@@ -15,8 +12,21 @@ describe("DSL: basic", () => {
   let executor: Executor;
   let appAddrHex: string;
   let StackValue: StackValue__factory;
+  let NEXT_MONTH: number;
+  let PREV_MONTH: number;
+  let lastBlockTimestamp: number;
 
   before(async () => {
+    lastBlockTimestamp = (
+      await ethers.provider.getBlock(
+        // eslint-disable-next-line no-underscore-dangle
+        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
+      )
+    ).timestamp;
+
+    NEXT_MONTH = lastBlockTimestamp + 60 * 60 * 24 * 30;
+    PREV_MONTH = lastBlockTimestamp - 60 * 60 * 24 * 30;
+
     // Create StackValue Factory instance
     StackValue = await ethers.getContractFactory("StackValue");
 
@@ -312,11 +322,11 @@ describe("DSL: basic", () => {
       await checkStack(StackValue, stack, 1, 1);
     });
 
-    it("blockTimestamp < loadLocal uint256 NEXT_MONTH", async () => {
-      const bytes32Number = hex4Bytes("NEXT_MONTH");
-      await app.setStorageUint256(bytes32Number, NEXT_MONTH);
+    it("loadLocal uint256 TIMESTAMP < loadLocal uint256 NEXT_MONTH", async () => {
+      await app.setStorageUint256(hex4Bytes("NEXT_MONTH"), NEXT_MONTH);
+      await app.setStorageUint256(hex4Bytes("TIMESTAMP"), lastBlockTimestamp);
 
-      await app.parse(ctxAddr, "blockTimestamp < loadLocal uint256 NEXT_MONTH");
+      await app.parse(ctxAddr, "loadLocal uint256 TIMESTAMP < loadLocal uint256 NEXT_MONTH");
       await app.execute(ctxAddr);
       await checkStack(StackValue, stack, 1, 1);
     });
@@ -422,11 +432,11 @@ describe("DSL: basic", () => {
       await checkStack(StackValue, stack, 1, 1);
     });
 
-    it("blockTimestamp < loadRemote uint256 NEXT_MONTH", async () => {
-      const bytes32Number = hex4Bytes("NEXT_MONTH");
-      await app.setStorageUint256(bytes32Number, NEXT_MONTH);
+    it("loadLocal uint256 TIMESTAMP < loadRemote uint256 NEXT_MONTH", async () => {
+      await app.setStorageUint256(hex4Bytes("NEXT_MONTH"), NEXT_MONTH);
+      await app.setStorageUint256(hex4Bytes("TIMESTAMP"), lastBlockTimestamp);
 
-      await app.parse(ctxAddr, `blockTimestamp < loadRemote uint256 NEXT_MONTH ${appAddrHex}`);
+      await app.parse(ctxAddr, `loadLocal uint256 TIMESTAMP < loadRemote uint256 NEXT_MONTH ${appAddrHex}`);
       await app.execute(ctxAddr);
       await checkStack(StackValue, stack, 1, 1);
     });
@@ -586,16 +596,18 @@ describe("DSL: basic", () => {
     await checkStack(StackValue, stack, 1, 1);
   });
 
-  it("time > PREV_MONTH", async () => {
+  it("TIMESTAMP > PREV_MONTH", async () => {
     await app.setStorageUint256(hex4Bytes("PREV_MONTH"), PREV_MONTH);
-    await app.parse(ctxAddr, "blockTimestamp > loadLocal uint256 PREV_MONTH");
+    await app.setStorageUint256(hex4Bytes("TIMESTAMP"), lastBlockTimestamp);
+    await app.parse(ctxAddr, "loadLocal uint256 TIMESTAMP > loadLocal uint256 PREV_MONTH");
     await app.execute(ctxAddr);
     await checkStack(StackValue, stack, 1, 1);
   });
 
-  it("time < NEXT_MONTH", async () => {
+  it("TIMESTAMP < NEXT_MONTH", async () => {
     await app.setStorageUint256(hex4Bytes("NEXT_MONTH"), NEXT_MONTH);
-    await app.parse(ctxAddr, "blockTimestamp < loadLocal uint256 NEXT_MONTH");
+    await app.setStorageUint256(hex4Bytes("TIMESTAMP"), lastBlockTimestamp);
+    await app.parse(ctxAddr, "(loadLocal uint256 TIMESTAMP) < (loadLocal uint256 NEXT_MONTH)");
     await app.execute(ctxAddr);
     await checkStack(StackValue, stack, 1, 1);
   });
@@ -607,14 +619,15 @@ describe("DSL: basic", () => {
     async function testCase(INIT: number, EXPIRY: number, RISK: boolean, target: number) {
       await app.setStorageUint256(hex4Bytes("INIT"), INIT);
       await app.setStorageUint256(hex4Bytes("EXPIRY"), EXPIRY);
+      await app.setStorageUint256(hex4Bytes("TIMESTAMP"), lastBlockTimestamp);
       await app.setStorageBool(hex4Bytes("RISK"), RISK);
 
       await app.parse(
         ctxAddr,
         `
-        (blockTimestamp > loadLocal uint256 INIT)
+        (loadLocal uint256 TIMESTAMP > loadLocal uint256 INIT)
         and
-        (blockTimestamp < loadLocal uint256 EXPIRY)
+        (loadLocal uint256 TIMESTAMP < loadLocal uint256 EXPIRY)
         or
         (loadLocal bool RISK != bool true)
         `
@@ -664,14 +677,15 @@ describe("DSL: basic", () => {
 
     it("complex expression", async () => {
       const program = `
-        (((blockTimestamp >    loadLocal uint256 INIT)
+        (((loadLocal uint256 TIMESTAMP >    loadLocal uint256 INIT)
           and
-        (blockTimestamp <   loadLocal uint256 EXPIRY))
+        (loadLocal uint256 TIMESTAMP <   loadLocal uint256 EXPIRY))
           or
         loadLocal bool RISK != bool true)`;
 
       await app.setStorageUint256(hex4Bytes("INIT"), NEXT_MONTH);
       await app.setStorageUint256(hex4Bytes("EXPIRY"), PREV_MONTH);
+      await app.setStorageUint256(hex4Bytes("TIMESTAMP"), lastBlockTimestamp);
       await app.setStorageBool(hex4Bytes("RISK"), false);
 
       await app.parse(ctxAddr, program);

@@ -3,9 +3,6 @@ import { expect } from "chai";
 import { AppMock, Context, Stack, StackValue__factory } from "../typechain";
 import { checkStack, hex4Bytes, hex4BytesShort } from "./utils/utils";
 
-const NEXT_MONTH = Math.round((Date.now() + 1000 * 60 * 60 * 24 * 30) / 1000);
-const PREV_MONTH = Math.round((Date.now() - 1000 * 60 * 60 * 24 * 30) / 1000);
-
 async function getChainId() {
   return ethers.provider.getNetwork().then((network) => network.chainId);
 }
@@ -16,8 +13,21 @@ describe("End-to-end", () => {
   let ctx: Context;
   let app: AppMock;
   let StackValue: StackValue__factory;
+  let NEXT_MONTH: number;
+  let PREV_MONTH: number;
+  let lastBlockTimestamp: number;
 
   before(async () => {
+    lastBlockTimestamp = (
+      await ethers.provider.getBlock(
+        // eslint-disable-next-line no-underscore-dangle
+        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
+      )
+    ).timestamp;
+
+    NEXT_MONTH = lastBlockTimestamp + 60 * 60 * 24 * 30;
+    PREV_MONTH = lastBlockTimestamp - 60 * 60 * 24 * 30;
+
     // Create StackValue Factory instance
     StackValue = await ethers.getContractFactory("StackValue");
 
@@ -71,10 +81,14 @@ describe("End-to-end", () => {
     });
   });
 
-  describe("((time > init) and (time < expiry)) or ((risk == true) == false)", async () => {
+  describe("((time > init) and (time < expiry)) or ((risk == true) == false)", () => {
     const ITS_RISKY = 1;
     const NOT_RISKY = 0;
-    const NOW = Math.floor(Date.now() / 1000);
+    let NOW: number;
+
+    before(() => {
+      NOW = lastBlockTimestamp;
+    });
 
     const code = `
       ((loadLocal uint256 NOW > loadLocal uint256 INIT)
