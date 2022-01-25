@@ -4,44 +4,61 @@ pragma solidity ^0.8.0;
 import "../helpers/Stack.sol";
 
 interface IContext {
+    // Variables
     function stack() external returns (Stack);
 
     function program() external returns (bytes memory);
 
     function pc() external returns (uint256);
 
-    // function parser() external returns (address);
-
     function appAddress() external returns (address);
 
     function msgSender() external returns (address);
 
+    function opCodeByName(string memory _name) external returns (bytes1 _opcode);
+
     function selectorByOpcode(bytes1 _opcode) external returns (bytes4 _selecotor);
 
+    function asmSelectors(string memory _name) external returns (bytes4 _selecotor);
+
+    function branchSelectors(string memory _baseOpName, bytes1 _branchCode) external view returns (bytes4 _selector);
+
+    function branchCodes(string memory _baseOpName, string memory _branchName)
+        external
+        view
+        returns (bytes1 _branchCode);
+
+    // Functions
+
     function addOpcode(
-        string memory name,
-        bytes1 opcode,
-        bytes4 opSelector,
-        bytes4 asmSelector
+        string memory _name,
+        bytes1 _opcode,
+        bytes4 _opSelector,
+        bytes4 _asmSelector
     ) external;
 
-    function setProgram(bytes memory data) external;
+    function addOpcodeBranch(
+        string memory _baseOpName,
+        string memory _branchName,
+        bytes1 _branchCode,
+        bytes4 _selector
+    ) external;
 
-    function programAt(uint256 index, uint256 step) external view returns (bytes memory);
+    function setProgram(bytes memory _data) external;
 
-    function branchSelectors(string memory baseOpName, bytes1 branchCode) external view returns (bytes4);
+    function programAt(uint256 _index, uint256 _step) external view returns (bytes memory);
 
     function programSlice(
-        bytes calldata payload,
-        uint256 index,
-        uint256 step
+        bytes calldata _payload,
+        uint256 _index,
+        uint256 _step
     ) external pure returns (bytes memory);
 
-    function setPc(uint256 value) external;
+    function setPc(uint256 _pc) external;
 
-    function incPc(uint256 value) external;
+    function incPc(uint256 _val) external;
 
-    // function setAppAddress(address addr) external;
+    function setAppAddress(address _addr) external;
 
-    // function setMsgSender(address _msgSender) external;
+    function setMsgSender(address _msgSender) external;
 }

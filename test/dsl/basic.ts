@@ -54,9 +54,6 @@ describe("DSL: basic", () => {
     appAddrHex = app.address.slice(2);
   });
 
-  // TODO: Parser.parse() test
-  // TODO: Preprocessor: test operator priorities
-
   it("uint256 1122334433", async () => {
     await app.parse("uint256 1122334433");
     await app.execute();
@@ -288,12 +285,6 @@ describe("DSL: basic", () => {
     await app.parse("blockChainId");
     const tx = await app.execute();
     await checkStack(StackValue, stack, 1, tx.chainId);
-  });
-
-  it("block number < block timestamp", async () => {
-    await app.parse("blockNumber < blockTimestamp");
-    await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
   });
 
   describe("loadLocal", () => {
@@ -580,18 +571,6 @@ describe("DSL: basic", () => {
     await checkStack(StackValue, stack, 1, 1);
   });
 
-  it("T & T == T", async () => {
-    await app.parse("bool true and bool true");
-    await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
-  });
-
-  it("(T & T) | T == T", async () => {
-    await app.parse("bool true and bool true or bool true");
-    await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
-  });
-
   it("TIMESTAMP > PREV_MONTH", async () => {
     await app.setStorageUint256(hex4Bytes("PREV_MONTH"), PREV_MONTH);
     await app.setStorageUint256(hex4Bytes("TIMESTAMP"), lastBlockTimestamp);
@@ -604,6 +583,12 @@ describe("DSL: basic", () => {
     await app.setStorageUint256(hex4Bytes("NEXT_MONTH"), NEXT_MONTH);
     await app.setStorageUint256(hex4Bytes("TIMESTAMP"), lastBlockTimestamp);
     await app.parse("(loadLocal uint256 TIMESTAMP) < (loadLocal uint256 NEXT_MONTH)");
+    await app.execute();
+    await checkStack(StackValue, stack, 1, 1);
+  });
+
+  it("block number < block timestamp", async () => {
+    await app.parse("blockNumber < blockTimestamp");
     await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });

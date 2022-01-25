@@ -1,21 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./interfaces/IContext.sol";
-import "./interfaces/IStorage.sol";
-import "./interfaces/IERC20.sol";
-import "./libs/UnstructuredStorage.sol";
+import { IContext } from "./interfaces/IContext.sol";
+import { IStorage } from "./interfaces/IStorage.sol";
+import { IERC20 } from "./interfaces/IERC20.sol";
+import { UnstructuredStorage } from "./libs/UnstructuredStorage.sol";
 import { StackValue } from "./helpers/Stack.sol";
 import "hardhat/console.sol";
 
 contract Opcodes {
     using UnstructuredStorage for bytes32;
-
-    // IContext public ctx;
-
-    // constructor(IContext _ctx) {
-    //     ctx = _ctx;
-    // }
 
     /* solhint-disable-next-line no-empty-blocks */
     receive() external payable {}

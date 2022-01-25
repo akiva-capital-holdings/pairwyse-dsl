@@ -50,7 +50,7 @@ describe("Agreement", () => {
 
     // Top up contract
     const oneEthBN = ethers.utils.parseEther("1");
-    await anybody.sendTransaction({ to: await agreement.parser(), value: oneEthBN });
+    await anybody.sendTransaction({ to: await parser.opcodes(), value: oneEthBN });
 
     const signatory = alice.address;
     const transaction = "sendEth RECEIVER 1000000000000000000";

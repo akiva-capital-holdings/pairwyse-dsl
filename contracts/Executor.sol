@@ -2,9 +2,10 @@
 pragma solidity ^0.8.0;
 
 import { IContext } from "./interfaces/IContext.sol";
+import { IExecutor } from "./interfaces/IExecutor.sol";
 import "hardhat/console.sol";
 
-contract Executor {
+contract Executor is IExecutor {
     address public opcodes;
 
     constructor(address _opcodes) {

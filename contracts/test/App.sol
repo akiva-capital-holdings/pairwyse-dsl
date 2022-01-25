@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { Parser } from "../Parser.sol";
-import { Context } from "../Context.sol";
-import { Executor } from "../Executor.sol";
+import { IParser } from "../interfaces/IParser.sol";
+import { IContext } from "../interfaces/IContext.sol";
+import { IExecutor } from "../interfaces/IExecutor.sol";
 import { Storage } from "../helpers/Storage.sol";
 
 // import "hardhat/console.sol";
 
 contract App is Storage {
-    Parser public parser;
-    Executor public executor;
-    Context public ctx;
+    IParser public parser;
+    IExecutor public executor;
+    IContext public ctx;
 
     receive() external payable {
         payable(parser.opcodes()).transfer(msg.value);
     }
 
     constructor(
-        Parser _parser,
-        Executor _executor,
-        Context _ctx
+        IParser _parser,
+        IExecutor _executor,
+        IContext _ctx
     ) {
         parser = _parser;
         executor = _executor;

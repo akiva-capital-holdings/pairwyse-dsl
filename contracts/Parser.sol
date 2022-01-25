@@ -1,20 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { Context } from "./Context.sol";
-import { Opcodes } from "./Opcodes.sol";
-import { ConditionalTx } from "./ConditionalTx.sol";
-import { StringUtils } from "./libs/StringUtils.sol";
-import { Preprocessor } from "./helpers/Preprocessor.sol";
-import { Storage } from "./helpers/Storage.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
+import { IContext } from "./interfaces/IContext.sol";
+import { IParser } from "./interfaces/IParser.sol";
+import { StringUtils } from "./libs/StringUtils.sol";
+import { Storage } from "./helpers/Storage.sol";
+import { Preprocessor } from "./Preprocessor.sol";
+import { Opcodes } from "./Opcodes.sol";
 import "hardhat/console.sol";
 
 // TODO: make all quotes single
-// TODO: use only explicit imports i.e. import { X } from "./X.sol"
-// TODO: fix other todos
 
-contract Parser is Storage {
+contract Parser is IParser, Storage {
     using StringUtils for string;
 
     Opcodes public opcodes;
@@ -24,23 +22,17 @@ contract Parser is Storage {
     string[] internal cmds;
     uint256 internal cmdIdx;
 
-    event ExecRes(bool result);
-    event NewConditionalTx(address txObj);
-
-    // solhint-disable-next-line no-empty-blocks
-    receive() external payable {} // TODO: remove this function
-
     constructor() {
         opcodes = new Opcodes();
         preprocessor = new Preprocessor();
     }
 
-    function parse(Context _ctx, string memory _codeRaw) external {
+    function parse(IContext _ctx, string memory _codeRaw) external {
         string[] memory _code = preprocessor.transform(_codeRaw);
         parseCode(_ctx, _code);
     }
 
-    function initOpcodes(Context _ctx) external {
+    function initOpcodes(IContext _ctx) external {
         // Opcodes for operators
         addOpcodeForOperator(_ctx, "!", 0x02, opcodes.opNot.selector, 0x0, 4);
 
@@ -88,12 +80,12 @@ contract Parser is Storage {
      * Asm functions
      */
 
-    function asmLoadLocal(Context _ctx) public {
+    function asmLoadLocal(IContext _ctx) public {
         parseBranchOf(_ctx, "loadLocal");
         parseVariable();
     }
 
-    function asmLoadRemote(Context _ctx) public {
+    function asmLoadRemote(IContext _ctx) public {
         parseBranchOf(_ctx, "loadRemote");
         parseVariable();
         parseAddress();
@@ -144,7 +136,7 @@ contract Parser is Storage {
      */
 
     function addOpcodeForOperator(
-        Context _ctx,
+        IContext _ctx,
         string memory _name,
         bytes1 _opcode,
         bytes4 _opSelector,
@@ -155,7 +147,7 @@ contract Parser is Storage {
         preprocessor.addOperator(_name, _priority);
     }
 
-    function parseCode(Context _ctx, string[] memory code) internal virtual {
+    function parseCode(IContext _ctx, string[] memory code) internal virtual {
         delete program;
         cmdIdx = 0;
         cmds = code;
@@ -169,7 +161,7 @@ contract Parser is Storage {
         _ctx.setProgram(program);
     }
 
-    function parseOpcodeWithParams(Context _ctx) internal {
+    function parseOpcodeWithParams(IContext _ctx) internal {
         string storage cmd = nextCmd();
         bytes1 opcode = _ctx.opCodeByName(cmd);
         require(opcode != 0x0, string(abi.encodePacked("Parser: '", cmd, "' command is unknown")));
@@ -202,7 +194,7 @@ contract Parser is Storage {
         program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(nextCmd()))));
     }
 
-    function parseBranchOf(Context _ctx, string memory baseOpName) internal {
+    function parseBranchOf(IContext _ctx, string memory baseOpName) internal {
         program = bytes.concat(program, _ctx.branchCodes(baseOpName, nextCmd()));
     }
 

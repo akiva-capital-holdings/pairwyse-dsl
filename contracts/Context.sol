@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./interfaces/IContext.sol";
-import "./helpers/Stack.sol";
+import { IContext } from "./interfaces/IContext.sol";
+import { Stack } from "./helpers/Stack.sol";
 import "hardhat/console.sol";
 
-// TODO: split Context into:
+// TODO: may be wise to split Context into:
 //      contract A (holds opCodeByName, selectorByOpcode, and asmSelectors)
 //      contract B (holds particular state variables: stack, program, pc, appAddress, msgSender)
 contract Context is IContext {
@@ -15,84 +15,77 @@ contract Context is IContext {
     address public override appAddress;
     address public override msgSender;
 
-    mapping(string => bytes1) public opCodeByName; // name => hex // used in Parser
-    mapping(bytes1 => bytes4) public selectorByOpcode; // used in ConditionalTx
-    mapping(string => bytes4) public asmSelectors; // used in Parser
+    mapping(string => bytes1) public override opCodeByName; // name => hex // used in Parser
+    mapping(bytes1 => bytes4) public override selectorByOpcode; // used in ConditionalTx
+    mapping(string => bytes4) public override asmSelectors; // used in Parser
 
     // baseOpName -> branchCode -> selector;
     mapping(string => mapping(bytes1 => bytes4)) public override branchSelectors;
 
     // baseOpName -> branchName -> branchCode;
-    mapping(string => mapping(string => bytes1)) public branchCodes;
-
-    // modifier onlyParser() {
-    //     require(parser == msg.sender, "Caller is not parser");
-    //     _;
-    // }
+    mapping(string => mapping(string => bytes1)) public override branchCodes;
 
     constructor() {
         stack = new Stack();
     }
 
     function addOpcode(
-        string memory name,
-        bytes1 opcode,
-        bytes4 opSelector,
-        bytes4 asmSelector
+        string memory _name,
+        bytes1 _opcode,
+        bytes4 _opSelector,
+        bytes4 _asmSelector
     ) public override {
         require(
-            opCodeByName[name] == bytes1(0) && selectorByOpcode[opcode] == bytes4(0),
+            opCodeByName[_name] == bytes1(0) && selectorByOpcode[_opcode] == bytes4(0),
             "Context: duplicate opcode name or code"
         );
-        opCodeByName[name] = opcode;
-        selectorByOpcode[opcode] = opSelector;
-        asmSelectors[name] = asmSelector;
+        opCodeByName[_name] = _opcode;
+        selectorByOpcode[_opcode] = _opSelector;
+        asmSelectors[_name] = _asmSelector;
     }
 
     function addOpcodeBranch(
-        string memory baseOpName,
-        string memory branchName,
-        bytes1 branchCode,
-        bytes4 selector
-    ) public {
-        branchSelectors[baseOpName][branchCode] = selector;
-        branchCodes[baseOpName][branchName] = branchCode;
+        string memory _baseOpName,
+        string memory _branchName,
+        bytes1 _branchCode,
+        bytes4 _selector
+    ) public override {
+        branchSelectors[_baseOpName][_branchCode] = _selector;
+        branchCodes[_baseOpName][_branchName] = _branchCode;
     }
 
-    function setProgram(
-        bytes memory data /*onlyParser*/
-    ) public virtual override {
-        program = data;
+    function setProgram(bytes memory _data) public virtual override {
+        program = _data;
         pc = 0;
     }
 
-    function programAt(uint256 index, uint256 step) public view override returns (bytes memory) {
+    function programAt(uint256 _index, uint256 _step) public view override returns (bytes memory) {
         bytes memory data = program;
-        return this.programSlice(data, index, step);
+        return this.programSlice(data, _index, _step);
     }
 
     function programSlice(
-        bytes calldata payload,
-        uint256 index,
-        uint256 step
+        bytes calldata _payload,
+        uint256 _index,
+        uint256 _step
     ) public pure override returns (bytes memory) {
-        require(payload.length > index, "slicing out of range");
-        return payload[index:index + step];
+        require(_payload.length > _index, "slicing out of range");
+        return _payload[_index:_index + _step];
     }
 
-    function setPc(uint256 value) public override {
-        pc = value;
+    function setPc(uint256 _pc) public override {
+        pc = _pc;
     }
 
-    function incPc(uint256 value) public override {
-        pc += value;
+    function incPc(uint256 _val) public override {
+        pc += _val;
     }
 
-    function setAppAddress(address addr) public {
-        appAddress = addr;
+    function setAppAddress(address _addr) public override {
+        appAddress = _addr;
     }
 
-    function setMsgSender(address _msgSender) public {
+    function setMsgSender(address _msgSender) public override {
         msgSender = _msgSender;
     }
 }

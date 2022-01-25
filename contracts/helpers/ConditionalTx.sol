@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { Context } from "./Context.sol";
-import { Opcodes } from "./Opcodes.sol";
-import { Executor } from "./Executor.sol";
-import "hardhat/console.sol";
+import { IConditionalTx } from "../interfaces/IConditionalTx.sol";
+import { IContext } from "../interfaces/IContext.sol";
+import { IExecutor } from "../interfaces/IExecutor.sol";
+import { Opcodes } from "../Opcodes.sol";
 
-contract ConditionalTx {
-    Context public transactionCtx;
-    Context public conditionCtx;
-    Executor public executor; // TODO: make interface
+// import "hardhat/console.sol";
+
+contract ConditionalTx is IConditionalTx {
+    IContext public transactionCtx;
+    IContext public conditionCtx;
+    IExecutor public executor;
     bool public isExecuted;
 
     address public signatory;
@@ -20,9 +22,9 @@ contract ConditionalTx {
         address _signatory,
         string memory _transactionStr,
         string memory _conditionStr,
-        Context _transactionCtx,
-        Context _conditionCtx,
-        Executor _executor
+        IContext _transactionCtx,
+        IContext _conditionCtx,
+        IExecutor _executor
     ) {
         signatory = _signatory;
         transactionStr = _transactionStr;
