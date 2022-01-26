@@ -19,9 +19,6 @@ contract Agreement is Storage {
         parser = _parser;
     }
 
-    // solhint-disable-next-line no-empty-blocks
-    receive() external payable {}
-
     function update(
         address _signatory,
         string memory _transactionStr,
@@ -32,8 +29,10 @@ contract Agreement is Storage {
 
         parser.initOpcodes(transactionCtx);
         parser.initOpcodes(conditionCtx);
+
         transactionCtx.setAppAddress(address(this));
         transactionCtx.setMsgSender(msg.sender);
+
         conditionCtx.setAppAddress(address(this));
         conditionCtx.setMsgSender(msg.sender);
 

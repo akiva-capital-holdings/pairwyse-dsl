@@ -30,15 +30,19 @@ contract ConditionalTx is IConditionalTx {
 
         transactionCtx = _transactionCtx;
         conditionCtx = _conditionCtx;
+
+        conditionCtx.setOpcodesAddr(address(Opcodes));
+        transactionCtx.setOpcodesAddr(address(Opcodes));
     }
 
+    // solhint-disable-next-line no-empty-blocks
+    receive() external payable {}
+
     function checkCondition() external {
-        console.log("checkCondition");
         Executor.execute(conditionCtx);
     }
 
     function execTransaction() external {
-        console.log("execTransaction");
         require(!isExecuted, "ConditionalTx: txn already was executed");
         Executor.execute(transactionCtx);
         isExecuted = true;

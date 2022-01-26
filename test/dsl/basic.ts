@@ -39,7 +39,7 @@ describe("DSL: basic", () => {
     });
     parser = await ParserCont.deploy();
 
-    // Deploy Context
+    // Deploy Context & setup
     ctx = await (await ethers.getContractFactory("Context")).deploy();
     await ctx.setOpcodesAddr(opcodesLib.address);
 
