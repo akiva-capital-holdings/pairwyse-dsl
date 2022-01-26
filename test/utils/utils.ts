@@ -2,7 +2,7 @@
 
 import { expect } from "chai";
 import { ethers } from "ethers";
-import { Opcodes, Stack__factory, StackValue__factory, Stack, ContextMock, StackValue } from "../../typechain";
+import { Opcodes, Stack__factory, StackValue__factory, Stack, Context, StackValue } from "../../typechain";
 import { OpConditionalTxFunc } from "../types";
 
 /**
@@ -23,13 +23,13 @@ export const hex4BytesShort = (str: string) => hex4Bytes(str).slice(2, 2 + 8);
 /**
  * Push values to stack
  * @param SV StackValue: StackValue__factory
- * @param context context: ContextMock
+ * @param context context: Context
  * @param ST Stack: Stack__factory
  * @param arr Array of values to put in stack. They are put in stack one-by-one
  *            from the beginning of the array
  * @returns created stack
  */
-export const pushToStack = async (SV: StackValue__factory, context: ContextMock, ST: Stack__factory, arr: number[]) => {
+export const pushToStack = async (SV: StackValue__factory, context: Context, ST: Stack__factory, arr: number[]) => {
   const stackValues: StackValue[] = [];
 
   for (let i = 0; i < arr.length; ++i) {
@@ -64,7 +64,7 @@ export const checkStack = async (
   expectedValue: number,
   indexFromEnd: number = 0,
   badLenErr = "Bad stack length",
-  badValueErr = "Bad stack value"
+  badValueErr = "Bad stack value",
 ) => {
   // check stack length
   const stackLen = await stack.length();
@@ -82,7 +82,7 @@ export async function checkStackTail(
   expectedLen: number,
   expectedValues: number[],
   badLenErr = "Bad stack length",
-  badValueErr = "Bad stack value"
+  badValueErr = "Bad stack value",
 ) {
   for (let i = 0; i < expectedValues.length; i++) {
     await checkStack(SV, stack, expectedLen, expectedValues[expectedValues.length - 1 - i], i, badLenErr, badValueErr);
@@ -94,7 +94,7 @@ export async function checkStackTail(
  * operation. Ex. 1 > 2 = 0
  * @param ST Stack: Stack__factory
  * @param SV StackValue: StackValue__factory
- * @param context context: ContextMock
+ * @param context context: Context
  * @param opcodes opcodes: Opcodes
  * @param opFunc opcode function (>, <, =, ...)
  * @param value1 First value to the stack
@@ -104,12 +104,12 @@ export async function checkStackTail(
 export const testTwoInputOneOutput = async (
   ST: Stack__factory,
   SV: StackValue__factory,
-  context: ContextMock,
+  context: Context,
   opcodes: Opcodes,
   opFunc: OpConditionalTxFunc,
   value1: number,
   value2: number,
-  result: number
+  result: number,
 ) => {
   const stack = await pushToStack(SV, context, ST, [value1, value2]);
   await opFunc(opcodes)(context.address);

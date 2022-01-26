@@ -1,11 +1,12 @@
 /* eslint-disable camelcase */
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { expect } from "chai";
 import { ethers } from "hardhat";
-import { ContextMock, StackValue__factory, Stack, ExecutorMock, Parser } from "../typechain";
+import { Context, StackValue__factory, Stack, ExecutorMock, Parser } from "../typechain";
 import { checkStack, hex4Bytes } from "./utils/utils";
 
 describe("Executor", () => {
-  let ctx: ContextMock;
+  let ctx: Context;
   let ctxAddr: string;
   let stack: Stack;
   let app: ExecutorMock;
@@ -47,7 +48,16 @@ describe("Executor", () => {
     stack = StackCont.attach(contextStackAddress);
   });
 
-  describe("eval()", async () => {
+  describe("execute()", async () => {
+    it("error: empty program", async () => {
+      await expect(app.execute(ctxAddr)).to.be.revertedWith("Executor: empty program");
+    });
+
+    it("error: did not find selector for opcode", async () => {
+      await ctx.setProgram("0x99");
+      await expect(app.execute(ctxAddr)).to.be.revertedWith("Executor: did not find selector for opcode");
+    });
+
     it("blockNumber", async () => {
       /**
        * Program is:
@@ -155,14 +165,14 @@ describe("Executor", () => {
           const bytes32Bytes = hex4Bytes("BYTES");
           await app.setStorageBytes32(
             bytes32Bytes,
-            "0x1234500000000000000000000000000000000000000000000000000000000001"
+            "0x1234500000000000000000000000000000000000000000000000000000000001",
           );
 
           // Set BYTES2
           const bytes32Bytes2 = hex4Bytes("BYTES2");
           await app.setStorageBytes32(
             bytes32Bytes2,
-            "0x1234500000000000000000000000000000000000000000000000000000000001"
+            "0x1234500000000000000000000000000000000000000000000000000000000001",
           );
 
           /**
@@ -185,14 +195,14 @@ describe("Executor", () => {
           const bytes32Bytes = hex4Bytes("BYTES");
           await app.setStorageBytes32(
             bytes32Bytes,
-            "0x1234500000000000000000000000000000000000000000000000000000000001"
+            "0x1234500000000000000000000000000000000000000000000000000000000001",
           );
 
           // Set BYTES2
           const bytes32Bytes2 = hex4Bytes("BYTES2");
           await app.setStorageBytes32(
             bytes32Bytes2,
-            "0x1234500000000000000000000000000000000000000000000000000000000011"
+            "0x1234500000000000000000000000000000000000000000000000000000000011",
           );
 
           /**
@@ -473,14 +483,14 @@ describe("Executor", () => {
           const bytes32Bytes = hex4Bytes("BYTES");
           await app.setStorageBytes32(
             bytes32Bytes,
-            "0x1234500000000000000000000000000000000000000000000000000000000001"
+            "0x1234500000000000000000000000000000000000000000000000000000000001",
           );
 
           // Set BYTES2
           const bytes32Bytes2 = hex4Bytes("BYTES2");
           await app.setStorageBytes32(
             bytes32Bytes2,
-            "0x1234500000000000000000000000000000000000000000000000000000000001"
+            "0x1234500000000000000000000000000000000000000000000000000000000001",
           );
 
           /**
@@ -503,14 +513,14 @@ describe("Executor", () => {
           const bytes32Bytes = hex4Bytes("BYTES");
           await app.setStorageBytes32(
             bytes32Bytes,
-            "0x1234500000000000000000000000000000000000000000000000000000000001"
+            "0x1234500000000000000000000000000000000000000000000000000000000001",
           );
 
           // Set BYTES2
           const bytes32Bytes2 = hex4Bytes("BYTES2");
           await app.setStorageBytes32(
             bytes32Bytes2,
-            "0x1234500000000000000000000000000000000000000000000000000000000011"
+            "0x1234500000000000000000000000000000000000000000000000000000000011",
           );
 
           /**

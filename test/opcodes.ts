@@ -6,8 +6,8 @@ import {
   Stack__factory,
   StackValue__factory,
   Opcodes,
-  ContextMock__factory,
-  ContextMock,
+  Context__factory,
+  Context,
 } from "../typechain";
 import { testLt, testGt, testLe, testAnd, testOr } from "./utils/testOps";
 import { checkStack, pushToStack, testTwoInputOneOutput } from "./utils/utils";
@@ -16,19 +16,19 @@ import { TestCaseUint256 } from "./types";
 
 describe("Opcode", () => {
   // eslint-disable-next-line camelcase
-  let Context: ContextMock__factory;
+  let Context: Context__factory;
   // eslint-disable-next-line camelcase
   let OpcodesCont: Opcodes__factory;
   // eslint-disable-next-line camelcase
   let Stack: Stack__factory;
   // eslint-disable-next-line camelcase
   let StackValue: StackValue__factory;
-  let context: ContextMock;
+  let context: Context;
   let opcodes: Opcodes;
   let ctx: string;
 
   beforeEach(async () => {
-    Context = await ethers.getContractFactory("ContextMock");
+    Context = await ethers.getContractFactory("Context");
     OpcodesCont = await ethers.getContractFactory("Opcodes");
     Stack = await ethers.getContractFactory("Stack");
     StackValue = await ethers.getContractFactory("StackValue");
@@ -66,8 +66,8 @@ describe("Opcode", () => {
             testLt.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result
-          )
+            testCase.result,
+          ),
         );
       });
     });
@@ -85,8 +85,8 @@ describe("Opcode", () => {
             testGt.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result
-          )
+            testCase.result,
+          ),
         );
       });
     });
@@ -104,8 +104,8 @@ describe("Opcode", () => {
             testLe.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result
-          )
+            testCase.result,
+          ),
         );
       });
     });
@@ -138,8 +138,8 @@ describe("Opcode", () => {
             testAnd.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result
-          )
+            testCase.result,
+          ),
         );
       });
     });
@@ -176,8 +176,8 @@ describe("Opcode", () => {
             testOr.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result
-          )
+            testCase.result,
+          ),
         );
       });
     });

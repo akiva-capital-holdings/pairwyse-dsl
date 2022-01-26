@@ -25,6 +25,11 @@ contract Context is IContext {
     // baseOpName -> branchName -> branchCode;
     mapping(string => mapping(string => bytes1)) public override branchCodes;
 
+    modifier nonZeroAddress(address _addr) {
+        require(_addr != address(0), "Context: address is zero");
+        _;
+    }
+
     constructor() {
         stack = new Stack();
     }
@@ -35,6 +40,7 @@ contract Context is IContext {
         bytes4 _opSelector,
         bytes4 _asmSelector
     ) public override {
+        require(_opSelector != bytes4(0), "Context: empty opcode selector");
         require(
             opCodeByName[_name] == bytes1(0) && selectorByOpcode[_opcode] == bytes4(0),
             "Context: duplicate opcode name or code"
@@ -50,13 +56,19 @@ contract Context is IContext {
         bytes1 _branchCode,
         bytes4 _selector
     ) public override {
+        require(_selector != bytes4(0), "Context: empty opcode selector");
+        require(
+            branchSelectors[_baseOpName][_branchCode] == bytes4(0) &&
+                branchCodes[_baseOpName][_branchName] == bytes1(0),
+            "Context: duplicate opcode branch"
+        );
         branchSelectors[_baseOpName][_branchCode] = _selector;
         branchCodes[_baseOpName][_branchName] = _branchCode;
     }
 
-    function setProgram(bytes memory _data) public virtual override {
+    function setProgram(bytes memory _data) public override {
         program = _data;
-        pc = 0;
+        setPc(0);
     }
 
     function programAt(uint256 _index, uint256 _step) public view override returns (bytes memory) {
@@ -69,7 +81,7 @@ contract Context is IContext {
         uint256 _index,
         uint256 _step
     ) public pure override returns (bytes memory) {
-        require(_payload.length > _index, "slicing out of range");
+        require(_payload.length > _index, "Context: slicing out of range");
         return _payload[_index:_index + _step];
     }
 
@@ -81,11 +93,11 @@ contract Context is IContext {
         pc += _val;
     }
 
-    function setAppAddress(address _addr) public override {
+    function setAppAddress(address _addr) public override nonZeroAddress(_addr) {
         appAddress = _addr;
     }
 
-    function setMsgSender(address _msgSender) public override {
+    function setMsgSender(address _msgSender) public override nonZeroAddress(_msgSender) {
         msgSender = _msgSender;
     }
 }

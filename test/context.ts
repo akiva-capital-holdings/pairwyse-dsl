@@ -1,31 +1,122 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-/* eslint-disable camelcase */
-import { ContextMock__factory, ContextMock } from "../typechain";
+import { Context } from "../typechain";
 
 describe("Context", () => {
-  // eslint-disable-next-line camelcase
-  let Context: ContextMock__factory;
-  let context: ContextMock;
+  let app: Context;
 
   beforeEach(async () => {
-    Context = await ethers.getContractFactory("ContextMock");
-    context = await Context.deploy();
+    const ContextCont = await ethers.getContractFactory("Context");
+    app = await ContextCont.deploy();
   });
 
-  describe("programAt", async () => {
+  describe("addOpcode", () => {
+    it("error: empty opcode selector", async () => {
+      await expect(app.addOpcode("+", "0x01", "0x00000000", "0x00000000")).to.be.revertedWith(
+        "Context: empty opcode selector",
+      );
+    });
+    it("error: duplicate opcode", async () => {
+      await app.addOpcode("+", "0x01", "0x00000001", "0x00000000");
+      await expect(app.addOpcode("+", "0x02", "0x00000001", "0x00000000")).to.be.revertedWith(
+        "Context: duplicate opcode name or code",
+      );
+      await expect(app.addOpcode("*", "0x01", "0x00000001", "0x00000000")).to.be.revertedWith(
+        "Context: duplicate opcode name or code",
+      );
+    });
+    it("success", async () => {
+      const name = "+";
+      const opcode = "0x01";
+      const opSelector = "0x00000001";
+      const asmSelector = "0x00000000";
+      await app.addOpcode(name, opcode, opSelector, asmSelector);
+      expect(await app.opCodeByName(name)).to.equal(opcode);
+      expect(await app.selectorByOpcode(opcode)).to.equal(opSelector);
+      expect(await app.asmSelectors(name)).to.equal(asmSelector);
+    });
+  });
+
+  describe("addOpcodeBranch", () => {
+    it("error: empty opcode selector", async () => {
+      await expect(app.addOpcodeBranch("loadLocal", "uint256", "0x01", "0x00000000")).to.be.revertedWith(
+        "Context: empty opcode selector",
+      );
+    });
+    it("error: duplicate opcode", async () => {
+      await app.addOpcodeBranch("loadLocal", "uint256", "0x01", "0x00000001");
+      await expect(app.addOpcodeBranch("loadLocal", "bool", "0x01", "0x00000002")).to.be.revertedWith(
+        "Context: duplicate opcode branch",
+      );
+      await expect(app.addOpcodeBranch("loadLocal", "uint256", "0x02", "0x00000002")).to.be.revertedWith(
+        "Context: duplicate opcode branch",
+      );
+    });
+    it("success", async () => {
+      const baseOpName = "loadLocal";
+      const branchName = "uint256";
+      const branchCode = "0x01";
+      const selector = "0x00000001";
+      await app.addOpcodeBranch(baseOpName, branchName, branchCode, selector);
+      expect(await app.branchSelectors(baseOpName, branchCode)).to.equal(selector);
+      expect(await app.branchCodes(baseOpName, branchName)).to.equal(branchCode);
+    });
+  });
+
+  it("setProgram", async () => {
+    await app.setPc("0x03");
+    expect(await app.pc()).to.equal("0x03");
+    await app.setProgram("0x123456");
+    expect(await app.program()).to.equal("0x123456");
+    expect(await app.pc()).to.equal("0x00");
+  });
+
+  describe("programAt & programSlice", () => {
     it("get slice", async () => {
-      await context.setProgram("0x01020304");
+      await app.setProgram("0x01020304");
 
-      expect(await context.programAt(0, 1), "Wrong bytes slice").to.equal("0x01");
-      expect(await context.programAt(1, 1), "Wrong bytes slice").to.equal("0x02");
-      expect(await context.programAt(2, 1), "Wrong bytes slice").to.equal("0x03");
-      expect(await context.programAt(3, 1), "Wrong bytes slice").to.equal("0x04");
+      expect(await app.programAt(0, 1), "Wrong bytes slice").to.equal("0x01");
+      expect(await app.programAt(1, 1), "Wrong bytes slice").to.equal("0x02");
+      expect(await app.programAt(2, 1), "Wrong bytes slice").to.equal("0x03");
+      expect(await app.programAt(3, 1), "Wrong bytes slice").to.equal("0x04");
     });
+
     it("overflow", async () => {
-      await context.setProgram("0x01020304");
-
-      await expect(context.programAt(4, 1)).to.be.revertedWith("slicing out of range");
+      await app.setProgram("0x01020304");
+      await expect(app.programAt(4, 1)).to.be.revertedWith("Context: slicing out of range");
     });
+  });
+
+  it("setPc", async () => {
+    await app.setPc(1);
+    expect(await app.pc()).to.equal(1);
+    await app.setPc(999);
+    expect(await app.pc()).to.equal(999);
+    await app.setPc(0);
+    expect(await app.pc()).to.equal(0);
+  });
+
+  it("incPc", async () => {
+    await app.setPc(5);
+    await app.incPc(1);
+    expect(await app.pc()).to.equal(6);
+    await app.incPc(3);
+    expect(await app.pc()).to.equal(9);
+    await app.incPc(0);
+    expect(await app.pc()).to.equal(9);
+  });
+
+  it("setAppAddress", async () => {
+    await expect(app.setAppAddress(ethers.constants.AddressZero)).to.be.revertedWith("Context: address is zero");
+    const [addr] = await ethers.getSigners();
+    await app.setAppAddress(addr.address);
+    expect(await app.appAddress()).to.equal(addr.address);
+  });
+
+  it("setMsgSender", async () => {
+    await expect(app.setMsgSender(ethers.constants.AddressZero)).to.be.revertedWith("Context: address is zero");
+    const [addr] = await ethers.getSigners();
+    await app.setMsgSender(addr.address);
+    expect(await app.msgSender()).to.equal(addr.address);
   });
 });
