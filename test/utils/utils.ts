@@ -2,8 +2,8 @@
 
 import { expect } from "chai";
 import { ethers } from "ethers";
-import { Opcodes, Stack__factory, StackValue__factory, Stack, Context, StackValue } from "../../typechain";
-import { OpConditionalTxFunc } from "../types";
+import { /*Opcodes,*/ Stack__factory, StackValue__factory, Stack, Context, StackValue } from "../../typechain";
+// import { OpConditionalTxFunc } from "../types";
 
 /**
  * Apply keccak256 to `str`, cut the result to the first 4 bytes, append
@@ -29,7 +29,12 @@ export const hex4BytesShort = (str: string) => hex4Bytes(str).slice(2, 2 + 8);
  *            from the beginning of the array
  * @returns created stack
  */
-export const pushToStack = async (SV: StackValue__factory, context: Context, ST: Stack__factory, arr: number[]) => {
+export const pushToStack = async (
+  SV: StackValue__factory,
+  context: Context,
+  ST: Stack__factory,
+  arr: (string | number)[],
+) => {
   const stackValues: StackValue[] = [];
 
   for (let i = 0; i < arr.length; ++i) {
@@ -41,7 +46,11 @@ export const pushToStack = async (SV: StackValue__factory, context: Context, ST:
   const stack = ST.attach(contextStackAddress);
 
   for (let i = 0; i < stackValues.length; ++i) {
-    await stackValues[i].setUint256(arr[i]);
+    if (typeof arr[i] === "number") {
+      await stackValues[i].setUint256(arr[i] as number);
+    } else if (typeof arr[i] === "string") {
+      await stackValues[i].setString(arr[i] as string);
+    }
     await stack.push(stackValues[i].address);
   }
 
@@ -89,29 +98,29 @@ export async function checkStackTail(
   }
 }
 
-/**
- * Test stack with two values that combines into a single value after the
- * operation. Ex. 1 > 2 = 0
- * @param ST Stack: Stack__factory
- * @param SV StackValue: StackValue__factory
- * @param context context: Context
- * @param opcodes opcodes: Opcodes
- * @param opFunc opcode function (>, <, =, ...)
- * @param value1 First value to the stack
- * @param value2 Second value to the stack
- * @param result Expected result after applying opFunc to value1 and value2
- */
-export const testTwoInputOneOutput = async (
-  ST: Stack__factory,
-  SV: StackValue__factory,
-  context: Context,
-  opcodes: Opcodes,
-  opFunc: OpConditionalTxFunc,
-  value1: number,
-  value2: number,
-  result: number,
-) => {
-  const stack = await pushToStack(SV, context, ST, [value1, value2]);
-  await opFunc(opcodes)(context.address);
-  await checkStack(SV, stack, 1, result);
-};
+// /**
+//  * Test stack with two values that combines into a single value after the
+//  * operation. Ex. 1 > 2 = 0
+//  * @param ST Stack: Stack__factory
+//  * @param SV StackValue: StackValue__factory
+//  * @param context context: Context
+//  * @param opcodes opcodes: Opcodes
+//  * @param opFunc opcode function (>, <, =, ...)
+//  * @param value1 First value to the stack
+//  * @param value2 Second value to the stack
+//  * @param result Expected result after applying opFunc to value1 and value2
+//  */
+// export const testTwoInputOneOutput = async (
+//   ST: Stack__factory,
+//   SV: StackValue__factory,
+//   context: Context,
+//   opcodes: Opcodes,
+//   opFunc: OpConditionalTxFunc,
+//   value1: number,
+//   value2: number,
+//   result: number,
+// ) => {
+//   const stack = await pushToStack(SV, context, ST, [value1, value2]);
+//   await opFunc(opcodes)(context.address);
+//   await checkStack(SV, stack, 1, result);
+// };

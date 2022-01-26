@@ -15,6 +15,8 @@ interface IContext {
 
     function msgSender() external returns (address);
 
+    function opcodes() external returns (address);
+
     function opCodeByName(string memory _name) external returns (bytes1 _opcode);
 
     function selectorByOpcode(bytes1 _opcode) external returns (bytes4 _selecotor);
@@ -29,6 +31,8 @@ interface IContext {
         returns (bytes1 _branchCode);
 
     // Functions
+
+    function setOpcodesAddr(address _opcodes) external;
 
     function addOpcode(
         string memory _name,

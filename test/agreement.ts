@@ -5,7 +5,7 @@ import { hex4Bytes } from "./utils/utils";
 import { Agreement } from "../typechain/Agreement";
 import { Parser } from "../typechain/Parser";
 
-describe("Agreement", () => {
+describe.only("Agreement", () => {
   let parser: Parser;
   let agreement: Agreement;
   let alice: SignerWithAddress;
@@ -21,7 +21,7 @@ describe("Agreement", () => {
     const lastBlockTimestamp = (
       await ethers.provider.getBlock(
         // eslint-disable-next-line no-underscore-dangle
-        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
+        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */,
       )
     ).timestamp;
 
@@ -29,6 +29,8 @@ describe("Agreement", () => {
 
     // Deploy StringUtils library
     const stringLib = await (await ethers.getContractFactory("StringUtils")).deploy();
+    const opcodesLib = await (await ethers.getContractFactory("Opcodes")).deploy();
+    const executorLib = await (await ethers.getContractFactory("Executor")).deploy();
 
     // Deploy Parser
     const ParserCont = await ethers.getContractFactory("Parser", {
@@ -36,11 +38,10 @@ describe("Agreement", () => {
     });
     parser = await ParserCont.deploy();
 
-    // Deploy Executor
-    const executor = await (await ethers.getContractFactory("Executor")).deploy(await parser.opcodes());
-
     // Deploy Agreement
-    agreement = await (await ethers.getContractFactory("Agreement")).deploy(parser.address, executor.address);
+    agreement = await (
+      await ethers.getContractFactory("Agreement", { libraries: { Executor: executorLib.address } })
+    ).deploy(parser.address);
   });
 
   it("lifecycle", async () => {
@@ -49,14 +50,16 @@ describe("Agreement", () => {
     await agreement.setStorageUint256(hex4Bytes("LOCK_TIME"), NEXT_MONTH);
 
     // Top up contract
+    console.log(1);
     const oneEthBN = ethers.utils.parseEther("1");
-    await anybody.sendTransaction({ to: await parser.opcodes(), value: oneEthBN });
+    await anybody.sendTransaction({ to: agreement.address, value: oneEthBN });
 
     const signatory = alice.address;
     const transaction = "sendEth RECEIVER 1000000000000000000";
     const condition = "blockTimestamp > loadLocal uint256 LOCK_TIME";
 
     // Update
+    console.log(2);
     const txId = await agreement.callStatic.update(signatory, transaction, condition);
     await agreement.update(signatory, transaction, condition);
 
@@ -64,12 +67,15 @@ describe("Agreement", () => {
      * Execute
      */
     // Bad signatory
+    console.log(3);
     await expect(agreement.connect(anybody).execute(txId)).to.be.revertedWith("Agreement: bad tx signatory");
 
     // Condition isn't satisfied
+    console.log(4);
     await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith("Agreement: tx condition is not satisfied");
 
     // Execute transaction
+    console.log(5);
     await ethers.provider.send("evm_increaseTime", [ONE_MONTH]);
     await expect(await agreement.connect(alice).execute(txId)).to.changeEtherBalance(receiver, oneEthBN);
   });

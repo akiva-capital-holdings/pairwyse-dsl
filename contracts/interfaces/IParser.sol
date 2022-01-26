@@ -8,7 +8,7 @@ import { Opcodes } from "../Opcodes.sol";
 interface IParser {
     // Variables
 
-    function opcodes() external returns (Opcodes);
+    // function opcodes() external returns (Opcodes);
 
     function preprocessor() external returns (Preprocessor);
 

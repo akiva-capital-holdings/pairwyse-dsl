@@ -3,27 +3,20 @@ pragma solidity ^0.8.0;
 
 import { IParser } from "../interfaces/IParser.sol";
 import { IContext } from "../interfaces/IContext.sol";
-import { IExecutor } from "../interfaces/IExecutor.sol";
+import { Executor } from "../Executor.sol";
 import { Storage } from "../helpers/Storage.sol";
 
 // import "hardhat/console.sol";
 
 contract App is Storage {
     IParser public parser;
-    IExecutor public executor;
     IContext public ctx;
 
-    receive() external payable {
-        payable(parser.opcodes()).transfer(msg.value);
-    }
+    // solhint-disable-next-line no-empty-blocks
+    receive() external payable {}
 
-    constructor(
-        IParser _parser,
-        IExecutor _executor,
-        IContext _ctx
-    ) {
+    constructor(IParser _parser, IContext _ctx) {
         parser = _parser;
-        executor = _executor;
         ctx = _ctx;
         setupContext();
     }
@@ -34,7 +27,7 @@ contract App is Storage {
     }
 
     function execute() external {
-        executor.execute(ctx);
+        Executor.execute(ctx);
     }
 
     function resetContext() public {

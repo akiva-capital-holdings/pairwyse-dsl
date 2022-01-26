@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import { IContext } from "./IContext.sol";
-import { IExecutor } from "./IExecutor.sol";
 import { Opcodes } from "../Opcodes.sol";
 
 interface IConditionalTx {
@@ -11,8 +10,6 @@ interface IConditionalTx {
     function transactionCtx() external returns (IContext);
 
     function conditionCtx() external returns (IContext);
-
-    function executor() external returns (IExecutor);
 
     function isExecuted() external returns (bool);
 

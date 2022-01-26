@@ -14,15 +14,16 @@ contract Context is IContext {
     uint256 public override pc;
     address public override appAddress;
     address public override msgSender;
+    address public override opcodes;
 
-    mapping(string => bytes1) public override opCodeByName; // name => hex // used in Parser
-    mapping(bytes1 => bytes4) public override selectorByOpcode; // used in ConditionalTx
-    mapping(string => bytes4) public override asmSelectors; // used in Parser
+    mapping(string => bytes1) public override opCodeByName; // name => hex
+    mapping(bytes1 => bytes4) public override selectorByOpcode;
+    mapping(string => bytes4) public override asmSelectors;
 
-    // baseOpName -> branchCode -> selector;
+    // baseOpName -> branchCode -> selector
     mapping(string => mapping(bytes1 => bytes4)) public override branchSelectors;
 
-    // baseOpName -> branchName -> branchCode;
+    // baseOpName -> branchName -> branchCode
     mapping(string => mapping(string => bytes1)) public override branchCodes;
 
     modifier nonZeroAddress(address _addr) {
@@ -32,6 +33,10 @@ contract Context is IContext {
 
     constructor() {
         stack = new Stack();
+    }
+
+    function setOpcodesAddr(address _opcodes) public {
+        opcodes = _opcodes;
     }
 
     function addOpcode(

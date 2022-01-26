@@ -53,7 +53,7 @@ describe("Parser", () => {
           (loadLocal uint256 TIMESTAMP < loadLocal uint256 EXPIRY)
           or
           (loadLocal bool RISK != bool true)
-          `
+          `,
       );
       const expected = "0x1b011b7b16d41b01b687035e041b011b7b16d41b019dc69bb503121b0255248f7c18011413";
       expect(await ctx.program()).to.equal(expected);
