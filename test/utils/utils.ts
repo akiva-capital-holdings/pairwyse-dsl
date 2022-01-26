@@ -1,9 +1,9 @@
 /* eslint-disable camelcase */
 
 import { expect } from "chai";
-import { ethers } from "ethers";
-import { /*Opcodes,*/ Stack__factory, StackValue__factory, Stack, Context, StackValue } from "../../typechain";
-// import { OpConditionalTxFunc } from "../types";
+import { Contract, ethers } from "ethers";
+import { Stack__factory, StackValue__factory, Stack, Context, StackValue } from "../../typechain";
+import { OpConditionalTxFunc } from "../types";
 
 /**
  * Apply keccak256 to `str`, cut the result to the first 4 bytes, append
@@ -98,29 +98,29 @@ export async function checkStackTail(
   }
 }
 
-// /**
-//  * Test stack with two values that combines into a single value after the
-//  * operation. Ex. 1 > 2 = 0
-//  * @param ST Stack: Stack__factory
-//  * @param SV StackValue: StackValue__factory
-//  * @param context context: Context
-//  * @param opcodes opcodes: Opcodes
-//  * @param opFunc opcode function (>, <, =, ...)
-//  * @param value1 First value to the stack
-//  * @param value2 Second value to the stack
-//  * @param result Expected result after applying opFunc to value1 and value2
-//  */
-// export const testTwoInputOneOutput = async (
-//   ST: Stack__factory,
-//   SV: StackValue__factory,
-//   context: Context,
-//   opcodes: Opcodes,
-//   opFunc: OpConditionalTxFunc,
-//   value1: number,
-//   value2: number,
-//   result: number,
-// ) => {
-//   const stack = await pushToStack(SV, context, ST, [value1, value2]);
-//   await opFunc(opcodes)(context.address);
-//   await checkStack(SV, stack, 1, result);
-// };
+/**
+ * Test stack with two values that combines into a single value after the
+ * operation. Ex. 1 > 2 = 0
+ * @param ST Stack: Stack__factory
+ * @param SV StackValue: StackValue__factory
+ * @param context context: Context
+ * @param opcodes opcodes: Opcodes
+ * @param opFunc opcode function (>, <, =, ...)
+ * @param value1 First value to the stack
+ * @param value2 Second value to the stack
+ * @param result Expected result after applying opFunc to value1 and value2
+ */
+export const testTwoInputOneOutput = async (
+  ST: Stack__factory,
+  SV: StackValue__factory,
+  context: Context,
+  opcodes: Contract,
+  opFunc: OpConditionalTxFunc,
+  value1: number,
+  value2: number,
+  result: number,
+) => {
+  const stack = await pushToStack(SV, context, ST, [value1, value2]);
+  await opFunc(opcodes)(context.address);
+  await checkStack(SV, stack, 1, result);
+};

@@ -1,52 +1,65 @@
 // import { expect } from "chai";
 // import { ethers } from "hardhat";
+// import { Contract } from "ethers";
 // /* eslint-disable camelcase */
-// import { Opcodes__factory, Stack__factory, StackValue__factory, Opcodes, Context } from "../typechain";
+// import { Stack__factory, StackValue__factory, Context } from "../typechain";
 // import { testLt, testGt, testLe, testAnd, testOr } from "./utils/testOps";
 // import { checkStack, pushToStack, testTwoInputOneOutput } from "./utils/utils";
 // import { TestCaseUint256 } from "./types";
+// import { Opcodes } from "../typechain/Opcodes";
 // /* eslint-enable camelcase */
 
-// describe("Opcode", () => {
-//   // eslint-disable-next-line camelcase
-//   let OpcodesCont: Opcodes__factory;
+// describe("Opcodes", () => {
 //   // eslint-disable-next-line camelcase
 //   let Stack: Stack__factory;
 //   // eslint-disable-next-line camelcase
 //   let StackValue: StackValue__factory;
 //   let context: Context;
-//   let opcodes: Opcodes;
+//   let opcodesLib: Opcodes;
 //   let ctx: string;
 
 //   beforeEach(async () => {
-//     const ContextCont = await ethers.getContractFactory("Context");
-//     OpcodesCont = await ethers.getContractFactory("Opcodes");
 //     Stack = await ethers.getContractFactory("Stack");
 //     StackValue = await ethers.getContractFactory("StackValue");
 
-//     context = await ContextCont.deploy();
+//     context = await (await ethers.getContractFactory("Context")).deploy();
 //     ctx = context.address;
-//     opcodes = await OpcodesCont.deploy();
+
+//     // Deploy libraries
+//     opcodesLib = (await (await ethers.getContractFactory("Opcodes")).deploy()) as Opcodes;
+//     const stringLib = await (await ethers.getContractFactory("StringUtils")).deploy();
+
+//     const parser = await (
+//       await ethers.getContractFactory("Parser", {
+//         libraries: { StringUtils: stringLib.address },
+//       })
+//     ).deploy();
+
+//     const [sender] = await ethers.getSigners();
+//     await parser.initOpcodes(ctx);
+//     await context.setAppAddress(context.address);
+//     await context.setMsgSender(sender.address);
+//     await context.setOpcodesAddr(opcodesLib.address);
 //   });
 
 //   describe("Eq", () => {
 //     it("error: type mismatch", async () => {
 //       const stack = await pushToStack(StackValue, context, Stack, [500, "hey"]);
 //       expect(await stack.length()).to.equal(2);
-//       await expect(opcodes.opEq(ctx)).to.be.revertedWith("Opcodes: type mismatch");
+//       await expect(opcodesLib.opEq(ctx)).to.be.revertedWith("Opcodes: type mismatch");
 //     });
 
 //     it("uint256 equal", async () => {
 //       const stack = await pushToStack(StackValue, context, Stack, [500, 500]);
 //       expect(await stack.length()).to.equal(2);
-//       await opcodes.opEq(ctx);
+//       await opcodesLib.opEq(ctx);
 //       await checkStack(StackValue, stack, 1, 1);
 //     });
 
 //     it("uint256 not equal", async () => {
 //       const stack = await pushToStack(StackValue, context, Stack, [100, 200]);
 //       expect(await stack.length()).to.equal(2);
-//       await opcodes.opEq(ctx);
+//       await opcodesLib.opEq(ctx);
 //       await checkStack(StackValue, stack, 1, 0);
 //     });
 //   });
@@ -59,7 +72,7 @@
 //             Stack,
 //             StackValue,
 //             context,
-//             opcodes,
+//             opcodesLib,
 //             testLt.opFunc,
 //             testCase.value1,
 //             testCase.value2,
@@ -78,7 +91,7 @@
 //             Stack,
 //             StackValue,
 //             context,
-//             opcodes,
+//             opcodesLib,
 //             testGt.opFunc,
 //             testCase.value1,
 //             testCase.value2,
@@ -97,7 +110,7 @@
 //             Stack,
 //             StackValue,
 //             context,
-//             opcodes,
+//             opcodesLib,
 //             testLe.opFunc,
 //             testCase.value1,
 //             testCase.value2,
@@ -115,7 +128,7 @@
 //       // stack size is 2
 //       expect(await stack.length()).to.equal(2);
 
-//       await opcodes.opSwap(ctx);
+//       await opcodesLib.opSwap(ctx);
 
 //       await checkStack(StackValue, stack, 2, 200);
 //       stack.pop();
@@ -131,7 +144,7 @@
 //             Stack,
 //             StackValue,
 //             context,
-//             opcodes,
+//             opcodesLib,
 //             testAnd.opFunc,
 //             testCase.value1,
 //             testCase.value2,
@@ -148,15 +161,15 @@
 //       expect(await stack.length()).to.equal(4);
 
 //       // stack.len = 3; stack.pop() = 1
-//       await opcodes.opAnd(ctx);
+//       await opcodesLib.opAnd(ctx);
 //       await checkStack(StackValue, stack, 3, 1);
 
 //       // stack.len = 2; stack.pop() = 1
-//       await opcodes.opAnd(ctx);
+//       await opcodesLib.opAnd(ctx);
 //       await checkStack(StackValue, stack, 2, 1);
 
 //       // stack.len = 1; stack.pop() = 0
-//       await opcodes.opAnd(ctx);
+//       await opcodesLib.opAnd(ctx);
 //       await checkStack(StackValue, stack, 1, 0);
 //     });
 //   });
@@ -169,7 +182,7 @@
 //             Stack,
 //             StackValue,
 //             context,
-//             opcodes,
+//             opcodesLib,
 //             testOr.opFunc,
 //             testCase.value1,
 //             testCase.value2,
@@ -185,11 +198,11 @@
 //       expect(await stack.length()).to.equal(3);
 
 //       // stack.len = 2; stack.pop() = 1
-//       await opcodes.opOr(ctx);
+//       await opcodesLib.opOr(ctx);
 //       await checkStack(StackValue, stack, 2, 0);
 
 //       // stack.len = 1; stack.pop() = 1
-//       await opcodes.opOr(ctx);
+//       await opcodesLib.opOr(ctx);
 //       await checkStack(StackValue, stack, 1, 1);
 //     });
 //   });
@@ -198,7 +211,7 @@
 //     it("uint256 is zero", async () => {
 //       const stack = await pushToStack(StackValue, context, Stack, [0]);
 //       expect(await stack.length()).to.equal(1);
-//       await opcodes.opNot(ctx);
+//       await opcodesLib.opNot(ctx);
 //       await checkStack(StackValue, stack, 1, 1);
 //     });
 
@@ -206,14 +219,14 @@
 //       it("1", async () => {
 //         const stack = await pushToStack(StackValue, context, Stack, [1]);
 //         expect(await stack.length()).to.equal(1);
-//         await opcodes.opNot(ctx);
+//         await opcodesLib.opNot(ctx);
 //         await checkStack(StackValue, stack, 1, 0);
 //       });
 
 //       it("3", async () => {
 //         const stack = await pushToStack(StackValue, context, Stack, [3]);
 //         expect(await stack.length()).to.equal(1);
-//         await opcodes.opNot(ctx);
+//         await opcodesLib.opNot(ctx);
 //         await checkStack(StackValue, stack, 1, 0);
 //       });
 //     });
@@ -227,7 +240,7 @@
 //       // 0x05 is NUMBER
 //       await context.setProgram("0x15");
 
-//       const opBlockResult = await opcodes.opBlockNumber(ctx);
+//       const opBlockResult = await opcodesLib.opBlockNumber(ctx);
 
 //       // stack size is 1
 //       expect(await stack.length()).to.equal(1);
@@ -246,7 +259,7 @@
 //       // 0x17 is ChainID
 //       await context.setProgram("0x17");
 
-//       const opBlockResult = await opcodes.opBlockChainId(ctx);
+//       const opBlockResult = await opcodesLib.opBlockChainId(ctx);
 
 //       // stack size is 1
 //       expect(await stack.length()).to.equal(1);
@@ -266,7 +279,7 @@
 //       // 0x16 is Timestamp
 //       await context.setProgram("0x16");
 
-//       const opBlockResult = await opcodes.opBlockTimestamp(ctx);
+//       const opBlockResult = await opcodesLib.opBlockTimestamp(ctx);
 
 //       // stack size is 1
 //       expect(await stack.length()).to.equal(1);

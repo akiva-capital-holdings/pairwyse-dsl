@@ -1,7 +1,6 @@
-import { ContractTransaction } from "ethers";
-// import { Opcodes } from "../../typechain";
+import { Contract, ContractTransaction } from "ethers";
 
-// export type OpConditionalTxFunc = (opcodes: Opcodes) => (ctx: string) => Promise<ContractTransaction>;
+export type OpConditionalTxFunc = (opcodes: Contract) => (ctx: string) => Promise<ContractTransaction>;
 
 export interface TestCaseUint256 {
   name: string;
@@ -10,10 +9,10 @@ export interface TestCaseUint256 {
   result: number;
 }
 
-// export interface TestOp {
-//   opFunc: OpConditionalTxFunc;
-//   testCases: TestCaseUint256[];
-// }
+export interface TestOp {
+  opFunc: OpConditionalTxFunc;
+  testCases: TestCaseUint256[];
+}
 
 export interface Testcase {
   name: string;

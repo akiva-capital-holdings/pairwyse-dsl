@@ -8,7 +8,7 @@ async function getChainId() {
 }
 
 // TODO: make more thorough end-to-end testing
-describe.only("End-to-end", () => {
+describe("End-to-end", () => {
   let stack: Stack;
   let ctx: Context;
   let app: App;
@@ -33,27 +33,29 @@ describe.only("End-to-end", () => {
 
     // Deploy StringUtils library
     const stringLib = await (await ethers.getContractFactory("StringUtils")).deploy();
+    const opcodesLib = await (await ethers.getContractFactory("Opcodes")).deploy();
+    const executorLib = await (await ethers.getContractFactory("Executor")).deploy();
 
     // Deploy Parser
-    const ParserCont = await ethers.getContractFactory("Parser", {
-      libraries: { StringUtils: stringLib.address },
-    });
-    const parser = await ParserCont.deploy();
-
-    // Deploy Executor
-    const executor = await (await ethers.getContractFactory("Executor")).deploy(await parser.opcodes());
+    const parser = await (
+      await ethers.getContractFactory("Parser", {
+        libraries: { StringUtils: stringLib.address },
+      })
+    ).deploy();
 
     // Deploy Context & setup
     ctx = await (await ethers.getContractFactory("Context")).deploy();
+    await ctx.setOpcodesAddr(opcodesLib.address);
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory("Stack");
     const contextStackAddress = await ctx.stack();
     stack = StackCont.attach(contextStackAddress);
 
-    // Deploy App
-    const AppCont = await ethers.getContractFactory("App");
-    app = await AppCont.deploy(parser.address, executor.address, ctx.address);
+    // Deploy Application
+    app = await (
+      await ethers.getContractFactory("App", { libraries: { Executor: executorLib.address } })
+    ).deploy(parser.address, ctx.address);
   });
 
   describe("blockChainId < loadLocal uint256 VAR", () => {

@@ -27,6 +27,7 @@ contract Agreement is Storage {
         Context transactionCtx = new Context();
         Context conditionCtx = new Context();
 
+        // TODO: improve the logic here. Why parser is responsible for initing opcodes for Context?
         parser.initOpcodes(transactionCtx);
         parser.initOpcodes(conditionCtx);
 
