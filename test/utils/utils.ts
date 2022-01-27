@@ -70,8 +70,9 @@ export const checkStack = async (
   SV: StackValue__factory,
   stack: Stack,
   expectedLen: number,
-  expectedValue: number,
+  expectedValue: number | string,
   indexFromEnd: number = 0,
+  type: "string" | "number" = "number",
   badLenErr = "Bad stack length",
   badValueErr = "Bad stack value",
 ) => {
@@ -82,7 +83,12 @@ export const checkStack = async (
   // get result
   const svResultAddress = await stack.stack(stackLen.toNumber() - 1 - indexFromEnd);
   const svResult = SV.attach(svResultAddress);
-  expect((await svResult.getUint256()).toNumber()).to.equal(expectedValue, badValueErr);
+
+  if (type === "number") {
+    expect(await svResult.getUint256()).to.equal(expectedValue, badValueErr);
+  } else if (type === "string") {
+    expect(await svResult.getString()).to.equal(expectedValue, badValueErr);
+  }
 };
 
 export async function checkStackTail(
@@ -90,11 +96,21 @@ export async function checkStackTail(
   stack: Stack,
   expectedLen: number,
   expectedValues: number[],
+  type: "string" | "number" = "number",
   badLenErr = "Bad stack length",
   badValueErr = "Bad stack value",
 ) {
   for (let i = 0; i < expectedValues.length; i++) {
-    await checkStack(SV, stack, expectedLen, expectedValues[expectedValues.length - 1 - i], i, badLenErr, badValueErr);
+    await checkStack(
+      SV,
+      stack,
+      expectedLen,
+      expectedValues[expectedValues.length - 1 - i],
+      i,
+      type,
+      badLenErr,
+      badValueErr,
+    );
   }
 }
 

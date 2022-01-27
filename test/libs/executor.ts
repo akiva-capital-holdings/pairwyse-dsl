@@ -3,9 +3,9 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { Contract } from "ethers";
 import { ethers } from "hardhat";
-import { Context, StackValue__factory, Stack, Parser } from "../typechain";
-import { ExecutorMock } from "../typechain/ExecutorMock";
-import { checkStack, hex4Bytes } from "./utils/utils";
+import { Context, StackValue__factory, Stack, Parser } from "../../typechain";
+import { ExecutorMock } from "../../typechain/ExecutorMock";
+import { checkStack, hex4Bytes } from "../utils/utils";
 
 describe("Executor", () => {
   let ctx: Context;

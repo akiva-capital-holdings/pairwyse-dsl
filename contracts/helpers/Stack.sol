@@ -7,16 +7,18 @@ contract StackValue {
         NONE,
         // UINT256 in an OpSpec shows that the op pops or yields a uint256
         UINT256,
-        STRING
+        STRING,
+        ADDRESS
     }
 
     StackType private _type;
 
     uint256 private _uint256;
     string private _string;
+    address private _address;
 
     function getUint256() public view returns (uint256) {
-        require(_type == StackType.UINT256, "uint256 type mismatch");
+        require(_type == StackType.UINT256, "Stack: uint256 type mismatch");
         return _uint256;
     }
 
@@ -26,13 +28,23 @@ contract StackValue {
     }
 
     function getString() public view returns (string memory) {
-        require(_type == StackType.STRING, "string type mismatch");
+        require(_type == StackType.STRING, "Stack: string type mismatch");
         return _string;
     }
 
     function setString(string memory value) public {
         _string = value;
         _type = StackType.STRING;
+    }
+
+    function getAddress() public view returns (address) {
+        require(_type == StackType.ADDRESS, "Stack: address type mismatch");
+        return _address;
+    }
+
+    function setAddress(address _addr) public {
+        _address = _addr;
+        _type = StackType.ADDRESS;
     }
 
     function getType() public view returns (StackType) {

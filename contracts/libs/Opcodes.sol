@@ -4,12 +4,14 @@ pragma solidity ^0.8.0;
 import { IContext } from "../interfaces/IContext.sol";
 import { IStorage } from "../interfaces/IStorage.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
+import { StringUtils } from "./StringUtils.sol";
 import { UnstructuredStorage } from "./UnstructuredStorage.sol";
 import { StackValue } from "../helpers/Stack.sol";
 import "hardhat/console.sol";
 
 library Opcodes {
     using UnstructuredStorage for bytes32;
+    using StringUtils for string;
 
     function opLoadLocalAny(IContext _ctx) public {
         address libAddr = _ctx.opcodes();
@@ -31,13 +33,11 @@ library Opcodes {
         StackValue prev = _ctx.stack().pop();
 
         require(last.getType() == prev.getType(), "Opcodes: type mismatch");
+        require(last.getType() == StackValue.StackType.UINT256, "Opcodes: bad type");
 
-        bool result = false;
-        if (last.getType() == StackValue.StackType.UINT256) {
-            result = last.getUint256() == prev.getUint256();
-        }
+        bool result = last.getUint256() == prev.getUint256();
 
-        putUint256ToStack(_ctx, result ? 1 : 0);
+        putToStack(_ctx, result ? 1 : 0);
     }
 
     /**
@@ -48,13 +48,11 @@ library Opcodes {
         StackValue prev = _ctx.stack().pop();
 
         require(last.getType() == prev.getType(), "Opcodes: type mismatch");
+        require(last.getType() == StackValue.StackType.UINT256, "Opcodes: bad type");
 
-        bool result = false;
-        if (last.getType() == StackValue.StackType.UINT256) {
-            result = last.getUint256() != prev.getUint256();
-        }
+        bool result = last.getUint256() != prev.getUint256();
 
-        putUint256ToStack(_ctx, result ? 1 : 0);
+        putToStack(_ctx, result ? 1 : 0);
     }
 
     /**
@@ -65,12 +63,11 @@ library Opcodes {
         StackValue prev = _ctx.stack().pop();
 
         require(last.getType() == prev.getType(), "Opcodes: type mismatch");
-        bool result = false;
-        if (last.getType() == StackValue.StackType.UINT256) {
-            result = prev.getUint256() < last.getUint256();
-        }
+        require(last.getType() == StackValue.StackType.UINT256, "Opcodes: bad type");
 
-        putUint256ToStack(_ctx, result ? 1 : 0);
+        bool result = prev.getUint256() < last.getUint256();
+
+        putToStack(_ctx, result ? 1 : 0);
     }
 
     /**
@@ -114,12 +111,13 @@ library Opcodes {
     function opAnd(IContext _ctx) public {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
-        require(
-            last.getType() == prev.getType() && last.getType() == StackValue.StackType.UINT256,
-            "Opcodes: bad types"
-        );
+
+        require(last.getType() == prev.getType(), "Opcodes: type mismatch");
+        require(last.getType() == StackValue.StackType.UINT256, "Opcodes: bad type");
+
         bool result = (prev.getUint256() > 0) && (last.getUint256() > 0);
-        putUint256ToStack(_ctx, result ? 1 : 0);
+
+        putToStack(_ctx, result ? 1 : 0);
     }
 
     /**
@@ -129,24 +127,26 @@ library Opcodes {
     function opOr(IContext _ctx) public {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
-        require(
-            last.getType() == prev.getType() && last.getType() == StackValue.StackType.UINT256,
-            "Opcodes: bad types"
-        );
+
+        require(last.getType() == prev.getType(), "Opcodes: type mismatch");
+        require(last.getType() == StackValue.StackType.UINT256, "Opcodes: bad type");
+
         bool result = (prev.getUint256() > 0) || (last.getUint256() > 0);
-        putUint256ToStack(_ctx, result ? 1 : 0);
+
+        putToStack(_ctx, result ? 1 : 0);
     }
 
     function opXor(IContext _ctx) public {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
-        require(
-            last.getType() == prev.getType() && last.getType() == StackValue.StackType.UINT256,
-            "Opcodes: bad types"
-        );
+
+        require(last.getType() == prev.getType(), "Opcodes: type mismatch");
+        require(last.getType() == StackValue.StackType.UINT256, "Opcodes: bad type");
+
         bool result = ((prev.getUint256() > 0) && (last.getUint256() == 0)) ||
             ((prev.getUint256() == 0) && (last.getUint256() > 0));
-        putUint256ToStack(_ctx, result ? 1 : 0);
+
+        putToStack(_ctx, result ? 1 : 0);
     }
 
     /**
@@ -154,25 +154,28 @@ library Opcodes {
      */
     function opNot(IContext _ctx) public {
         StackValue last = _ctx.stack().pop();
-        require(last.getType() == StackValue.StackType.UINT256, "Opcodes: opNot requires uint256");
+
+        require(last.getType() == StackValue.StackType.UINT256, "Opcodes: bad type");
+
         bool result = last.getUint256() == 0;
-        putUint256ToStack(_ctx, result ? 1 : 0);
+
+        putToStack(_ctx, result ? 1 : 0);
     }
 
     function opBlockNumber(IContext _ctx) public {
-        putUint256ToStack(_ctx, block.number);
+        putToStack(_ctx, block.number);
     }
 
     function opBlockTimestamp(IContext _ctx) public {
-        putUint256ToStack(_ctx, block.timestamp);
+        putToStack(_ctx, block.timestamp);
     }
 
     function opBlockChainId(IContext _ctx) public {
-        putUint256ToStack(_ctx, block.chainid);
+        putToStack(_ctx, block.chainid);
     }
 
     function opMsgSender(IContext _ctx) public {
-        putUint256ToStack(_ctx, uint256(uint160(_ctx.msgSender())));
+        putToStack(_ctx, uint256(uint160(_ctx.msgSender())));
     }
 
     function opLoadLocalUint256(IContext _ctx) public {
@@ -209,11 +212,11 @@ library Opcodes {
 
     function opBool(IContext _ctx) public {
         bytes memory data = nextBytes(_ctx, 1);
-        putUint256ToStack(_ctx, uint256(uint8(data[0])));
+        putToStack(_ctx, uint256(uint8(data[0])));
     }
 
     function opUint256(IContext _ctx) public {
-        putUint256ToStack(_ctx, opUint256Get(_ctx));
+        putToStack(_ctx, opUint256Get(_ctx));
     }
 
     function opSendEth(IContext _ctx) public {
@@ -224,7 +227,7 @@ library Opcodes {
         // console.log("recipient:", recipient);
         // console.log("amount:", amount);
         recipient.transfer(amount);
-        putUint256ToStack(_ctx, 1);
+        putToStack(_ctx, 1);
     }
 
     function opTransfer(IContext _ctx) public {
@@ -242,7 +245,7 @@ library Opcodes {
 
         IERC20(token).transfer(recipient, amount);
 
-        putUint256ToStack(_ctx, 1);
+        putToStack(_ctx, 1);
     }
 
     function opTransferFrom(IContext _ctx) public {
@@ -261,10 +264,10 @@ library Opcodes {
 
         IERC20(token).transferFrom(from, to, amount);
 
-        putUint256ToStack(_ctx, 1);
+        putToStack(_ctx, 1);
     }
 
-    function opUint256Get(IContext _ctx) private returns (uint256) {
+    function opUint256Get(IContext _ctx) public returns (uint256) {
         bytes memory data = nextBytes(_ctx, 32);
 
         // Convert bytes to bytes32
@@ -276,33 +279,45 @@ library Opcodes {
         return uint256(result);
     }
 
-    function putUint256ToStack(IContext _ctx, uint256 result) private {
+    function putToStack(IContext _ctx, uint256 _value) public {
         StackValue resultValue = new StackValue();
-        resultValue.setUint256(result);
+        resultValue.setUint256(_value);
         _ctx.stack().push(resultValue);
     }
 
-    function nextBytes(IContext _ctx, uint256 size) private returns (bytes memory out) {
+    // function putToStack(IContext _ctx, string memory _value) public {
+    //     StackValue resultValue = new StackValue();
+    //     resultValue.setString(_value);
+    //     _ctx.stack().push(resultValue);
+    // }
+
+    // function putToStack(IContext _ctx, address _value) public {
+    //     StackValue resultValue = new StackValue();
+    //     resultValue.setAddress(_value);
+    //     _ctx.stack().push(resultValue);
+    // }
+
+    function nextBytes(IContext _ctx, uint256 size) public returns (bytes memory out) {
         out = _ctx.programAt(_ctx.pc(), size);
         _ctx.incPc(size);
     }
 
-    function nextBytes1(IContext _ctx) private returns (bytes1) {
+    function nextBytes1(IContext _ctx) public returns (bytes1) {
         return nextBytes(_ctx, 1)[0];
     }
 
-    function nextBranchSelector(IContext _ctx, string memory baseOpName) private returns (bytes4) {
+    function nextBranchSelector(IContext _ctx, string memory baseOpName) public returns (bytes4) {
         bytes1 branchCode = nextBytes1(_ctx);
         return _ctx.branchSelectors(baseOpName, branchCode);
     }
 
-    function mustCall(address addr, bytes memory data) private {
+    function mustCall(address addr, bytes memory data) public {
         (bool success, ) = addr.delegatecall(data);
         // if (!success) console.log("Opcodes: call not success");
         require(success, "Opcodes: call not success");
     }
 
-    function opLoadLocalGet(IContext _ctx, string memory funcSignature) private returns (bytes32 result) {
+    function opLoadLocalGet(IContext _ctx, string memory funcSignature) public returns (bytes32 result) {
         bytes memory varName = nextBytes(_ctx, 4);
 
         // Convert bytes to bytes32
@@ -321,7 +336,7 @@ library Opcodes {
         }
     }
 
-    function opAddressGet(IContext _ctx) private returns (address) {
+    function opAddressGet(IContext _ctx) public returns (address) {
         bytes memory contractAddrBytes = nextBytes(_ctx, 20);
 
         // Convert bytes to bytes32
@@ -344,12 +359,12 @@ library Opcodes {
         return address(uint160(uint256(contractAddrB32)));
     }
 
-    function opLoadLocal(IContext _ctx, string memory funcSignature) private {
+    function opLoadLocal(IContext _ctx, string memory funcSignature) public {
         bytes32 result = opLoadLocalGet(_ctx, funcSignature);
-        putUint256ToStack(_ctx, uint256(result));
+        putToStack(_ctx, uint256(result));
     }
 
-    function opLoadRemote(IContext _ctx, string memory funcSignature) private {
+    function opLoadRemote(IContext _ctx, string memory funcSignature) public {
         bytes memory varName = nextBytes(_ctx, 4);
         bytes memory contractAddrBytes = nextBytes(_ctx, 20);
 
@@ -387,6 +402,6 @@ library Opcodes {
 
         // console.log("variable =", uint256(result));
 
-        putUint256ToStack(_ctx, uint256(result));
+        putToStack(_ctx, uint256(result));
     }
 }

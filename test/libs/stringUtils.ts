@@ -1,13 +1,12 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { StringUtils, StringUtilsMock } from "../../typechain";
+import { StringUtilsMock } from "../../typechain";
 
 describe("StringUtils", () => {
   let app: StringUtilsMock;
-  let stringLib: StringUtils;
 
   before(async () => {
-    stringLib = await (await ethers.getContractFactory("StringUtils")).deploy();
+    const stringLib = await (await ethers.getContractFactory("StringUtils")).deploy();
     app = await (
       await ethers.getContractFactory("StringUtilsMock", { libraries: { StringUtils: stringLib.address } })
     ).deploy();
