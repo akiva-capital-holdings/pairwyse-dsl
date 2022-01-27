@@ -67,6 +67,11 @@ describe("Executor", () => {
       await expect(app.execute(ctxAddr)).to.be.revertedWith("Executor: did not find selector for opcode");
     });
 
+    it("error: call not success", async () => {
+      await ctx.setProgram("0x05");
+      await expect(app.execute(ctxAddr)).to.be.revertedWith("Executor: call not success");
+    });
+
     it("blockNumber", async () => {
       /**
        * Program is:

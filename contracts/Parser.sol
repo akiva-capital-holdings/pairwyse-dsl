@@ -173,16 +173,16 @@ contract Parser is IParser, Storage {
         // if no selector then opcode without params
     }
 
-    function transferAllEth(address payable receiver) internal {
-        receiver.transfer(address(this).balance);
-    }
+    // function transferAllEth(address payable receiver) internal {
+    //     receiver.transfer(address(this).balance);
+    // }
 
-    function transferAllERC20(address token, address receiver) internal {
-        uint256 balanceThis = IERC20(token).balanceOf(address(this));
-        // console.log("balanceThis");
-        // console.log(balanceThis);
-        IERC20(token).transfer(receiver, balanceThis);
-    }
+    // function transferAllERC20(address token, address receiver) internal {
+    //     uint256 balanceThis = IERC20(token).balanceOf(address(this));
+    //     // console.log("balanceThis");
+    //     // console.log(balanceThis);
+    //     IERC20(token).transfer(receiver, balanceThis);
+    // }
 
     function nextCmd() internal returns (string storage) {
         return cmds[cmdIdx++];

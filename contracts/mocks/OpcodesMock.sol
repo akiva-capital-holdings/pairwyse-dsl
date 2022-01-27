@@ -175,11 +175,15 @@ contract OpcodesMock {
         Opcodes.mustCall(addr, data);
     }
 
-    // function opLoadLocalGet(IContext _ctx, string memory funcSignature) private returns (bytes32 result) {}
+    function opLoadLocalGet(IContext _ctx, string memory funcSignature) public returns (bytes32 result) {
+        return Opcodes.opLoadLocalGet(_ctx, funcSignature);
+    }
 
     // function opAddressGet(IContext _ctx) private returns (address) {}
 
     // function opLoadLocal(IContext _ctx, string memory funcSignature) private {}
 
-    // function opLoadRemote(IContext _ctx, string memory funcSignature) private {}
+    function opLoadRemote(IContext _ctx, string memory funcSignature) public {
+        Opcodes.opLoadRemote(_ctx, funcSignature);
+    }
 }

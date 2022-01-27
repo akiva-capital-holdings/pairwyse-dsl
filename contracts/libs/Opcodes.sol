@@ -314,7 +314,7 @@ library Opcodes {
     function mustCall(address addr, bytes memory data) public {
         (bool success, ) = addr.delegatecall(data);
         // if (!success) console.log("Opcodes: call not success");
-        require(success, "Opcodes: call not success");
+        require(success, "Opcodes: mustCall call not success");
     }
 
     function opLoadLocalGet(IContext _ctx, string memory funcSignature) public returns (bytes32 result) {
@@ -328,7 +328,7 @@ library Opcodes {
 
         // Load local value by it's hex
         (bool success, bytes memory data) = _ctx.appAddress().call(abi.encodeWithSignature(funcSignature, varNameB32));
-        require(success, "Opcodes: call not success");
+        require(success, "Opcodes: opLoadLocal call not success");
 
         // Convert bytes to bytes32
         assembly {
@@ -392,7 +392,7 @@ library Opcodes {
 
         // Load local value by it's hex
         (bool success, bytes memory data) = contractAddr.call(abi.encodeWithSignature(funcSignature, varNameB32));
-        require(success, "Opcodes: call not success");
+        require(success, "Opcodes: opLoadRemote call not success");
 
         // Convert bytes to bytes32
         bytes32 result;

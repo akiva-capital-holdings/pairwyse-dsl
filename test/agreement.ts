@@ -75,5 +75,8 @@ describe("Agreement", () => {
     // Execute transaction
     await ethers.provider.send("evm_increaseTime", [ONE_MONTH]);
     await expect(await agreement.connect(alice).execute(txId)).to.changeEtherBalance(receiver, oneEthBN);
+
+    // Tx already executed
+    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith("ConditionalTx: txn already was executed");
   });
 });

@@ -32,6 +32,10 @@ describe("Parser", () => {
   });
 
   describe("parse", () => {
+    it("error: delegatecall to asmSelector failed", async () => {
+      await expect(app.parse(ctxAddr, "uint256")).to.be.revertedWith("delegatecall to asmSelector failed");
+    });
+
     it("uint256 1122334433", async () => {
       await app.parse(ctxAddr, "uint256 1122334433");
       const expected = "0x1a0000000000000000000000000000000000000000000000000000000042e576e1";
