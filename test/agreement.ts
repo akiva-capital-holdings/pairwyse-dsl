@@ -21,7 +21,7 @@ describe("Agreement", () => {
     const lastBlockTimestamp = (
       await ethers.provider.getBlock(
         // eslint-disable-next-line no-underscore-dangle
-        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
+        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */,
       )
     ).timestamp;
 
@@ -29,6 +29,8 @@ describe("Agreement", () => {
 
     // Deploy StringUtils library
     const stringLib = await (await ethers.getContractFactory("StringUtils")).deploy();
+    const opcodesLib = await (await ethers.getContractFactory("Opcodes")).deploy();
+    const executorLib = await (await ethers.getContractFactory("Executor")).deploy();
 
     // Deploy Parser
     const ParserCont = await ethers.getContractFactory("Parser", {
@@ -36,21 +38,18 @@ describe("Agreement", () => {
     });
     parser = await ParserCont.deploy();
 
-    // Deploy Executor
-    const executor = await (await ethers.getContractFactory("Executor")).deploy(await parser.opcodes());
-
     // Deploy Agreement
-    agreement = await (await ethers.getContractFactory("Agreement")).deploy(parser.address, executor.address);
+    agreement = await (
+      await ethers.getContractFactory("Agreement", {
+        libraries: { Executor: executorLib.address, Opcodes: opcodesLib.address },
+      })
+    ).deploy(parser.address);
   });
 
   it("lifecycle", async () => {
     // Set variables
     await agreement.setStorageAddress(hex4Bytes("RECEIVER"), receiver.address);
     await agreement.setStorageUint256(hex4Bytes("LOCK_TIME"), NEXT_MONTH);
-
-    // Top up contract
-    const oneEthBN = ethers.utils.parseEther("1");
-    await anybody.sendTransaction({ to: await parser.opcodes(), value: oneEthBN });
 
     const signatory = alice.address;
     const transaction = "sendEth RECEIVER 1000000000000000000";
@@ -59,6 +58,10 @@ describe("Agreement", () => {
     // Update
     const txId = await agreement.callStatic.update(signatory, transaction, condition);
     await agreement.update(signatory, transaction, condition);
+
+    // Top up contract
+    const oneEthBN = ethers.utils.parseEther("1");
+    await anybody.sendTransaction({ to: await agreement.txs(txId), value: oneEthBN });
 
     /**
      * Execute
@@ -72,5 +75,8 @@ describe("Agreement", () => {
     // Execute transaction
     await ethers.provider.send("evm_increaseTime", [ONE_MONTH]);
     await expect(await agreement.connect(alice).execute(txId)).to.changeEtherBalance(receiver, oneEthBN);
+
+    // Tx already executed
+    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith("ConditionalTx: txn already was executed");
   });
 });

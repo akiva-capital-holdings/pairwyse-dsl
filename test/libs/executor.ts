@@ -1,9 +1,11 @@
 /* eslint-disable camelcase */
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
+import { Contract } from "ethers";
 import { ethers } from "hardhat";
-import { Context, StackValue__factory, Stack, ExecutorMock, Parser } from "../typechain";
-import { checkStack, hex4Bytes } from "./utils/utils";
+import { Context, StackValue__factory, Stack, Parser } from "../../typechain";
+import { ExecutorMock } from "../../typechain/ExecutorMock";
+import { checkStack, hex4Bytes } from "../utils/utils";
 
 describe("Executor", () => {
   let ctx: Context;
@@ -11,6 +13,7 @@ describe("Executor", () => {
   let stack: Stack;
   let app: ExecutorMock;
   let parser: Parser;
+  let opcodesLib: Contract;
   let StackValue: StackValue__factory;
   let sender: SignerWithAddress;
 
@@ -20,18 +23,23 @@ describe("Executor", () => {
     // Create StackValue Factory instance
     StackValue = await ethers.getContractFactory("StackValue");
 
-    // Deploy StringUtils library
+    // Deploy libraries
+    opcodesLib = await (await ethers.getContractFactory("Opcodes")).deploy();
     const stringLib = await (await ethers.getContractFactory("StringUtils")).deploy();
+    const executorLib = await (await ethers.getContractFactory("Executor")).deploy();
 
-    // Deploy Parser
-    const ParserCont = await ethers.getContractFactory("Parser", {
-      libraries: { StringUtils: stringLib.address },
-    });
-    parser = await ParserCont.deploy();
+    parser = await (
+      await ethers.getContractFactory("Parser", {
+        libraries: { StringUtils: stringLib.address },
+      })
+    ).deploy();
 
-    // Deploy App
-    const AppCont = await ethers.getContractFactory("ExecutorMock");
-    app = await AppCont.deploy(await parser.opcodes());
+    // Deploy ExecutorMock
+    app = await (
+      await ethers.getContractFactory("ExecutorMock", {
+        libraries: { Executor: executorLib.address },
+      })
+    ).deploy();
   });
 
   beforeEach(async () => {
@@ -41,6 +49,7 @@ describe("Executor", () => {
     await parser.initOpcodes(ctxAddr);
     await ctx.setAppAddress(app.address);
     await ctx.setMsgSender(sender.address);
+    await ctx.setOpcodesAddr(opcodesLib.address);
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory("Stack");
@@ -56,6 +65,11 @@ describe("Executor", () => {
     it("error: did not find selector for opcode", async () => {
       await ctx.setProgram("0x99");
       await expect(app.execute(ctxAddr)).to.be.revertedWith("Executor: did not find selector for opcode");
+    });
+
+    it("error: call not success", async () => {
+      await ctx.setProgram("0x05");
+      await expect(app.execute(ctxAddr)).to.be.revertedWith("Executor: call not success");
     });
 
     it("blockNumber", async () => {

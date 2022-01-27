@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { Executor } from "../Executor.sol";
+import { IContext } from "../interfaces/IContext.sol";
+import { Executor } from "../libs/Executor.sol";
 import { Storage } from "../helpers/Storage.sol";
 
-contract ExecutorMock is Executor, Storage {
-    // solhint-disable-next-line no-empty-blocks
-    constructor(address _opcodes) Executor(_opcodes) {}
+contract ExecutorMock is Storage {
+    function execute(IContext _ctx) public {
+        Executor.execute(_ctx);
+    }
 }

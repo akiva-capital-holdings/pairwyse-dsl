@@ -1,27 +1,68 @@
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { StackType } from "../../src/interfaces";
-import { StackValue } from "../../typechain";
+import { Stack, StackValue__factory } from "../../typechain";
 
 describe("Stack", () => {
-  let stackValue: StackValue;
+  let stack: Stack;
+  let StackValueCont: StackValue__factory;
+  let first: SignerWithAddress;
 
-  beforeEach(async () => {
-    const StackValueCont = await ethers.getContractFactory("StackValue");
-    stackValue = await StackValueCont.deploy();
+  before(async () => {
+    [first] = await ethers.getSigners();
+    stack = await (await ethers.getContractFactory("Stack")).deploy();
+    StackValueCont = await ethers.getContractFactory("StackValue");
   });
 
-  describe("ArgType", () => {
-    it("Uint256", async () => {
-      await stackValue.setUint256(100);
-      expect(await stackValue.getType()).to.equal(StackType.UINT256);
-    });
-  });
+  it("push & length & seeLast & pop & clear", async () => {
+    // uint256
+    const svUint256 = await StackValueCont.deploy();
+    await stack.push(svUint256.address);
+    await svUint256.setUint256(1);
+    expect(await stack.length()).to.equal(1);
+    expect(await stack.seeLast()).to.equal(svUint256.address);
+    expect(await svUint256.getUint256()).to.equal(1);
 
-  describe("Uint256", () => {
-    it("get/set Uint256", async () => {
-      await stackValue.setUint256(100);
-      expect(await stackValue.getUint256()).to.equal(100);
-    });
+    // string
+    const svString = await StackValueCont.deploy();
+    await stack.push(svString.address);
+    await svString.setString("hey");
+    expect(await stack.length()).to.equal(2);
+    expect(await stack.seeLast()).to.equal(svString.address);
+    expect(await svString.getString()).to.equal("hey");
+
+    // address
+    const svAddress = await StackValueCont.deploy();
+    await stack.push(svAddress.address);
+    await svAddress.setAddress(first.address);
+    expect(await stack.length()).to.equal(3);
+    expect(await stack.seeLast()).to.equal(svAddress.address);
+    expect(await svAddress.getAddress()).to.equal(first.address);
+
+    // pop
+    let sv = await stack.callStatic.pop();
+    expect(sv).to.equal(svAddress.address);
+    expect(await svAddress.getAddress()).to.equal(first.address);
+    await stack.pop();
+    expect(await stack.length()).to.equal(2);
+
+    sv = await stack.callStatic.pop();
+    expect(sv).to.equal(svString.address);
+    expect(await svString.getString()).to.equal("hey");
+    await stack.pop();
+    expect(await stack.length()).to.equal(1);
+
+    sv = await stack.callStatic.pop();
+    expect(sv).to.equal(svUint256.address);
+    expect(await svUint256.getUint256()).to.equal(1);
+    await stack.pop();
+    expect(await stack.length()).to.equal(0);
+
+    // clear
+    await stack.push((await StackValueCont.deploy()).address);
+    await stack.push((await StackValueCont.deploy()).address);
+    expect(await stack.length()).to.equal(2);
+    await stack.clear();
+    expect(await stack.length()).to.equal(0);
   });
 });

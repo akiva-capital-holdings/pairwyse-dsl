@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { App, Context, Executor, Parser, Stack, StackValue__factory } from "../../typechain";
+import { App, Context, Parser, Stack, StackValue__factory } from "../../typechain";
 import { checkStack } from "../utils/utils";
 
 describe("Boolean Algebra", () => {
@@ -7,7 +7,6 @@ describe("Boolean Algebra", () => {
   let ctx: Context;
   let app: App;
   let parser: Parser;
-  let executor: Executor;
   let StackValue: StackValue__factory;
 
   before(async () => {
@@ -16,6 +15,8 @@ describe("Boolean Algebra", () => {
 
     // Deploy StringUtils library
     const stringLib = await (await ethers.getContractFactory("StringUtils")).deploy();
+    const opcodesLib = await (await ethers.getContractFactory("Opcodes")).deploy();
+    const executorLib = await (await ethers.getContractFactory("Executor")).deploy();
 
     // Deploy Parser
     const ParserCont = await ethers.getContractFactory("Parser", {
@@ -23,19 +24,19 @@ describe("Boolean Algebra", () => {
     });
     parser = await ParserCont.deploy();
 
-    // Deploy Executor
-    executor = await (await ethers.getContractFactory("Executor")).deploy(await parser.opcodes());
-
-    // Deploy Context & setup
+    // Deploy Context
     ctx = await (await ethers.getContractFactory("Context")).deploy();
+    await ctx.setOpcodesAddr(opcodesLib.address);
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory("Stack");
     const contextStackAddress = await ctx.stack();
     stack = StackCont.attach(contextStackAddress);
 
-    // Deploy Agreement
-    app = await (await ethers.getContractFactory("App")).deploy(parser.address, executor.address, ctx.address);
+    // Deploy Application
+    app = await (
+      await ethers.getContractFactory("App", { libraries: { Executor: executorLib.address } })
+    ).deploy(parser.address, ctx.address);
   });
 
   describe("Commutative law", async () => {
@@ -45,7 +46,7 @@ describe("Boolean Algebra", () => {
           bool ${a.toString()} ${op} bool ${b.toString()}
           ==
           bool ${b.toString()} ${op} bool ${a.toString()}
-          `
+          `,
       );
       await app.execute();
       await checkStack(StackValue, stack, 1, 1);
@@ -78,7 +79,7 @@ describe("Boolean Algebra", () => {
           (bool ${A} ${op} bool ${B}) ${op} bool ${C}
           ==
           bool ${A} ${op} (bool ${B} ${op} bool ${C})
-          `
+          `,
       );
       await app.execute();
       await checkStack(StackValue, stack, 1, 1);
@@ -129,7 +130,7 @@ describe("Boolean Algebra", () => {
           bool ${A} ${op1} (bool ${B} ${op2} bool ${C})
           ==
           (bool ${A} ${op1} bool ${B}) ${op2} (bool ${A} ${op1} bool ${C})
-        `
+        `,
       );
       await app.execute();
 

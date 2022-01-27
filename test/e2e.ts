@@ -21,7 +21,7 @@ describe("End-to-end", () => {
     lastBlockTimestamp = (
       await ethers.provider.getBlock(
         // eslint-disable-next-line no-underscore-dangle
-        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
+        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */,
       )
     ).timestamp;
 
@@ -33,27 +33,29 @@ describe("End-to-end", () => {
 
     // Deploy StringUtils library
     const stringLib = await (await ethers.getContractFactory("StringUtils")).deploy();
+    const opcodesLib = await (await ethers.getContractFactory("Opcodes")).deploy();
+    const executorLib = await (await ethers.getContractFactory("Executor")).deploy();
 
     // Deploy Parser
-    const ParserCont = await ethers.getContractFactory("Parser", {
-      libraries: { StringUtils: stringLib.address },
-    });
-    const parser = await ParserCont.deploy();
-
-    // Deploy Executor
-    const executor = await (await ethers.getContractFactory("Executor")).deploy(await parser.opcodes());
+    const parser = await (
+      await ethers.getContractFactory("Parser", {
+        libraries: { StringUtils: stringLib.address },
+      })
+    ).deploy();
 
     // Deploy Context & setup
     ctx = await (await ethers.getContractFactory("Context")).deploy();
+    await ctx.setOpcodesAddr(opcodesLib.address);
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory("Stack");
     const contextStackAddress = await ctx.stack();
     stack = StackCont.attach(contextStackAddress);
 
-    // Deploy App
-    const AppCont = await ethers.getContractFactory("App");
-    app = await AppCont.deploy(parser.address, executor.address, ctx.address);
+    // Deploy Application
+    app = await (
+      await ethers.getContractFactory("App", { libraries: { Executor: executorLib.address } })
+    ).deploy(parser.address, ctx.address);
   });
 
   describe("blockChainId < loadLocal uint256 VAR", () => {
@@ -128,7 +130,7 @@ describe("End-to-end", () => {
       A: number,
       B: number,
       C: number,
-      result: number
+      result: number,
     ) {
       await app.setStorageUint256(hex4Bytes("NOW"), NOW);
       await app.setStorageUint256(hex4Bytes("INIT"), INIT);

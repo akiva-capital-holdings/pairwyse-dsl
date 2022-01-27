@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IExecutor } from "../interfaces/IExecutor.sol";
 import { IParser } from "../interfaces/IParser.sol";
 import { ConditionalTx } from "../helpers/ConditionalTx.sol";
 import { Storage } from "../helpers/Storage.sol";
@@ -11,15 +10,13 @@ import { Context } from "../Context.sol";
 
 contract Agreement is Storage {
     IParser public parser;
-    IExecutor public executor;
 
     event NewTransaction(bytes32 txId, address signatory, string transaction, string conditionStr);
 
     mapping(bytes32 => ConditionalTx) public txs;
 
-    constructor(IParser _parser, IExecutor _executor) {
+    constructor(IParser _parser) {
         parser = _parser;
-        executor = _executor;
     }
 
     function update(
@@ -30,21 +27,17 @@ contract Agreement is Storage {
         Context transactionCtx = new Context();
         Context conditionCtx = new Context();
 
+        // TODO: improve the logic here. Why parser is responsible for initing opcodes for Context?
         parser.initOpcodes(transactionCtx);
         parser.initOpcodes(conditionCtx);
+
         transactionCtx.setAppAddress(address(this));
         transactionCtx.setMsgSender(msg.sender);
+
         conditionCtx.setAppAddress(address(this));
         conditionCtx.setMsgSender(msg.sender);
 
-        ConditionalTx txn = new ConditionalTx(
-            _signatory,
-            _transactionStr,
-            _conditionStr,
-            transactionCtx,
-            conditionCtx,
-            executor
-        );
+        ConditionalTx txn = new ConditionalTx(_signatory, _transactionStr, _conditionStr, transactionCtx, conditionCtx);
         parser.parse(txn.transactionCtx(), _transactionStr);
         parser.parse(txn.conditionCtx(), _conditionStr);
 

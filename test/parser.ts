@@ -32,6 +32,10 @@ describe("Parser", () => {
   });
 
   describe("parse", () => {
+    it("error: delegatecall to asmSelector failed", async () => {
+      await expect(app.parse(ctxAddr, "uint256")).to.be.revertedWith("delegatecall to asmSelector failed");
+    });
+
     it("uint256 1122334433", async () => {
       await app.parse(ctxAddr, "uint256 1122334433");
       const expected = "0x1a0000000000000000000000000000000000000000000000000000000042e576e1";
@@ -53,7 +57,7 @@ describe("Parser", () => {
           (loadLocal uint256 TIMESTAMP < loadLocal uint256 EXPIRY)
           or
           (loadLocal bool RISK != bool true)
-          `
+          `,
       );
       const expected = "0x1b011b7b16d41b01b687035e041b011b7b16d41b019dc69bb503121b0255248f7c18011413";
       expect(await ctx.program()).to.equal(expected);

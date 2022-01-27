@@ -3,15 +3,14 @@ pragma solidity ^0.8.0;
 
 import { IConditionalTx } from "../interfaces/IConditionalTx.sol";
 import { IContext } from "../interfaces/IContext.sol";
-import { IExecutor } from "../interfaces/IExecutor.sol";
-import { Opcodes } from "../Opcodes.sol";
+import { Opcodes } from "../libs/Opcodes.sol";
+import { Executor } from "../libs/Executor.sol";
 
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract ConditionalTx is IConditionalTx {
     IContext public transactionCtx;
     IContext public conditionCtx;
-    IExecutor public executor;
     bool public isExecuted;
 
     address public signatory;
@@ -23,8 +22,7 @@ contract ConditionalTx is IConditionalTx {
         string memory _transactionStr,
         string memory _conditionStr,
         IContext _transactionCtx,
-        IContext _conditionCtx,
-        IExecutor _executor
+        IContext _conditionCtx
     ) {
         signatory = _signatory;
         transactionStr = _transactionStr;
@@ -32,16 +30,21 @@ contract ConditionalTx is IConditionalTx {
 
         transactionCtx = _transactionCtx;
         conditionCtx = _conditionCtx;
-        executor = _executor;
+
+        conditionCtx.setOpcodesAddr(address(Opcodes));
+        transactionCtx.setOpcodesAddr(address(Opcodes));
     }
 
+    // solhint-disable-next-line no-empty-blocks
+    receive() external payable {}
+
     function checkCondition() external {
-        executor.execute(conditionCtx);
+        Executor.execute(conditionCtx);
     }
 
     function execTransaction() external {
         require(!isExecuted, "ConditionalTx: txn already was executed");
-        executor.execute(transactionCtx);
+        Executor.execute(transactionCtx);
         isExecuted = true;
     }
 }
