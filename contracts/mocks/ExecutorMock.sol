@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import { IContext } from "../interfaces/IContext.sol";
+import { Executor } from "../libs/Executor.sol";
 import { Storage } from "../helpers/Storage.sol";
-import { Executor } from "../Executor.sol";
 
 contract ExecutorMock is Storage {
     function execute(IContext _ctx) public {

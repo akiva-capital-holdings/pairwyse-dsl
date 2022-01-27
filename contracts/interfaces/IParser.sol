@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { IContext } from "./IContext.sol";
 import { Preprocessor } from "../Preprocessor.sol";
-import { Opcodes } from "../Opcodes.sol";
+import { Opcodes } from "../libs/Opcodes.sol";
 
 interface IParser {
     // Variables

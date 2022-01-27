@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IContext } from "./interfaces/IContext.sol";
-import { IStorage } from "./interfaces/IStorage.sol";
-import { IERC20 } from "./interfaces/IERC20.sol";
-import { UnstructuredStorage } from "./libs/UnstructuredStorage.sol";
-import { StackValue } from "./helpers/Stack.sol";
+import { IContext } from "../interfaces/IContext.sol";
+import { IStorage } from "../interfaces/IStorage.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
+import { UnstructuredStorage } from "./UnstructuredStorage.sol";
+import { StackValue } from "../helpers/Stack.sol";
 import "hardhat/console.sol";
 
 library Opcodes {

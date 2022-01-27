@@ -5,15 +5,14 @@ import { IERC20 } from "./interfaces/IERC20.sol";
 import { IContext } from "./interfaces/IContext.sol";
 import { IParser } from "./interfaces/IParser.sol";
 import { StringUtils } from "./libs/StringUtils.sol";
+import { Opcodes } from "./libs/Opcodes.sol";
 import { Storage } from "./helpers/Storage.sol";
 import { Preprocessor } from "./Preprocessor.sol";
-import { Opcodes } from "./Opcodes.sol";
 import "hardhat/console.sol";
 
 // TODO: make all quotes single
 
-/*IParser, */
-contract Parser is Storage {
+contract Parser is IParser, Storage {
     using StringUtils for string;
 
     Preprocessor public preprocessor;

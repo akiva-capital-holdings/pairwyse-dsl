@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import { IConditionalTx } from "../interfaces/IConditionalTx.sol";
 import { IContext } from "../interfaces/IContext.sol";
-import { Opcodes } from "../Opcodes.sol";
-import { Executor } from "../Executor.sol";
+import { Opcodes } from "../libs/Opcodes.sol";
+import { Executor } from "../libs/Executor.sol";
 
 import "hardhat/console.sol";
 
