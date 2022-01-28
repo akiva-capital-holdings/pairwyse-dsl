@@ -105,17 +105,17 @@ contract Parser is IParser, Storage {
         // Note: this function may cost many gas. But the contract that will execute sendEth function will need to have
         // that ETH. So one solution is to transfer ETH to Opcodes contract (that executes sendEth function) or to move
         // all execution (and evaluation logic) of sendEth function to Parser contract (that is less desirable)
-        // transferAllEth(payable(address(opcodes))); // TODO uncomment
+        // transferAllEth(payable(address(opcodes)));
     }
 
     function asmTransfer() public {
-        address token = getAddress();
+        // address token = getAddress();
         // console.log("token");
         // console.log(token);
         parseAddress();
         parseVariable();
         asmUint256();
-        // transferAllERC20(token, address(opcodes)); // TODO uncomment
+        // transferAllERC20(token, address(opcodes));
     }
 
     function asmTransferFrom() public {
@@ -149,7 +149,8 @@ contract Parser is IParser, Storage {
         delete program;
         cmdIdx = 0;
         cmds = code;
-        _ctx.stack().clear(); // TODO: remove or reset context fully
+        _ctx.setPc(0);
+        _ctx.stack().clear();
 
         while (cmdIdx < cmds.length) {
             parseOpcodeWithParams(_ctx);

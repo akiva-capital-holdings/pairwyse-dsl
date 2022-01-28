@@ -8,6 +8,7 @@ import { Context } from "../Context.sol";
 
 // import "hardhat/console.sol";
 
+// Create ProxyConditionalTx for funds storage for different ConditionalTx
 contract Agreement is Storage {
     IParser public parser;
 
