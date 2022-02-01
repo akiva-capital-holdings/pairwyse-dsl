@@ -8,11 +8,6 @@
     "avoid-low-level-calls": ["off"],
     "not-rely-on-time": ["off"],
     "no-inline-assembly": ["off"],
-    "prettier/prettier": [
-      "error",
-      {
-        "endOfLine": "auto"
-      }
-    ]
+    "quotes": ["error", "single"]
   }
 }

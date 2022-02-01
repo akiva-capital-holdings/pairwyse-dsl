@@ -1,14 +1,5 @@
 {
-  "printWidth": 120,
-  "quotes": "double",
+  "printWidth": 100,
   "bracketSpacing": true,
-  "overrides": [
-    {
-      "files": "*.sol",
-      "options": {
-        "tabWidth": 4
-      }
-    }
-  ],
-  "trailingComma": "all"
+  "singleQuote": true
 }
