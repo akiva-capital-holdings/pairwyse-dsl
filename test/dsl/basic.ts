@@ -591,7 +591,7 @@ describe('DSL: basic', () => {
     const dai = await Token.deploy(ethers.utils.parseEther('1000'));
 
     const oneDAI = ethers.utils.parseEther('1');
-    await dai.connect(owner).approve(app.address, oneDAI); // Note: approve not to app but to opcodes addr
+    await dai.connect(owner).approve(app.address, oneDAI);
     expect(await dai.allowance(owner.address, app.address)).to.equal(oneDAI);
 
     await app.setStorageAddress(hex4Bytes('DAI'), dai.address);
