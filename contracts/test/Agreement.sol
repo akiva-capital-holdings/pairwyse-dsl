@@ -49,10 +49,10 @@ contract Agreement {
         emit NewTransaction(_txId, _signatory, _transactionStr, _conditionStr);
     }
 
-    function execute(bytes32 _txId) external {
+    function execute(bytes32 _txId) external payable {
         require(verify(_txId), 'Agreement: bad tx signatory');
-        require(validate(_txId), 'Agreement: tx condition is not satisfied');
-        require(fulfil(_txId), 'Agreement: tx fulfilment error');
+        require(validate(_txId, msg.value), 'Agreement: tx condition is not satisfied');
+        require(fulfil(_txId, msg.value), 'Agreement: tx fulfilment error');
     }
 
     function verify(bytes32 _txId) internal view returns (bool) {
@@ -60,15 +60,15 @@ contract Agreement {
         return signatory == msg.sender;
     }
 
-    function validate(bytes32 _txId) internal returns (bool) {
+    function validate(bytes32 _txId, uint256 _msgValue) internal returns (bool) {
         (, IContext conditionCtx, , , , ) = txs.txs(_txId);
-        txs.checkCondition(_txId);
+        txs.checkCondition(_txId, _msgValue);
         return conditionCtx.stack().seeLast().getUint256() == 0 ? false : true;
     }
 
-    function fulfil(bytes32 _txId) internal returns (bool) {
+    function fulfil(bytes32 _txId, uint256 _msgValue) internal returns (bool) {
         (IContext transactionCtx, , , , , ) = txs.txs(_txId);
-        txs.execTransaction(_txId);
+        txs.execTransaction(_txId, _msgValue);
         return transactionCtx.stack().seeLast().getUint256() == 0 ? false : true;
     }
 }

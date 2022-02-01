@@ -17,6 +17,8 @@ interface IContext {
 
     function opcodes() external returns (address);
 
+    function msgValue() external returns (uint256);
+
     function opCodeByName(string memory _name) external returns (bytes1 _opcode);
 
     function selectorByOpcode(bytes1 _opcode) external returns (bytes4 _selecotor);
@@ -68,4 +70,6 @@ interface IContext {
     function setAppAddress(address _addr) external;
 
     function setMsgSender(address _msgSender) external;
+
+    function setMsgValue(uint256 _msgValue) external;
 }

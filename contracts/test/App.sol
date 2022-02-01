@@ -26,7 +26,8 @@ contract App is Storage {
         parser.parse(ctx, _program);
     }
 
-    function execute() external {
+    function execute() external payable {
+        ctx.setMsgValue(msg.value);
         Executor.execute(ctx);
     }
 

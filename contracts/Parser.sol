@@ -68,6 +68,7 @@ contract Parser is IParser, Storage {
             Opcodes.opSetLocalBool.selector,
             this.asmSetLocalBool.selector
         );
+        _ctx.addOpcode('msgValue', 0x22, Opcodes.opMsgValue.selector, 0x0);
 
         // Complex Opcodes with sub Opcodes (branches)
         string memory name = 'loadLocal';

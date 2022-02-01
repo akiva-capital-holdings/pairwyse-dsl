@@ -4,19 +4,22 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { hex4Bytes } from './utils/utils';
 import { Agreement } from '../typechain/Agreement';
 import { Parser } from '../typechain/Parser';
+import { ConditionalTxs } from '../typechain';
 
 describe('Agreement', () => {
   let parser: Parser;
   let agreement: Agreement;
   let alice: SignerWithAddress;
-  let receiver: SignerWithAddress;
+  let bob: SignerWithAddress;
   let anybody: SignerWithAddress;
+  let txsAddr: string;
+  let txs: ConditionalTxs;
 
   const ONE_MONTH = 60 * 60 * 24 * 30;
   let NEXT_MONTH: number;
 
   before(async () => {
-    [alice, receiver, anybody] = await ethers.getSigners();
+    [alice, bob, anybody] = await ethers.getSigners();
 
     const lastBlockTimestamp = (
       await ethers.provider.getBlock(
@@ -44,14 +47,14 @@ describe('Agreement', () => {
         libraries: { Executor: executorLib.address, Opcodes: opcodesLib.address },
       })
     ).deploy(parser.address);
+
+    txsAddr = await agreement.txs();
+    txs = await ethers.getContractAt('ConditionalTxs', txsAddr);
   });
 
   it('one condition', async () => {
     // Set variables
-    const txsAddr = await agreement.txs();
-    const txs = await ethers.getContractAt('ConditionalTxs', txsAddr);
-
-    await txs.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
+    await txs.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
     await txs.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
     const signatory = alice.address;
@@ -82,10 +85,7 @@ describe('Agreement', () => {
 
     // Execute transaction
     await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-    await expect(await agreement.connect(alice).execute(txId)).to.changeEtherBalance(
-      receiver,
-      oneEthBN
-    );
+    await expect(await agreement.connect(alice).execute(txId)).to.changeEtherBalance(bob, oneEthBN);
 
     // Tx already executed
     await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith(
@@ -93,7 +93,51 @@ describe('Agreement', () => {
     );
   });
 
-  it('Alice (borrower) and Bob (lender)', async () => {
-    //
+  it.skip('Alice (borrower) and Bob (lender)', async () => {
+    const oneEth = ethers.utils.parseEther('1');
+    const tenTokens = ethers.utils.parseEther('10');
+    const token = await (
+      await ethers.getContractFactory('Token')
+    ).deploy(ethers.utils.parseEther('1000'));
+
+    const tokenAddrSub = token.address.substring(2);
+
+    // TODO: 'setLocal address BORROWER = msgSender'
+    const steps = [
+      // Alice deposits 1 ETH to SC
+      {
+        signatory: alice.address,
+        transaction: `
+          sendEth ADDRESS_THIS ${oneEth}
+          and setLocalBool BORROWER_DEPOSITED true
+        `,
+        condition: 'loadLocal bool BORROWER_DEPOSITED == false',
+      },
+      // Bob lends 10 tokens to Alice
+      {
+        signatory: bob.address,
+        transaction: `
+          transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}
+          and setLocalBool LENDER_DEPOSITED true
+        `,
+        condition: `
+          loadLocal bool BORROWER_DEPOSITED == true
+          and loadLocal bool LENDER_DEPOSITED == false
+        `,
+      },
+      // Alice returns 10 tokens to Bob and collects 1 ETH
+      {
+        signatory: alice.address,
+        transaction: `
+          transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()}
+          and receiveEth ALICE ${oneEth}
+          and setLocalBool OBLIGATIONS_SETTLED true
+        `,
+        condition: `
+          loadLocal bool LENDER_DEPOSITED == true
+          and loadLocal bool OBLIGATIONS_SETTLED == false
+        `,
+      },
+    ];
   });
 });

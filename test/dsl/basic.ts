@@ -558,6 +558,13 @@ describe('DSL: basic', () => {
     await checkStack(StackValue, stack, 1, 1);
   });
 
+  it('msgValue', async () => {
+    const oneEth = ethers.utils.parseEther('1');
+    await app.parse('msgValue');
+    await app.execute({ value: oneEth });
+    await checkStack(StackValue, stack, 1, oneEth.toString());
+  });
+
   it('sendEth', async () => {
     const [vault, receiver] = await ethers.getSigners();
     await app.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
@@ -566,7 +573,7 @@ describe('DSL: basic', () => {
     await app.parse(`sendEth RECEIVER ${oneEthBN.toString()}`);
 
     // No ETH on the contract
-    // await expect(app.execute()).to.be.revertedWith("Executor: call not success");
+    await expect(app.execute()).to.be.revertedWith('Executor: call not success');
 
     // Enough ETH on the contract
     await vault.sendTransaction({ to: app.address, value: oneEthBN });

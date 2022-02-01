@@ -9,22 +9,23 @@ import 'hardhat/console.sol';
 //      contract A (holds opCodeByName, selectorByOpcode, and asmSelectors)
 //      contract B (holds particular state variables: stack, program, pc, appAddress, msgSender)
 contract Context is IContext {
-    Stack public override stack;
-    bytes public override program;
-    uint256 public override pc;
-    address public override appAddress;
-    address public override msgSender;
-    address public override opcodes;
+    Stack public stack;
+    bytes public program;
+    uint256 public pc;
+    address public appAddress;
+    address public msgSender;
+    address public opcodes;
+    uint256 public msgValue;
 
-    mapping(string => bytes1) public override opCodeByName; // name => hex
-    mapping(bytes1 => bytes4) public override selectorByOpcode;
-    mapping(string => bytes4) public override asmSelectors;
+    mapping(string => bytes1) public opCodeByName; // name => hex
+    mapping(bytes1 => bytes4) public selectorByOpcode;
+    mapping(string => bytes4) public asmSelectors;
 
     // baseOpName -> branchCode -> selector
-    mapping(string => mapping(bytes1 => bytes4)) public override branchSelectors;
+    mapping(string => mapping(bytes1 => bytes4)) public branchSelectors;
 
     // baseOpName -> branchName -> branchCode
-    mapping(string => mapping(string => bytes1)) public override branchCodes;
+    mapping(string => mapping(string => bytes1)) public branchCodes;
 
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), 'Context: address is zero');
@@ -44,7 +45,7 @@ contract Context is IContext {
         bytes1 _opcode,
         bytes4 _opSelector,
         bytes4 _asmSelector
-    ) public override {
+    ) public {
         require(_opSelector != bytes4(0), 'Context: empty opcode selector');
         require(
             opCodeByName[_name] == bytes1(0) && selectorByOpcode[_opcode] == bytes4(0),
@@ -60,7 +61,7 @@ contract Context is IContext {
         string memory _branchName,
         bytes1 _branchCode,
         bytes4 _selector
-    ) public override {
+    ) public {
         require(_selector != bytes4(0), 'Context: empty opcode selector');
         require(
             branchSelectors[_baseOpName][_branchCode] == bytes4(0) &&
@@ -71,12 +72,12 @@ contract Context is IContext {
         branchCodes[_baseOpName][_branchName] = _branchCode;
     }
 
-    function setProgram(bytes memory _data) public override {
+    function setProgram(bytes memory _data) public {
         program = _data;
         setPc(0);
     }
 
-    function programAt(uint256 _index, uint256 _step) public view override returns (bytes memory) {
+    function programAt(uint256 _index, uint256 _step) public view returns (bytes memory) {
         bytes memory data = program;
         return this.programSlice(data, _index, _step);
     }
@@ -85,24 +86,28 @@ contract Context is IContext {
         bytes calldata _payload,
         uint256 _index,
         uint256 _step
-    ) public pure override returns (bytes memory) {
+    ) public pure returns (bytes memory) {
         require(_payload.length > _index, 'Context: slicing out of range');
         return _payload[_index:_index + _step];
     }
 
-    function setPc(uint256 _pc) public override {
+    function setPc(uint256 _pc) public {
         pc = _pc;
     }
 
-    function incPc(uint256 _val) public override {
+    function incPc(uint256 _val) public {
         pc += _val;
     }
 
-    function setAppAddress(address _addr) public override nonZeroAddress(_addr) {
+    function setAppAddress(address _addr) public nonZeroAddress(_addr) {
         appAddress = _addr;
     }
 
-    function setMsgSender(address _msgSender) public override nonZeroAddress(_msgSender) {
+    function setMsgSender(address _msgSender) public nonZeroAddress(_msgSender) {
         msgSender = _msgSender;
+    }
+
+    function setMsgValue(uint256 _msgValue) public {
+        msgValue = _msgValue;
     }
 }

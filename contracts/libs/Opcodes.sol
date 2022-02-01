@@ -178,6 +178,10 @@ library Opcodes {
         putToStack(_ctx, uint256(uint160(_ctx.msgSender())));
     }
 
+    function opMsgValue(IContext _ctx) public {
+        putToStack(_ctx, uint256(uint160(_ctx.msgValue())));
+    }
+
     function opSetLocalBool(IContext _ctx) public {
         opSetLocal(_ctx, 'setStorageBool(bytes32,bool)');
     }
@@ -233,6 +237,17 @@ library Opcodes {
         recipient.transfer(amount);
         putToStack(_ctx, 1);
     }
+
+    // function opReceiveEth(IContext _ctx) public {
+    //     address payable recipient = payable(
+    //         address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+    //     );
+    //     uint256 amount = opUint256Get(_ctx);
+    //     // console.log("recipient:", recipient);
+    //     // console.log("amount:", amount);
+    //     recipient.transfer(amount);
+    //     putToStack(_ctx, 1);
+    // }
 
     function opTransfer(IContext _ctx) public {
         address token = opAddressGet(_ctx);

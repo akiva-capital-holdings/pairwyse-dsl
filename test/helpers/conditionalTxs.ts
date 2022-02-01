@@ -115,7 +115,7 @@ describe('Conditional transactions', () => {
 
     // Execute transaction
     await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-    await expect(await app.connect(alice).execTransaction(txId)).to.changeEtherBalance(
+    await expect(await app.connect(alice).execTransaction(txId, 0)).to.changeEtherBalance(
       bob,
       oneEthBN
     );
@@ -218,12 +218,12 @@ describe('Conditional transactions', () => {
     expect(await token.balanceOf(app.address)).to.equal(tenTokens);
 
     // Execute transactions
-    await expect(await app.connect(alice).execTransaction(txId1)).to.changeEtherBalance(
+    await expect(await app.connect(alice).execTransaction(txId1, 0)).to.changeEtherBalance(
       bob,
       oneEth
     );
     await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-    await expect(() => app.connect(bob).execTransaction(txId2)).to.changeTokenBalance(
+    await expect(() => app.connect(bob).execTransaction(txId2, 0)).to.changeTokenBalance(
       token,
       alice,
       tenTokens
