@@ -2,84 +2,73 @@
 pragma solidity ^0.8.0;
 
 import { IParser } from '../interfaces/IParser.sol';
-import { ConditionalTx } from '../helpers/ConditionalTx.sol';
-import { Storage } from '../helpers/Storage.sol';
+import { IContext } from '../interfaces/IContext.sol';
+import { ConditionalTxs } from '../helpers/ConditionalTxs.sol';
 import { Context } from '../Context.sol';
 
-// import "hardhat/console.sol";
+import 'hardhat/console.sol';
 
-// Create ProxyConditionalTx for funds storage for different ConditionalTx
-contract Agreement is Storage {
+contract Agreement {
     IParser public parser;
+    ConditionalTxs public txs;
 
     event NewTransaction(bytes32 txId, address signatory, string transaction, string conditionStr);
 
-    mapping(bytes32 => ConditionalTx) public txs;
-
     constructor(IParser _parser) {
         parser = _parser;
+        txs = new ConditionalTxs();
     }
 
     function update(
         address _signatory,
         string memory _transactionStr,
         string memory _conditionStr
-    ) external returns (bytes32 txId) {
-        Context transactionCtx = new Context();
-        Context conditionCtx = new Context();
+    ) external returns (bytes32 _txId) {
+        Context _transactionCtx = new Context();
+        Context _conditionCtx = new Context();
 
         // TODO: improve the logic here. Why parser is responsible for initing opcodes for Context?
-        parser.initOpcodes(transactionCtx);
-        parser.initOpcodes(conditionCtx);
+        parser.initOpcodes(_transactionCtx);
+        parser.initOpcodes(_conditionCtx);
 
-        transactionCtx.setAppAddress(address(this));
-        transactionCtx.setMsgSender(msg.sender);
-
-        conditionCtx.setAppAddress(address(this));
-        conditionCtx.setMsgSender(msg.sender);
-
-        ConditionalTx txn = new ConditionalTx(
+        _txId = txs.addTx(
             _signatory,
             _transactionStr,
             _conditionStr,
-            transactionCtx,
-            conditionCtx
+            _transactionCtx,
+            _conditionCtx
         );
-        parser.parse(txn.transactionCtx(), _transactionStr);
-        parser.parse(txn.conditionCtx(), _conditionStr);
 
-        txId = hashTx(_signatory, _transactionStr, _conditionStr);
-        txs[txId] = txn;
+        // _transactionCtx.setMsgSender(msg.sender);
+        // _conditionCtx.setMsgSender(msg.sender);
 
-        emit NewTransaction(txId, _signatory, _transactionStr, _conditionStr);
+        (IContext transactionCtx, IContext conditionCtx, , , , ) = txs.txs(_txId);
+        parser.parse(transactionCtx, _transactionStr);
+        parser.parse(conditionCtx, _conditionStr);
+
+        emit NewTransaction(_txId, _signatory, _transactionStr, _conditionStr);
     }
 
-    function execute(bytes32 txId) external {
-        ConditionalTx txn = txs[txId];
-        require(verify(txn.signatory()), 'Agreement: bad tx signatory');
-        require(validate(txn), 'Agreement: tx condition is not satisfied');
-        require(fulfil(txn), 'Agreement: tx fulfilment error');
+    function execute(bytes32 _txId) external {
+        require(verify(_txId), 'Agreement: bad tx signatory');
+        require(validate(_txId), 'Agreement: tx condition is not satisfied');
+        require(fulfil(_txId), 'Agreement: tx fulfilment error');
     }
 
-    function verify(address _signatory) internal view returns (bool) {
-        return _signatory == msg.sender;
+    function verify(bytes32 _txId) internal view returns (bool) {
+        (, , , address signatory, , ) = txs.txs(_txId);
+        return signatory == msg.sender;
     }
 
-    function validate(ConditionalTx _tx) internal returns (bool) {
-        _tx.checkCondition();
-        return _tx.conditionCtx().stack().seeLast().getUint256() == 0 ? false : true;
+    function validate(bytes32 _txId) internal returns (bool) {
+        (, IContext conditionCtx, , , , ) = txs.txs(_txId);
+        txs.checkCondition(_txId);
+        return conditionCtx.stack().seeLast().getUint256() == 0 ? false : true;
     }
 
-    function fulfil(ConditionalTx _tx) internal returns (bool) {
-        _tx.execTransaction();
-        return _tx.transactionCtx().stack().seeLast().getUint256() == 0 ? false : true;
-    }
-
-    function hashTx(
-        address _signatory,
-        string memory _transaction,
-        string memory _condition
-    ) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(_signatory, _transaction, _condition));
+    function fulfil(bytes32 _txId) internal returns (bool) {
+        (IContext transactionCtx, , , , , ) = txs.txs(_txId);
+        txs.execTransaction(_txId);
+        return transactionCtx.stack().seeLast().getUint256() == 0 ? false : true;
     }
 }

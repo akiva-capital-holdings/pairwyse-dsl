@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IConditionalTx } from '../interfaces/IConditionalTx.sol';
+import { IConditionalTxs } from '../interfaces/IConditionalTxs.sol';
 import { IContext } from '../interfaces/IContext.sol';
 import { Opcodes } from '../libs/Opcodes.sol';
 import { Executor } from '../libs/Executor.sol';
@@ -9,19 +9,8 @@ import { Storage } from './Storage.sol';
 
 import 'hardhat/console.sol';
 
-contract ConditionalTxs is Storage {
-    struct Tx {
-        IContext transactionCtx;
-        IContext conditionCtx;
-        bool isExecuted;
-        address signatory;
-        string transactionStr;
-        string conditionStr;
-    }
-
+contract ConditionalTxs is IConditionalTxs, Storage {
     mapping(bytes32 => Tx) public txs;
-
-    event NewTx(bytes32 txId);
 
     function addTx(
         address _signatory,
@@ -39,6 +28,9 @@ contract ConditionalTxs is Storage {
             _conditionStr
         );
 
+        _transactionCtx.setAppAddress(address(this));
+        _conditionCtx.setAppAddress(address(this));
+
         _conditionCtx.setOpcodesAddr(address(Opcodes));
         _transactionCtx.setOpcodesAddr(address(Opcodes));
 
@@ -55,7 +47,7 @@ contract ConditionalTxs is Storage {
         require(checkCondition(txId), 'ConditionalTxs: txn condition is not satisfied');
         require(!txn.isExecuted, 'ConditionalTxs: txn already was executed');
         Executor.execute(txn.transactionCtx);
-        txn.isExecuted = true;
+        txs[txId].isExecuted = true;
     }
 
     function checkCondition(bytes32 txId) public returns (bool) {

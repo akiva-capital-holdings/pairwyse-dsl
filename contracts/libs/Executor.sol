@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { IContext } from '../interfaces/IContext.sol';
 
-// import "hardhat/console.sol";
+import 'hardhat/console.sol';
 
 library Executor {
     function execute(IContext _ctx) public {

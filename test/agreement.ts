@@ -46,14 +46,13 @@ describe('Agreement', () => {
     ).deploy(parser.address);
   });
 
-  it('Alice (borrower) and Bob (lender)', async () => {
-    //
-  });
-
-  it('lifecycle', async () => {
+  it('one condition', async () => {
     // Set variables
-    await agreement.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
-    await agreement.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
+    const txsAddr = await agreement.txs();
+    const txs = await ethers.getContractAt('ConditionalTxs', txsAddr);
+
+    await txs.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
+    await txs.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
     const signatory = alice.address;
     const transaction = 'sendEth RECEIVER 1000000000000000000';
@@ -65,7 +64,8 @@ describe('Agreement', () => {
 
     // Top up contract
     const oneEthBN = ethers.utils.parseEther('1');
-    await anybody.sendTransaction({ to: await agreement.txs(txId), value: oneEthBN });
+
+    await anybody.sendTransaction({ to: txsAddr, value: oneEthBN });
 
     /**
      * Execute
@@ -89,7 +89,11 @@ describe('Agreement', () => {
 
     // Tx already executed
     await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith(
-      'ConditionalTx: txn already was executed'
+      'ConditionalTxs: txn already was executed'
     );
+  });
+
+  it('Alice (borrower) and Bob (lender)', async () => {
+    //
   });
 });

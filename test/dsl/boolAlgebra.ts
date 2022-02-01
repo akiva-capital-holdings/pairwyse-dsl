@@ -172,7 +172,7 @@ describe('Boolean Algebra', () => {
     });
   });
 
-  describe("DeMorgan's Law", async () => {
+  describe('DeMorgan\'s Law', async () => {
     async function testCase(op1: string, op2: string, a: boolean, b: boolean) {
       const A = a.toString();
       const B = b.toString();
