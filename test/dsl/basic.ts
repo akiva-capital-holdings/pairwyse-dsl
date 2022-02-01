@@ -288,6 +288,15 @@ describe('DSL: basic', () => {
     await checkStack(StackValue, stack, 1, tx.chainId);
   });
 
+  it('setLocalBool', async () => {
+    await app.parse('setLocalBool BOOLVAR true');
+    await app.execute();
+    expect(await app.getStorageBool(hex4Bytes('BOOLVAR'))).to.equal(true);
+    await app.parse('setLocalBool BOOLVAR false');
+    await app.execute();
+    expect(await app.getStorageBool(hex4Bytes('BOOLVAR'))).to.equal(false);
+  });
+
   describe('loadLocal', () => {
     it('loadLocal uint256 NUMBER', async () => {
       await app.setStorageUint256(hex4Bytes('NUMBER'), 777);

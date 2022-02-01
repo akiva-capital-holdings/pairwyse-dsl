@@ -62,6 +62,12 @@ contract Parser is IParser, Storage {
             Opcodes.opTransferFrom.selector,
             this.asmTransferFrom.selector
         );
+        _ctx.addOpcode(
+            'setLocalBool',
+            0x21,
+            Opcodes.opSetLocalBool.selector,
+            this.asmSetLocalBool.selector
+        );
 
         // Complex Opcodes with sub Opcodes (branches)
         string memory name = 'loadLocal';
@@ -82,6 +88,11 @@ contract Parser is IParser, Storage {
     /**
      * Asm functions
      */
+
+    function asmSetLocalBool() public {
+        parseVariable();
+        asmBool();
+    }
 
     function asmLoadLocal(IContext _ctx) public {
         parseBranchOf(_ctx, 'loadLocal');
@@ -178,17 +189,6 @@ contract Parser is IParser, Storage {
         }
         // if no selector then opcode without params
     }
-
-    // function transferAllEth(address payable receiver) internal {
-    //     receiver.transfer(address(this).balance);
-    // }
-
-    // function transferAllERC20(address token, address receiver) internal {
-    //     uint256 balanceThis = IERC20(token).balanceOf(address(this));
-    //     // console.log("balanceThis");
-    //     // console.log(balanceThis);
-    //     IERC20(token).transfer(receiver, balanceThis);
-    // }
 
     function nextCmd() internal returns (string storage) {
         return cmds[cmdIdx++];

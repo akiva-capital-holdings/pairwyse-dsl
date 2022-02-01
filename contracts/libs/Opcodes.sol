@@ -178,6 +178,10 @@ library Opcodes {
         putToStack(_ctx, uint256(uint160(_ctx.msgSender())));
     }
 
+    function opSetLocalBool(IContext _ctx) public {
+        opSetLocal(_ctx, 'setStorageBool(bytes32,bool)');
+    }
+
     function opLoadLocalUint256(IContext _ctx) public {
         opLoadLocal(_ctx, 'getStorageUint256(bytes32)');
     }
@@ -323,19 +327,35 @@ library Opcodes {
         require(success, 'Opcodes: mustCall call not success');
     }
 
+    function getNextBytes(IContext _ctx, uint256 _bytesNum) public returns (bytes32 varNameB32) {
+        bytes memory varName = nextBytes(_ctx, _bytesNum);
+
+        // Convert bytes to bytes32
+        assembly {
+            varNameB32 := mload(add(varName, 0x20))
+        }
+    }
+
+    function opSetLocal(IContext _ctx, string memory _funcSignature) public {
+        bytes32 _varNameB32 = getNextBytes(_ctx, 4);
+
+        bytes memory data = nextBytes(_ctx, 1);
+        bool _boolVal = uint8(data[0]) == 1;
+
+        // Set local variable by it's hex
+        (bool success, ) = _ctx.appAddress().call(
+            abi.encodeWithSignature(_funcSignature, _varNameB32, _boolVal)
+        );
+        require(success, 'Opcodes: opSetLocal call not success');
+    }
+
     function opLoadLocalGet(IContext _ctx, string memory funcSignature)
         public
         returns (bytes32 result)
     {
-        bytes memory varName = nextBytes(_ctx, 4);
+        bytes32 varNameB32 = getNextBytes(_ctx, 4);
 
-        // Convert bytes to bytes32
-        bytes32 varNameB32;
-        assembly {
-            varNameB32 := mload(add(varName, 0x20))
-        }
-
-        // Load local value by it's hex
+        // Load local variable by it's hex
         (bool success, bytes memory data) = _ctx.appAddress().call(
             abi.encodeWithSignature(funcSignature, varNameB32)
         );

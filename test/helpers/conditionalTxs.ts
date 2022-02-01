@@ -4,7 +4,7 @@ import { ethers } from 'hardhat';
 import { ConditionalTxs, Context, Context__factory, Parser } from '../../typechain';
 import { hex4Bytes } from '../utils/utils';
 
-describe.only('Conditional transactions', () => {
+describe('Conditional transactions', () => {
   let app: ConditionalTxs;
   let parser: Parser;
   let ContextCont: Context__factory;
