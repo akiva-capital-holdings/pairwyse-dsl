@@ -1,9 +1,9 @@
 /* eslint-disable camelcase */
 
-import { expect } from "chai";
-import { Contract, ethers } from "ethers";
-import { Stack__factory, StackValue__factory, Stack, Context, StackValue } from "../../typechain";
-import { OpConditionalTxFunc } from "../types";
+import { expect } from 'chai';
+import { Contract, ethers } from 'ethers';
+import { Stack__factory, StackValue__factory, Stack, Context, StackValue } from '../../typechain';
+import { OpConditionalTxFunc } from '../types';
 
 /**
  * Apply keccak256 to `str`, cut the result to the first 4 bytes, append
@@ -14,9 +14,9 @@ import { OpConditionalTxFunc } from "../types";
 export const hex4Bytes = (str: string) =>
   ethers.utils
     .keccak256(ethers.utils.toUtf8Bytes(str))
-    .split("")
-    .map((x, i) => (i < 10 ? x : "0"))
-    .join("");
+    .split('')
+    .map((x, i) => (i < 10 ? x : '0'))
+    .join('');
 
 export const hex4BytesShort = (str: string) => hex4Bytes(str).slice(2, 2 + 8);
 
@@ -33,7 +33,7 @@ export const pushToStack = async (
   SV: StackValue__factory,
   context: Context,
   ST: Stack__factory,
-  arr: (string | number)[],
+  arr: (string | number)[]
 ) => {
   const stackValues: StackValue[] = [];
 
@@ -46,9 +46,9 @@ export const pushToStack = async (
   const stack = ST.attach(contextStackAddress);
 
   for (let i = 0; i < stackValues.length; ++i) {
-    if (typeof arr[i] === "number") {
+    if (typeof arr[i] === 'number') {
       await stackValues[i].setUint256(arr[i] as number);
-    } else if (typeof arr[i] === "string") {
+    } else if (typeof arr[i] === 'string') {
       await stackValues[i].setString(arr[i] as string);
     }
     await stack.push(stackValues[i].address);
@@ -72,9 +72,9 @@ export const checkStack = async (
   expectedLen: number,
   expectedValue: number | string,
   indexFromEnd: number = 0,
-  type: "string" | "number" = "number",
-  badLenErr = "Bad stack length",
-  badValueErr = "Bad stack value",
+  type: 'string' | 'number' = 'number',
+  badLenErr = 'Bad stack length',
+  badValueErr = 'Bad stack value'
 ) => {
   // check stack length
   const stackLen = await stack.length();
@@ -84,9 +84,9 @@ export const checkStack = async (
   const svResultAddress = await stack.stack(stackLen.toNumber() - 1 - indexFromEnd);
   const svResult = SV.attach(svResultAddress);
 
-  if (type === "number") {
+  if (type === 'number') {
     expect(await svResult.getUint256()).to.equal(expectedValue, badValueErr);
-  } else if (type === "string") {
+  } else if (type === 'string') {
     expect(await svResult.getString()).to.equal(expectedValue, badValueErr);
   }
 };
@@ -96,9 +96,9 @@ export async function checkStackTail(
   stack: Stack,
   expectedLen: number,
   expectedValues: number[],
-  type: "string" | "number" = "number",
-  badLenErr = "Bad stack length",
-  badValueErr = "Bad stack value",
+  type: 'string' | 'number' = 'number',
+  badLenErr = 'Bad stack length',
+  badValueErr = 'Bad stack value'
 ) {
   for (let i = 0; i < expectedValues.length; i++) {
     await checkStack(
@@ -109,7 +109,7 @@ export async function checkStackTail(
       i,
       type,
       badLenErr,
-      badValueErr,
+      badValueErr
     );
   }
 }
@@ -134,7 +134,7 @@ export const testTwoInputOneOutput = async (
   opFunc: OpConditionalTxFunc,
   value1: number,
   value2: number,
-  result: number,
+  result: number
 ) => {
   const stack = await pushToStack(SV, context, ST, [value1, value2]);
   await opFunc(opcodes)(context.address);

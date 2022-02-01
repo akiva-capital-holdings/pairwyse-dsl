@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IERC20 } from "./interfaces/IERC20.sol";
-import { IContext } from "./interfaces/IContext.sol";
-import { IParser } from "./interfaces/IParser.sol";
-import { StringUtils } from "./libs/StringUtils.sol";
-import { Opcodes } from "./libs/Opcodes.sol";
-import { Storage } from "./helpers/Storage.sol";
-import { Preprocessor } from "./Preprocessor.sol";
-import "hardhat/console.sol";
+import { IERC20 } from './interfaces/IERC20.sol';
+import { IContext } from './interfaces/IContext.sol';
+import { IParser } from './interfaces/IParser.sol';
+import { StringUtils } from './libs/StringUtils.sol';
+import { Opcodes } from './libs/Opcodes.sol';
+import { Storage } from './helpers/Storage.sol';
+import { Preprocessor } from './Preprocessor.sol';
+import 'hardhat/console.sol';
 
 // TODO: make all quotes single
 
@@ -32,46 +32,51 @@ contract Parser is IParser, Storage {
 
     function initOpcodes(IContext _ctx) external {
         // Opcodes for operators
-        addOpcodeForOperator(_ctx, "!", 0x02, Opcodes.opNot.selector, 0x0, 4);
+        addOpcodeForOperator(_ctx, '!', 0x02, Opcodes.opNot.selector, 0x0, 4);
 
-        addOpcodeForOperator(_ctx, "swap", 0x05, Opcodes.opSwap.selector, 0x0, 3);
-        addOpcodeForOperator(_ctx, "and", 0x12, Opcodes.opAnd.selector, 0x0, 3);
+        addOpcodeForOperator(_ctx, 'swap', 0x05, Opcodes.opSwap.selector, 0x0, 3);
+        addOpcodeForOperator(_ctx, 'and', 0x12, Opcodes.opAnd.selector, 0x0, 3);
 
-        addOpcodeForOperator(_ctx, "xor", 0x11, Opcodes.opXor.selector, 0x0, 2);
-        addOpcodeForOperator(_ctx, "or", 0x13, Opcodes.opOr.selector, 0x0, 2);
+        addOpcodeForOperator(_ctx, 'xor', 0x11, Opcodes.opXor.selector, 0x0, 2);
+        addOpcodeForOperator(_ctx, 'or', 0x13, Opcodes.opOr.selector, 0x0, 2);
 
-        addOpcodeForOperator(_ctx, "==", 0x01, Opcodes.opEq.selector, 0x0, 1);
-        addOpcodeForOperator(_ctx, "<", 0x03, Opcodes.opLt.selector, 0x0, 1);
-        addOpcodeForOperator(_ctx, ">", 0x04, Opcodes.opGt.selector, 0x0, 1);
-        addOpcodeForOperator(_ctx, "<=", 0x06, Opcodes.opLe.selector, 0x0, 1);
-        addOpcodeForOperator(_ctx, ">=", 0x07, Opcodes.opGe.selector, 0x0, 1);
-        addOpcodeForOperator(_ctx, "!=", 0x14, Opcodes.opNotEq.selector, 0x0, 1);
+        addOpcodeForOperator(_ctx, '==', 0x01, Opcodes.opEq.selector, 0x0, 1);
+        addOpcodeForOperator(_ctx, '<', 0x03, Opcodes.opLt.selector, 0x0, 1);
+        addOpcodeForOperator(_ctx, '>', 0x04, Opcodes.opGt.selector, 0x0, 1);
+        addOpcodeForOperator(_ctx, '<=', 0x06, Opcodes.opLe.selector, 0x0, 1);
+        addOpcodeForOperator(_ctx, '>=', 0x07, Opcodes.opGe.selector, 0x0, 1);
+        addOpcodeForOperator(_ctx, '!=', 0x14, Opcodes.opNotEq.selector, 0x0, 1);
 
         // Simple Opcodes
-        _ctx.addOpcode("blockNumber", 0x15, Opcodes.opBlockNumber.selector, 0x0);
-        _ctx.addOpcode("blockTimestamp", 0x16, Opcodes.opBlockTimestamp.selector, 0x0);
-        _ctx.addOpcode("blockChainId", 0x17, Opcodes.opBlockChainId.selector, 0x0);
-        _ctx.addOpcode("bool", 0x18, Opcodes.opBool.selector, this.asmBool.selector);
-        _ctx.addOpcode("uint256", 0x1a, Opcodes.opUint256.selector, this.asmUint256.selector);
-        _ctx.addOpcode("msgSender", 0x1d, Opcodes.opMsgSender.selector, 0x0);
-        _ctx.addOpcode("sendEth", 0x1e, Opcodes.opSendEth.selector, this.asmSend.selector);
-        _ctx.addOpcode("transfer", 0x1f, Opcodes.opTransfer.selector, this.asmTransfer.selector);
-        _ctx.addOpcode("transferFrom", 0x20, Opcodes.opTransferFrom.selector, this.asmTransferFrom.selector);
+        _ctx.addOpcode('blockNumber', 0x15, Opcodes.opBlockNumber.selector, 0x0);
+        _ctx.addOpcode('blockTimestamp', 0x16, Opcodes.opBlockTimestamp.selector, 0x0);
+        _ctx.addOpcode('blockChainId', 0x17, Opcodes.opBlockChainId.selector, 0x0);
+        _ctx.addOpcode('bool', 0x18, Opcodes.opBool.selector, this.asmBool.selector);
+        _ctx.addOpcode('uint256', 0x1a, Opcodes.opUint256.selector, this.asmUint256.selector);
+        _ctx.addOpcode('msgSender', 0x1d, Opcodes.opMsgSender.selector, 0x0);
+        _ctx.addOpcode('sendEth', 0x1e, Opcodes.opSendEth.selector, this.asmSend.selector);
+        _ctx.addOpcode('transfer', 0x1f, Opcodes.opTransfer.selector, this.asmTransfer.selector);
+        _ctx.addOpcode(
+            'transferFrom',
+            0x20,
+            Opcodes.opTransferFrom.selector,
+            this.asmTransferFrom.selector
+        );
 
         // Complex Opcodes with sub Opcodes (branches)
-        string memory name = "loadLocal";
+        string memory name = 'loadLocal';
         _ctx.addOpcode(name, 0x1b, Opcodes.opLoadLocalAny.selector, this.asmLoadLocal.selector);
-        _ctx.addOpcodeBranch(name, "uint256", 0x01, Opcodes.opLoadLocalUint256.selector);
-        _ctx.addOpcodeBranch(name, "bool", 0x02, Opcodes.opLoadLocalBool.selector);
-        _ctx.addOpcodeBranch(name, "address", 0x03, Opcodes.opLoadLocalAddress.selector);
-        _ctx.addOpcodeBranch(name, "bytes32", 0x04, Opcodes.opLoadLocalBytes32.selector);
+        _ctx.addOpcodeBranch(name, 'uint256', 0x01, Opcodes.opLoadLocalUint256.selector);
+        _ctx.addOpcodeBranch(name, 'bool', 0x02, Opcodes.opLoadLocalBool.selector);
+        _ctx.addOpcodeBranch(name, 'address', 0x03, Opcodes.opLoadLocalAddress.selector);
+        _ctx.addOpcodeBranch(name, 'bytes32', 0x04, Opcodes.opLoadLocalBytes32.selector);
 
-        name = "loadRemote";
+        name = 'loadRemote';
         _ctx.addOpcode(name, 0x1c, Opcodes.opLoadRemoteAny.selector, this.asmLoadRemote.selector);
-        _ctx.addOpcodeBranch(name, "uint256", 0x01, Opcodes.opLoadRemoteUint256.selector);
-        _ctx.addOpcodeBranch(name, "bool", 0x02, Opcodes.opLoadRemoteBool.selector);
-        _ctx.addOpcodeBranch(name, "address", 0x03, Opcodes.opLoadRemoteAddress.selector);
-        _ctx.addOpcodeBranch(name, "bytes32", 0x04, Opcodes.opLoadRemoteBytes32.selector);
+        _ctx.addOpcodeBranch(name, 'uint256', 0x01, Opcodes.opLoadRemoteUint256.selector);
+        _ctx.addOpcodeBranch(name, 'bool', 0x02, Opcodes.opLoadRemoteBool.selector);
+        _ctx.addOpcodeBranch(name, 'address', 0x03, Opcodes.opLoadRemoteAddress.selector);
+        _ctx.addOpcodeBranch(name, 'bytes32', 0x04, Opcodes.opLoadRemoteBytes32.selector);
     }
 
     /**
@@ -79,18 +84,18 @@ contract Parser is IParser, Storage {
      */
 
     function asmLoadLocal(IContext _ctx) public {
-        parseBranchOf(_ctx, "loadLocal");
+        parseBranchOf(_ctx, 'loadLocal');
         parseVariable();
     }
 
     function asmLoadRemote(IContext _ctx) public {
-        parseBranchOf(_ctx, "loadRemote");
+        parseBranchOf(_ctx, 'loadRemote');
         parseVariable();
         parseAddress();
     }
 
     function asmBool() public {
-        bytes1 value = bytes1(nextCmd().equal("true") ? 0x01 : 0x00);
+        bytes1 value = bytes1(nextCmd().equal('true') ? 0x01 : 0x00);
         program = bytes.concat(program, value);
     }
 
@@ -169,7 +174,7 @@ contract Parser is IParser, Storage {
         bytes4 selector = _ctx.asmSelectors(cmd);
         if (selector != 0x0) {
             (bool success, ) = address(this).delegatecall(abi.encodeWithSelector(selector, _ctx));
-            require(success, "Parser: delegatecall to asmSelector failed");
+            require(success, 'Parser: delegatecall to asmSelector failed');
         }
         // if no selector then opcode without params
     }

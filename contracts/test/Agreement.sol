@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IParser } from "../interfaces/IParser.sol";
-import { ConditionalTx } from "../helpers/ConditionalTx.sol";
-import { Storage } from "../helpers/Storage.sol";
-import { Context } from "../Context.sol";
+import { IParser } from '../interfaces/IParser.sol';
+import { ConditionalTx } from '../helpers/ConditionalTx.sol';
+import { Storage } from '../helpers/Storage.sol';
+import { Context } from '../Context.sol';
 
 // import "hardhat/console.sol";
 
@@ -38,7 +38,13 @@ contract Agreement is Storage {
         conditionCtx.setAppAddress(address(this));
         conditionCtx.setMsgSender(msg.sender);
 
-        ConditionalTx txn = new ConditionalTx(_signatory, _transactionStr, _conditionStr, transactionCtx, conditionCtx);
+        ConditionalTx txn = new ConditionalTx(
+            _signatory,
+            _transactionStr,
+            _conditionStr,
+            transactionCtx,
+            conditionCtx
+        );
         parser.parse(txn.transactionCtx(), _transactionStr);
         parser.parse(txn.conditionCtx(), _conditionStr);
 
@@ -50,9 +56,9 @@ contract Agreement is Storage {
 
     function execute(bytes32 txId) external {
         ConditionalTx txn = txs[txId];
-        require(verify(txn.signatory()), "Agreement: bad tx signatory");
-        require(validate(txn), "Agreement: tx condition is not satisfied");
-        require(fulfil(txn), "Agreement: tx fulfilment error");
+        require(verify(txn.signatory()), 'Agreement: bad tx signatory');
+        require(validate(txn), 'Agreement: tx condition is not satisfied');
+        require(fulfil(txn), 'Agreement: tx fulfilment error');
     }
 
     function verify(address _signatory) internal view returns (bool) {

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { Opcodes } from "../libs/Opcodes.sol";
-import { IContext } from "./IContext.sol";
+import { Opcodes } from '../libs/Opcodes.sol';
+import { IContext } from './IContext.sol';
 
 interface IConditionalTx {
     // Variables

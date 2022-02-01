@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IContext } from "./interfaces/IContext.sol";
-import { Stack } from "./helpers/Stack.sol";
-import "hardhat/console.sol";
+import { IContext } from './interfaces/IContext.sol';
+import { Stack } from './helpers/Stack.sol';
+import 'hardhat/console.sol';
 
 // TODO: may be wise to split Context into:
 //      contract A (holds opCodeByName, selectorByOpcode, and asmSelectors)
@@ -27,7 +27,7 @@ contract Context is IContext {
     mapping(string => mapping(string => bytes1)) public override branchCodes;
 
     modifier nonZeroAddress(address _addr) {
-        require(_addr != address(0), "Context: address is zero");
+        require(_addr != address(0), 'Context: address is zero');
         _;
     }
 
@@ -45,10 +45,10 @@ contract Context is IContext {
         bytes4 _opSelector,
         bytes4 _asmSelector
     ) public override {
-        require(_opSelector != bytes4(0), "Context: empty opcode selector");
+        require(_opSelector != bytes4(0), 'Context: empty opcode selector');
         require(
             opCodeByName[_name] == bytes1(0) && selectorByOpcode[_opcode] == bytes4(0),
-            "Context: duplicate opcode name or code"
+            'Context: duplicate opcode name or code'
         );
         opCodeByName[_name] = _opcode;
         selectorByOpcode[_opcode] = _opSelector;
@@ -61,11 +61,11 @@ contract Context is IContext {
         bytes1 _branchCode,
         bytes4 _selector
     ) public override {
-        require(_selector != bytes4(0), "Context: empty opcode selector");
+        require(_selector != bytes4(0), 'Context: empty opcode selector');
         require(
             branchSelectors[_baseOpName][_branchCode] == bytes4(0) &&
                 branchCodes[_baseOpName][_branchName] == bytes1(0),
-            "Context: duplicate opcode branch"
+            'Context: duplicate opcode branch'
         );
         branchSelectors[_baseOpName][_branchCode] = _selector;
         branchCodes[_baseOpName][_branchName] = _branchCode;
@@ -86,7 +86,7 @@ contract Context is IContext {
         uint256 _index,
         uint256 _step
     ) public pure override returns (bytes memory) {
-        require(_payload.length > _index, "Context: slicing out of range");
+        require(_payload.length > _index, 'Context: slicing out of range');
         return _payload[_index:_index + _step];
     }
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "../helpers/Stack.sol";
+import '../helpers/Stack.sol';
 
 interface IContext {
     // Variables
@@ -23,7 +23,10 @@ interface IContext {
 
     function asmSelectors(string memory _name) external returns (bytes4 _selecotor);
 
-    function branchSelectors(string memory _baseOpName, bytes1 _branchCode) external view returns (bytes4 _selector);
+    function branchSelectors(string memory _baseOpName, bytes1 _branchCode)
+        external
+        view
+        returns (bytes4 _selector);
 
     function branchCodes(string memory _baseOpName, string memory _branchName)
         external

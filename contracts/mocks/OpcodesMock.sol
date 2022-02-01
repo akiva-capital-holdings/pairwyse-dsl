@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IContext } from "../interfaces/IContext.sol";
-import { IStorage } from "../interfaces/IStorage.sol";
-import { IERC20 } from "../interfaces/IERC20.sol";
-import { Opcodes } from "../libs/Opcodes.sol";
-import { StackValue } from "../helpers/Stack.sol";
-import "hardhat/console.sol";
+import { IContext } from '../interfaces/IContext.sol';
+import { IStorage } from '../interfaces/IStorage.sol';
+import { IERC20 } from '../interfaces/IERC20.sol';
+import { Opcodes } from '../libs/Opcodes.sol';
+import { StackValue } from '../helpers/Stack.sol';
+import 'hardhat/console.sol';
 
 contract OpcodesMock {
     function opLoadLocalAny(IContext _ctx) public {
@@ -175,7 +175,10 @@ contract OpcodesMock {
         Opcodes.mustCall(addr, data);
     }
 
-    function opLoadLocalGet(IContext _ctx, string memory funcSignature) public returns (bytes32 result) {
+    function opLoadLocalGet(IContext _ctx, string memory funcSignature)
+        public
+        returns (bytes32 result)
+    {
         return Opcodes.opLoadLocalGet(_ctx, funcSignature);
     }
 

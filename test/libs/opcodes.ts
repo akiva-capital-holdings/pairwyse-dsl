@@ -1,13 +1,21 @@
-import { expect } from "chai";
-import { ethers } from "hardhat";
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
 /* eslint-disable camelcase */
-import { Stack__factory, StackValue__factory, Context, OpcodesMock, Stack } from "../../typechain";
-import { testOpLt, testOpGt, testOpLe, testOpGe, testOpAnd, testOpOr, testOpXor } from "../utils/testOps";
-import { checkStack, pushToStack, testTwoInputOneOutput } from "../utils/utils";
-import { TestCaseUint256 } from "../types";
+import { Stack__factory, StackValue__factory, Context, OpcodesMock, Stack } from '../../typechain';
+import {
+  testOpLt,
+  testOpGt,
+  testOpLe,
+  testOpGe,
+  testOpAnd,
+  testOpOr,
+  testOpXor,
+} from '../utils/testOps';
+import { checkStack, pushToStack, testTwoInputOneOutput } from '../utils/utils';
+import { TestCaseUint256 } from '../types';
 /* eslint-enable camelcase */
 
-describe("Opcodes", () => {
+describe('Opcodes', () => {
   // eslint-disable-next-line camelcase
   let StackCont: Stack__factory;
   // eslint-disable-next-line camelcase
@@ -18,31 +26,31 @@ describe("Opcodes", () => {
   let stack: Stack;
 
   before(async () => {
-    StackCont = await ethers.getContractFactory("Stack");
-    StackValue = await ethers.getContractFactory("StackValue");
+    StackCont = await ethers.getContractFactory('Stack');
+    StackValue = await ethers.getContractFactory('StackValue');
 
-    ctx = await (await ethers.getContractFactory("Context")).deploy();
+    ctx = await (await ethers.getContractFactory('Context')).deploy();
     ctxAddr = ctx.address;
 
     // Deploy libraries
-    const opcodesLib = await (await ethers.getContractFactory("Opcodes")).deploy();
-    const stringLib = await (await ethers.getContractFactory("StringUtils")).deploy();
+    const opcodesLib = await (await ethers.getContractFactory('Opcodes')).deploy();
+    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
 
     // Deploy OpcodesMock
     app = await (
-      await ethers.getContractFactory("OpcodesMock", { libraries: { Opcodes: opcodesLib.address } })
+      await ethers.getContractFactory('OpcodesMock', { libraries: { Opcodes: opcodesLib.address } })
     ).deploy();
 
     // Deploy Parser
     const parser = await (
-      await ethers.getContractFactory("Parser", {
+      await ethers.getContractFactory('Parser', {
         libraries: { StringUtils: stringLib.address },
       })
     ).deploy();
 
     // Create Stack instance
     const stackAddr = await ctx.stack();
-    stack = await ethers.getContractAt("Stack", stackAddr);
+    stack = await ethers.getContractAt('Stack', stackAddr);
 
     // Setup
     await parser.initOpcodes(ctxAddr);
@@ -55,45 +63,51 @@ describe("Opcodes", () => {
     await stack.clear();
   });
 
-  it("opLoadLocalAny", async () => {
-    await ctx.setProgram("0x1a");
-    await expect(app.opLoadLocalAny(ctxAddr)).to.be.revertedWith("Opcodes: mustCall call not success");
+  it('opLoadLocalAny', async () => {
+    await ctx.setProgram('0x1a');
+    await expect(app.opLoadLocalAny(ctxAddr)).to.be.revertedWith(
+      'Opcodes: mustCall call not success'
+    );
   });
 
-  it("opLoadLocalGet", async () => {
-    await ctx.setProgram("0x1a000000");
-    await expect(app.opLoadLocalGet(ctxAddr, "hey()")).to.be.revertedWith("Opcodes: opLoadLocal call not success");
+  it('opLoadLocalGet', async () => {
+    await ctx.setProgram('0x1a000000');
+    await expect(app.opLoadLocalGet(ctxAddr, 'hey()')).to.be.revertedWith(
+      'Opcodes: opLoadLocal call not success'
+    );
   });
 
-  it("opLoadRemote", async () => {
+  it('opLoadRemote', async () => {
     const ctxAddrCut = ctxAddr.substring(2);
     await ctx.setProgram(`0x1a000000${ctxAddrCut}`);
-    await expect(app.opLoadRemote(ctxAddr, "hey()")).to.be.revertedWith("Opcodes: opLoadRemote call not success");
+    await expect(app.opLoadRemote(ctxAddr, 'hey()')).to.be.revertedWith(
+      'Opcodes: opLoadRemote call not success'
+    );
   });
 
-  it("opLoadRemoteAny", async () => {});
+  it('opLoadRemoteAny', async () => {});
 
-  describe("opEq", () => {
-    it("error: type mismatch", async () => {
-      await pushToStack(StackValue, ctx, StackCont, [500, "hey"]);
+  describe('opEq', () => {
+    it('error: type mismatch', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [500, 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opEq(ctxAddr)).to.be.revertedWith("Opcodes: type mismatch");
+      await expect(app.opEq(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
     });
 
-    it("error: bad type", async () => {
-      await pushToStack(StackValue, ctx, StackCont, ["hey", "hey"]);
+    it('error: bad type', async () => {
+      await pushToStack(StackValue, ctx, StackCont, ['hey', 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opEq(ctxAddr)).to.be.revertedWith("Opcodes: bad type");
+      await expect(app.opEq(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
     });
 
-    it("uint256 equal", async () => {
+    it('uint256 equal', async () => {
       await pushToStack(StackValue, ctx, StackCont, [500, 500]);
       expect(await stack.length()).to.equal(2);
       await app.opEq(ctxAddr);
       await checkStack(StackValue, stack, 1, 1);
     });
 
-    it("uint256 not equal", async () => {
+    it('uint256 not equal', async () => {
       await pushToStack(StackValue, ctx, StackCont, [100, 200]);
       expect(await stack.length()).to.equal(2);
       await app.opEq(ctxAddr);
@@ -101,27 +115,27 @@ describe("Opcodes", () => {
     });
   });
 
-  describe("opNotEq", () => {
-    it("error: type mismatch", async () => {
-      await pushToStack(StackValue, ctx, StackCont, [500, "hey"]);
+  describe('opNotEq', () => {
+    it('error: type mismatch', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [500, 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opNotEq(ctxAddr)).to.be.revertedWith("Opcodes: type mismatch");
+      await expect(app.opNotEq(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
     });
 
-    it("error: bad type", async () => {
-      await pushToStack(StackValue, ctx, StackCont, ["hey", "hey"]);
+    it('error: bad type', async () => {
+      await pushToStack(StackValue, ctx, StackCont, ['hey', 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opNotEq(ctxAddr)).to.be.revertedWith("Opcodes: bad type");
+      await expect(app.opNotEq(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
     });
 
-    it("uint256 equal", async () => {
+    it('uint256 equal', async () => {
       await pushToStack(StackValue, ctx, StackCont, [500, 500]);
       expect(await stack.length()).to.equal(2);
       await app.opNotEq(ctxAddr);
       await checkStack(StackValue, stack, 1, 0);
     });
 
-    it("uint256 not equal", async () => {
+    it('uint256 not equal', async () => {
       await pushToStack(StackValue, ctx, StackCont, [100, 200]);
       expect(await stack.length()).to.equal(2);
       await app.opNotEq(ctxAddr);
@@ -129,20 +143,20 @@ describe("Opcodes", () => {
     });
   });
 
-  describe("opLt", () => {
-    it("error: type mismatch", async () => {
-      await pushToStack(StackValue, ctx, StackCont, [500, "hey"]);
+  describe('opLt', () => {
+    it('error: type mismatch', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [500, 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opLt(ctxAddr)).to.be.revertedWith("Opcodes: type mismatch");
+      await expect(app.opLt(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
     });
 
-    it("error: bad type", async () => {
-      await pushToStack(StackValue, ctx, StackCont, ["hey", "hey"]);
+    it('error: bad type', async () => {
+      await pushToStack(StackValue, ctx, StackCont, ['hey', 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opLt(ctxAddr)).to.be.revertedWith("Opcodes: bad type");
+      await expect(app.opLt(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
     });
 
-    describe("uint256", () => {
+    describe('uint256', () => {
       testOpLt.testCases.forEach((testCase: TestCaseUint256) => {
         it(testCase.name, async () =>
           testTwoInputOneOutput(
@@ -153,27 +167,27 @@ describe("Opcodes", () => {
             testOpLt.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result,
-          ),
+            testCase.result
+          )
         );
       });
     });
   });
 
-  describe("opGt", () => {
-    it("error: type mismatch", async () => {
-      await pushToStack(StackValue, ctx, StackCont, [500, "hey"]);
+  describe('opGt', () => {
+    it('error: type mismatch', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [500, 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opGt(ctxAddr)).to.be.revertedWith("Opcodes: type mismatch");
+      await expect(app.opGt(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
     });
 
-    it("error: bad type", async () => {
-      await pushToStack(StackValue, ctx, StackCont, ["hey", "hey"]);
+    it('error: bad type', async () => {
+      await pushToStack(StackValue, ctx, StackCont, ['hey', 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opGt(ctxAddr)).to.be.revertedWith("Opcodes: bad type");
+      await expect(app.opGt(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
     });
 
-    describe("uint256", () => {
+    describe('uint256', () => {
       testOpGt.testCases.forEach((testCase: TestCaseUint256) => {
         it(testCase.name, async () =>
           testTwoInputOneOutput(
@@ -184,27 +198,27 @@ describe("Opcodes", () => {
             testOpGt.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result,
-          ),
+            testCase.result
+          )
         );
       });
     });
   });
 
-  describe("opLe", () => {
-    it("error: type mismatch", async () => {
-      await pushToStack(StackValue, ctx, StackCont, [500, "hey"]);
+  describe('opLe', () => {
+    it('error: type mismatch', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [500, 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opLe(ctxAddr)).to.be.revertedWith("Opcodes: type mismatch");
+      await expect(app.opLe(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
     });
 
-    it("error: bad type", async () => {
-      await pushToStack(StackValue, ctx, StackCont, ["hey", "hey"]);
+    it('error: bad type', async () => {
+      await pushToStack(StackValue, ctx, StackCont, ['hey', 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opLe(ctxAddr)).to.be.revertedWith("Opcodes: bad type");
+      await expect(app.opLe(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
     });
 
-    describe("uint256", () => {
+    describe('uint256', () => {
       testOpLe.testCases.forEach((testCase: TestCaseUint256) => {
         it(testCase.name, async () =>
           testTwoInputOneOutput(
@@ -215,27 +229,27 @@ describe("Opcodes", () => {
             testOpLe.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result,
-          ),
+            testCase.result
+          )
         );
       });
     });
   });
 
-  describe("opGe", () => {
-    it("error: type mismatch", async () => {
-      await pushToStack(StackValue, ctx, StackCont, [500, "hey"]);
+  describe('opGe', () => {
+    it('error: type mismatch', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [500, 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opGe(ctxAddr)).to.be.revertedWith("Opcodes: type mismatch");
+      await expect(app.opGe(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
     });
 
-    it("error: bad type", async () => {
-      await pushToStack(StackValue, ctx, StackCont, ["hey", "hey"]);
+    it('error: bad type', async () => {
+      await pushToStack(StackValue, ctx, StackCont, ['hey', 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opGe(ctxAddr)).to.be.revertedWith("Opcodes: bad type");
+      await expect(app.opGe(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
     });
 
-    describe("uint256", () => {
+    describe('uint256', () => {
       testOpGe.testCases.forEach((testCase: TestCaseUint256) => {
         it(testCase.name, async () =>
           testTwoInputOneOutput(
@@ -246,15 +260,15 @@ describe("Opcodes", () => {
             testOpGe.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result,
-          ),
+            testCase.result
+          )
         );
       });
     });
   });
 
-  describe("opSwap", () => {
-    it("uint256", async () => {
+  describe('opSwap', () => {
+    it('uint256', async () => {
       await pushToStack(StackValue, ctx, StackCont, [200, 100]);
 
       expect(await stack.length()).to.equal(2);
@@ -279,20 +293,20 @@ describe("Opcodes", () => {
     // });
   });
 
-  describe("opAnd", () => {
-    it("error: type mismatch", async () => {
-      await pushToStack(StackValue, ctx, StackCont, [500, "hey"]);
+  describe('opAnd', () => {
+    it('error: type mismatch', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [500, 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opAnd(ctxAddr)).to.be.revertedWith("Opcodes: type mismatch");
+      await expect(app.opAnd(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
     });
 
-    it("error: bad type", async () => {
-      await pushToStack(StackValue, ctx, StackCont, ["hey", "hey"]);
+    it('error: bad type', async () => {
+      await pushToStack(StackValue, ctx, StackCont, ['hey', 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opAnd(ctxAddr)).to.be.revertedWith("Opcodes: bad type");
+      await expect(app.opAnd(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
     });
 
-    describe("two values of uint256", () => {
+    describe('two values of uint256', () => {
       testOpAnd.testCases.forEach((testCase: TestCaseUint256) => {
         it(testCase.name, async () =>
           testTwoInputOneOutput(
@@ -303,13 +317,13 @@ describe("Opcodes", () => {
             testOpAnd.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result,
-          ),
+            testCase.result
+          )
         );
       });
     });
 
-    it("((1 && 5) && 7) && 0", async () => {
+    it('((1 && 5) && 7) && 0', async () => {
       await pushToStack(StackValue, ctx, StackCont, [0, 7, 5, 1]);
 
       // stack size is 4
@@ -329,20 +343,20 @@ describe("Opcodes", () => {
     });
   });
 
-  describe("opOr", () => {
-    it("error: type mismatch", async () => {
-      await pushToStack(StackValue, ctx, StackCont, [500, "hey"]);
+  describe('opOr', () => {
+    it('error: type mismatch', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [500, 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opOr(ctxAddr)).to.be.revertedWith("Opcodes: type mismatch");
+      await expect(app.opOr(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
     });
 
-    it("error: bad type", async () => {
-      await pushToStack(StackValue, ctx, StackCont, ["hey", "hey"]);
+    it('error: bad type', async () => {
+      await pushToStack(StackValue, ctx, StackCont, ['hey', 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opOr(ctxAddr)).to.be.revertedWith("Opcodes: bad type");
+      await expect(app.opOr(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
     });
 
-    describe("two values of uint256", () => {
+    describe('two values of uint256', () => {
       testOpOr.testCases.forEach((testCase: TestCaseUint256) => {
         it(testCase.name, async () =>
           testTwoInputOneOutput(
@@ -353,13 +367,13 @@ describe("Opcodes", () => {
             testOpOr.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result,
-          ),
+            testCase.result
+          )
         );
       });
     });
 
-    it("0 || 0 || 3", async () => {
+    it('0 || 0 || 3', async () => {
       await pushToStack(StackValue, ctx, StackCont, [3, 0, 0]);
 
       expect(await stack.length()).to.equal(3);
@@ -374,20 +388,20 @@ describe("Opcodes", () => {
     });
   });
 
-  describe("opXor", () => {
-    it("error: type mismatch", async () => {
-      await pushToStack(StackValue, ctx, StackCont, [500, "hey"]);
+  describe('opXor', () => {
+    it('error: type mismatch', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [500, 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opXor(ctxAddr)).to.be.revertedWith("Opcodes: type mismatch");
+      await expect(app.opXor(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
     });
 
-    it("error: bad type", async () => {
-      await pushToStack(StackValue, ctx, StackCont, ["hey", "hey"]);
+    it('error: bad type', async () => {
+      await pushToStack(StackValue, ctx, StackCont, ['hey', 'hey']);
       expect(await stack.length()).to.equal(2);
-      await expect(app.opXor(ctxAddr)).to.be.revertedWith("Opcodes: bad type");
+      await expect(app.opXor(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
     });
 
-    describe("two values of uint256", () => {
+    describe('two values of uint256', () => {
       testOpXor.testCases.forEach((testCase: TestCaseUint256) => {
         it(testCase.name, async () =>
           testTwoInputOneOutput(
@@ -398,13 +412,13 @@ describe("Opcodes", () => {
             testOpXor.opFunc,
             testCase.value1,
             testCase.value2,
-            testCase.result,
-          ),
+            testCase.result
+          )
         );
       });
     });
 
-    it("0 || 0 || 3", async () => {
+    it('0 || 0 || 3', async () => {
       await pushToStack(StackValue, ctx, StackCont, [3, 0, 0]);
 
       expect(await stack.length()).to.equal(3);
@@ -419,29 +433,29 @@ describe("Opcodes", () => {
     });
   });
 
-  describe("opNot", () => {
-    it("error: bad type", async () => {
-      await pushToStack(StackValue, ctx, StackCont, ["hey"]);
+  describe('opNot', () => {
+    it('error: bad type', async () => {
+      await pushToStack(StackValue, ctx, StackCont, ['hey']);
       expect(await stack.length()).to.equal(1);
-      await expect(app.opNot(ctxAddr)).to.be.revertedWith("Opcodes: bad type");
+      await expect(app.opNot(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
     });
 
-    it("uint256 is zero", async () => {
+    it('uint256 is zero', async () => {
       await pushToStack(StackValue, ctx, StackCont, [0]);
       expect(await stack.length()).to.equal(1);
       await app.opNot(ctxAddr);
       await checkStack(StackValue, stack, 1, 1);
     });
 
-    describe("uint256 is non-zero", () => {
-      it("1", async () => {
+    describe('uint256 is non-zero', () => {
+      it('1', async () => {
         await pushToStack(StackValue, ctx, StackCont, [1]);
         expect(await stack.length()).to.equal(1);
         await app.opNot(ctxAddr);
         await checkStack(StackValue, stack, 1, 0);
       });
 
-      it("3", async () => {
+      it('3', async () => {
         await pushToStack(StackValue, ctx, StackCont, [3]);
         expect(await stack.length()).to.equal(1);
         await app.opNot(ctxAddr);
@@ -450,13 +464,13 @@ describe("Opcodes", () => {
     });
   });
 
-  describe("block", () => {
-    it("blockNumber", async () => {
+  describe('block', () => {
+    it('blockNumber', async () => {
       const ctxStackAddress = await ctx.stack();
       StackCont.attach(ctxStackAddress);
 
       // 0x05 is NUMBER
-      await ctx.setProgram("0x15");
+      await ctx.setProgram('0x15');
 
       const opBlockResult = await app.opBlockNumber(ctxAddr);
 
@@ -471,12 +485,12 @@ describe("Opcodes", () => {
     });
 
     // Block timestamp doesn't work because Hardhat doesn't return timestamp
-    it("blockTimestamp", async () => {
+    it('blockTimestamp', async () => {
       const ctxStackAddress = await ctx.stack();
       StackCont.attach(ctxStackAddress);
 
       // 0x16 is Timestamp
-      await ctx.setProgram("0x16");
+      await ctx.setProgram('0x16');
 
       await app.opBlockTimestamp(ctxAddr);
 
@@ -490,19 +504,22 @@ describe("Opcodes", () => {
       const lastBlockTimestamp = (
         await ethers.provider.getBlock(
           // eslint-disable-next-line no-underscore-dangle
-          ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */,
+          ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
         )
       ).timestamp;
 
-      expect((await svResult.getUint256()).toNumber()).to.be.approximately(lastBlockTimestamp, 1000);
+      expect((await svResult.getUint256()).toNumber()).to.be.approximately(
+        lastBlockTimestamp,
+        1000
+      );
     });
 
-    it("blockChainId", async () => {
+    it('blockChainId', async () => {
       const ctxStackAddress = await ctx.stack();
       StackCont.attach(ctxStackAddress);
 
       // 0x17 is ChainID
-      await ctx.setProgram("0x17");
+      await ctx.setProgram('0x17');
 
       const opBlockResult = await app.opBlockChainId(ctxAddr);
 
@@ -517,7 +534,7 @@ describe("Opcodes", () => {
     });
   });
 
-  it("opMsgSender", async () => {
+  it('opMsgSender', async () => {
     const [first, second] = await ethers.getSigners();
 
     await app.opMsgSender(ctxAddr);
@@ -534,41 +551,41 @@ describe("Opcodes", () => {
     await checkStack(StackValue, stack, 1, second.address);
   });
 
-  it("opLoadLocalUint256", async () => {});
+  it('opLoadLocalUint256', async () => {});
 
-  it("opLoadLocalBytes32", async () => {});
+  it('opLoadLocalBytes32', async () => {});
 
-  it("opLoadLocalBool", async () => {});
+  it('opLoadLocalBool', async () => {});
 
-  it("opLoadLocalAddress", async () => {});
+  it('opLoadLocalAddress', async () => {});
 
-  it("opLoadRemoteUint256", async () => {});
+  it('opLoadRemoteUint256', async () => {});
 
-  it("opLoadRemoteBytes32", async () => {});
+  it('opLoadRemoteBytes32', async () => {});
 
-  it("opLoadRemoteBool", async () => {});
+  it('opLoadRemoteBool', async () => {});
 
-  it("opLoadRemoteAddress", async () => {});
+  it('opLoadRemoteAddress', async () => {});
 
-  it("opBool", async () => {});
+  it('opBool', async () => {});
 
-  it("opUint256", async () => {});
+  it('opUint256', async () => {});
 
-  it("opSendEth", async () => {});
+  it('opSendEth', async () => {});
 
-  it("opTransfer", async () => {});
+  it('opTransfer', async () => {});
 
-  it("opTransferFrom", async () => {});
+  it('opTransferFrom', async () => {});
 
-  it("opUint256Get", async () => {});
+  it('opUint256Get', async () => {});
 
-  it("putUint256ToStack", async () => {});
+  it('putUint256ToStack', async () => {});
 
-  it("nextBytes", async () => {});
+  it('nextBytes', async () => {});
 
-  it("nextBytes1", async () => {});
+  it('nextBytes1', async () => {});
 
-  it("nextBranchSelector", async () => {});
+  it('nextBranchSelector', async () => {});
 
   // describe("mustCall", () => {
   //   it("error: call not success", async () => {
@@ -576,11 +593,11 @@ describe("Opcodes", () => {
   //   });
   // });
 
-  it("opLoadLocalGet", async () => {});
+  it('opLoadLocalGet', async () => {});
 
-  it("opAddressGet", async () => {});
+  it('opAddressGet', async () => {});
 
-  it("opLoadLocal", async () => {});
+  it('opLoadLocal', async () => {});
 
-  it("opLoadRemote", async () => {});
+  it('opLoadRemote', async () => {});
 });

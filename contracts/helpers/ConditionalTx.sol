@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IConditionalTx } from "../interfaces/IConditionalTx.sol";
-import { IContext } from "../interfaces/IContext.sol";
-import { Opcodes } from "../libs/Opcodes.sol";
-import { Executor } from "../libs/Executor.sol";
+import { IConditionalTx } from '../interfaces/IConditionalTx.sol';
+import { IContext } from '../interfaces/IContext.sol';
+import { Opcodes } from '../libs/Opcodes.sol';
+import { Executor } from '../libs/Executor.sol';
 
-import "hardhat/console.sol";
+import 'hardhat/console.sol';
 
 contract ConditionalTx is IConditionalTx {
     IContext public transactionCtx;
@@ -43,7 +43,7 @@ contract ConditionalTx is IConditionalTx {
     }
 
     function execTransaction() external {
-        require(!isExecuted, "ConditionalTx: txn already was executed");
+        require(!isExecuted, 'ConditionalTx: txn already was executed');
         Executor.execute(transactionCtx);
         isExecuted = true;
     }

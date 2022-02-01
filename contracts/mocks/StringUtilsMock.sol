@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { StringUtils } from "../libs/StringUtils.sol";
+import { StringUtils } from '../libs/StringUtils.sol';
 
 contract StringUtilsMock {
     function char(string memory s, uint256 index) public pure returns (string memory) {

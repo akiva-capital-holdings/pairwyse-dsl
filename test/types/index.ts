@@ -1,6 +1,8 @@
-import { Contract, ContractTransaction } from "ethers";
+import { Contract, ContractTransaction } from 'ethers';
 
-export type OpConditionalTxFunc = (opcodes: Contract) => (ctx: string) => Promise<ContractTransaction>;
+export type OpConditionalTxFunc = (
+  opcodes: Contract
+) => (ctx: string) => Promise<ContractTransaction>;
 
 export interface TestCaseUint256 {
   name: string;

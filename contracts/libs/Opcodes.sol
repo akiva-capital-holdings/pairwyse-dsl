@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IContext } from "../interfaces/IContext.sol";
-import { IStorage } from "../interfaces/IStorage.sol";
-import { IERC20 } from "../interfaces/IERC20.sol";
-import { StringUtils } from "./StringUtils.sol";
-import { UnstructuredStorage } from "./UnstructuredStorage.sol";
-import { StackValue } from "../helpers/Stack.sol";
-import "hardhat/console.sol";
+import { IContext } from '../interfaces/IContext.sol';
+import { IStorage } from '../interfaces/IStorage.sol';
+import { IERC20 } from '../interfaces/IERC20.sol';
+import { StringUtils } from './StringUtils.sol';
+import { UnstructuredStorage } from './UnstructuredStorage.sol';
+import { StackValue } from '../helpers/Stack.sol';
+import 'hardhat/console.sol';
 
 library Opcodes {
     using UnstructuredStorage for bytes32;
@@ -15,13 +15,13 @@ library Opcodes {
 
     function opLoadLocalAny(IContext _ctx) public {
         address libAddr = _ctx.opcodes();
-        bytes4 selector = nextBranchSelector(_ctx, "loadLocal");
+        bytes4 selector = nextBranchSelector(_ctx, 'loadLocal');
         mustCall(libAddr, abi.encodeWithSelector(selector, _ctx));
     }
 
     function opLoadRemoteAny(IContext _ctx) public {
         address libAddr = _ctx.opcodes();
-        bytes4 selector = nextBranchSelector(_ctx, "loadRemote");
+        bytes4 selector = nextBranchSelector(_ctx, 'loadRemote');
         mustCall(libAddr, abi.encodeWithSelector(selector, _ctx));
     }
 
@@ -32,8 +32,8 @@ library Opcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), "Opcodes: type mismatch");
-        require(last.getType() == StackValue.StackType.UINT256, "Opcodes: bad type");
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
 
         bool result = last.getUint256() == prev.getUint256();
 
@@ -47,8 +47,8 @@ library Opcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), "Opcodes: type mismatch");
-        require(last.getType() == StackValue.StackType.UINT256, "Opcodes: bad type");
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
 
         bool result = last.getUint256() != prev.getUint256();
 
@@ -62,8 +62,8 @@ library Opcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), "Opcodes: type mismatch");
-        require(last.getType() == StackValue.StackType.UINT256, "Opcodes: bad type");
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
 
         bool result = prev.getUint256() < last.getUint256();
 
@@ -112,8 +112,8 @@ library Opcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), "Opcodes: type mismatch");
-        require(last.getType() == StackValue.StackType.UINT256, "Opcodes: bad type");
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
 
         bool result = (prev.getUint256() > 0) && (last.getUint256() > 0);
 
@@ -128,8 +128,8 @@ library Opcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), "Opcodes: type mismatch");
-        require(last.getType() == StackValue.StackType.UINT256, "Opcodes: bad type");
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
 
         bool result = (prev.getUint256() > 0) || (last.getUint256() > 0);
 
@@ -140,8 +140,8 @@ library Opcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), "Opcodes: type mismatch");
-        require(last.getType() == StackValue.StackType.UINT256, "Opcodes: bad type");
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
 
         bool result = ((prev.getUint256() > 0) && (last.getUint256() == 0)) ||
             ((prev.getUint256() == 0) && (last.getUint256() > 0));
@@ -155,7 +155,7 @@ library Opcodes {
     function opNot(IContext _ctx) public {
         StackValue last = _ctx.stack().pop();
 
-        require(last.getType() == StackValue.StackType.UINT256, "Opcodes: bad type");
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
 
         bool result = last.getUint256() == 0;
 
@@ -179,35 +179,35 @@ library Opcodes {
     }
 
     function opLoadLocalUint256(IContext _ctx) public {
-        opLoadLocal(_ctx, "getStorageUint256(bytes32)");
+        opLoadLocal(_ctx, 'getStorageUint256(bytes32)');
     }
 
     function opLoadLocalBytes32(IContext _ctx) public {
-        opLoadLocal(_ctx, "getStorageBytes32(bytes32)");
+        opLoadLocal(_ctx, 'getStorageBytes32(bytes32)');
     }
 
     function opLoadLocalBool(IContext _ctx) public {
-        opLoadLocal(_ctx, "getStorageBool(bytes32)");
+        opLoadLocal(_ctx, 'getStorageBool(bytes32)');
     }
 
     function opLoadLocalAddress(IContext _ctx) public {
-        opLoadLocal(_ctx, "getStorageAddress(bytes32)");
+        opLoadLocal(_ctx, 'getStorageAddress(bytes32)');
     }
 
     function opLoadRemoteUint256(IContext _ctx) public {
-        opLoadRemote(_ctx, "getStorageUint256(bytes32)");
+        opLoadRemote(_ctx, 'getStorageUint256(bytes32)');
     }
 
     function opLoadRemoteBytes32(IContext _ctx) public {
-        opLoadRemote(_ctx, "getStorageBytes32(bytes32)");
+        opLoadRemote(_ctx, 'getStorageBytes32(bytes32)');
     }
 
     function opLoadRemoteBool(IContext _ctx) public {
-        opLoadRemote(_ctx, "getStorageBool(bytes32)");
+        opLoadRemote(_ctx, 'getStorageBool(bytes32)');
     }
 
     function opLoadRemoteAddress(IContext _ctx) public {
-        opLoadRemote(_ctx, "getStorageAddress(bytes32)");
+        opLoadRemote(_ctx, 'getStorageAddress(bytes32)');
     }
 
     function opBool(IContext _ctx) public {
@@ -221,7 +221,7 @@ library Opcodes {
 
     function opSendEth(IContext _ctx) public {
         address payable recipient = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctx, "getStorageAddress(bytes32)"))))
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
         );
         uint256 amount = opUint256Get(_ctx);
         // console.log("recipient:", recipient);
@@ -233,7 +233,7 @@ library Opcodes {
     function opTransfer(IContext _ctx) public {
         address token = opAddressGet(_ctx);
         address payable recipient = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctx, "getStorageAddress(bytes32)"))))
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
         );
         uint256 amount = opUint256Get(_ctx);
         // console.log("token");
@@ -249,9 +249,15 @@ library Opcodes {
     }
 
     function opTransferFrom(IContext _ctx) public {
-        address payable token = payable(address(uint160(uint256(opLoadLocalGet(_ctx, "getStorageAddress(bytes32)")))));
-        address payable from = payable(address(uint160(uint256(opLoadLocalGet(_ctx, "getStorageAddress(bytes32)")))));
-        address payable to = payable(address(uint160(uint256(opLoadLocalGet(_ctx, "getStorageAddress(bytes32)")))));
+        address payable token = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        address payable from = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        address payable to = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
         uint256 amount = opUint256Get(_ctx);
         // console.log("token");
         // console.log(token);
@@ -314,10 +320,13 @@ library Opcodes {
     function mustCall(address addr, bytes memory data) public {
         (bool success, ) = addr.delegatecall(data);
         // if (!success) console.log("Opcodes: call not success");
-        require(success, "Opcodes: mustCall call not success");
+        require(success, 'Opcodes: mustCall call not success');
     }
 
-    function opLoadLocalGet(IContext _ctx, string memory funcSignature) public returns (bytes32 result) {
+    function opLoadLocalGet(IContext _ctx, string memory funcSignature)
+        public
+        returns (bytes32 result)
+    {
         bytes memory varName = nextBytes(_ctx, 4);
 
         // Convert bytes to bytes32
@@ -327,8 +336,10 @@ library Opcodes {
         }
 
         // Load local value by it's hex
-        (bool success, bytes memory data) = _ctx.appAddress().call(abi.encodeWithSignature(funcSignature, varNameB32));
-        require(success, "Opcodes: opLoadLocal call not success");
+        (bool success, bytes memory data) = _ctx.appAddress().call(
+            abi.encodeWithSignature(funcSignature, varNameB32)
+        );
+        require(success, 'Opcodes: opLoadLocal call not success');
 
         // Convert bytes to bytes32
         assembly {
@@ -391,8 +402,10 @@ library Opcodes {
         // console.log("contractAddr =", contractAddr);
 
         // Load local value by it's hex
-        (bool success, bytes memory data) = contractAddr.call(abi.encodeWithSignature(funcSignature, varNameB32));
-        require(success, "Opcodes: opLoadRemote call not success");
+        (bool success, bytes memory data) = contractAddr.call(
+            abi.encodeWithSignature(funcSignature, varNameB32)
+        );
+        require(success, 'Opcodes: opLoadRemote call not success');
 
         // Convert bytes to bytes32
         bytes32 result;

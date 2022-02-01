@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { Stack, StackValue } from "./helpers/Stack.sol";
-import { StringUtils } from "./libs/StringUtils.sol";
+import { Stack, StackValue } from './helpers/Stack.sol';
+import { StringUtils } from './libs/StringUtils.sol';
 
 // import "hardhat/console.sol";
 
@@ -33,23 +33,23 @@ contract Preprocessor {
         for (uint256 i = 0; i < _program.length(); i++) {
             string memory char = _program.char(i);
             // console.log("char: %s", char);
-            if (char.equal(" ") || char.equal("\n") || char.equal("(") || char.equal(")")) {
+            if (char.equal(' ') || char.equal('\n') || char.equal('(') || char.equal(')')) {
                 if (buffer.length() > 0) {
                     result.push(buffer);
-                    buffer = "";
+                    buffer = '';
                 }
             } else {
                 buffer = buffer.concat(char);
             }
 
-            if (char.equal("(") || char.equal(")")) {
+            if (char.equal('(') || char.equal(')')) {
                 result.push(char);
             }
         }
 
         if (buffer.length() > 0) {
             result.push(buffer);
-            buffer = "";
+            buffer = '';
         }
 
         return result;
@@ -65,15 +65,18 @@ contract Preprocessor {
 
             if (isOperator(chunk)) {
                 // console.log("%s is an operator", chunk);
-                while (_stack.length() > 0 && opsPriors[chunk] <= opsPriors[_stack.seeLast().getString()]) {
+                while (
+                    _stack.length() > 0 &&
+                    opsPriors[chunk] <= opsPriors[_stack.seeLast().getString()]
+                ) {
                     // console.log("result push:", _stack.seeLast().getString());
                     result.push(_stack.pop().getString());
                 }
                 pushStringToStack(_stack, chunk);
-            } else if (chunk.equal("(")) {
+            } else if (chunk.equal('(')) {
                 pushStringToStack(_stack, chunk);
-            } else if (chunk.equal(")")) {
-                while (!_stack.seeLast().getString().equal("(")) {
+            } else if (chunk.equal(')')) {
+                while (!_stack.seeLast().getString().equal('(')) {
                     // console.log("result push: %s", _stack.seeLast().getString());
                     result.push(_stack.pop().getString());
                 }

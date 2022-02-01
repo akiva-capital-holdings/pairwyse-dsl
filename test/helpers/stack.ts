@@ -1,20 +1,20 @@
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { expect } from "chai";
-import { ethers } from "hardhat";
-import { Stack, StackValue__factory } from "../../typechain";
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+import { Stack, StackValue__factory } from '../../typechain';
 
-describe("Stack", () => {
+describe('Stack', () => {
   let stack: Stack;
   let StackValueCont: StackValue__factory;
   let first: SignerWithAddress;
 
   before(async () => {
     [first] = await ethers.getSigners();
-    stack = await (await ethers.getContractFactory("Stack")).deploy();
-    StackValueCont = await ethers.getContractFactory("StackValue");
+    stack = await (await ethers.getContractFactory('Stack')).deploy();
+    StackValueCont = await ethers.getContractFactory('StackValue');
   });
 
-  it("push & length & seeLast & pop & clear", async () => {
+  it('push & length & seeLast & pop & clear', async () => {
     // uint256
     const svUint256 = await StackValueCont.deploy();
     await stack.push(svUint256.address);
@@ -26,10 +26,10 @@ describe("Stack", () => {
     // string
     const svString = await StackValueCont.deploy();
     await stack.push(svString.address);
-    await svString.setString("hey");
+    await svString.setString('hey');
     expect(await stack.length()).to.equal(2);
     expect(await stack.seeLast()).to.equal(svString.address);
-    expect(await svString.getString()).to.equal("hey");
+    expect(await svString.getString()).to.equal('hey');
 
     // address
     const svAddress = await StackValueCont.deploy();
@@ -48,7 +48,7 @@ describe("Stack", () => {
 
     sv = await stack.callStatic.pop();
     expect(sv).to.equal(svString.address);
-    expect(await svString.getString()).to.equal("hey");
+    expect(await svString.getString()).to.equal('hey');
     await stack.pop();
     expect(await stack.length()).to.equal(1);
 

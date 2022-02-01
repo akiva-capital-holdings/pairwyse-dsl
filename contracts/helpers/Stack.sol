@@ -18,7 +18,7 @@ contract StackValue {
     address private _address;
 
     function getUint256() public view returns (uint256) {
-        require(_type == StackType.UINT256, "Stack: uint256 type mismatch");
+        require(_type == StackType.UINT256, 'Stack: uint256 type mismatch');
         return _uint256;
     }
 
@@ -28,7 +28,7 @@ contract StackValue {
     }
 
     function getString() public view returns (string memory) {
-        require(_type == StackType.STRING, "Stack: string type mismatch");
+        require(_type == StackType.STRING, 'Stack: string type mismatch');
         return _string;
     }
 
@@ -38,7 +38,7 @@ contract StackValue {
     }
 
     function getAddress() public view returns (address) {
-        require(_type == StackType.ADDRESS, "Stack: address type mismatch");
+        require(_type == StackType.ADDRESS, 'Stack: address type mismatch');
         return _address;
     }
 
