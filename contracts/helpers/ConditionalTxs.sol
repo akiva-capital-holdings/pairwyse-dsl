@@ -9,7 +9,6 @@ import { Storage } from './Storage.sol';
 
 import 'hardhat/console.sol';
 
-/*IConditionalTxs,*/
 contract ConditionalTxs is Storage {
     struct Tx {
         IContext transactionCtx;
@@ -21,7 +20,6 @@ contract ConditionalTxs is Storage {
     }
 
     mapping(bytes32 => Tx) public txs;
-    mapping(address => uint256) transfers;
 
     event NewTx(bytes32 txId);
 
@@ -52,11 +50,11 @@ contract ConditionalTxs is Storage {
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    function execTransaction(
+    function execTx(
         bytes32 txId,
         uint256 _msgValue /*onlyOwner*/
     ) external {
-        // console.log('execTransaction');
+        // console.log('execTx');
         Tx memory txn = txs[txId];
         require(checkCondition(txId, _msgValue), 'ConditionalTxs: txn condition is not satisfied');
         require(!txn.isExecuted, 'ConditionalTxs: txn already was executed');

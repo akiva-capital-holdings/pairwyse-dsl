@@ -79,7 +79,7 @@ contract Agreement {
 
     function fulfil(bytes32 _txId, uint256 _msgValue) internal returns (bool) {
         (IContext transactionCtx, , , , , ) = txs.txs(_txId);
-        txs.execTransaction(_txId, _msgValue);
+        txs.execTx(_txId, _msgValue);
         return transactionCtx.stack().seeLast().getUint256() == 0 ? false : true;
     }
 }
