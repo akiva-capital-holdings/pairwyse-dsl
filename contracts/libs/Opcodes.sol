@@ -7,7 +7,8 @@ import { IERC20 } from '../interfaces/IERC20.sol';
 import { StringUtils } from './StringUtils.sol';
 import { UnstructuredStorage } from './UnstructuredStorage.sol';
 import { StackValue } from '../helpers/Stack.sol';
-import 'hardhat/console.sol';
+
+// import 'hardhat/console.sol';
 
 library Opcodes {
     using UnstructuredStorage for bytes32;
@@ -232,22 +233,9 @@ library Opcodes {
             address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
         );
         uint256 amount = opUint256Get(_ctx);
-        // console.log("recipient:", recipient);
-        // console.log("amount:", amount);
         recipient.transfer(amount);
         putToStack(_ctx, 1);
     }
-
-    // function opReceiveEth(IContext _ctx) public {
-    //     address payable recipient = payable(
-    //         address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
-    //     );
-    //     uint256 amount = opUint256Get(_ctx);
-    //     // console.log("recipient:", recipient);
-    //     // console.log("amount:", amount);
-    //     recipient.transfer(amount);
-    //     putToStack(_ctx, 1);
-    // }
 
     function opTransfer(IContext _ctx) public {
         address token = opAddressGet(_ctx);
@@ -255,12 +243,6 @@ library Opcodes {
             address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
         );
         uint256 amount = opUint256Get(_ctx);
-        // console.log("token");
-        // console.log(token);
-        // console.log("recipient");
-        // console.log(recipient);
-        // console.log("amount");
-        // console.log(amount);
 
         IERC20(token).transfer(recipient, amount);
 
@@ -278,14 +260,6 @@ library Opcodes {
             address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
         );
         uint256 amount = opUint256Get(_ctx);
-        // console.log("token");
-        // console.log(token);
-        // console.log("from");
-        // console.log(from);
-        // console.log("to");
-        // console.log(to);
-        // console.log("amount");
-        // console.log(amount);
 
         IERC20(token).transferFrom(from, to, amount);
 
@@ -338,7 +312,6 @@ library Opcodes {
 
     function mustCall(address addr, bytes memory data) public {
         (bool success, ) = addr.delegatecall(data);
-        // if (!success) console.log("Opcodes: call not success");
         require(success, 'Opcodes: mustCall call not success');
     }
 
@@ -362,6 +335,7 @@ library Opcodes {
             abi.encodeWithSignature(_funcSignature, _varNameB32, _boolVal)
         );
         require(success, 'Opcodes: opSetLocal call not success');
+        putToStack(_ctx, 1);
     }
 
     function opLoadLocalGet(IContext _ctx, string memory funcSignature)
@@ -399,9 +373,6 @@ library Opcodes {
          */
         contractAddrB32 >>= 96;
 
-        // console.log("contractAddrB32");
-        // console.logBytes32(contractAddrB32);
-
         return address(uint160(uint256(contractAddrB32)));
     }
 
@@ -430,11 +401,7 @@ library Opcodes {
          */
         contractAddrB32 >>= 96;
 
-        // console.log("contractAddrB32");
-        // console.logBytes32(contractAddrB32);
-
         address contractAddr = address(uint160(uint256(contractAddrB32)));
-        // console.log("contractAddr =", contractAddr);
 
         // Load local value by it's hex
         (bool success, bytes memory data) = contractAddr.call(
@@ -447,8 +414,6 @@ library Opcodes {
         assembly {
             result := mload(add(data, 0x20))
         }
-
-        // console.log("variable =", uint256(result));
 
         putToStack(_ctx, uint256(result));
     }

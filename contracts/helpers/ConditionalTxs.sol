@@ -30,7 +30,7 @@ contract ConditionalTxs is Storage {
         string memory _transactionStr,
         string memory _conditionStr,
         IContext _transactionCtx,
-        IContext _conditionCtx /*onlyOwner*/
+        IContext _conditionCtx
     ) external returns (bytes32 txId) {
         Tx memory txn = Tx(
             _transactionCtx,
@@ -41,9 +41,6 @@ contract ConditionalTxs is Storage {
             _conditionStr
         );
 
-        _transactionCtx.setAppAddress(address(this));
-        _conditionCtx.setAppAddress(address(this));
-
         _conditionCtx.setOpcodesAddr(address(Opcodes));
         _transactionCtx.setOpcodesAddr(address(Opcodes));
 
@@ -53,17 +50,17 @@ contract ConditionalTxs is Storage {
     }
 
     // solhint-disable-next-line no-empty-blocks
-    receive() external payable {
-        // bytes4 _msgSender = bytes4(keccak256(abi.encodePacked(msg.sender)));
-        // uint256 _amount = getStorageUint256(_msgSender);
-        // setStorageUint256(_msgSender, _amount + msg.value);
-    }
+    receive() external payable {}
 
-    function execTransaction(bytes32 txId, uint256 _msgValue) external /*onlyOwner*/
-    {
+    function execTransaction(
+        bytes32 txId,
+        uint256 _msgValue /*onlyOwner*/
+    ) external {
+        // console.log('execTransaction');
         Tx memory txn = txs[txId];
         require(checkCondition(txId, _msgValue), 'ConditionalTxs: txn condition is not satisfied');
         require(!txn.isExecuted, 'ConditionalTxs: txn already was executed');
+
         txn.transactionCtx.setMsgValue(_msgValue);
         Executor.execute(txn.transactionCtx);
         txs[txId].isExecuted = true;
@@ -73,6 +70,7 @@ contract ConditionalTxs is Storage {
         bytes32 txId,
         uint256 _msgValue /*onlyOwner*/
     ) public returns (bool) {
+        // console.log('checkCondition');
         Tx memory txn = txs[txId];
         txn.conditionCtx.setMsgValue(_msgValue);
         Executor.execute(txn.conditionCtx);

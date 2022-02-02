@@ -1,6 +1,7 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { parseEther } from 'ethers/lib/utils';
 import { hex4Bytes } from './utils/utils';
 import { Agreement } from '../typechain/Agreement';
 import { Parser } from '../typechain/Parser';
@@ -66,7 +67,7 @@ describe('Agreement', () => {
     await agreement.update(signatory, transaction, condition);
 
     // Top up contract
-    const oneEthBN = ethers.utils.parseEther('1');
+    const oneEthBN = parseEther('1');
 
     await anybody.sendTransaction({ to: txsAddr, value: oneEthBN });
 
@@ -93,14 +94,17 @@ describe('Agreement', () => {
     );
   });
 
-  it.skip('Alice (borrower) and Bob (lender)', async () => {
-    const oneEth = ethers.utils.parseEther('1');
-    const tenTokens = ethers.utils.parseEther('10');
-    const token = await (
-      await ethers.getContractFactory('Token')
-    ).deploy(ethers.utils.parseEther('1000'));
+  it('Alice (borrower) and Bob (lender)', async () => {
+    const oneEth = parseEther('1');
+    const tenTokens = parseEther('10');
+    const token = await (await ethers.getContractFactory('Token'))
+      .connect(bob)
+      .deploy(parseEther('1000'));
 
-    const tokenAddrSub = token.address.substring(2);
+    // Set variables
+    await txs.setStorageAddress(hex4Bytes('TOKEN_ADDR'), token.address);
+    await txs.setStorageAddress(hex4Bytes('ALICE'), alice.address);
+    await txs.setStorageAddress(hex4Bytes('BOB'), bob.address);
 
     // TODO: 'setLocal address BORROWER = msgSender'
     const steps = [
@@ -108,36 +112,74 @@ describe('Agreement', () => {
       {
         signatory: alice.address,
         transaction: `
-          sendEth ADDRESS_THIS ${oneEth}
-          and setLocalBool BORROWER_DEPOSITED true
-        `,
-        condition: 'loadLocal bool BORROWER_DEPOSITED == false',
+              (msgValue == uint256 ${oneEth})
+          and (setLocalBool BORROWER_DEPOSITED true)`,
+        condition: 'loadLocal bool BORROWER_DEPOSITED == bool false',
       },
       // Bob lends 10 tokens to Alice
       {
         signatory: bob.address,
         transaction: `
-          transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}
-          and setLocalBool LENDER_DEPOSITED true
+              (transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()})
+          and (setLocalBool LENDER_DEPOSITED true)
         `,
         condition: `
-          loadLocal bool BORROWER_DEPOSITED == true
-          and loadLocal bool LENDER_DEPOSITED == false
+              (loadLocal bool BORROWER_DEPOSITED == bool true)
+          and (loadLocal bool LENDER_DEPOSITED == bool false)
         `,
       },
       // Alice returns 10 tokens to Bob and collects 1 ETH
       {
         signatory: alice.address,
         transaction: `
-          transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()}
-          and receiveEth ALICE ${oneEth}
-          and setLocalBool OBLIGATIONS_SETTLED true
+              (transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()})
+          and (sendEth ALICE ${oneEth})
+          and (setLocalBool OBLIGATIONS_SETTLED true)
         `,
         condition: `
-          loadLocal bool LENDER_DEPOSITED == true
-          and loadLocal bool OBLIGATIONS_SETTLED == false
+              (loadLocal bool LENDER_DEPOSITED == bool true)
+          and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
         `,
       },
     ];
+
+    // Add tx objects to Agreement
+    const txIds: string[] = [];
+    for await (const step of steps) {
+      txIds.push(
+        await agreement.callStatic.update(step.signatory, step.transaction, step.condition)
+      );
+      await agreement.update(step.signatory, step.transaction, step.condition);
+    }
+
+    // Alice deposits 1 ETH to SC
+    // await expect(agreement.connect(alice).execute(txIds[0], { value: 0 })).to.be.revertedWith(
+    //   'Agreement: tx fulfilment error'
+    // );
+    // await expect(
+    //   agreement.connect(alice).execute(txIds[0], { value: parseEther('2') })
+    // ).to.be.revertedWith('Agreement: tx fulfilment error');
+    // console.log('Alice deposits 1 ETH to SC');
+    await agreement.connect(alice).execute(txIds[0], { value: oneEth });
+    expect(await ethers.provider.getBalance(txsAddr)).to.equal(oneEth);
+
+    // Bob lends 10 tokens to Alice
+    // console.log('Bob lends 10 tokens to Alice');
+    await token.connect(bob).approve(txsAddr, tenTokens);
+    await expect(() => agreement.connect(bob).execute(txIds[1])).to.changeTokenBalance(
+      token,
+      alice,
+      tenTokens
+    );
+
+    // Alice returns 10 tokens to Bob and collects 1 ETH
+    // console.log('Alice returns 10 tokens to Bob and collects 1 ETH');
+    expect(await token.balanceOf(alice.address)).to.equal(tenTokens);
+    await token.connect(alice).approve(txsAddr, tenTokens);
+    await expect(await agreement.connect(alice).execute(txIds[2])).to.changeEtherBalance(
+      alice,
+      oneEth
+    );
+    expect(await token.balanceOf(alice.address)).to.equal(0);
   });
 });

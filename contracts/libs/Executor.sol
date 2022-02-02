@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { IContext } from '../interfaces/IContext.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 library Executor {
     function execute(IContext _ctx) public {
@@ -11,12 +11,12 @@ library Executor {
         while (_ctx.pc() < _ctx.program().length) {
             bytes memory opcodeBytes = _ctx.programAt(_ctx.pc(), 1);
             bytes1 opcodeByte1;
+
             // convert bytes to bytes1
             assembly {
                 opcodeByte1 := mload(add(opcodeBytes, 0x20))
             }
-            // console.log("opcodeBytes1");
-            // console.logBytes1(opcodeByte1);
+
             bytes4 selector = _ctx.selectorByOpcode(opcodeByte1);
             require(selector != 0x0, 'Executor: did not find selector for opcode');
             _ctx.incPc(1);

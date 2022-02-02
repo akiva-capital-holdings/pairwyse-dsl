@@ -1,5 +1,6 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
+import { parseEther } from 'ethers/lib/utils';
 import { App, Context, Parser, Stack, StackValue__factory } from '../../typechain';
 import { checkStack, checkStackTail, hex4Bytes } from '../utils/utils';
 
@@ -559,7 +560,7 @@ describe('DSL: basic', () => {
   });
 
   it('msgValue', async () => {
-    const oneEth = ethers.utils.parseEther('1');
+    const oneEth = parseEther('1');
     await app.parse('msgValue');
     await app.execute({ value: oneEth });
     await checkStack(StackValue, stack, 1, oneEth.toString());
@@ -568,16 +569,16 @@ describe('DSL: basic', () => {
   it('sendEth', async () => {
     const [vault, receiver] = await ethers.getSigners();
     await app.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
-    const oneEthBN = ethers.utils.parseEther('1');
+    const twoEth = parseEther('2');
 
-    await app.parse(`sendEth RECEIVER ${oneEthBN.toString()}`);
+    await app.parse(`sendEth RECEIVER ${twoEth.toString()}`);
 
     // No ETH on the contract
     await expect(app.execute()).to.be.revertedWith('Executor: call not success');
 
     // Enough ETH on the contract
-    await vault.sendTransaction({ to: app.address, value: oneEthBN });
-    await expect(await app.execute()).to.changeEtherBalance(receiver, oneEthBN);
+    await vault.sendTransaction({ to: app.address, value: twoEth });
+    await expect(await app.execute()).to.changeEtherBalance(receiver, twoEth);
     await checkStack(StackValue, stack, 1, 1);
   });
 
@@ -585,9 +586,9 @@ describe('DSL: basic', () => {
     const [, receiver] = await ethers.getSigners();
 
     const Token = await ethers.getContractFactory('Token');
-    const dai = await Token.deploy(ethers.utils.parseEther('1000'));
+    const dai = await Token.deploy(parseEther('1000'));
 
-    const oneDAI = ethers.utils.parseEther('1');
+    const oneDAI = parseEther('1');
     await dai.transfer(app.address, oneDAI);
     expect(await dai.balanceOf(app.address)).to.equal(oneDAI);
 
@@ -604,9 +605,9 @@ describe('DSL: basic', () => {
     const [owner, receiver] = await ethers.getSigners();
 
     const Token = await ethers.getContractFactory('Token');
-    const dai = await Token.deploy(ethers.utils.parseEther('1000'));
+    const dai = await Token.deploy(parseEther('1000'));
 
-    const oneDAI = ethers.utils.parseEther('1');
+    const oneDAI = parseEther('1');
     await dai.connect(owner).approve(app.address, oneDAI);
     expect(await dai.allowance(owner.address, app.address)).to.equal(oneDAI);
 

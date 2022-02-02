@@ -23,7 +23,13 @@ contract Agreement {
         address _signatory,
         string memory _transactionStr,
         string memory _conditionStr
-    ) external returns (bytes32 _txId) {
+    )
+        external
+        returns (
+            // bytes32[] memory _requiredTxs // txs required to be executed before this transaction can be executed
+            bytes32 _txId
+        )
+    {
         Context _transactionCtx = new Context();
         Context _conditionCtx = new Context();
 
@@ -31,12 +37,16 @@ contract Agreement {
         parser.initOpcodes(_transactionCtx);
         parser.initOpcodes(_conditionCtx);
 
+        _transactionCtx.setAppAddress(address(txs));
+        _conditionCtx.setAppAddress(address(txs));
+
         _txId = txs.addTx(
             _signatory,
             _transactionStr,
             _conditionStr,
             _transactionCtx,
             _conditionCtx
+            // _requiredTxs
         );
 
         // _transactionCtx.setMsgSender(msg.sender);
@@ -50,6 +60,7 @@ contract Agreement {
     }
 
     function execute(bytes32 _txId) external payable {
+        payable(txs).transfer(msg.value);
         require(verify(_txId), 'Agreement: bad tx signatory');
         require(validate(_txId, msg.value), 'Agreement: tx condition is not satisfied');
         require(fulfil(_txId, msg.value), 'Agreement: tx fulfilment error');
