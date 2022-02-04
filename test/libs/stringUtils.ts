@@ -51,8 +51,10 @@ describe('StringUtils', () => {
   });
 
   it('toUint256', async () => {
-    await expect(app.toUint256('/')).to.be.revertedWith('String: non-decimal character'); // hex 0x29
-    await expect(app.toUint256(':')).to.be.revertedWith('String: non-decimal character'); // hex 0x3A
+    // hex 0x29
+    await expect(app.toUint256('/')).to.be.revertedWith('String: non-decimal character');
+    // hex 0x3A
+    await expect(app.toUint256(':')).to.be.revertedWith('String: non-decimal character');
     expect(await app.toUint256('')).to.equal('0');
     expect(await app.toUint256('0')).to.equal('0');
     expect(await app.toUint256('9')).to.equal('9');

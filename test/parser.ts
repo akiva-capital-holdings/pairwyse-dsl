@@ -70,7 +70,7 @@ describe('Parser', () => {
       await expect(app.parse(ctxAddr, 'unknownExpr')).to.be.revertedWith(
         "Parser: 'unknownExpr' command is unknown"
       );
-      await expect(app.parse(ctxAddr, '?!')).to.be.revertedWith("Parser: '?!' command is unknown");
+      await expect(app.parse(ctxAddr, '?!')).to.be.revertedWith('Parser: "?!" command is unknown');
     });
   });
 });

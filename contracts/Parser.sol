@@ -180,7 +180,7 @@ contract Parser is IParser, Storage {
     function parseOpcodeWithParams(IContext _ctx) internal {
         string storage cmd = nextCmd();
         bytes1 opcode = _ctx.opCodeByName(cmd);
-        require(opcode != 0x0, string(abi.encodePacked("Parser: '", cmd, "' command is unknown")));
+        require(opcode != 0x0, string(abi.encodePacked('Parser: "', cmd, '" command is unknown')));
         program = bytes.concat(program, opcode);
 
         bytes4 selector = _ctx.asmSelectors(cmd);
