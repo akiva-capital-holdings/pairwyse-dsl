@@ -11,6 +11,8 @@ interface IContext {
 
     function pc() external returns (uint256);
 
+    function nextpc() external returns (uint256);
+
     function appAddress() external returns (address);
 
     function msgSender() external returns (address);
@@ -64,6 +66,8 @@ interface IContext {
     ) external pure returns (bytes memory);
 
     function setPc(uint256 _pc) external;
+
+    function setNextPc(uint256 _nextpc) external;
 
     function incPc(uint256 _val) external;
 

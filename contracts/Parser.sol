@@ -70,20 +70,24 @@ contract Parser is IParser, Storage {
         );
         _ctx.addOpcode('msgValue', 0x22, Opcodes.opMsgValue.selector, 0x0);
 
-        // Complex Opcodes with sub Opcodes (branches)
-        string memory name = 'loadLocal';
-        _ctx.addOpcode(name, 0x1b, Opcodes.opLoadLocalAny.selector, this.asmLoadLocal.selector);
-        _ctx.addOpcodeBranch(name, 'uint256', 0x01, Opcodes.opLoadLocalUint256.selector);
-        _ctx.addOpcodeBranch(name, 'bool', 0x02, Opcodes.opLoadLocalBool.selector);
-        _ctx.addOpcodeBranch(name, 'address', 0x03, Opcodes.opLoadLocalAddress.selector);
-        _ctx.addOpcodeBranch(name, 'bytes32', 0x04, Opcodes.opLoadLocalBytes32.selector);
+        // Branching (bnz = branch non-zero)
+        _ctx.addOpcode('bnz', 0x23, Opcodes.opBnz.selector, 0x0);
+        _ctx.addOpcode('end', 0x24, Opcodes.opEnd.selector, 0x0);
 
-        name = 'loadRemote';
-        _ctx.addOpcode(name, 0x1c, Opcodes.opLoadRemoteAny.selector, this.asmLoadRemote.selector);
-        _ctx.addOpcodeBranch(name, 'uint256', 0x01, Opcodes.opLoadRemoteUint256.selector);
-        _ctx.addOpcodeBranch(name, 'bool', 0x02, Opcodes.opLoadRemoteBool.selector);
-        _ctx.addOpcodeBranch(name, 'address', 0x03, Opcodes.opLoadRemoteAddress.selector);
-        _ctx.addOpcodeBranch(name, 'bytes32', 0x04, Opcodes.opLoadRemoteBytes32.selector);
+        // // Complex Opcodes with sub Opcodes (branches)
+        // string memory name = 'loadLocal';
+        // _ctx.addOpcode(name, 0x1b, Opcodes.opLoadLocalAny.selector, this.asmLoadLocal.selector);
+        // _ctx.addOpcodeBranch(name, 'uint256', 0x01, Opcodes.opLoadLocalUint256.selector);
+        // _ctx.addOpcodeBranch(name, 'bool', 0x02, Opcodes.opLoadLocalBool.selector);
+        // _ctx.addOpcodeBranch(name, 'address', 0x03, Opcodes.opLoadLocalAddress.selector);
+        // _ctx.addOpcodeBranch(name, 'bytes32', 0x04, Opcodes.opLoadLocalBytes32.selector);
+
+        // name = 'loadRemote';
+        // _ctx.addOpcode(name, 0x1c, Opcodes.opLoadRemoteAny.selector, this.asmLoadRemote.selector);
+        // _ctx.addOpcodeBranch(name, 'uint256', 0x01, Opcodes.opLoadRemoteUint256.selector);
+        // _ctx.addOpcodeBranch(name, 'bool', 0x02, Opcodes.opLoadRemoteBool.selector);
+        // _ctx.addOpcodeBranch(name, 'address', 0x03, Opcodes.opLoadRemoteAddress.selector);
+        // _ctx.addOpcodeBranch(name, 'bytes32', 0x04, Opcodes.opLoadRemoteBytes32.selector);
     }
 
     /**

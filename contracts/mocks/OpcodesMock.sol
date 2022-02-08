@@ -10,11 +10,11 @@ import 'hardhat/console.sol';
 
 contract OpcodesMock {
     function opLoadLocalAny(IContext _ctx) public {
-        Opcodes.opLoadLocalAny(_ctx);
+        // Opcodes.opLoadLocalAny(_ctx); // todo: uncomment
     }
 
     function opLoadRemoteAny(IContext _ctx) public {
-        Opcodes.opLoadRemoteAny(_ctx);
+        // Opcodes.opLoadRemoteAny(_ctx); // todo: uncomment
     }
 
     /**
@@ -110,35 +110,35 @@ contract OpcodesMock {
     }
 
     function opLoadLocalUint256(IContext _ctx) public {
-        Opcodes.opLoadLocalUint256(_ctx);
+        // Opcodes.opLoadLocalUint256(_ctx); // todo: uncomment
     }
 
     function opLoadLocalBytes32(IContext _ctx) public {
-        Opcodes.opLoadLocalBytes32(_ctx);
+        // Opcodes.opLoadLocalBytes32(_ctx); // todo: uncomment
     }
 
     function opLoadLocalBool(IContext _ctx) public {
-        Opcodes.opLoadLocalBool(_ctx);
+        // Opcodes.opLoadLocalBool(_ctx); // todo: uncomment
     }
 
     function opLoadLocalAddress(IContext _ctx) public {
-        Opcodes.opLoadLocalAddress(_ctx);
+        // Opcodes.opLoadLocalAddress(_ctx); // todo: uncomment
     }
 
     function opLoadRemoteUint256(IContext _ctx) public {
-        Opcodes.opLoadRemoteUint256(_ctx);
+        // Opcodes.opLoadRemoteUint256(_ctx); // todo: uncomment
     }
 
     function opLoadRemoteBytes32(IContext _ctx) public {
-        Opcodes.opLoadRemoteBytes32(_ctx);
+        // Opcodes.opLoadRemoteBytes32(_ctx); // todo: uncomment
     }
 
     function opLoadRemoteBool(IContext _ctx) public {
-        Opcodes.opLoadRemoteBool(_ctx);
+        // Opcodes.opLoadRemoteBool(_ctx); // todo: uncomment
     }
 
     function opLoadRemoteAddress(IContext _ctx) public {
-        Opcodes.opLoadRemoteAddress(_ctx);
+        // Opcodes.opLoadRemoteAddress(_ctx); // todo: uncomment
     }
 
     function opBool(IContext _ctx) public {
@@ -179,7 +179,7 @@ contract OpcodesMock {
         public
         returns (bytes32 result)
     {
-        return Opcodes.opLoadLocalGet(_ctx, funcSignature);
+        // return Opcodes.opLoadLocalGet(_ctx, funcSignature); // todo: uncomment
     }
 
     // function opAddressGet(IContext _ctx) private returns (address) {}
@@ -187,6 +187,6 @@ contract OpcodesMock {
     // function opLoadLocal(IContext _ctx, string memory funcSignature) private {}
 
     function opLoadRemote(IContext _ctx, string memory funcSignature) public {
-        Opcodes.opLoadRemote(_ctx, funcSignature);
+        // Opcodes.opLoadRemote(_ctx, funcSignature); // todo: uncomment
     }
 }

@@ -5,7 +5,7 @@ import { Contract } from 'ethers';
 import { ethers } from 'hardhat';
 import { Context, StackValue__factory, Stack, Parser } from '../../typechain';
 import { ExecutorMock } from '../../typechain/ExecutorMock';
-import { checkStack, hex4Bytes } from '../utils/utils';
+import { checkStack, checkStackTail, hex4Bytes } from '../utils/utils';
 
 describe('Executor', () => {
   let ctx: Context;
@@ -72,6 +72,55 @@ describe('Executor', () => {
     it('error: call not success', async () => {
       await ctx.setProgram('0x05');
       await expect(app.execute(ctxAddr)).to.be.revertedWith('Executor: call not success');
+    });
+
+    describe.only('if-else', () => {
+      const ONE = new Array(64).join('0') + 1;
+      const TWO = new Array(64).join('0') + 2;
+      const THREE = new Array(64).join('0') + 3;
+
+      it('nothing in the stack', async () => {
+        const programTrue = `0x 23 0022 0044  1a ${ONE} 24  1a ${TWO} 24  1a ${THREE}`
+          .split(' ')
+          .filter((x) => !!x)
+          .join('');
+
+        await ctx.setProgram(programTrue);
+        await app.execute(ctxAddr);
+        await checkStackTail(StackValue, stack, 2, [2, 3]);
+      });
+
+      it('if condition is true', async () => {
+        /**
+         * 18 bool
+         * 01 true
+         * 0004 offset of the `false` branch
+         * 0026 offset of the body
+         * 1a uint256
+         * ONE, TWO, THREE - just a uint256 number
+         * 23 bnz
+         * 24 end
+         */
+        const programTrue = `0x 18 01 23 0022 0044  1a ${ONE} 24  1a ${TWO} 24  1a ${THREE}`
+          .split(' ')
+          .filter((x) => !!x)
+          .join('');
+
+        await ctx.setProgram(programTrue);
+        await app.execute(ctxAddr);
+        await checkStackTail(StackValue, stack, 2, [1, 3]);
+      });
+
+      it('if condition is false', async () => {
+        const programFalse = `0x 18 00 23 0022 0044  1a ${ONE} 24  1a ${TWO} 24  1a ${THREE}`
+          .split(' ')
+          .filter((x) => !!x)
+          .join('');
+
+        await ctx.setProgram(programFalse);
+        await app.execute(ctxAddr);
+        await checkStackTail(StackValue, stack, 2, [2, 3]);
+      });
     });
 
     it('blockNumber', async () => {

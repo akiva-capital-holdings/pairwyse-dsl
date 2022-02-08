@@ -12,6 +12,7 @@ contract Context is IContext {
     Stack public stack;
     bytes public program;
     uint256 public pc;
+    uint256 public nextpc;
     address public appAddress;
     address public msgSender;
     address public opcodes;
@@ -93,6 +94,10 @@ contract Context is IContext {
 
     function setPc(uint256 _pc) public {
         pc = _pc;
+    }
+
+    function setNextPc(uint256 _nextpc) public {
+        nextpc = _nextpc;
     }
 
     function incPc(uint256 _val) public {

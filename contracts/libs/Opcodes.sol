@@ -14,17 +14,17 @@ library Opcodes {
     using UnstructuredStorage for bytes32;
     using StringUtils for string;
 
-    function opLoadLocalAny(IContext _ctx) public {
-        address libAddr = _ctx.opcodes();
-        bytes4 selector = nextBranchSelector(_ctx, 'loadLocal');
-        mustCall(libAddr, abi.encodeWithSelector(selector, _ctx));
-    }
+    // function opLoadLocalAny(IContext _ctx) public {
+    //     address libAddr = _ctx.opcodes();
+    //     bytes4 selector = nextBranchSelector(_ctx, 'loadLocal');
+    //     mustCall(libAddr, abi.encodeWithSelector(selector, _ctx));
+    // }
 
-    function opLoadRemoteAny(IContext _ctx) public {
-        address libAddr = _ctx.opcodes();
-        bytes4 selector = nextBranchSelector(_ctx, 'loadRemote');
-        mustCall(libAddr, abi.encodeWithSelector(selector, _ctx));
-    }
+    // function opLoadRemoteAny(IContext _ctx) public {
+    //     address libAddr = _ctx.opcodes();
+    //     bytes4 selector = nextBranchSelector(_ctx, 'loadRemote');
+    //     mustCall(libAddr, abi.encodeWithSelector(selector, _ctx));
+    // }
 
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if they are equal.
@@ -187,37 +187,69 @@ library Opcodes {
         opSetLocal(_ctx, 'setStorageBool(bytes32,bool)');
     }
 
-    function opLoadLocalUint256(IContext _ctx) public {
-        opLoadLocal(_ctx, 'getStorageUint256(bytes32)');
+    function opBnz(IContext _ctx) public {
+        // console.log('opBnz');
+        if (_ctx.stack().length() == 0) {
+            // console.log('notihing in the stack');
+            putToStack(_ctx, 0); // for if-else condition to work all the time
+        }
+
+        StackValue last = _ctx.stack().pop();
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type in the stack');
+
+        uint16 _offsetFalseBranch = opUint16Get(_ctx);
+        // console.log('offset (false) =', _offsetFalseBranch);
+        uint16 _offsetCode = opUint16Get(_ctx);
+        // console.log('offset (code) =', _offsetCode);
+
+        // console.log('pc =', _ctx.pc());
+        _ctx.setNextPc(_ctx.pc() + _offsetCode);
+
+        if (last.getUint256() > 0) {
+            // console.log('if condition is true');
+            _ctx.setPc(_ctx.pc());
+        } else {
+            // console.log('if condition is false');
+            _ctx.setPc(_ctx.pc() + _offsetFalseBranch);
+        }
     }
 
-    function opLoadLocalBytes32(IContext _ctx) public {
-        opLoadLocal(_ctx, 'getStorageBytes32(bytes32)');
+    function opEnd(IContext _ctx) public {
+        _ctx.setPc(_ctx.nextpc());
+        _ctx.setNextPc(0);
     }
 
-    function opLoadLocalBool(IContext _ctx) public {
-        opLoadLocal(_ctx, 'getStorageBool(bytes32)');
-    }
+    // function opLoadLocalUint256(IContext _ctx) public {
+    //     opLoadLocal(_ctx, 'getStorageUint256(bytes32)');
+    // }
 
-    function opLoadLocalAddress(IContext _ctx) public {
-        opLoadLocal(_ctx, 'getStorageAddress(bytes32)');
-    }
+    // function opLoadLocalBytes32(IContext _ctx) public {
+    //     opLoadLocal(_ctx, 'getStorageBytes32(bytes32)');
+    // }
 
-    function opLoadRemoteUint256(IContext _ctx) public {
-        opLoadRemote(_ctx, 'getStorageUint256(bytes32)');
-    }
+    // function opLoadLocalBool(IContext _ctx) public {
+    //     opLoadLocal(_ctx, 'getStorageBool(bytes32)');
+    // }
 
-    function opLoadRemoteBytes32(IContext _ctx) public {
-        opLoadRemote(_ctx, 'getStorageBytes32(bytes32)');
-    }
+    // function opLoadLocalAddress(IContext _ctx) public {
+    //     opLoadLocal(_ctx, 'getStorageAddress(bytes32)');
+    // }
 
-    function opLoadRemoteBool(IContext _ctx) public {
-        opLoadRemote(_ctx, 'getStorageBool(bytes32)');
-    }
+    // function opLoadRemoteUint256(IContext _ctx) public {
+    //     opLoadRemote(_ctx, 'getStorageUint256(bytes32)');
+    // }
 
-    function opLoadRemoteAddress(IContext _ctx) public {
-        opLoadRemote(_ctx, 'getStorageAddress(bytes32)');
-    }
+    // function opLoadRemoteBytes32(IContext _ctx) public {
+    //     opLoadRemote(_ctx, 'getStorageBytes32(bytes32)');
+    // }
+
+    // function opLoadRemoteBool(IContext _ctx) public {
+    //     opLoadRemote(_ctx, 'getStorageBool(bytes32)');
+    // }
+
+    // function opLoadRemoteAddress(IContext _ctx) public {
+    //     opLoadRemote(_ctx, 'getStorageAddress(bytes32)');
+    // }
 
     function opBool(IContext _ctx) public {
         bytes memory data = nextBytes(_ctx, 1);
@@ -229,41 +261,49 @@ library Opcodes {
     }
 
     function opSendEth(IContext _ctx) public {
-        address payable recipient = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
-        );
-        uint256 amount = opUint256Get(_ctx);
-        recipient.transfer(amount);
-        putToStack(_ctx, 1);
+        // address payable recipient = payable(
+        //     address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        // );
+        // uint256 amount = opUint256Get(_ctx);
+        // recipient.transfer(amount);
+        // putToStack(_ctx, 1);
     }
 
     function opTransfer(IContext _ctx) public {
-        address token = opAddressGet(_ctx);
-        address payable recipient = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
-        );
-        uint256 amount = opUint256Get(_ctx);
-
-        IERC20(token).transfer(recipient, amount);
-
-        putToStack(_ctx, 1);
+        // address token = opAddressGet(_ctx);
+        // address payable recipient = payable(
+        //     address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        // );
+        // uint256 amount = opUint256Get(_ctx);
+        // IERC20(token).transfer(recipient, amount);
+        // putToStack(_ctx, 1);
     }
 
     function opTransferFrom(IContext _ctx) public {
-        address payable token = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
-        );
-        address payable from = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
-        );
-        address payable to = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
-        );
-        uint256 amount = opUint256Get(_ctx);
+        // address payable token = payable(
+        //     address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        // );
+        // address payable from = payable(
+        //     address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        // );
+        // address payable to = payable(
+        //     address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        // );
+        // uint256 amount = opUint256Get(_ctx);
+        // IERC20(token).transferFrom(from, to, amount);
+        // putToStack(_ctx, 1);
+    }
 
-        IERC20(token).transferFrom(from, to, amount);
+    function opUint16Get(IContext _ctx) public returns (uint16) {
+        bytes memory data = nextBytes(_ctx, 2);
 
-        putToStack(_ctx, 1);
+        // Convert bytes to bytes8
+        bytes2 result;
+        assembly {
+            result := mload(add(data, 0x20))
+        }
+
+        return uint16(result);
     }
 
     function opUint256Get(IContext _ctx) public returns (uint256) {
@@ -338,23 +378,23 @@ library Opcodes {
         putToStack(_ctx, 1);
     }
 
-    function opLoadLocalGet(IContext _ctx, string memory funcSignature)
-        public
-        returns (bytes32 result)
-    {
-        bytes32 varNameB32 = getNextBytes(_ctx, 4);
+    // function opLoadLocalGet(IContext _ctx, string memory funcSignature)
+    //     public
+    //     returns (bytes32 result)
+    // {
+    //     bytes32 varNameB32 = getNextBytes(_ctx, 4);
 
-        // Load local variable by it's hex
-        (bool success, bytes memory data) = _ctx.appAddress().call(
-            abi.encodeWithSignature(funcSignature, varNameB32)
-        );
-        require(success, 'Opcodes: opLoadLocal call not success');
+    //     // Load local variable by it's hex
+    //     (bool success, bytes memory data) = _ctx.appAddress().call(
+    //         abi.encodeWithSignature(funcSignature, varNameB32)
+    //     );
+    //     require(success, 'Opcodes: opLoadLocal call not success');
 
-        // Convert bytes to bytes32
-        assembly {
-            result := mload(add(data, 0x20))
-        }
-    }
+    //     // Convert bytes to bytes32
+    //     assembly {
+    //         result := mload(add(data, 0x20))
+    //     }
+    // }
 
     function opAddressGet(IContext _ctx) public returns (address) {
         bytes memory contractAddrBytes = nextBytes(_ctx, 20);
@@ -376,45 +416,45 @@ library Opcodes {
         return address(uint160(uint256(contractAddrB32)));
     }
 
-    function opLoadLocal(IContext _ctx, string memory funcSignature) public {
-        bytes32 result = opLoadLocalGet(_ctx, funcSignature);
-        putToStack(_ctx, uint256(result));
-    }
+    // function opLoadLocal(IContext _ctx, string memory funcSignature) public {
+    //     bytes32 result = opLoadLocalGet(_ctx, funcSignature);
+    //     putToStack(_ctx, uint256(result));
+    // }
 
-    function opLoadRemote(IContext _ctx, string memory funcSignature) public {
-        bytes memory varName = nextBytes(_ctx, 4);
-        bytes memory contractAddrBytes = nextBytes(_ctx, 20);
+    // function opLoadRemote(IContext _ctx, string memory funcSignature) public {
+    //     bytes memory varName = nextBytes(_ctx, 4);
+    //     bytes memory contractAddrBytes = nextBytes(_ctx, 20);
 
-        // Convert bytes to bytes32
-        bytes32 varNameB32;
-        bytes32 contractAddrB32;
-        assembly {
-            varNameB32 := mload(add(varName, 0x20))
-            contractAddrB32 := mload(add(contractAddrBytes, 0x20))
-        }
-        /**
-         * Shift bytes to the left so that
-         * 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512000000000000000000000000
-         * transforms into
-         * 0x000000000000000000000000e7f1725e7734ce288f8367e1bb143e90bb3f0512
-         * This is needed to later conversion from bytes32 to address
-         */
-        contractAddrB32 >>= 96;
+    //     // Convert bytes to bytes32
+    //     bytes32 varNameB32;
+    //     bytes32 contractAddrB32;
+    //     assembly {
+    //         varNameB32 := mload(add(varName, 0x20))
+    //         contractAddrB32 := mload(add(contractAddrBytes, 0x20))
+    //     }
+    //     /**
+    //      * Shift bytes to the left so that
+    //      * 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512000000000000000000000000
+    //      * transforms into
+    //      * 0x000000000000000000000000e7f1725e7734ce288f8367e1bb143e90bb3f0512
+    //      * This is needed to later conversion from bytes32 to address
+    //      */
+    //     contractAddrB32 >>= 96;
 
-        address contractAddr = address(uint160(uint256(contractAddrB32)));
+    //     address contractAddr = address(uint160(uint256(contractAddrB32)));
 
-        // Load local value by it's hex
-        (bool success, bytes memory data) = contractAddr.call(
-            abi.encodeWithSignature(funcSignature, varNameB32)
-        );
-        require(success, 'Opcodes: opLoadRemote call not success');
+    //     // Load local value by it's hex
+    //     (bool success, bytes memory data) = contractAddr.call(
+    //         abi.encodeWithSignature(funcSignature, varNameB32)
+    //     );
+    //     require(success, 'Opcodes: opLoadRemote call not success');
 
-        // Convert bytes to bytes32
-        bytes32 result;
-        assembly {
-            result := mload(add(data, 0x20))
-        }
+    //     // Convert bytes to bytes32
+    //     bytes32 result;
+    //     assembly {
+    //         result := mload(add(data, 0x20))
+    //     }
 
-        putToStack(_ctx, uint256(result));
-    }
+    //     putToStack(_ctx, uint256(result));
+    // }
 }
