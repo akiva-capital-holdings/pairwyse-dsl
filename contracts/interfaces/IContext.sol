@@ -4,6 +4,13 @@ pragma solidity ^0.8.0;
 import '../helpers/Stack.sol';
 
 interface IContext {
+    enum OpcodeLibNames {
+        ComparatorOpcodes,
+        LogicalOpcodes,
+        SetOpcodes,
+        OtherOpcodes
+    }
+
     // Variables
     function stack() external returns (Stack);
 
@@ -17,13 +24,21 @@ interface IContext {
 
     function msgSender() external returns (address);
 
-    function opcodes() external returns (address);
+    function comparatorOpcodes() external returns (address);
+
+    function logicalOpcodes() external returns (address);
+
+    function setOpcodes() external returns (address);
+
+    function otherOpcodes() external returns (address);
 
     function msgValue() external returns (uint256);
 
     function opCodeByName(string memory _name) external returns (bytes1 _opcode);
 
     function selectorByOpcode(bytes1 _opcode) external returns (bytes4 _selecotor);
+
+    function opcodeLibNameByOpcode(bytes1 _opcode) external returns (OpcodeLibNames _name);
 
     function asmSelectors(string memory _name) external returns (bytes4 _selecotor);
 
@@ -39,13 +54,20 @@ interface IContext {
 
     // Functions
 
-    function setOpcodesAddr(address _opcodes) external;
+    function setComparatorOpcodesAddr(address _opcodes) external;
+
+    function setLogicalOpcodesAddr(address _opcodes) external;
+
+    function setSetOpcodesAddr(address _opcodes) external;
+
+    function setOtherOpcodesAddr(address _opcodes) external;
 
     function addOpcode(
         string memory _name,
         bytes1 _opcode,
         bytes4 _opSelector,
-        bytes4 _asmSelector
+        bytes4 _asmSelector,
+        OpcodeLibNames _libName
     ) external;
 
     function addOpcodeBranch(

@@ -15,11 +15,15 @@ contract Context is IContext {
     uint256 public nextpc;
     address public appAddress;
     address public msgSender;
-    address public opcodes;
+    address public comparatorOpcodes;
+    address public logicalOpcodes;
+    address public setOpcodes;
+    address public otherOpcodes;
     uint256 public msgValue;
 
     mapping(string => bytes1) public opCodeByName; // name => hex
     mapping(bytes1 => bytes4) public selectorByOpcode;
+    mapping(bytes1 => OpcodeLibNames) public opcodeLibNameByOpcode;
     mapping(string => bytes4) public asmSelectors;
 
     // baseOpName -> branchCode -> selector
@@ -37,15 +41,28 @@ contract Context is IContext {
         stack = new Stack();
     }
 
-    function setOpcodesAddr(address _opcodes) public {
-        opcodes = _opcodes;
+    function setComparatorOpcodesAddr(address _comparatorOpcodes) public {
+        comparatorOpcodes = _comparatorOpcodes;
+    }
+
+    function setLogicalOpcodesAddr(address _logicalOpcodes) public {
+        logicalOpcodes = _logicalOpcodes;
+    }
+
+    function setSetOpcodesAddr(address _setOpcodes) public {
+        setOpcodes = _setOpcodes;
+    }
+
+    function setOtherOpcodesAddr(address _otherOpcodes) public {
+        otherOpcodes = _otherOpcodes;
     }
 
     function addOpcode(
         string memory _name,
         bytes1 _opcode,
         bytes4 _opSelector,
-        bytes4 _asmSelector
+        bytes4 _asmSelector,
+        OpcodeLibNames _libName
     ) public {
         require(_opSelector != bytes4(0), 'Context: empty opcode selector');
         require(
@@ -54,6 +71,7 @@ contract Context is IContext {
         );
         opCodeByName[_name] = _opcode;
         selectorByOpcode[_opcode] = _opSelector;
+        opcodeLibNameByOpcode[_opcode] = _libName;
         asmSelectors[_name] = _asmSelector;
     }
 

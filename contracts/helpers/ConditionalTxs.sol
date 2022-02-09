@@ -3,7 +3,10 @@ pragma solidity ^0.8.0;
 
 // import { IConditionalTxs } from '../interfaces/IConditionalTxs.sol';
 import { IContext } from '../interfaces/IContext.sol';
-import { Opcodes } from '../libs/Opcodes.sol';
+import { ComparatorOpcodes } from '../libs/opcodes/ComparatorOpcodes.sol';
+import { LogicalOpcodes } from '../libs/opcodes/LogicalOpcodes.sol';
+import { SetOpcodes } from '../libs/opcodes/SetOpcodes.sol';
+import { OtherOpcodes } from '../libs/opcodes/OtherOpcodes.sol';
 import { Executor } from '../libs/Executor.sol';
 import { Storage } from './Storage.sol';
 
@@ -39,8 +42,15 @@ contract ConditionalTxs is Storage {
             _conditionStr
         );
 
-        _conditionCtx.setOpcodesAddr(address(Opcodes));
-        _transactionCtx.setOpcodesAddr(address(Opcodes));
+        _conditionCtx.setComparatorOpcodesAddr(address(ComparatorOpcodes));
+        _conditionCtx.setLogicalOpcodesAddr(address(LogicalOpcodes));
+        _conditionCtx.setSetOpcodesAddr(address(SetOpcodes));
+        _conditionCtx.setOtherOpcodesAddr(address(OtherOpcodes));
+
+        _transactionCtx.setComparatorOpcodesAddr(address(ComparatorOpcodes));
+        _transactionCtx.setLogicalOpcodesAddr(address(LogicalOpcodes));
+        _transactionCtx.setSetOpcodesAddr(address(SetOpcodes));
+        _transactionCtx.setOtherOpcodesAddr(address(OtherOpcodes));
 
         txId = hashTx(_signatory, _transactionStr, _conditionStr);
         txs[txId] = txn;

@@ -31,9 +31,37 @@ describe('End-to-end', () => {
     // Create StackValue Factory instance
     StackValue = await ethers.getContractFactory('StackValue');
 
-    // Deploy StringUtils library
+    // Deploy libraries
+    const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
+    const comparatorOpcodesLib = await (
+      await ethers.getContractFactory('ComparatorOpcodes', {
+        libraries: {
+          OpcodeHelpers: opcodeHelpersLib.address,
+        },
+      })
+    ).deploy();
+    const logicalOpcodesLib = await (
+      await ethers.getContractFactory('LogicalOpcodes', {
+        libraries: {
+          OpcodeHelpers: opcodeHelpersLib.address,
+        },
+      })
+    ).deploy();
+    const setOpcodesLib = await (
+      await ethers.getContractFactory('SetOpcodes', {
+        libraries: {
+          OpcodeHelpers: opcodeHelpersLib.address,
+        },
+      })
+    ).deploy();
+    const otherOpcodesLib = await (
+      await ethers.getContractFactory('OtherOpcodes', {
+        libraries: {
+          OpcodeHelpers: opcodeHelpersLib.address,
+        },
+      })
+    ).deploy();
     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
-    const opcodesLib = await (await ethers.getContractFactory('Opcodes')).deploy();
     const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
 
     // Deploy Parser
@@ -45,7 +73,10 @@ describe('End-to-end', () => {
 
     // Deploy Context & setup
     ctx = await (await ethers.getContractFactory('Context')).deploy();
-    await ctx.setOpcodesAddr(opcodesLib.address);
+    await ctx.setComparatorOpcodesAddr(comparatorOpcodesLib.address);
+    await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
+    await ctx.setSetOpcodesAddr(setOpcodesLib.address);
+    await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');

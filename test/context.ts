@@ -5,6 +5,13 @@ import { Context } from '../typechain';
 describe('Context', () => {
   let app: Context;
 
+  enum OpcodeLibNames {
+    ComparatorOpcodes,
+    LogicalOpcodes,
+    SetOpcodes,
+    OtherOpcodes,
+  }
+
   beforeEach(async () => {
     const ContextCont = await ethers.getContractFactory('Context');
     app = await ContextCont.deploy();
@@ -12,25 +19,31 @@ describe('Context', () => {
 
   describe('addOpcode', () => {
     it('error: empty opcode selector', async () => {
-      await expect(app.addOpcode('+', '0x01', '0x00000000', '0x00000000')).to.be.revertedWith(
-        'Context: empty opcode selector'
-      );
+      await expect(
+        app.addOpcode('+', '0x01', '0x00000000', '0x00000000', OpcodeLibNames.ComparatorOpcodes)
+      ).to.be.revertedWith('Context: empty opcode selector');
     });
     it('error: duplicate opcode', async () => {
-      await app.addOpcode('+', '0x01', '0x00000001', '0x00000000');
-      await expect(app.addOpcode('+', '0x02', '0x00000001', '0x00000000')).to.be.revertedWith(
-        'Context: duplicate opcode name or code'
+      await app.addOpcode(
+        '+',
+        '0x01',
+        '0x00000001',
+        '0x00000000',
+        OpcodeLibNames.ComparatorOpcodes
       );
-      await expect(app.addOpcode('*', '0x01', '0x00000001', '0x00000000')).to.be.revertedWith(
-        'Context: duplicate opcode name or code'
-      );
+      await expect(
+        app.addOpcode('+', '0x02', '0x00000001', '0x00000000', OpcodeLibNames.ComparatorOpcodes)
+      ).to.be.revertedWith('Context: duplicate opcode name or code');
+      await expect(
+        app.addOpcode('*', '0x01', '0x00000001', '0x00000000', OpcodeLibNames.ComparatorOpcodes)
+      ).to.be.revertedWith('Context: duplicate opcode name or code');
     });
     it('success', async () => {
       const name = '+';
       const opcode = '0x01';
       const opSelector = '0x00000001';
       const asmSelector = '0x00000000';
-      await app.addOpcode(name, opcode, opSelector, asmSelector);
+      await app.addOpcode(name, opcode, opSelector, asmSelector, OpcodeLibNames.ComparatorOpcodes);
       expect(await app.opCodeByName(name)).to.equal(opcode);
       expect(await app.selectorByOpcode(opcode)).to.equal(opSelector);
       expect(await app.asmSelectors(name)).to.equal(asmSelector);

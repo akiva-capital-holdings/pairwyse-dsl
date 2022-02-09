@@ -9,9 +9,9 @@ import { StringUtils } from './libs/StringUtils.sol';
 contract Preprocessor {
     using StringUtils for string;
 
-    mapping(string => uint256) internal opsPriors;
+    mapping(string => uint256) internal opsPriors; // todo: move to Context
     string[] internal result;
-    string[] public operators;
+    string[] public operators; // todo: move to Context
 
     // Note: bigger number => bigger priority
     function addOperator(string memory _op, uint256 _priority) external {

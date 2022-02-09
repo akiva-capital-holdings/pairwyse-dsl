@@ -17,12 +17,29 @@ library Executor {
                 opcodeByte1 := mload(add(opcodeBytes, 0x20))
             }
 
+            // console.logBytes4(opcodeByte1);
+
             bytes4 selector = _ctx.selectorByOpcode(opcodeByte1);
             require(selector != 0x0, 'Executor: did not find selector for opcode');
+            IContext.OpcodeLibNames _libName = _ctx.opcodeLibNameByOpcode(opcodeByte1);
+            // require(_libName exists, 'Executor: did not find selector for opcode'); // TODO: add this check
             _ctx.incPc(1);
-            (bool success, ) = _ctx.opcodes().delegatecall(
-                abi.encodeWithSelector(selector, address(_ctx))
-            );
+
+            address _lib;
+
+            if (_libName == IContext.OpcodeLibNames.ComparatorOpcodes) {
+                _lib = _ctx.comparatorOpcodes();
+            } else if (_libName == IContext.OpcodeLibNames.LogicalOpcodes) {
+                _lib = _ctx.logicalOpcodes();
+            } else if (_libName == IContext.OpcodeLibNames.SetOpcodes) {
+                _lib = _ctx.setOpcodes();
+            } else if (_libName == IContext.OpcodeLibNames.OtherOpcodes) {
+                _lib = _ctx.otherOpcodes();
+            }
+
+            // console.log('lib addr =', _lib);
+
+            (bool success, ) = _lib.delegatecall(abi.encodeWithSelector(selector, address(_ctx)));
             require(success, 'Executor: call not success');
         }
     }

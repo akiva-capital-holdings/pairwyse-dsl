@@ -1,7 +1,6 @@
 /* eslint-disable camelcase */
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { Contract } from 'ethers';
 import { ethers } from 'hardhat';
 import { Context, StackValue__factory, Stack, Parser } from '../../typechain';
 import { ExecutorMock } from '../../typechain/ExecutorMock';
@@ -13,7 +12,6 @@ describe('Executor', () => {
   let stack: Stack;
   let app: ExecutorMock;
   let parser: Parser;
-  let opcodesLib: Contract;
   let StackValue: StackValue__factory;
   let sender: SignerWithAddress;
 
@@ -24,7 +22,35 @@ describe('Executor', () => {
     StackValue = await ethers.getContractFactory('StackValue');
 
     // Deploy libraries
-    opcodesLib = await (await ethers.getContractFactory('Opcodes')).deploy();
+    const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
+    const comparatorOpcodesLib = await (
+      await ethers.getContractFactory('ComparatorOpcodes', {
+        libraries: {
+          OpcodeHelpers: opcodeHelpersLib.address,
+        },
+      })
+    ).deploy();
+    const logicalOpcodesLib = await (
+      await ethers.getContractFactory('LogicalOpcodes', {
+        libraries: {
+          OpcodeHelpers: opcodeHelpersLib.address,
+        },
+      })
+    ).deploy();
+    const setOpcodesLib = await (
+      await ethers.getContractFactory('SetOpcodes', {
+        libraries: {
+          OpcodeHelpers: opcodeHelpersLib.address,
+        },
+      })
+    ).deploy();
+    const otherOpcodesLib = await (
+      await ethers.getContractFactory('OtherOpcodes', {
+        libraries: {
+          OpcodeHelpers: opcodeHelpersLib.address,
+        },
+      })
+    ).deploy();
     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
     const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
 
@@ -40,21 +66,27 @@ describe('Executor', () => {
         libraries: { Executor: executorLib.address },
       })
     ).deploy();
-  });
 
-  beforeEach(async () => {
     // Deploy & setup Context
     ctx = await (await ethers.getContractFactory('Context')).deploy();
     ctxAddr = ctx.address;
     await parser.initOpcodes(ctxAddr);
     await ctx.setAppAddress(app.address);
     await ctx.setMsgSender(sender.address);
-    await ctx.setOpcodesAddr(opcodesLib.address);
+    await ctx.setComparatorOpcodesAddr(comparatorOpcodesLib.address);
+    await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
+    await ctx.setSetOpcodesAddr(setOpcodesLib.address);
+    await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
     const contextStackAddress = await ctx.stack();
     stack = StackCont.attach(contextStackAddress);
+  });
+
+  afterEach(async () => {
+    stack.clear();
+    ctx.setPc(0);
   });
 
   describe('execute()', async () => {
@@ -74,7 +106,7 @@ describe('Executor', () => {
       await expect(app.execute(ctxAddr)).to.be.revertedWith('Executor: call not success');
     });
 
-    describe.only('if-else', () => {
+    describe('if-else', () => {
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;
       const THREE = new Array(64).join('0') + 3;

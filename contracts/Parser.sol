@@ -5,7 +5,10 @@ import { IERC20 } from './interfaces/IERC20.sol';
 import { IContext } from './interfaces/IContext.sol';
 import { IParser } from './interfaces/IParser.sol';
 import { StringUtils } from './libs/StringUtils.sol';
-import { Opcodes } from './libs/Opcodes.sol';
+import { ComparatorOpcodes } from './libs/opcodes/ComparatorOpcodes.sol';
+import { LogicalOpcodes } from './libs/opcodes/LogicalOpcodes.sol';
+import { SetOpcodes } from './libs/opcodes/SetOpcodes.sol';
+import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
 import { Storage } from './helpers/Storage.sol';
 import { Preprocessor } from './Preprocessor.sol';
 import 'hardhat/console.sol';
@@ -32,63 +35,239 @@ contract Parser is IParser, Storage {
 
     function initOpcodes(IContext _ctx) external {
         // Opcodes for operators
-        addOpcodeForOperator(_ctx, '!', 0x02, Opcodes.opNot.selector, 0x0, 4);
+        addOpcodeForOperator(
+            _ctx,
+            '==',
+            0x01,
+            ComparatorOpcodes.opEq.selector,
+            0x0,
+            IContext.OpcodeLibNames.ComparatorOpcodes,
+            1
+        );
+        addOpcodeForOperator(
+            _ctx,
+            '!=',
+            0x14,
+            ComparatorOpcodes.opNotEq.selector,
+            0x0,
+            IContext.OpcodeLibNames.ComparatorOpcodes,
+            1
+        );
+        addOpcodeForOperator(
+            _ctx,
+            '<',
+            0x03,
+            ComparatorOpcodes.opLt.selector,
+            0x0,
+            IContext.OpcodeLibNames.ComparatorOpcodes,
+            1
+        );
+        addOpcodeForOperator(
+            _ctx,
+            '>',
+            0x04,
+            ComparatorOpcodes.opGt.selector,
+            0x0,
+            IContext.OpcodeLibNames.ComparatorOpcodes,
+            1
+        );
+        addOpcodeForOperator(
+            _ctx,
+            '<=',
+            0x06,
+            ComparatorOpcodes.opLe.selector,
+            0x0,
+            IContext.OpcodeLibNames.ComparatorOpcodes,
+            1
+        );
+        addOpcodeForOperator(
+            _ctx,
+            '>=',
+            0x07,
+            ComparatorOpcodes.opGe.selector,
+            0x0,
+            IContext.OpcodeLibNames.ComparatorOpcodes,
+            1
+        );
+        addOpcodeForOperator(
+            _ctx,
+            'swap',
+            0x05,
+            ComparatorOpcodes.opSwap.selector,
+            0x0,
+            IContext.OpcodeLibNames.ComparatorOpcodes,
+            3
+        );
+        addOpcodeForOperator(
+            _ctx,
+            '!',
+            0x02,
+            ComparatorOpcodes.opNot.selector,
+            0x0,
+            IContext.OpcodeLibNames.ComparatorOpcodes,
+            4
+        );
 
-        addOpcodeForOperator(_ctx, 'swap', 0x05, Opcodes.opSwap.selector, 0x0, 3);
-        addOpcodeForOperator(_ctx, 'and', 0x12, Opcodes.opAnd.selector, 0x0, 3);
+        addOpcodeForOperator(
+            _ctx,
+            'and',
+            0x12,
+            SetOpcodes.opAnd.selector,
+            0x0,
+            IContext.OpcodeLibNames.SetOpcodes,
+            3
+        );
+        addOpcodeForOperator(
+            _ctx,
+            'xor',
+            0x11,
+            SetOpcodes.opXor.selector,
+            0x0,
+            IContext.OpcodeLibNames.SetOpcodes,
+            2
+        );
+        addOpcodeForOperator(
+            _ctx,
+            'or',
+            0x13,
+            SetOpcodes.opOr.selector,
+            0x0,
+            IContext.OpcodeLibNames.SetOpcodes,
+            2
+        );
 
-        addOpcodeForOperator(_ctx, 'xor', 0x11, Opcodes.opXor.selector, 0x0, 2);
-        addOpcodeForOperator(_ctx, 'or', 0x13, Opcodes.opOr.selector, 0x0, 2);
-
-        addOpcodeForOperator(_ctx, '==', 0x01, Opcodes.opEq.selector, 0x0, 1);
-        addOpcodeForOperator(_ctx, '<', 0x03, Opcodes.opLt.selector, 0x0, 1);
-        addOpcodeForOperator(_ctx, '>', 0x04, Opcodes.opGt.selector, 0x0, 1);
-        addOpcodeForOperator(_ctx, '<=', 0x06, Opcodes.opLe.selector, 0x0, 1);
-        addOpcodeForOperator(_ctx, '>=', 0x07, Opcodes.opGe.selector, 0x0, 1);
-        addOpcodeForOperator(_ctx, '!=', 0x14, Opcodes.opNotEq.selector, 0x0, 1);
+        // Branching (bnz = branch non-zero)
+        _ctx.addOpcode(
+            'bnz',
+            0x23,
+            LogicalOpcodes.opBnz.selector,
+            0x0,
+            IContext.OpcodeLibNames.LogicalOpcodes
+        );
+        _ctx.addOpcode(
+            'end',
+            0x24,
+            LogicalOpcodes.opEnd.selector,
+            0x0,
+            IContext.OpcodeLibNames.LogicalOpcodes
+        );
 
         // Simple Opcodes
-        _ctx.addOpcode('blockNumber', 0x15, Opcodes.opBlockNumber.selector, 0x0);
-        _ctx.addOpcode('blockTimestamp', 0x16, Opcodes.opBlockTimestamp.selector, 0x0);
-        _ctx.addOpcode('blockChainId', 0x17, Opcodes.opBlockChainId.selector, 0x0);
-        _ctx.addOpcode('bool', 0x18, Opcodes.opBool.selector, this.asmBool.selector);
-        _ctx.addOpcode('uint256', 0x1a, Opcodes.opUint256.selector, this.asmUint256.selector);
-        _ctx.addOpcode('msgSender', 0x1d, Opcodes.opMsgSender.selector, 0x0);
-        _ctx.addOpcode('sendEth', 0x1e, Opcodes.opSendEth.selector, this.asmSend.selector);
-        _ctx.addOpcode('transfer', 0x1f, Opcodes.opTransfer.selector, this.asmTransfer.selector);
+        _ctx.addOpcode(
+            'blockNumber',
+            0x15,
+            OtherOpcodes.opBlockNumber.selector,
+            0x0,
+            IContext.OpcodeLibNames.OtherOpcodes
+        );
+        _ctx.addOpcode(
+            'blockTimestamp',
+            0x16,
+            OtherOpcodes.opBlockTimestamp.selector,
+            0x0,
+            IContext.OpcodeLibNames.OtherOpcodes
+        );
+        _ctx.addOpcode(
+            'blockChainId',
+            0x17,
+            OtherOpcodes.opBlockChainId.selector,
+            0x0,
+            IContext.OpcodeLibNames.OtherOpcodes
+        );
+        _ctx.addOpcode(
+            'bool',
+            0x18,
+            OtherOpcodes.opBool.selector,
+            this.asmBool.selector,
+            IContext.OpcodeLibNames.OtherOpcodes
+        );
+        _ctx.addOpcode(
+            'uint256',
+            0x1a,
+            OtherOpcodes.opUint256.selector,
+            this.asmUint256.selector,
+            IContext.OpcodeLibNames.OtherOpcodes
+        );
+        _ctx.addOpcode(
+            'msgSender',
+            0x1d,
+            OtherOpcodes.opMsgSender.selector,
+            0x0,
+            IContext.OpcodeLibNames.OtherOpcodes
+        );
+        _ctx.addOpcode(
+            'sendEth',
+            0x1e,
+            OtherOpcodes.opSendEth.selector,
+            this.asmSend.selector,
+            IContext.OpcodeLibNames.OtherOpcodes
+        );
+        _ctx.addOpcode(
+            'transfer',
+            0x1f,
+            OtherOpcodes.opTransfer.selector,
+            this.asmTransfer.selector,
+            IContext.OpcodeLibNames.OtherOpcodes
+        );
         _ctx.addOpcode(
             'transferFrom',
             0x20,
-            Opcodes.opTransferFrom.selector,
-            this.asmTransferFrom.selector
+            OtherOpcodes.opTransferFrom.selector,
+            this.asmTransferFrom.selector,
+            IContext.OpcodeLibNames.OtherOpcodes
         );
         _ctx.addOpcode(
             'setLocalBool',
             0x21,
-            Opcodes.opSetLocalBool.selector,
-            this.asmSetLocalBool.selector
+            OtherOpcodes.opSetLocalBool.selector,
+            this.asmSetLocalBool.selector,
+            IContext.OpcodeLibNames.OtherOpcodes
         );
-        _ctx.addOpcode('msgValue', 0x22, Opcodes.opMsgValue.selector, 0x0);
+        _ctx.addOpcode(
+            'msgValue',
+            0x22,
+            OtherOpcodes.opMsgValue.selector,
+            0x0,
+            IContext.OpcodeLibNames.OtherOpcodes
+        );
 
-        // Branching (bnz = branch non-zero)
-        _ctx.addOpcode('bnz', 0x23, Opcodes.opBnz.selector, 0x0);
-        _ctx.addOpcode('end', 0x24, Opcodes.opEnd.selector, 0x0);
+        // Complex Opcodes with sub Opcodes (branches)
+        string memory name = 'loadLocal';
+        _ctx.addOpcode(
+            name,
+            0x1b,
+            OtherOpcodes.opLoadLocalAny.selector,
+            this.asmLoadLocal.selector,
+            IContext.OpcodeLibNames.OtherOpcodes
+        );
+        _ctx.addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadLocalUint256.selector);
+        _ctx.addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadLocalBool.selector);
+        _ctx.addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadLocalAddress.selector);
+        _ctx.addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadLocalBytes32.selector);
 
-        // // Complex Opcodes with sub Opcodes (branches)
-        // string memory name = 'loadLocal';
-        // _ctx.addOpcode(name, 0x1b, Opcodes.opLoadLocalAny.selector, this.asmLoadLocal.selector);
-        // _ctx.addOpcodeBranch(name, 'uint256', 0x01, Opcodes.opLoadLocalUint256.selector);
-        // _ctx.addOpcodeBranch(name, 'bool', 0x02, Opcodes.opLoadLocalBool.selector);
-        // _ctx.addOpcodeBranch(name, 'address', 0x03, Opcodes.opLoadLocalAddress.selector);
-        // _ctx.addOpcodeBranch(name, 'bytes32', 0x04, Opcodes.opLoadLocalBytes32.selector);
-
-        // name = 'loadRemote';
-        // _ctx.addOpcode(name, 0x1c, Opcodes.opLoadRemoteAny.selector, this.asmLoadRemote.selector);
-        // _ctx.addOpcodeBranch(name, 'uint256', 0x01, Opcodes.opLoadRemoteUint256.selector);
-        // _ctx.addOpcodeBranch(name, 'bool', 0x02, Opcodes.opLoadRemoteBool.selector);
-        // _ctx.addOpcodeBranch(name, 'address', 0x03, Opcodes.opLoadRemoteAddress.selector);
-        // _ctx.addOpcodeBranch(name, 'bytes32', 0x04, Opcodes.opLoadRemoteBytes32.selector);
+        name = 'loadRemote';
+        _ctx.addOpcode(
+            name,
+            0x1c,
+            OtherOpcodes.opLoadRemoteAny.selector,
+            this.asmLoadRemote.selector,
+            IContext.OpcodeLibNames.OtherOpcodes
+        );
+        _ctx.addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadRemoteUint256.selector);
+        _ctx.addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadRemoteBool.selector);
+        _ctx.addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
+        _ctx.addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadRemoteBytes32.selector);
     }
+
+    // function initComparatorOpcodes(IContext _ctx) public {}
+
+    // function initLogicalOpcodes(IContext _ctx) public {}
+
+    // function initSetOpcodes(IContext _ctx) public {}
+
+    // function initOtherOpcodes(IContext _ctx) public {}
+
+    // function initOtherOpcodes(IContext _ctx) public {}
 
     /**
      * Asm functions
@@ -160,9 +339,10 @@ contract Parser is IParser, Storage {
         bytes1 _opcode,
         bytes4 _opSelector,
         bytes4 _asmSelector,
+        IContext.OpcodeLibNames _libName,
         uint256 _priority
     ) internal {
-        _ctx.addOpcode(_name, _opcode, _opSelector, _asmSelector);
+        _ctx.addOpcode(_name, _opcode, _opSelector, _asmSelector, _libName);
         preprocessor.addOperator(_name, _priority);
     }
 
