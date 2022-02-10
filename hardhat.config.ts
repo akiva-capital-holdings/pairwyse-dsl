@@ -6,7 +6,7 @@ import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
 import 'hardhat-gas-reporter';
 import 'solidity-coverage';
-// import "hardhat-contract-sizer";
+import 'hardhat-contract-sizer';
 
 dotenv.config();
 
@@ -28,7 +28,7 @@ const config: HardhatUserConfig = {
     version: '0.8.11',
     settings: {
       optimizer: {
-        enabled: false, // TODO: make `true`
+        enabled: process.env.OPTIMIZER !== undefined,
         runs: 100,
       },
     },
@@ -49,12 +49,12 @@ const config: HardhatUserConfig = {
   mocha: {
     timeout: 1e6,
   },
-  // contractSizer: {
-  //   alphaSort: true,
-  //   disambiguatePaths: false,
-  //   runOnCompile: true,
-  //   strict: true,
-  // },
+  contractSizer: {
+    // alphaSort: true,
+    // disambiguatePaths: false,
+    runOnCompile: process.env.CONTRACT_SIZER !== undefined,
+    // strict: true,
+  },
 };
 
 export default config;

@@ -2,17 +2,23 @@ import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
+import { Contract } from 'ethers';
 import { hex4Bytes } from './utils/utils';
 import { Agreement } from '../typechain/Agreement';
 import { Parser } from '../typechain/Parser';
 import { ConditionalTxs } from '../typechain';
 
+// TODO: add more complex tests with more steps. Possible problem: contract call run out of gas and made the transaction revert
 describe('Agreement', () => {
   let parser: Parser;
   let agreement: Agreement;
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
   let anybody: SignerWithAddress;
+  let comparatorOpcodesLib: Contract;
+  let logicalOpcodesLib: Contract;
+  let setOpcodesLib: Contract;
+  let otherOpcodesLib: Contract;
   let txsAddr: string;
   let txs: ConditionalTxs;
 
@@ -33,28 +39,28 @@ describe('Agreement', () => {
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const comparatorOpcodesLib = await (
+    comparatorOpcodesLib = await (
       await ethers.getContractFactory('ComparatorOpcodes', {
         libraries: {
           OpcodeHelpers: opcodeHelpersLib.address,
         },
       })
     ).deploy();
-    const logicalOpcodesLib = await (
+    logicalOpcodesLib = await (
       await ethers.getContractFactory('LogicalOpcodes', {
         libraries: {
           OpcodeHelpers: opcodeHelpersLib.address,
         },
       })
     ).deploy();
-    const setOpcodesLib = await (
+    setOpcodesLib = await (
       await ethers.getContractFactory('SetOpcodes', {
         libraries: {
           OpcodeHelpers: opcodeHelpersLib.address,
         },
       })
     ).deploy();
-    const otherOpcodesLib = await (
+    otherOpcodesLib = await (
       await ethers.getContractFactory('OtherOpcodes', {
         libraries: {
           OpcodeHelpers: opcodeHelpersLib.address,
@@ -62,14 +68,16 @@ describe('Agreement', () => {
       })
     ).deploy();
     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
-    const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
 
     // Deploy Parser
     const ParserCont = await ethers.getContractFactory('Parser', {
       libraries: { StringUtils: stringLib.address },
     });
     parser = await ParserCont.deploy();
+  });
 
+  beforeEach(async () => {
+    const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
     // Deploy Agreement
     agreement = await (
       await ethers.getContractFactory('Agreement', {
@@ -97,8 +105,17 @@ describe('Agreement', () => {
     const condition = 'blockTimestamp > loadLocal uint256 LOCK_TIME';
 
     // Update
-    const txId = await agreement.callStatic.update(signatory, transaction, condition);
-    await agreement.update(signatory, transaction, condition);
+    const Ctx = await ethers.getContractFactory('Context');
+    const txCtx = await Ctx.deploy();
+    const cdCtx = await Ctx.deploy();
+    const txId = await agreement.callStatic.update(
+      signatory,
+      transaction,
+      condition,
+      txCtx.address,
+      cdCtx.address
+    );
+    await agreement.update(signatory, transaction, condition, txCtx.address, cdCtx.address);
 
     // Top up contract
     const oneEthBN = parseEther('1');
@@ -128,7 +145,7 @@ describe('Agreement', () => {
     );
   });
 
-  it.skip('Alice (borrower) and Bob (lender)', async () => {
+  it('Alice (borrower) and Bob (lender)', async () => {
     const oneEth = parseEther('1');
     const tenTokens = parseEther('10');
     const token = await (await ethers.getContractFactory('Token'))
@@ -179,11 +196,31 @@ describe('Agreement', () => {
 
     // Add tx objects to Agreement
     const txIds: string[] = [];
+    let txCtx;
+    let cdCtx;
+
+    const Ctx = await ethers.getContractFactory('Context');
+
     for await (const step of steps) {
+      txCtx = await Ctx.deploy();
+      cdCtx = await Ctx.deploy();
       txIds.push(
-        await agreement.callStatic.update(step.signatory, step.transaction, step.condition)
+        await agreement.callStatic.update(
+          step.signatory,
+          step.transaction,
+          step.condition,
+          txCtx.address,
+          cdCtx.address
+        )
       );
-      await agreement.update(step.signatory, step.transaction, step.condition);
+      console.log('agreement update');
+      await agreement.update(
+        step.signatory,
+        step.transaction,
+        step.condition,
+        txCtx.address,
+        cdCtx.address
+      );
     }
 
     // Alice deposits 1 ETH to SC
@@ -193,12 +230,12 @@ describe('Agreement', () => {
     // await expect(
     //   agreement.connect(alice).execute(txIds[0], { value: parseEther('2') })
     // ).to.be.revertedWith('Agreement: tx fulfilment error');
-    // console.log('Alice deposits 1 ETH to SC');
+    console.log('Alice deposits 1 ETH to SC');
     await agreement.connect(alice).execute(txIds[0], { value: oneEth });
     expect(await ethers.provider.getBalance(txsAddr)).to.equal(oneEth);
 
     // Bob lends 10 tokens to Alice
-    // console.log('Bob lends 10 tokens to Alice');
+    console.log('Bob lends 10 tokens to Alice');
     await token.connect(bob).approve(txsAddr, tenTokens);
     await expect(() => agreement.connect(bob).execute(txIds[1])).to.changeTokenBalance(
       token,
@@ -207,7 +244,7 @@ describe('Agreement', () => {
     );
 
     // Alice returns 10 tokens to Bob and collects 1 ETH
-    // console.log('Alice returns 10 tokens to Bob and collects 1 ETH');
+    console.log('Alice returns 10 tokens to Bob and collects 1 ETH');
     expect(await token.balanceOf(alice.address)).to.equal(tenTokens);
     await token.connect(alice).approve(txsAddr, tenTokens);
     await expect(await agreement.connect(alice).execute(txIds[2])).to.changeEtherBalance(

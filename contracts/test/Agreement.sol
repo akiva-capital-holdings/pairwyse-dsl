@@ -22,7 +22,9 @@ contract Agreement {
     function update(
         address _signatory,
         string memory _transactionStr,
-        string memory _conditionStr
+        string memory _conditionStr,
+        Context _transactionCtx,
+        Context _conditionCtx
     )
         external
         returns (
@@ -30,9 +32,6 @@ contract Agreement {
             bytes32 _txId
         )
     {
-        Context _transactionCtx = new Context();
-        Context _conditionCtx = new Context();
-
         // TODO: improve the logic here. Why parser is responsible for initing opcodes for Context?
         parser.initOpcodes(_transactionCtx);
         parser.initOpcodes(_conditionCtx);
