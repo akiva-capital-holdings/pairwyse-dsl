@@ -148,8 +148,14 @@ describe('Conditional transactions', () => {
     await anybody.sendTransaction({ to: app.address, value: oneEthBN });
 
     // Execute transaction
+    await expect(app.connect(alice).execTx(txId, 0)).to.be.revertedWith(
+      'ConditionalTxs: txn condition is not satisfied'
+    );
     await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
     await expect(await app.connect(alice).execTx(txId, 0)).to.changeEtherBalance(bob, oneEthBN);
+    await expect(app.connect(alice).execTx(txId, 0)).to.be.revertedWith(
+      'ConditionalTxs: txn already was executed'
+    );
   });
 
   it('test two transactions', async () => {

@@ -213,7 +213,6 @@ describe('Agreement', () => {
           cdCtx.address
         )
       );
-      console.log('agreement update');
       await agreement.update(
         step.signatory,
         step.transaction,
@@ -230,12 +229,12 @@ describe('Agreement', () => {
     // await expect(
     //   agreement.connect(alice).execute(txIds[0], { value: parseEther('2') })
     // ).to.be.revertedWith('Agreement: tx fulfilment error');
-    console.log('Alice deposits 1 ETH to SC');
+    // console.log('Alice deposits 1 ETH to SC');
     await agreement.connect(alice).execute(txIds[0], { value: oneEth });
     expect(await ethers.provider.getBalance(txsAddr)).to.equal(oneEth);
 
     // Bob lends 10 tokens to Alice
-    console.log('Bob lends 10 tokens to Alice');
+    // console.log('Bob lends 10 tokens to Alice');
     await token.connect(bob).approve(txsAddr, tenTokens);
     await expect(() => agreement.connect(bob).execute(txIds[1])).to.changeTokenBalance(
       token,
@@ -244,7 +243,7 @@ describe('Agreement', () => {
     );
 
     // Alice returns 10 tokens to Bob and collects 1 ETH
-    console.log('Alice returns 10 tokens to Bob and collects 1 ETH');
+    // console.log('Alice returns 10 tokens to Bob and collects 1 ETH');
     expect(await token.balanceOf(alice.address)).to.equal(tenTokens);
     await token.connect(alice).approve(txsAddr, tenTokens);
     await expect(await agreement.connect(alice).execute(txIds[2])).to.changeEtherBalance(

@@ -33,7 +33,7 @@ library Executor {
                 _lib = _ctx.logicalOpcodes();
             } else if (_libName == IContext.OpcodeLibNames.SetOpcodes) {
                 _lib = _ctx.setOpcodes();
-            } else if (_libName == IContext.OpcodeLibNames.OtherOpcodes) {
+            } else {
                 _lib = _ctx.otherOpcodes();
             }
 

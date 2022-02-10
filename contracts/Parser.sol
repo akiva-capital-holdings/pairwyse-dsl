@@ -5,10 +5,6 @@ import { IERC20 } from './interfaces/IERC20.sol';
 import { IContext } from './interfaces/IContext.sol';
 import { IParser } from './interfaces/IParser.sol';
 import { StringUtils } from './libs/StringUtils.sol';
-// import { ComparatorOpcodes } from './libs/opcodes/ComparatorOpcodes.sol';
-// import { LogicalOpcodes } from './libs/opcodes/LogicalOpcodes.sol';
-// import { SetOpcodes } from './libs/opcodes/SetOpcodes.sol';
-// import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
 import { Storage } from './helpers/Storage.sol';
 import { Preprocessor } from './Preprocessor.sol';
 
@@ -127,28 +123,5 @@ contract Parser is IParser, Storage {
 
     function parseAddress() internal {
         program = bytes.concat(program, nextCmd().fromHex());
-    }
-
-    function getAddress() internal view returns (address) {
-        bytes memory addrBytes = cmds[cmdIdx].fromHex();
-        bytes32 addrB32;
-        // console.logBytes(addrBytes);
-
-        assembly {
-            addrB32 := mload(add(addrBytes, 0x20))
-        }
-        /**
-         * Shift bytes to the left so that
-         * 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512000000000000000000000000
-         * transforms into
-         * 0x000000000000000000000000e7f1725e7734ce288f8367e1bb143e90bb3f0512
-         * This is needed to later conversion from bytes32 to address
-         */
-        addrB32 >>= 96;
-
-        // console.log("addrB32");
-        // console.logBytes32(addrB32);
-
-        return address(uint160(uint256(addrB32)));
     }
 }
