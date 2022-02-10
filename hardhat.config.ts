@@ -28,7 +28,7 @@ const config: HardhatUserConfig = {
     version: '0.8.11',
     settings: {
       optimizer: {
-        enabled: process.env.OPTIMIZER !== undefined,
+        enabled: process.env.OPTIMIZER === 'true',
         runs: 100,
       },
     },
@@ -40,7 +40,7 @@ const config: HardhatUserConfig = {
     },
   },
   gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
+    enabled: process.env.REPORT_GAS === 'true',
     currency: 'USD',
   },
   etherscan: {
@@ -52,7 +52,7 @@ const config: HardhatUserConfig = {
   contractSizer: {
     // alphaSort: true,
     // disambiguatePaths: false,
-    runOnCompile: process.env.CONTRACT_SIZER !== undefined,
+    runOnCompile: process.env.CONTRACT_SIZER === 'true',
     // strict: true,
   },
 };

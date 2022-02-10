@@ -289,5 +289,49 @@ describe('Preprocessor', () => {
       ];
       expect(cmds).to.eql(expected);
     });
+
+    it('if-else expression', async () => {
+      const ONE = new Array(64).join('0') + 1;
+      const TWO = new Array(64).join('0') + 2;
+      const THREE = new Array(64).join('0') + 3;
+      const FOUR = new Array(64).join('0') + 4;
+
+      const program = `
+        bool true
+        bnz good bad
+        uint256 ${FOUR}
+
+        good {
+          uint256 ${ONE}
+          uint256 ${TWO}
+        }
+        
+        bad {
+          uint256 ${THREE}
+        }
+        `;
+
+      const cmds = await app.callStatic.transform(ctxAddr, program);
+      const expected = [
+        'bool',
+        'true',
+        'bnz',
+        'good',
+        'bad',
+        'uint256',
+        FOUR,
+        'good',
+        'uint256',
+        ONE,
+        'uint256',
+        TWO,
+        'end',
+        'bad',
+        'uint256',
+        THREE,
+        'end',
+      ];
+      expect(cmds).to.eql(expected);
+    });
   });
 });

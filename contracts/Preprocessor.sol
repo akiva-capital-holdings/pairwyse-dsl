@@ -25,6 +25,14 @@ contract Preprocessor {
         // console.log("program len: %s", program.length());
         for (uint256 i = 0; i < _program.length(); i++) {
             string memory char = _program.char(i);
+
+            // if-else conditions parsing
+            if (char.equal('{')) continue;
+            if (char.equal('}')) {
+                result.push('end');
+                continue;
+            }
+
             // console.log("char: %s", char);
             if (char.equal(' ') || char.equal('\n') || char.equal('(') || char.equal(')')) {
                 if (buffer.length() > 0) {

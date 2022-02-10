@@ -6,7 +6,7 @@ import { Context, StackValue__factory, Stack } from '../../typechain';
 import { ExecutorMock } from '../../typechain/ExecutorMock';
 import { checkStack, checkStackTail, hex4Bytes } from '../utils/utils';
 
-describe('Executor', () => {
+describe.only('Executor', () => {
   let ctx: Context;
   let ctxAddr: string;
   let stack: Stack;
@@ -102,6 +102,7 @@ describe('Executor', () => {
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;
       const THREE = new Array(64).join('0') + 3;
+      const FOUR = new Array(64).join('0') + 4;
 
       it('nothing in the stack', async () => {
         const programTrue = `0x 23 0022 0044  1a ${ONE} 24  1a ${TWO} 24  1a ${THREE}`
@@ -118,8 +119,8 @@ describe('Executor', () => {
         /**
          * 18 bool
          * 01 true
-         * 0004 offset of the `false` branch
-         * 0026 offset of the body
+         * 0022 offset of the `false` branch
+         * 0044 offset of the body
          * 1a uint256
          * ONE, TWO, THREE - just a uint256 number
          * 23 bnz
@@ -133,6 +134,30 @@ describe('Executor', () => {
         await ctx.setProgram(programTrue);
         await app.execute(ctxAddr);
         await checkStackTail(StackValue, stack, 2, [1, 3]);
+      });
+
+      it('if condition is true (#2)', async () => {
+        const programTrue =
+          '0x' +
+          '18' + // bool
+          '01' + // true
+          '23' + // bnz
+          '0044' + // offset of the `bad` branch
+          '0065' + // offset of the body (after the if-else blocks)
+          '1a' + // good: uint256
+          `${ONE}` + // good: ONE
+          '1a' + // good: uint256
+          `${TWO}` + // good: TWO
+          '24' + // good: end
+          '1a' + // bad: uint256
+          `${THREE}` + // bad: THREE
+          '24' + // bad: end
+          '1a' + // uin256
+          `${FOUR}`; // FOUR
+
+        await ctx.setProgram(programTrue);
+        await app.execute(ctxAddr);
+        await checkStackTail(StackValue, stack, 3, [1, 2, 4]);
       });
 
       it('if condition is false', async () => {

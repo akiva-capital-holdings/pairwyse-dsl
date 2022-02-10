@@ -72,5 +72,71 @@ describe('Parser', () => {
       );
       await expect(app.parse(ctxAddr, '?!')).to.be.revertedWith('Parser: "?!" command is unknown');
     });
+
+    it.skip('if-else condition', async () => {
+      const ONE = new Array(64).join('0') + 1;
+      const TWO = new Array(64).join('0') + 2;
+      const THREE = new Array(64).join('0') + 3;
+      const FOUR = new Array(64).join('0') + 4;
+
+      // to Preprocessor
+      await app.parse(
+        ctxAddr,
+        `
+        bool true
+        bnz good bad
+        uint256 ${FOUR}
+
+        good {
+          uint256 ${ONE}
+          uint256 ${TWO}
+        }
+        
+        bad {
+          uint256 ${THREE}
+        }
+        `
+      );
+
+      // to Parser
+      const parserInput = [
+        'bool',
+        'true',
+        'bnz',
+        'good',
+        'bad',
+        'uint256',
+        FOUR,
+        'good',
+        'uint256',
+        ONE,
+        'uint256',
+        TWO,
+        'end',
+        'bad',
+        'uint256',
+        THREE,
+        'end',
+      ];
+
+      // to Executor
+      const executorInput =
+        '0x' +
+        '18' + // bool
+        '01' + // true
+        '23' + // bnz
+        '0044' + // offset of the `bad` branch
+        '0065' + // offset of the body (after the if-else blocks)
+        '1a' + // good: uint256
+        `${ONE}` + // good: ONE
+        '1a' + // good: uint256
+        `${TWO}` + // good: TWO
+        '24' + // good: end
+        '1a' + // bad: uint256
+        `${THREE}` + // bad: THREE
+        '24' + // bad: end
+        '1a' + // uin256
+        `${FOUR}`; // FOUR
+    });
   });
 });
