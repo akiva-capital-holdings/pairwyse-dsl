@@ -2,7 +2,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Context, StackValue__factory, Stack, Parser } from '../../typechain';
+import { Context, StackValue__factory, Stack } from '../../typechain';
 import { ExecutorMock } from '../../typechain/ExecutorMock';
 import { checkStack, checkStackTail, hex4Bytes } from '../utils/utils';
 
@@ -11,7 +11,6 @@ describe('Executor', () => {
   let ctxAddr: string;
   let stack: Stack;
   let app: ExecutorMock;
-  let parser: Parser;
   let StackValue: StackValue__factory;
   let sender: SignerWithAddress;
 
@@ -51,14 +50,7 @@ describe('Executor', () => {
         },
       })
     ).deploy();
-    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
     const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
-
-    parser = await (
-      await ethers.getContractFactory('Parser', {
-        libraries: { StringUtils: stringLib.address },
-      })
-    ).deploy();
 
     // Deploy ExecutorMock
     app = await (
@@ -70,7 +62,7 @@ describe('Executor', () => {
     // Deploy & setup Context
     ctx = await (await ethers.getContractFactory('Context')).deploy();
     ctxAddr = ctx.address;
-    await parser.initOpcodes(ctxAddr);
+    await ctx.initOpcodes();
     await ctx.setAppAddress(app.address);
     await ctx.setMsgSender(sender.address);
     await ctx.setComparatorOpcodesAddr(comparatorOpcodesLib.address);

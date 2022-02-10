@@ -25,16 +25,9 @@ contract Agreement {
         string memory _conditionStr,
         Context _transactionCtx,
         Context _conditionCtx
-    )
-        external
-        returns (
-            // bytes32[] memory _requiredTxs // txs required to be executed before this transaction can be executed
-            bytes32 _txId
-        )
-    {
-        // TODO: improve the logic here. Why parser is responsible for initing opcodes for Context?
-        parser.initOpcodes(_transactionCtx);
-        parser.initOpcodes(_conditionCtx);
+    ) external returns (bytes32 _txId) {
+        _transactionCtx.initOpcodes();
+        _conditionCtx.initOpcodes();
 
         _transactionCtx.setAppAddress(address(txs));
         _conditionCtx.setAppAddress(address(txs));
@@ -45,7 +38,6 @@ contract Agreement {
             _conditionStr,
             _transactionCtx,
             _conditionCtx
-            // _requiredTxs
         );
 
         // _transactionCtx.setMsgSender(msg.sender);

@@ -2,7 +2,13 @@
 pragma solidity ^0.8.0;
 
 import { IContext } from './interfaces/IContext.sol';
+import { IParser } from './interfaces/IParser.sol';
 import { Stack } from './helpers/Stack.sol';
+import { ComparatorOpcodes } from './libs/opcodes/ComparatorOpcodes.sol';
+import { LogicalOpcodes } from './libs/opcodes/LogicalOpcodes.sol';
+import { SetOpcodes } from './libs/opcodes/SetOpcodes.sol';
+import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
+
 import 'hardhat/console.sol';
 
 // TODO: may be wise to split Context into:
@@ -25,6 +31,8 @@ contract Context is IContext {
     mapping(bytes1 => bytes4) public selectorByOpcode;
     mapping(bytes1 => OpcodeLibNames) public opcodeLibNameByOpcode;
     mapping(string => bytes4) public asmSelectors;
+    mapping(string => uint256) public opsPriors;
+    string[] public operators;
 
     // baseOpName -> branchCode -> selector
     mapping(string => mapping(bytes1 => bytes4)) public branchSelectors;
@@ -39,6 +47,213 @@ contract Context is IContext {
 
     constructor() {
         stack = new Stack();
+    }
+
+    function initOpcodes() external {
+        // Opcodes for operators
+        addOpcodeForOperator(
+            '==',
+            0x01,
+            ComparatorOpcodes.opEq.selector,
+            0x0,
+            OpcodeLibNames.ComparatorOpcodes,
+            1
+        );
+        addOpcodeForOperator(
+            '!=',
+            0x14,
+            ComparatorOpcodes.opNotEq.selector,
+            0x0,
+            OpcodeLibNames.ComparatorOpcodes,
+            1
+        );
+        addOpcodeForOperator(
+            '<',
+            0x03,
+            ComparatorOpcodes.opLt.selector,
+            0x0,
+            OpcodeLibNames.ComparatorOpcodes,
+            1
+        );
+        addOpcodeForOperator(
+            '>',
+            0x04,
+            ComparatorOpcodes.opGt.selector,
+            0x0,
+            OpcodeLibNames.ComparatorOpcodes,
+            1
+        );
+        addOpcodeForOperator(
+            '<=',
+            0x06,
+            ComparatorOpcodes.opLe.selector,
+            0x0,
+            OpcodeLibNames.ComparatorOpcodes,
+            1
+        );
+        addOpcodeForOperator(
+            '>=',
+            0x07,
+            ComparatorOpcodes.opGe.selector,
+            0x0,
+            OpcodeLibNames.ComparatorOpcodes,
+            1
+        );
+        addOpcodeForOperator(
+            'swap',
+            0x05,
+            ComparatorOpcodes.opSwap.selector,
+            0x0,
+            OpcodeLibNames.ComparatorOpcodes,
+            3
+        );
+        addOpcodeForOperator(
+            '!',
+            0x02,
+            ComparatorOpcodes.opNot.selector,
+            0x0,
+            OpcodeLibNames.ComparatorOpcodes,
+            4
+        );
+
+        addOpcodeForOperator(
+            'and',
+            0x12,
+            SetOpcodes.opAnd.selector,
+            0x0,
+            OpcodeLibNames.SetOpcodes,
+            3
+        );
+        addOpcodeForOperator(
+            'xor',
+            0x11,
+            SetOpcodes.opXor.selector,
+            0x0,
+            OpcodeLibNames.SetOpcodes,
+            2
+        );
+        addOpcodeForOperator(
+            'or',
+            0x13,
+            SetOpcodes.opOr.selector,
+            0x0,
+            OpcodeLibNames.SetOpcodes,
+            2
+        );
+
+        // Branching (bnz = branch non-zero)
+        addOpcode('bnz', 0x23, LogicalOpcodes.opBnz.selector, 0x0, OpcodeLibNames.LogicalOpcodes);
+        addOpcode('end', 0x24, LogicalOpcodes.opEnd.selector, 0x0, OpcodeLibNames.LogicalOpcodes);
+
+        // Simple Opcodes
+        addOpcode(
+            'blockNumber',
+            0x15,
+            OtherOpcodes.opBlockNumber.selector,
+            0x0,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
+            'blockTimestamp',
+            0x16,
+            OtherOpcodes.opBlockTimestamp.selector,
+            0x0,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
+            'blockChainId',
+            0x17,
+            OtherOpcodes.opBlockChainId.selector,
+            0x0,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
+            'bool',
+            0x18,
+            OtherOpcodes.opBool.selector,
+            IParser.asmBool.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
+            'uint256',
+            0x1a,
+            OtherOpcodes.opUint256.selector,
+            IParser.asmUint256.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
+            'msgSender',
+            0x1d,
+            OtherOpcodes.opMsgSender.selector,
+            0x0,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
+            'sendEth',
+            0x1e,
+            OtherOpcodes.opSendEth.selector,
+            IParser.asmSend.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
+            'transfer',
+            0x1f,
+            OtherOpcodes.opTransfer.selector,
+            IParser.asmTransfer.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
+            'transferFrom',
+            0x20,
+            OtherOpcodes.opTransferFrom.selector,
+            IParser.asmTransferFrom.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
+            'setLocalBool',
+            0x21,
+            OtherOpcodes.opSetLocalBool.selector,
+            IParser.asmSetLocalBool.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
+            'msgValue',
+            0x22,
+            OtherOpcodes.opMsgValue.selector,
+            0x0,
+            OpcodeLibNames.OtherOpcodes
+        );
+
+        // Complex Opcodes with sub Opcodes (branches)
+        string memory name = 'loadLocal';
+        addOpcode(
+            name,
+            0x1b,
+            OtherOpcodes.opLoadLocalAny.selector,
+            IParser.asmLoadLocal.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadLocalUint256.selector);
+        addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadLocalBool.selector);
+        addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadLocalAddress.selector);
+        addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadLocalBytes32.selector);
+
+        name = 'loadRemote';
+        addOpcode(
+            name,
+            0x1c,
+            OtherOpcodes.opLoadRemoteAny.selector,
+            IParser.asmLoadRemote.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadRemoteUint256.selector);
+        addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadRemoteBool.selector);
+        addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
+        addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadRemoteBytes32.selector);
+    }
+
+    function operatorsLen() external view returns (uint256) {
+        return operators.length;
     }
 
     function setComparatorOpcodesAddr(address _comparatorOpcodes) public {
@@ -75,12 +290,24 @@ contract Context is IContext {
         asmSelectors[_name] = _asmSelector;
     }
 
+    function addOpcodeForOperator(
+        string memory _name,
+        bytes1 _opcode,
+        bytes4 _opSelector,
+        bytes4 _asmSelector,
+        OpcodeLibNames _libName,
+        uint256 _priority
+    ) internal {
+        addOpcode(_name, _opcode, _opSelector, _asmSelector, _libName);
+        addOperator(_name, _priority);
+    }
+
     function addOpcodeBranch(
         string memory _baseOpName,
         string memory _branchName,
         bytes1 _branchCode,
         bytes4 _selector
-    ) public {
+    ) internal {
         require(_selector != bytes4(0), 'Context: empty opcode selector');
         require(
             branchSelectors[_baseOpName][_branchCode] == bytes4(0) &&
@@ -89,6 +316,12 @@ contract Context is IContext {
         );
         branchSelectors[_baseOpName][_branchCode] = _selector;
         branchCodes[_baseOpName][_branchName] = _branchCode;
+    }
+
+    // Note: bigger number => bigger priority
+    function addOperator(string memory _op, uint256 _priority) internal {
+        opsPriors[_op] = _priority;
+        operators.push(_op);
     }
 
     function setProgram(bytes memory _data) public {

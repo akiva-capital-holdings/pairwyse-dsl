@@ -34,7 +34,6 @@ describe('Comparator opcodes', () => {
         libraries: { OpcodeHelpers: opcodeHelpersLib.address },
       })
     ).deploy();
-    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
 
     // Deploy ComparatorOpcodesMock
     app = await (
@@ -43,19 +42,12 @@ describe('Comparator opcodes', () => {
       })
     ).deploy();
 
-    // Deploy Parser
-    const parser = await (
-      await ethers.getContractFactory('Parser', {
-        libraries: { StringUtils: stringLib.address },
-      })
-    ).deploy();
-
     // Create Stack instance
     const stackAddr = await ctx.stack();
     stack = await ethers.getContractAt('Stack', stackAddr);
 
     // Setup
-    await parser.initOpcodes(ctxAddr);
+    await ctx.initOpcodes();
     await ctx.setAppAddress(ctx.address);
     await ctx.setComparatorOpcodesAddr(comparatorOpcodesLib.address);
   });

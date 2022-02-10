@@ -12,35 +12,39 @@ interface IContext {
     }
 
     // Variables
-    function stack() external returns (Stack);
+    function stack() external view returns (Stack);
 
-    function program() external returns (bytes memory);
+    function program() external view returns (bytes memory);
 
-    function pc() external returns (uint256);
+    function pc() external view returns (uint256);
 
-    function nextpc() external returns (uint256);
+    function nextpc() external view returns (uint256);
 
-    function appAddress() external returns (address);
+    function appAddress() external view returns (address);
 
-    function msgSender() external returns (address);
+    function msgSender() external view returns (address);
 
-    function comparatorOpcodes() external returns (address);
+    function comparatorOpcodes() external view returns (address);
 
-    function logicalOpcodes() external returns (address);
+    function logicalOpcodes() external view returns (address);
 
-    function setOpcodes() external returns (address);
+    function setOpcodes() external view returns (address);
 
-    function otherOpcodes() external returns (address);
+    function otherOpcodes() external view returns (address);
 
-    function msgValue() external returns (uint256);
+    function msgValue() external view returns (uint256);
 
-    function opCodeByName(string memory _name) external returns (bytes1 _opcode);
+    function opCodeByName(string memory _name) external view returns (bytes1 _opcode);
 
-    function selectorByOpcode(bytes1 _opcode) external returns (bytes4 _selecotor);
+    function selectorByOpcode(bytes1 _opcode) external view returns (bytes4 _selecotor);
 
-    function opcodeLibNameByOpcode(bytes1 _opcode) external returns (OpcodeLibNames _name);
+    function opcodeLibNameByOpcode(bytes1 _opcode) external view returns (OpcodeLibNames _name);
 
-    function asmSelectors(string memory _name) external returns (bytes4 _selecotor);
+    function asmSelectors(string memory _name) external view returns (bytes4 _selecotor);
+
+    function opsPriors(string memory _name) external view returns (uint256 _priority);
+
+    function operators(uint256 _index) external view returns (string memory _operator);
 
     function branchSelectors(string memory _baseOpName, bytes1 _branchCode)
         external
@@ -54,6 +58,10 @@ interface IContext {
 
     // Functions
 
+    function initOpcodes() external;
+
+    function operatorsLen() external view returns (uint256);
+
     function setComparatorOpcodesAddr(address _opcodes) external;
 
     function setLogicalOpcodesAddr(address _opcodes) external;
@@ -62,20 +70,29 @@ interface IContext {
 
     function setOtherOpcodesAddr(address _opcodes) external;
 
-    function addOpcode(
-        string memory _name,
-        bytes1 _opcode,
-        bytes4 _opSelector,
-        bytes4 _asmSelector,
-        OpcodeLibNames _libName
-    ) external;
+    // function addOpcode(
+    //     string memory _name,
+    //     bytes1 _opcode,
+    //     bytes4 _opSelector,
+    //     bytes4 _asmSelector,
+    //     OpcodeLibNames _libName
+    // ) external;
 
-    function addOpcodeBranch(
-        string memory _baseOpName,
-        string memory _branchName,
-        bytes1 _branchCode,
-        bytes4 _selector
-    ) external;
+    // function addOpcodeForOperator(
+    //     string memory _name,
+    //     bytes1 _opcode,
+    //     bytes4 _opSelector,
+    //     bytes4 _asmSelector,
+    //     OpcodeLibNames _libName,
+    //     uint256 _priority
+    // ) external;
+
+    // function addOpcodeBranch(
+    //     string memory _baseOpName,
+    //     string memory _branchName,
+    //     bytes1 _branchCode,
+    //     bytes4 _selector
+    // ) external;
 
     function setProgram(bytes memory _data) external;
 

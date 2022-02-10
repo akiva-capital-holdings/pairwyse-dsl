@@ -37,7 +37,7 @@ contract App is Storage {
     }
 
     function setupContext() internal {
-        parser.initOpcodes(ctx);
+        ctx.initOpcodes();
         ctx.setAppAddress(address(this));
         ctx.setMsgSender(msg.sender);
     }

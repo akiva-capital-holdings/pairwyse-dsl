@@ -126,8 +126,11 @@ describe('Conditional transactions', () => {
     );
 
     // Setup
-    await parser.initOpcodes(txs[0].transactionCtx.address);
-    await parser.initOpcodes(txs[0].conditionCtx.address);
+    const txCtx = await ethers.getContractAt('Context', txs[0].transactionCtx.address);
+    const cdCtx = await ethers.getContractAt('Context', txs[0].conditionCtx.address);
+
+    await txCtx.initOpcodes();
+    await cdCtx.initOpcodes();
 
     await txs[0].transactionCtx.setAppAddress(app.address);
     await txs[0].transactionCtx.setMsgSender(alice.address);
@@ -212,8 +215,11 @@ describe('Conditional transactions', () => {
     );
 
     // Setup
-    await parser.initOpcodes(txs[0].transactionCtx.address);
-    await parser.initOpcodes(txs[0].conditionCtx.address);
+    const txCtx0 = await ethers.getContractAt('Context', txs[0].transactionCtx.address);
+    const cdCtx0 = await ethers.getContractAt('Context', txs[0].conditionCtx.address);
+
+    await txCtx0.initOpcodes();
+    await cdCtx0.initOpcodes();
 
     await txs[0].transactionCtx.setAppAddress(app.address);
     await txs[0].transactionCtx.setMsgSender(alice.address);
@@ -221,8 +227,11 @@ describe('Conditional transactions', () => {
     await txs[0].conditionCtx.setAppAddress(app.address);
     await txs[0].conditionCtx.setMsgSender(alice.address);
 
-    await parser.initOpcodes(txs[1].transactionCtx.address);
-    await parser.initOpcodes(txs[1].conditionCtx.address);
+    const txCtx1 = await ethers.getContractAt('Context', txs[1].transactionCtx.address);
+    const cdCtx1 = await ethers.getContractAt('Context', txs[1].conditionCtx.address);
+
+    await txCtx1.initOpcodes();
+    await cdCtx1.initOpcodes();
 
     await txs[1].transactionCtx.setAppAddress(app.address);
     await txs[1].transactionCtx.setMsgSender(bob.address);

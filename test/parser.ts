@@ -26,7 +26,7 @@ describe('Parser', () => {
     // Deploy & setup Context
     ctx = await (await ethers.getContractFactory('Context')).deploy();
     ctxAddr = ctx.address;
-    await app.initOpcodes(ctxAddr);
+    await ctx.initOpcodes();
     await ctx.setAppAddress(app.address);
     await ctx.setMsgSender(sender.address);
   });

@@ -5,6 +5,7 @@ import { Testcase } from './types';
 
 describe('Preprocessor', () => {
   let app: Preprocessor;
+  let ctxAddr: string;
 
   const jsTransform = (expr: string) =>
     expr
@@ -17,28 +18,32 @@ describe('Preprocessor', () => {
     // Deploy StringUtils library
     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
 
+    // Deploy Context
+    const ctx = await (await ethers.getContractFactory('ContextMock')).deploy();
+    ctxAddr = ctx.address;
+
+    // Setup operators & priorities
+    await ctx.addOperatorExt('!', 4);
+
+    await ctx.addOperatorExt('swap', 3);
+    await ctx.addOperatorExt('and', 3);
+
+    await ctx.addOperatorExt('xor', 2);
+    await ctx.addOperatorExt('or', 2);
+
+    await ctx.addOperatorExt('==', 1);
+    await ctx.addOperatorExt('<', 1);
+    await ctx.addOperatorExt('>', 1);
+    await ctx.addOperatorExt('<=', 1);
+    await ctx.addOperatorExt('>=', 1);
+    await ctx.addOperatorExt('!=', 1);
+
     // Deploy Preprocessor
     app = await (
       await ethers.getContractFactory('Preprocessor', {
         libraries: { StringUtils: stringLib.address },
       })
     ).deploy();
-
-    // Setup operators & priorities
-    await app.addOperator('!', 4);
-
-    await app.addOperator('swap', 3);
-    await app.addOperator('and', 3);
-
-    await app.addOperator('xor', 2);
-    await app.addOperator('or', 2);
-
-    await app.addOperator('==', 1);
-    await app.addOperator('<', 1);
-    await app.addOperator('>', 1);
-    await app.addOperator('<=', 1);
-    await app.addOperator('>=', 1);
-    await app.addOperator('!=', 1);
   });
 
   describe('infix to postfix', () => {
@@ -101,7 +106,7 @@ describe('Preprocessor', () => {
       it(name, async () => {
         const stack = await (await ethers.getContractFactory('Stack')).deploy();
         const inputArr = jsTransform(expr);
-        const res = await app.callStatic.infixToPostfix(inputArr, stack.address);
+        const res = await app.callStatic.infixToPostfix(ctxAddr, inputArr, stack.address);
         expect(res).to.eql(expected);
       });
     };
@@ -162,6 +167,7 @@ describe('Preprocessor', () => {
   describe('Execute high-level DSL', () => {
     it('parenthesis', async () => {
       const cmds = await app.callStatic.transform(
+        ctxAddr,
         '(((uint256 1 or uint256 5) or uint256 7) and uint256 1)'
       );
       const expected = [
@@ -183,6 +189,7 @@ describe('Preprocessor', () => {
     describe('parenthesis matter', () => {
       it('first', async () => {
         const cmds = await app.callStatic.transform(
+          ctxAddr,
           'uint256 1 or uint256 0 or uint256 1 and uint256 0'
         );
         const expected = [
@@ -204,6 +211,7 @@ describe('Preprocessor', () => {
 
       it('second', async () => {
         const cmds = await app.callStatic.transform(
+          ctxAddr,
           '((uint256 1 or uint256 0) or uint256 1) and uint256 0'
         );
         const expected = [
@@ -225,6 +233,7 @@ describe('Preprocessor', () => {
 
       it('third', async () => {
         const cmds = await app.callStatic.transform(
+          ctxAddr,
           '(uint256 1 or uint256 0) or (uint256 1 and uint256 0)'
         );
         const expected = [
@@ -253,7 +262,7 @@ describe('Preprocessor', () => {
           or
         loadLocal bool RISK != bool true)`;
 
-      const cmds = await app.callStatic.transform(program);
+      const cmds = await app.callStatic.transform(ctxAddr, program);
       const expected = [
         'loadLocal',
         'uint256',

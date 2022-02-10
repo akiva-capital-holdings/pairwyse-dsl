@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import { IContext } from './interfaces/IContext.sol';
 import { Stack, StackValue } from './helpers/Stack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 
@@ -9,20 +10,12 @@ import { StringUtils } from './libs/StringUtils.sol';
 contract Preprocessor {
     using StringUtils for string;
 
-    mapping(string => uint256) internal opsPriors; // todo: move to Context
     string[] internal result;
-    string[] public operators; // todo: move to Context
 
-    // Note: bigger number => bigger priority
-    function addOperator(string memory _op, uint256 _priority) external {
-        opsPriors[_op] = _priority;
-        operators.push(_op);
-    }
-
-    function transform(string memory _program) external returns (string[] memory) {
+    function transform(IContext _ctx, string memory _program) external returns (string[] memory) {
         Stack stack = new Stack();
         string[] memory code = split(_program);
-        return infixToPostfix(code, stack);
+        return infixToPostfix(_ctx, code, stack);
     }
 
     function split(string memory _program) public returns (string[] memory) {
@@ -55,7 +48,11 @@ contract Preprocessor {
         return result;
     }
 
-    function infixToPostfix(string[] memory _code, Stack _stack) public returns (string[] memory) {
+    function infixToPostfix(
+        IContext _ctx,
+        string[] memory _code,
+        Stack _stack
+    ) public returns (string[] memory) {
         delete result;
         string memory chunk;
         // console.log("\n\n", chunk);
@@ -63,11 +60,11 @@ contract Preprocessor {
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
 
-            if (isOperator(chunk)) {
+            if (isOperator(_ctx, chunk)) {
                 // console.log("%s is an operator", chunk);
                 while (
                     _stack.length() > 0 &&
-                    opsPriors[chunk] <= opsPriors[_stack.seeLast().getString()]
+                    _ctx.opsPriors(chunk) <= _ctx.opsPriors(_stack.seeLast().getString())
                 ) {
                     // console.log("result push:", _stack.seeLast().getString());
                     result.push(_stack.pop().getString());
@@ -102,9 +99,9 @@ contract Preprocessor {
         stack_.push(stackValue);
     }
 
-    function isOperator(string memory op) internal view returns (bool) {
-        for (uint256 i = 0; i < operators.length; i++) {
-            if (op.equal(operators[i])) return true;
+    function isOperator(IContext _ctx, string memory op) internal view returns (bool) {
+        for (uint256 i = 0; i < _ctx.operatorsLen(); i++) {
+            if (op.equal(_ctx.operators(i))) return true;
         }
         return false;
     }

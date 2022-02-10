@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Context } from '../typechain';
+import { ContextMock } from '../typechain';
 
 describe('Context', () => {
-  let app: Context;
+  let app: ContextMock;
 
   enum OpcodeLibNames {
     ComparatorOpcodes,
@@ -13,7 +13,7 @@ describe('Context', () => {
   }
 
   beforeEach(async () => {
-    const ContextCont = await ethers.getContractFactory('Context');
+    const ContextCont = await ethers.getContractFactory('ContextMock');
     app = await ContextCont.deploy();
   });
 
@@ -53,16 +53,16 @@ describe('Context', () => {
   describe('addOpcodeBranch', () => {
     it('error: empty opcode selector', async () => {
       await expect(
-        app.addOpcodeBranch('loadLocal', 'uint256', '0x01', '0x00000000')
+        app.addOpcodeBranchExt('loadLocal', 'uint256', '0x01', '0x00000000')
       ).to.be.revertedWith('Context: empty opcode selector');
     });
     it('error: duplicate opcode', async () => {
-      await app.addOpcodeBranch('loadLocal', 'uint256', '0x01', '0x00000001');
+      await app.addOpcodeBranchExt('loadLocal', 'uint256', '0x01', '0x00000001');
       await expect(
-        app.addOpcodeBranch('loadLocal', 'bool', '0x01', '0x00000002')
+        app.addOpcodeBranchExt('loadLocal', 'bool', '0x01', '0x00000002')
       ).to.be.revertedWith('Context: duplicate opcode branch');
       await expect(
-        app.addOpcodeBranch('loadLocal', 'uint256', '0x02', '0x00000002')
+        app.addOpcodeBranchExt('loadLocal', 'uint256', '0x02', '0x00000002')
       ).to.be.revertedWith('Context: duplicate opcode branch');
     });
     it('success', async () => {
@@ -70,7 +70,7 @@ describe('Context', () => {
       const branchName = 'uint256';
       const branchCode = '0x01';
       const selector = '0x00000001';
-      await app.addOpcodeBranch(baseOpName, branchName, branchCode, selector);
+      await app.addOpcodeBranchExt(baseOpName, branchName, branchCode, selector);
       expect(await app.branchSelectors(baseOpName, branchCode)).to.equal(selector);
       expect(await app.branchCodes(baseOpName, branchName)).to.equal(branchCode);
     });

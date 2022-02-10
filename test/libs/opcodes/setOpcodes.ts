@@ -22,7 +22,7 @@
 // import { TestCaseUint256 } from '../../types';
 // /* eslint-enable camelcase */
 
-// describe.only('Comparator opcodes', () => {
+// describe('Comparator opcodes', () => {
 //   // eslint-disable-next-line camelcase
 //   let StackCont: Stack__factory;
 //   // eslint-disable-next-line camelcase

@@ -10,11 +10,11 @@
 
 // contract OpcodesMock {
 //     function opLoadLocalAny(IContext _ctx) public {
-//         // Opcodes.opLoadLocalAny(_ctx); // todo: uncomment
+//         // Opcodes.opLoadLocalAny(_ctx);
 //     }
 
 //     function opLoadRemoteAny(IContext _ctx) public {
-//         // Opcodes.opLoadRemoteAny(_ctx); // todo: uncomment
+//         // Opcodes.opLoadRemoteAny(_ctx);
 //     }
 
 //     /**
@@ -110,35 +110,35 @@
 //     }
 
 //     function opLoadLocalUint256(IContext _ctx) public {
-//         // Opcodes.opLoadLocalUint256(_ctx); // todo: uncomment
+//         // Opcodes.opLoadLocalUint256(_ctx);
 //     }
 
 //     function opLoadLocalBytes32(IContext _ctx) public {
-//         // Opcodes.opLoadLocalBytes32(_ctx); // todo: uncomment
+//         // Opcodes.opLoadLocalBytes32(_ctx);
 //     }
 
 //     function opLoadLocalBool(IContext _ctx) public {
-//         // Opcodes.opLoadLocalBool(_ctx); // todo: uncomment
+//         // Opcodes.opLoadLocalBool(_ctx);
 //     }
 
 //     function opLoadLocalAddress(IContext _ctx) public {
-//         // Opcodes.opLoadLocalAddress(_ctx); // todo: uncomment
+//         // Opcodes.opLoadLocalAddress(_ctx);
 //     }
 
 //     function opLoadRemoteUint256(IContext _ctx) public {
-//         // Opcodes.opLoadRemoteUint256(_ctx); // todo: uncomment
+//         // Opcodes.opLoadRemoteUint256(_ctx);
 //     }
 
 //     function opLoadRemoteBytes32(IContext _ctx) public {
-//         // Opcodes.opLoadRemoteBytes32(_ctx); // todo: uncomment
+//         // Opcodes.opLoadRemoteBytes32(_ctx);
 //     }
 
 //     function opLoadRemoteBool(IContext _ctx) public {
-//         // Opcodes.opLoadRemoteBool(_ctx); // todo: uncomment
+//         // Opcodes.opLoadRemoteBool(_ctx);
 //     }
 
 //     function opLoadRemoteAddress(IContext _ctx) public {
-//         // Opcodes.opLoadRemoteAddress(_ctx); // todo: uncomment
+//         // Opcodes.opLoadRemoteAddress(_ctx);
 //     }
 
 //     function opBool(IContext _ctx) public {
@@ -179,7 +179,7 @@
 //         public
 //         returns (bytes32 result)
 //     {
-//         // return Opcodes.opLoadLocalGet(_ctx, funcSignature); // todo: uncomment
+//         // return Opcodes.opLoadLocalGet(_ctx, funcSignature);
 //     }
 
 //     // function opAddressGet(IContext _ctx) private returns (address) {}
@@ -187,6 +187,6 @@
 //     // function opLoadLocal(IContext _ctx, string memory funcSignature) private {}
 
 //     function opLoadRemote(IContext _ctx, string memory funcSignature) public {
-//         // Opcodes.opLoadRemote(_ctx, funcSignature); // todo: uncomment
+//         // Opcodes.opLoadRemote(_ctx, funcSignature);
 //     }
 // }

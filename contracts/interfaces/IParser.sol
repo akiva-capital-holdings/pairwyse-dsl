@@ -16,7 +16,7 @@ interface IParser {
 
     function parse(IContext _ctx, string memory _codeRaw) external;
 
-    function initOpcodes(IContext _ctx) external;
+    function asmSetLocalBool() external;
 
     function asmLoadLocal(IContext _ctx) external;
 
