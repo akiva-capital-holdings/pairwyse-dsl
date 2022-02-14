@@ -136,14 +136,17 @@ describe.only('Executor', () => {
         await checkStackTail(StackValue, stack, 2, [1, 3]);
       });
 
-      it('if condition is true (#2)', async () => {
+      it.only('if condition is true (#2)', async () => {
         const programTrue =
           '0x' +
           '18' + // bool
           '01' + // true
           '23' + // bnz
-          '0044' + // offset of the `bad` branch
-          '0065' + // offset of the body (after the if-else blocks)
+          '0029' + // position of the `good` branch
+          '006c' + // position of the `bad` branch
+          '1a' + // uin256
+          `${FOUR}` + // FOUR
+          '24' + // end of body
           '1a' + // good: uint256
           `${ONE}` + // good: ONE
           '1a' + // good: uint256
@@ -151,9 +154,7 @@ describe.only('Executor', () => {
           '24' + // good: end
           '1a' + // bad: uint256
           `${THREE}` + // bad: THREE
-          '24' + // bad: end
-          '1a' + // uin256
-          `${FOUR}`; // FOUR
+          '24'; // bad: end
 
         await ctx.setProgram(programTrue);
         await app.execute(ctxAddr);
@@ -169,6 +170,31 @@ describe.only('Executor', () => {
         await ctx.setProgram(programFalse);
         await app.execute(ctxAddr);
         await checkStackTail(StackValue, stack, 2, [2, 3]);
+      });
+
+      it('if condition is false (#2)', async () => {
+        const programTrue =
+          '0x' +
+          '18' + // bool
+          '00' + // true
+          '23' + // bnz
+          '0022' + // offset of the `good` branch
+          '0065' + // offset of the `bad` branch
+          '1a' + // uin256
+          `${FOUR}` + // FOUR
+          '24' + // end of body
+          '1a' + // good: uint256
+          `${ONE}` + // good: ONE
+          '1a' + // good: uint256
+          `${TWO}` + // good: TWO
+          '24' + // good: end
+          '1a' + // bad: uint256
+          `${THREE}` + // bad: THREE
+          '24'; // bad: end
+
+        await ctx.setProgram(programTrue);
+        await app.execute(ctxAddr);
+        await checkStackTail(StackValue, stack, 2, [3, 4]);
       });
     });
 

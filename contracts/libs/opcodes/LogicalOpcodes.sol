@@ -9,7 +9,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @title Logical operator opcodes
@@ -19,8 +19,8 @@ library LogicalOpcodes {
     using UnstructuredStorage for bytes32;
     using StringUtils for string;
 
+    // TODO: clean up
     function opBnz(IContext _ctx) public {
-        // console.log('opBnz');
         if (_ctx.stack().length() == 0) {
             // console.log('notihing in the stack');
             OpcodeHelpers.putToStack(_ctx, 0); // for if-else condition to work all the time
@@ -29,26 +29,34 @@ library LogicalOpcodes {
         StackValue last = _ctx.stack().pop();
         require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type in the stack');
 
-        uint16 _offsetFalseBranch = getUint16(_ctx);
-        // console.log('offset (false) =', _offsetFalseBranch);
-        uint16 _offsetCode = getUint16(_ctx);
-        // console.log('offset (code) =', _offsetCode);
+        uint16 _posTrueBranch = getUint16(_ctx);
+        console.log('pos (true) =', _posTrueBranch);
+        uint16 _posFalseBranch = getUint16(_ctx);
+        console.log('pos (false) =', _posFalseBranch);
 
-        // console.log('pc =', _ctx.pc());
-        _ctx.setNextPc(_ctx.pc() + _offsetCode);
+        _ctx.setNextPc(_ctx.pc());
 
         if (last.getUint256() > 0) {
-            // console.log('if condition is true');
-            _ctx.setPc(_ctx.pc());
+            console.log('if condition is true');
+            console.log('pc =', _ctx.pc());
+            _ctx.setPc(
+                /*_ctx.pc() + */
+                _posTrueBranch
+            );
         } else {
-            // console.log('if condition is false');
-            _ctx.setPc(_ctx.pc() + _offsetFalseBranch);
+            console.log('if condition is false');
+            console.log('pc =', _ctx.pc());
+            _ctx.setPc(
+                /*_ctx.pc() + */
+                _posFalseBranch
+            );
         }
     }
 
     function opEnd(IContext _ctx) public {
+        // console.log('\n\nopEnd');
         _ctx.setPc(_ctx.nextpc());
-        _ctx.setNextPc(0);
+        _ctx.setNextPc(_ctx.program().length);
     }
 
     function getUint16(IContext _ctx) public returns (uint16) {

@@ -31,4 +31,6 @@ interface IParser {
     function asmTransfer() external;
 
     function asmTransferFrom() external;
+
+    function asmBnz() external;
 }

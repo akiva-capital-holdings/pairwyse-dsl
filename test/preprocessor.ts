@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { Preprocessor } from '../typechain';
 import { Testcase } from './types';
 
-describe('Preprocessor', () => {
+describe.only('Preprocessor', () => {
   let app: Preprocessor;
   let ctxAddr: string;
 
@@ -290,7 +290,7 @@ describe('Preprocessor', () => {
       expect(cmds).to.eql(expected);
     });
 
-    it('if-else expression', async () => {
+    it.only('if-else expression', async () => {
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;
       const THREE = new Array(64).join('0') + 3;
@@ -299,7 +299,9 @@ describe('Preprocessor', () => {
       const program = `
         bool true
         bnz good bad
+
         uint256 ${FOUR}
+        end
 
         good {
           uint256 ${ONE}
@@ -320,6 +322,7 @@ describe('Preprocessor', () => {
         'bad',
         'uint256',
         FOUR,
+        'end',
         'good',
         'uint256',
         ONE,

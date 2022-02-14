@@ -1,11 +1,11 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Context, Parser } from '../typechain';
+import { Context, ParserMock } from '../typechain';
 
-describe('Parser', () => {
+describe.only('Parser', () => {
   let sender: SignerWithAddress;
-  let app: Parser;
+  let app: ParserMock;
   let ctx: Context;
   let ctxAddr: string;
 
@@ -16,7 +16,7 @@ describe('Parser', () => {
     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
 
     // Deploy Parser
-    const ParserCont = await ethers.getContractFactory('Parser', {
+    const ParserCont = await ethers.getContractFactory('ParserMock', {
       libraries: { StringUtils: stringLib.address },
     });
     app = await ParserCont.deploy();
@@ -73,33 +73,35 @@ describe('Parser', () => {
       await expect(app.parse(ctxAddr, '?!')).to.be.revertedWith('Parser: "?!" command is unknown');
     });
 
-    it.skip('if-else condition', async () => {
+    it.only('if-else condition', async () => {
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;
       const THREE = new Array(64).join('0') + 3;
       const FOUR = new Array(64).join('0') + 4;
 
       // to Preprocessor
-      await app.parse(
-        ctxAddr,
-        `
-        bool true
-        bnz good bad
-        uint256 ${FOUR}
+      // await app.parse(
+      //   ctxAddr,
+      //   `
+      //   bool true
+      //   bnz good bad
 
-        good {
-          uint256 ${ONE}
-          uint256 ${TWO}
-        }
-        
-        bad {
-          uint256 ${THREE}
-        }
-        `
-      );
+      //   uint256 ${FOUR}
+      //   end
+
+      //   good {
+      //     uint256 ${ONE}
+      //     uint256 ${TWO}
+      //   }
+
+      //   bad {
+      //     uint256 ${THREE}
+      //   }
+      //   `
+      // );
 
       // to Parser
-      const parserInput = [
+      await app.parseCodeExt(ctxAddr, [
         'bool',
         'true',
         'bnz',
@@ -107,6 +109,7 @@ describe('Parser', () => {
         'bad',
         'uint256',
         FOUR,
+        'end',
         'good',
         'uint256',
         ONE,
@@ -117,16 +120,19 @@ describe('Parser', () => {
         'uint256',
         THREE,
         'end',
-      ];
+      ]);
 
       // to Executor
-      const executorInput =
+      const expected =
         '0x' +
         '18' + // bool
         '01' + // true
         '23' + // bnz
-        '0044' + // offset of the `bad` branch
-        '0065' + // offset of the body (after the if-else blocks)
+        '0029' + // position of the `good` branch
+        '006c' + // position of the `bad` branch
+        '1a' + // uin256
+        `${FOUR}` + // FOUR
+        '24' + // end of body
         '1a' + // good: uint256
         `${ONE}` + // good: ONE
         '1a' + // good: uint256
@@ -134,9 +140,8 @@ describe('Parser', () => {
         '24' + // good: end
         '1a' + // bad: uint256
         `${THREE}` + // bad: THREE
-        '24' + // bad: end
-        '1a' + // uin256
-        `${FOUR}`; // FOUR
+        '24'; // bad: end
+      expect(await ctx.program()).to.equal(expected);
     });
   });
 });
