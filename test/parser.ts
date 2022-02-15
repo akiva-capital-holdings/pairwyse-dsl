@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { Context, ParserMock } from '../typechain';
 
-describe.only('Parser', () => {
+describe('Parser', () => {
   let sender: SignerWithAddress;
   let app: ParserMock;
   let ctx: Context;
@@ -14,10 +14,11 @@ describe.only('Parser', () => {
 
     // Deploy StringUtils library
     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
+    const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
 
     // Deploy Parser
     const ParserCont = await ethers.getContractFactory('ParserMock', {
-      libraries: { StringUtils: stringLib.address },
+      libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
     });
     app = await ParserCont.deploy();
   });
@@ -73,7 +74,7 @@ describe.only('Parser', () => {
       await expect(app.parse(ctxAddr, '?!')).to.be.revertedWith('Parser: "?!" command is unknown');
     });
 
-    it.only('if-else condition', async () => {
+    it('if-else condition', async () => {
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;
       const THREE = new Array(64).join('0') + 3;
@@ -84,7 +85,7 @@ describe.only('Parser', () => {
       //   ctxAddr,
       //   `
       //   bool true
-      //   bnz good bad
+      //   ifelse good bad
 
       //   uint256 ${FOUR}
       //   end
@@ -104,7 +105,7 @@ describe.only('Parser', () => {
       await app.parseCodeExt(ctxAddr, [
         'bool',
         'true',
-        'bnz',
+        'ifelse',
         'good',
         'bad',
         'uint256',
@@ -127,7 +128,7 @@ describe.only('Parser', () => {
         '0x' +
         '18' + // bool
         '01' + // true
-        '23' + // bnz
+        '23' + // ifelse
         '0029' + // position of the `good` branch
         '006c' + // position of the `bad` branch
         '1a' + // uin256

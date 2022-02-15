@@ -19,10 +19,8 @@ library LogicalOpcodes {
     using UnstructuredStorage for bytes32;
     using StringUtils for string;
 
-    // TODO: clean up
-    function opBnz(IContext _ctx) public {
+    function opIfelse(IContext _ctx) public {
         if (_ctx.stack().length() == 0) {
-            // console.log('notihing in the stack');
             OpcodeHelpers.putToStack(_ctx, 0); // for if-else condition to work all the time
         }
 
@@ -30,31 +28,13 @@ library LogicalOpcodes {
         require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type in the stack');
 
         uint16 _posTrueBranch = getUint16(_ctx);
-        console.log('pos (true) =', _posTrueBranch);
         uint16 _posFalseBranch = getUint16(_ctx);
-        console.log('pos (false) =', _posFalseBranch);
 
         _ctx.setNextPc(_ctx.pc());
-
-        if (last.getUint256() > 0) {
-            console.log('if condition is true');
-            console.log('pc =', _ctx.pc());
-            _ctx.setPc(
-                /*_ctx.pc() + */
-                _posTrueBranch
-            );
-        } else {
-            console.log('if condition is false');
-            console.log('pc =', _ctx.pc());
-            _ctx.setPc(
-                /*_ctx.pc() + */
-                _posFalseBranch
-            );
-        }
+        _ctx.setPc(last.getUint256() > 0 ? _posTrueBranch : _posFalseBranch);
     }
 
     function opEnd(IContext _ctx) public {
-        // console.log('\n\nopEnd');
         _ctx.setPc(_ctx.nextpc());
         _ctx.setNextPc(_ctx.program().length);
     }

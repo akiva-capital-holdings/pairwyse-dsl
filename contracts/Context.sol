@@ -141,12 +141,12 @@ contract Context is IContext {
             2
         );
 
-        // Branching (bnz = branch non-zero)
+        // Branching
         addOpcode(
-            'bnz',
+            'ifelse',
             0x23,
-            LogicalOpcodes.opBnz.selector,
-            IParser.asmBnz.selector,
+            LogicalOpcodes.opIfelse.selector,
+            IParser.asmIfelse.selector,
             OpcodeLibNames.LogicalOpcodes
         );
         addOpcode('end', 0x24, LogicalOpcodes.opEnd.selector, 0x0, OpcodeLibNames.LogicalOpcodes);

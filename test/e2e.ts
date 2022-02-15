@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
-import { App, Context, Stack, StackValue__factory } from '../typechain';
+import { E2EApp, Context, Preprocessor, Stack, StackValue__factory } from '../typechain';
 import { checkStack, hex4Bytes, hex4BytesShort } from './utils/utils';
 
 async function getChainId() {
@@ -10,8 +10,10 @@ async function getChainId() {
 // TODO: make more thorough end-to-end testing
 describe('End-to-end', () => {
   let stack: Stack;
+  let preprocessor: Preprocessor;
   let ctx: Context;
-  let app: App;
+  let ctxAddr: string;
+  let app: E2EApp;
   let StackValue: StackValue__factory;
   let NEXT_MONTH: number;
   let PREV_MONTH: number;
@@ -62,17 +64,26 @@ describe('End-to-end', () => {
       })
     ).deploy();
     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
+    const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
     const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
 
-    // Deploy Parser
-    const parser = await (
-      await ethers.getContractFactory('Parser', {
+    // Deploy Preprocessor
+    preprocessor = await (
+      await ethers.getContractFactory('Preprocessor', {
         libraries: { StringUtils: stringLib.address },
+      })
+    ).deploy();
+
+    // Deploy ParserMock
+    const parser = await (
+      await ethers.getContractFactory('ParserMock', {
+        libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
       })
     ).deploy();
 
     // Deploy Context & setup
     ctx = await (await ethers.getContractFactory('Context')).deploy();
+    ctxAddr = ctx.address;
     await ctx.setComparatorOpcodesAddr(comparatorOpcodesLib.address);
     await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
     await ctx.setSetOpcodesAddr(setOpcodesLib.address);
@@ -85,8 +96,8 @@ describe('End-to-end', () => {
 
     // Deploy Application
     app = await (
-      await ethers.getContractFactory('App', { libraries: { Executor: executorLib.address } })
-    ).deploy(parser.address, ctx.address);
+      await ethers.getContractFactory('E2EApp', { libraries: { Executor: executorLib.address } })
+    ).deploy(preprocessor.address, parser.address, ctxAddr);
   });
 
   describe('blockChainId < loadLocal uint256 VAR', () => {
@@ -194,5 +205,76 @@ describe('End-to-end', () => {
       it('((F & T) | F) == F', async () => testCase(NEXT_MONTH, NEXT_MONTH, ITS_RISKY, 0, 1, 0, 0));
       it('((F & F) | F) == F', async () => testCase(NEXT_MONTH, PREV_MONTH, ITS_RISKY, 0, 0, 0, 0));
     });
+  });
+
+  it('if-else branch', async () => {
+    const ONE = new Array(64).join('0') + 1;
+    const TWO = new Array(64).join('0') + 2;
+    const THREE = new Array(64).join('0') + 3;
+    const FOUR = new Array(64).join('0') + 4;
+
+    // to Preprocessor (input)
+    const input = `
+      bool true
+      ifelse good bad
+
+      uint256 ${FOUR}
+      end
+
+      good {
+        uint256 ${ONE}
+        uint256 ${TWO}
+      }
+
+      bad {
+        uint256 ${THREE}
+      }
+      `;
+    const code = await preprocessor.callStatic.transform(ctxAddr, input);
+    const expectedCode = [
+      'bool',
+      'true',
+      'ifelse',
+      'good',
+      'bad',
+      'uint256',
+      FOUR,
+      'end',
+      'good',
+      'uint256',
+      ONE,
+      'uint256',
+      TWO,
+      'end',
+      'bad',
+      'uint256',
+      THREE,
+      'end',
+    ];
+    expect(code).to.eql(expectedCode);
+
+    // to Parser
+    await app.parseCode(code);
+
+    // to Executor
+    const expectedProgram =
+      '0x' +
+      '18' + // bool
+      '01' + // true
+      '23' + // ifelse
+      '0029' + // position of the `good` branch
+      '006c' + // position of the `bad` branch
+      '1a' + // uin256
+      `${FOUR}` + // FOUR
+      '24' + // end of body
+      '1a' + // good: uint256
+      `${ONE}` + // good: ONE
+      '1a' + // good: uint256
+      `${TWO}` + // good: TWO
+      '24' + // good: end
+      '1a' + // bad: uint256
+      `${THREE}` + // bad: THREE
+      '24'; // bad: end
+    expect(await ctx.program()).to.equal(expectedProgram);
   });
 });

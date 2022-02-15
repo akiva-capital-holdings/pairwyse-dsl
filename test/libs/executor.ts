@@ -6,7 +6,7 @@ import { Context, StackValue__factory, Stack } from '../../typechain';
 import { ExecutorMock } from '../../typechain/ExecutorMock';
 import { checkStack, checkStackTail, hex4Bytes } from '../utils/utils';
 
-describe.only('Executor', () => {
+describe('Executor', () => {
   let ctx: Context;
   let ctxAddr: string;
   let stack: Stack;
@@ -105,7 +105,7 @@ describe.only('Executor', () => {
       const FOUR = new Array(64).join('0') + 4;
 
       it('nothing in the stack', async () => {
-        const programTrue = `0x 23 0022 0044  1a ${ONE} 24  1a ${TWO} 24  1a ${THREE}`
+        const programTrue = `0x 23 0027 0049  1a ${THREE} 24  1a ${ONE} 24  1a ${TWO} 24`
           .split(' ')
           .filter((x) => !!x)
           .join('');
@@ -123,10 +123,10 @@ describe.only('Executor', () => {
          * 0044 offset of the body
          * 1a uint256
          * ONE, TWO, THREE - just a uint256 number
-         * 23 bnz
+         * 23 ifelse
          * 24 end
          */
-        const programTrue = `0x 18 01 23 0022 0044  1a ${ONE} 24  1a ${TWO} 24  1a ${THREE}`
+        const programTrue = `0x 18 01 23 0029 0000  1a ${THREE} 24  1a ${ONE} 24  1a ${TWO} 24`
           .split(' ')
           .filter((x) => !!x)
           .join('');
@@ -136,12 +136,12 @@ describe.only('Executor', () => {
         await checkStackTail(StackValue, stack, 2, [1, 3]);
       });
 
-      it.only('if condition is true (#2)', async () => {
+      it('if condition is true (#2)', async () => {
         const programTrue =
           '0x' +
           '18' + // bool
           '01' + // true
-          '23' + // bnz
+          '23' + // ifelse
           '0029' + // position of the `good` branch
           '006c' + // position of the `bad` branch
           '1a' + // uin256
@@ -162,7 +162,7 @@ describe.only('Executor', () => {
       });
 
       it('if condition is false', async () => {
-        const programFalse = `0x 18 00 23 0022 0044  1a ${ONE} 24  1a ${TWO} 24  1a ${THREE}`
+        const programFalse = `0x 18 00 23 0029 004b  1a ${THREE} 24  1a ${ONE} 24  1a ${TWO} 24`
           .split(' ')
           .filter((x) => !!x)
           .join('');
@@ -177,9 +177,9 @@ describe.only('Executor', () => {
           '0x' +
           '18' + // bool
           '00' + // true
-          '23' + // bnz
-          '0022' + // offset of the `good` branch
-          '0065' + // offset of the `bad` branch
+          '23' + // ifelse
+          '0029' + // offset of the `good` branch
+          '006c' + // offset of the `bad` branch
           '1a' + // uin256
           `${FOUR}` + // FOUR
           '24' + // end of body

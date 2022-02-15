@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import 'hardhat/console.sol';
-
 library StringUtils {
     function char(string memory s, uint256 index) public pure returns (string memory) {
         require(index < length(s), 'String: index out of range');

@@ -1,21 +1,28 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IParser } from '../interfaces/IParser.sol';
+import { Preprocessor } from '../Preprocessor.sol';
+import { ParserMock } from '../mocks/ParserMock.sol';
 import { IContext } from '../interfaces/IContext.sol';
 import { Executor } from '../libs/Executor.sol';
 import { Storage } from '../helpers/Storage.sol';
 
 // import "hardhat/console.sol";
 
-contract App is Storage {
-    IParser public parser;
+contract E2EApp is Storage {
+    Preprocessor public preprocessor;
+    ParserMock public parser;
     IContext public ctx;
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    constructor(IParser _parser, IContext _ctx) {
+    constructor(
+        Preprocessor _preprocessor,
+        ParserMock _parser,
+        IContext _ctx
+    ) {
+        preprocessor = _preprocessor;
         parser = _parser;
         ctx = _ctx;
         setupContext();
@@ -23,6 +30,10 @@ contract App is Storage {
 
     function parse(string memory _program) external {
         parser.parse(ctx, _program);
+    }
+
+    function parseCode(string[] memory _code) external {
+        parser.parseCodeExt(ctx, _code);
     }
 
     function execute() external payable {

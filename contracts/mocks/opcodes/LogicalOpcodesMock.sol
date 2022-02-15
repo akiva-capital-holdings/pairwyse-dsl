@@ -5,8 +5,8 @@ import { IContext } from '../../interfaces/IContext.sol';
 import { LogicalOpcodes } from '../../libs/opcodes/LogicalOpcodes.sol';
 
 contract LogicalOpcodesMock {
-    function opBnz(IContext _ctx) public {
-        LogicalOpcodes.opBnz(_ctx);
+    function opIfelse(IContext _ctx) public {
+        LogicalOpcodes.opIfelse(_ctx);
     }
 
     function opEnd(IContext _ctx) public {

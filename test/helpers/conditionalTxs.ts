@@ -68,6 +68,7 @@ describe('Conditional transactions', () => {
       })
     ).deploy();
     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
+    const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
     const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
 
     // Deploy contracts
@@ -87,6 +88,7 @@ describe('Conditional transactions', () => {
       await ethers.getContractFactory('Parser', {
         libraries: {
           StringUtils: stringLib.address,
+          ByteUtils: byteLib.address,
         },
       })
     ).deploy();

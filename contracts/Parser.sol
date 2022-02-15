@@ -5,6 +5,7 @@ import { IERC20 } from './interfaces/IERC20.sol';
 import { IContext } from './interfaces/IContext.sol';
 import { IParser } from './interfaces/IParser.sol';
 import { StringUtils } from './libs/StringUtils.sol';
+import { ByteUtils } from './libs/ByteUtils.sol';
 import { Storage } from './helpers/Storage.sol';
 import { Preprocessor } from './Preprocessor.sol';
 
@@ -12,6 +13,7 @@ import 'hardhat/console.sol';
 
 contract Parser is IParser, Storage {
     using StringUtils for string;
+    using ByteUtils for bytes;
 
     Preprocessor public preprocessor;
 
@@ -78,24 +80,17 @@ contract Parser is IParser, Storage {
         asmUint256();
     }
 
-    // TODO: clean up
-    function asmBnz() public {
-        console.log('asmBnz');
-
+    function asmIfelse() public {
         string memory _true = nextCmd();
         string memory _false = nextCmd();
 
-        labelPos[_true] = program.length; // `true` branch ...
-        console.log('true =', program.length);
+        labelPos[_true] = program.length; // `true` branch position
         program = bytes.concat(program, bytes2(0)); // placeholder for `true` branch offset
 
-        // uint256 TRUE_BRANCH_POS_SIZE = 2;
-        labelPos[_false] = program.length; // `false` branch ...
-        console.log('false =', program.length);
+        labelPos[_false] = program.length; // `false` branch position
         program = bytes.concat(program, bytes2(0)); // placeholder for `false` branch offset
 
-        // console.log('bnz location =', _bnzLocation);
-        console.logBytes(program);
+        // console.logBytes(program);
     }
 
     /**
@@ -117,11 +112,10 @@ contract Parser is IParser, Storage {
             parseOpcodeWithParams(_ctx);
         }
 
-        console.logBytes(program);
+        // console.logBytes(program);
         _ctx.setProgram(program);
     }
 
-    // TODO: clean up
     function parseOpcodeWithParams(IContext _ctx) internal {
         string storage cmd = nextCmd();
         bytes1 opcode = _ctx.opCodeByName(cmd);
@@ -132,24 +126,10 @@ contract Parser is IParser, Storage {
         );
 
         if (isLabel(cmd)) {
-            console.log(cmd);
-            console.log('...is a label');
-            console.log('program.length =', program.length);
-            console.log('label pos =', labelPos[cmd]);
-            uint256 _branchLocation = program.length; /* - labelPos[cmd]*/
-            console.log('branch location =', _branchLocation);
-            // console.logBytes(program);
-            bytes memory programBefore = this.slice(program, 0, labelPos[cmd]);
-            // bytes memory branchPositionStorage = this.slice(
-            //     program,
-            //     labelPos[cmd],
-            //     labelPos[cmd] + 2
-            // );
-            // console.logBytes(branchPositionStorage);
-            bytes memory programAfter = this.slice(program, labelPos[cmd] + 2, program.length);
+            uint256 _branchLocation = program.length;
+            bytes memory programBefore = program.slice(0, labelPos[cmd]);
+            bytes memory programAfter = program.slice(labelPos[cmd] + 2, program.length);
             program = bytes.concat(programBefore, bytes2(uint16(_branchLocation)), programAfter);
-            // console.logBytes(program);
-            // console.logBytes(this.slice(data, _branchLocation, _branchLocation + 2));
         } else {
             program = bytes.concat(program, opcode);
 
@@ -162,15 +142,6 @@ contract Parser is IParser, Storage {
             }
         }
         // if no selector then opcode without params
-    }
-
-    // TODO: move to BytesUtils library
-    function slice(
-        bytes calldata _data,
-        uint256 _start,
-        uint256 _end
-    ) public pure returns (bytes memory) {
-        return _data[_start:_end];
     }
 
     function nextCmd() internal returns (string storage) {

@@ -60,11 +60,12 @@ describe('DSL: basic', () => {
       })
     ).deploy();
     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
+    const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
     const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
 
     // Deploy Parser
     const ParserCont = await ethers.getContractFactory('Parser', {
-      libraries: { StringUtils: stringLib.address },
+      libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
     });
     parser = await ParserCont.deploy();
 
