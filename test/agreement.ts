@@ -14,6 +14,7 @@ describe('Agreement', () => {
   let agreement: Agreement;
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
+  let carl: SignerWithAddress;
   let anybody: SignerWithAddress;
   let comparatorOpcodesLib: Contract;
   let logicalOpcodesLib: Contract;
@@ -26,7 +27,7 @@ describe('Agreement', () => {
   let NEXT_MONTH: number;
 
   before(async () => {
-    [alice, bob, anybody] = await ethers.getSigners();
+    [alice, bob, carl, anybody] = await ethers.getSigners();
 
     const lastBlockTimestamp = (
       await ethers.provider.getBlock(
@@ -252,5 +253,154 @@ describe('Agreement', () => {
       oneEth
     );
     expect(await token.balanceOf(alice.address)).to.equal(0);
+  });
+
+  it.only('Alice (borrower), Bob (lender), and Carl (insurer)', async () => {
+    const oneEth = parseEther('1');
+    const tenTokens = parseEther('10');
+    const token = await (await ethers.getContractFactory('Token'))
+      .connect(bob)
+      .deploy(parseEther('1000'));
+    const TOKEN = token.address.substring(2);
+    await token.connect(bob).transfer(carl.address, tenTokens);
+
+    // Set variables
+    await txs.setStorageAddress(hex4Bytes('TOKEN_ADDR'), token.address);
+    await txs.setStorageAddress(hex4Bytes('ALICE'), alice.address);
+    await txs.setStorageAddress(hex4Bytes('BOB'), bob.address);
+    await txs.setStorageAddress(hex4Bytes('CARL'), carl.address);
+    await txs.setStorageAddress(hex4Bytes('TRANSACTIONS'), txsAddr);
+
+    // TODO: 'setLocal address BORROWER = msgSender'
+    const steps = [
+      // Alice deposits 1 ETH to SC
+      {
+        signatory: alice.address,
+        transaction: `
+              (msgValue == uint256 ${oneEth})
+          and (setLocalBool BORROWER_DEPOSITED true)`,
+        condition: 'loadLocal bool BORROWER_DEPOSITED == bool false',
+      },
+      // Carl deposits 10 tokens to Agreement
+      {
+        signatory: carl.address,
+        transaction: `
+              (transferFrom TOKEN_ADDR CARL TRANSACTIONS ${tenTokens.toString()})
+          and (setLocalBool INSURER_DEPOSITED true)
+        `,
+        condition: 'loadLocal bool INSURER_DEPOSITED == bool false',
+      },
+      // Bob lends 10 tokens to Alice
+      {
+        signatory: bob.address,
+        transaction: `
+              (transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()})
+          and (setLocalBool LENDER_DEPOSITED true)
+        `,
+        condition: `
+              (loadLocal bool BORROWER_DEPOSITED == bool true)
+          and (loadLocal bool LENDER_DEPOSITED == bool false)
+        `,
+      },
+      // Alice returns 10 tokens to Bob and collects 1 ETH
+      {
+        signatory: alice.address,
+        transaction: `
+              (transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()})
+          and (sendEth ALICE ${oneEth})
+          and (setLocalBool OBLIGATIONS_SETTLED true)
+        `,
+        condition: `
+              (loadLocal bool LENDER_DEPOSITED == bool true)
+          and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
+        `,
+      },
+      // // If Alice didn't return 10 tokens to Bob before EXPIRY
+      // // then Bob can collect 10 tokens from Carl
+      // {},
+      // TODO: add if conditions
+      // If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens
+      {
+        signatory: carl.address,
+        transaction: `
+              (transfer ${TOKEN} CARL ${tenTokens.toString()})
+          
+              and (setLocalBool INSURER_RECEIVED_TOKENS_BACK true)
+        `,
+        condition: `
+              (blockTimestamp > loadLocal bool EXPIRY)
+          and (loadLocal bool INSURER_RECEIVED_TOKENS_BACK == bool false)`,
+      },
+    ];
+
+    // Add tx objects to Agreement
+    const txIds: string[] = [];
+    let txCtx;
+    let cdCtx;
+
+    const Ctx = await ethers.getContractFactory('Context');
+
+    for await (const step of steps) {
+      txCtx = await Ctx.deploy();
+      cdCtx = await Ctx.deploy();
+      txIds.push(
+        await agreement.callStatic.update(
+          step.signatory,
+          step.transaction,
+          step.condition,
+          txCtx.address,
+          cdCtx.address
+        )
+      );
+      await agreement.update(
+        step.signatory,
+        step.transaction,
+        step.condition,
+        txCtx.address,
+        cdCtx.address
+      );
+    }
+
+    // Alice deposits 1 ETH to SC
+    console.log('Alice deposits 1 ETH to SC');
+    await agreement.connect(alice).execute(txIds[0], { value: oneEth });
+    expect(await ethers.provider.getBalance(txsAddr)).to.equal(oneEth);
+
+    // Carl deposits 10 tokens to SC
+    console.log('Carl deposits 10 tokens to SC');
+    // console.log((await token.balanceOf(carl.address)).toString());
+    await token.connect(carl).approve(txsAddr, tenTokens);
+    await expect(() => agreement.connect(carl).execute(txIds[1])).to.changeTokenBalance(
+      token,
+      txs,
+      tenTokens
+    );
+
+    // Bob lends 10 tokens to Alice
+    console.log('Bob lends 10 tokens to Alice');
+    await token.connect(bob).approve(txsAddr, tenTokens);
+    await expect(() => agreement.connect(bob).execute(txIds[2])).to.changeTokenBalance(
+      token,
+      alice,
+      tenTokens
+    );
+
+    // Alice returns 10 tokens to Bob and collects 1 ETH
+    console.log('Alice returns 10 tokens to Bob and collects 1 ETH');
+    expect(await token.balanceOf(alice.address)).to.equal(tenTokens);
+    await token.connect(alice).approve(txsAddr, tenTokens);
+    await expect(await agreement.connect(alice).execute(txIds[3])).to.changeEtherBalance(
+      alice,
+      oneEth
+    );
+    expect(await token.balanceOf(alice.address)).to.equal(0);
+
+    // If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens
+    console.log('If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens');
+    await expect(() => agreement.connect(carl).execute(txIds[4])).to.changeTokenBalance(
+      token,
+      carl,
+      tenTokens
+    );
   });
 });

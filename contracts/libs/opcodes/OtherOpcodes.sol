@@ -101,17 +101,23 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctx, 1);
     }
 
+    // TODO: get token address from variable, not from the address itself in string as a parameter
     function opTransfer(IContext _ctx) public {
+        // console.log('opTransfer');
         address token = opAddressGet(_ctx);
+        // console.log('token', token);
         address payable recipient = payable(
             address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
         );
+        // console.log('recipient', recipient);
         uint256 amount = opUint256Get(_ctx);
+        // console.log('amount', amount);
         IERC20(token).transfer(recipient, amount);
         OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     function opTransferFrom(IContext _ctx) public {
+        // console.log('opTransferFrom');
         address payable token = payable(
             address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
         );
@@ -122,6 +128,10 @@ library OtherOpcodes {
             address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
         );
         uint256 amount = opUint256Get(_ctx);
+        // console.log('token', token);
+        // console.log('from', from);
+        // console.log('to', to);
+        // console.log('amount', amount);
         IERC20(token).transferFrom(from, to, amount);
         OpcodeHelpers.putToStack(_ctx, 1);
     }
