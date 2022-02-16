@@ -255,7 +255,7 @@ describe('Agreement', () => {
     expect(await token.balanceOf(alice.address)).to.equal(0);
   });
 
-  it.only('Alice (borrower), Bob (lender), and Carl (insurer)', async () => {
+  it('Alice (borrower), Bob (lender), and Carl (insurer)', async () => {
     const oneEth = parseEther('1');
     const tenTokens = parseEther('10');
     const token = await (await ethers.getContractFactory('Token'))
@@ -267,6 +267,7 @@ describe('Agreement', () => {
     // Set variables
     await txs.setStorageAddress(hex4Bytes('TOKEN_ADDR'), token.address);
     await txs.setStorageAddress(hex4Bytes('ALICE'), alice.address);
+    await txs.setStorageUint256(hex4Bytes('EXPIRY'), NEXT_MONTH);
     await txs.setStorageAddress(hex4Bytes('BOB'), bob.address);
     await txs.setStorageAddress(hex4Bytes('CARL'), carl.address);
     await txs.setStorageAddress(hex4Bytes('TRANSACTIONS'), txsAddr);
@@ -315,20 +316,30 @@ describe('Agreement', () => {
           and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
         `,
       },
-      // // If Alice didn't return 10 tokens to Bob before EXPIRY
-      // // then Bob can collect 10 tokens from Carl
-      // {},
-      // TODO: add if conditions
+      // If Alice didn't return 10 tokens to Bob before EXPIRY
+      // then Bob can collect 10 tokens from Carl
+      {
+        signatory: bob.address,
+        transaction: `
+              (transfer ${TOKEN} BOB ${tenTokens.toString()})
+          and (setLocalBool LENDER_WITHDRAW_INSURERS true)
+        `,
+        condition: `
+              (blockTimestamp > loadLocal uint256 EXPIRY)
+          and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
+          and (loadLocal bool LENDER_WITHDRAW_INSURERS == bool false)
+        `,
+      },
       // If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens
       {
         signatory: carl.address,
         transaction: `
               (transfer ${TOKEN} CARL ${tenTokens.toString()})
-          
-              and (setLocalBool INSURER_RECEIVED_TOKENS_BACK true)
+          and (setLocalBool INSURER_RECEIVED_TOKENS_BACK true)
         `,
         condition: `
-              (blockTimestamp > loadLocal bool EXPIRY)
+              (blockTimestamp > loadLocal uint256 EXPIRY)
+          and (loadLocal bool LENDER_WITHDRAW_INSURERS == bool false)
           and (loadLocal bool INSURER_RECEIVED_TOKENS_BACK == bool false)`,
       },
     ];
@@ -386,21 +397,35 @@ describe('Agreement', () => {
     );
 
     // Alice returns 10 tokens to Bob and collects 1 ETH
-    console.log('Alice returns 10 tokens to Bob and collects 1 ETH');
-    expect(await token.balanceOf(alice.address)).to.equal(tenTokens);
-    await token.connect(alice).approve(txsAddr, tenTokens);
-    await expect(await agreement.connect(alice).execute(txIds[3])).to.changeEtherBalance(
-      alice,
-      oneEth
-    );
-    expect(await token.balanceOf(alice.address)).to.equal(0);
+    // console.log('Alice returns 10 tokens to Bob and collects 1 ETH');
+    // expect(await token.balanceOf(alice.address)).to.equal(tenTokens);
+    // await token.connect(alice).approve(txsAddr, tenTokens);
+    // await expect(await agreement.connect(alice).execute(txIds[3])).to.changeEtherBalance(
+    //   alice,
+    //   oneEth
+    // );
+    // expect(await token.balanceOf(alice.address)).to.equal(0);
 
-    // If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens
-    console.log('If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens');
-    await expect(() => agreement.connect(carl).execute(txIds[4])).to.changeTokenBalance(
+    // If Alice didn't return 10 tokens to Bob before EXPIRY
+    // then Bob can collect 10 tokens from Carl
+    await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
+    console.log(
+      'If Alice didn not return 10 tokens to Bob before EXPIRY then ' +
+        'Bob can collect 10 tokens from Carl'
+    );
+    await expect(() => agreement.connect(bob).execute(txIds[4])).to.changeTokenBalance(
       token,
-      carl,
+      bob,
       tenTokens
     );
+
+    // // If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens
+    // await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
+    // console.log('If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens');
+    // await expect(() => agreement.connect(carl).execute(txIds[5])).to.changeTokenBalance(
+    //   token,
+    //   carl,
+    //   tenTokens
+    // );
   });
 });
