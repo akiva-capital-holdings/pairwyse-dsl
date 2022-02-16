@@ -149,6 +149,13 @@ contract Context is IContext {
             IParser.asmIfelse.selector,
             OpcodeLibNames.LogicalOpcodes
         );
+        addOpcode(
+            'if',
+            0x25,
+            LogicalOpcodes.opIf.selector,
+            IParser.asmIf.selector,
+            OpcodeLibNames.LogicalOpcodes
+        );
         addOpcode('end', 0x24, LogicalOpcodes.opEnd.selector, 0x0, OpcodeLibNames.LogicalOpcodes);
 
         // Simple Opcodes

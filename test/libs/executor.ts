@@ -98,6 +98,70 @@ describe('Executor', () => {
       await expect(app.execute(ctxAddr)).to.be.revertedWith('Executor: call not success');
     });
 
+    describe('if', () => {
+      const ONE = new Array(64).join('0') + 1;
+      const TWO = new Array(64).join('0') + 2;
+      const FOUR = new Array(64).join('0') + 4;
+
+      it('nothing in the stack', async () => {
+        await ctx.setProgram(
+          '0x' +
+            '25' + // if
+            '0027' + // position of the `action` branch
+            '1a' + // uin256
+            `${FOUR}` + // FOUR
+            '24' + // end of body
+            '1a' + // action: uint256
+            `${ONE}` + // action: ONE
+            '1a' + // action: uint256
+            `${TWO}` + // action: TWO
+            '24' // action: end
+        );
+        await app.execute(ctxAddr);
+        await checkStackTail(StackValue, stack, 0, []);
+      });
+
+      it('if condition is true', async () => {
+        await ctx.setProgram(
+          '0x' +
+            '18' + // bool
+            '01' + // true
+            '25' + // if
+            '0027' + // position of the `action` branch
+            '1a' + // uin256
+            `${FOUR}` + // FOUR
+            '24' + // end of body
+            '1a' + // action: uint256
+            `${ONE}` + // action: ONE
+            '1a' + // action: uint256
+            `${TWO}` + // action: TWO
+            '24' // action: end
+        );
+        await app.execute(ctxAddr);
+        await checkStackTail(StackValue, stack, 3, [1, 2, 4]);
+      });
+
+      it('if condition is false', async () => {
+        await ctx.setProgram(
+          '0x' +
+            '18' + // bool
+            '00' + // false
+            '25' + // if
+            '0027' + // position of the `action` branch
+            '1a' + // uin256
+            `${FOUR}` + // FOUR
+            '24' + // end of body
+            '1a' + // action: uint256
+            `${ONE}` + // action: ONE
+            '1a' + // action: uint256
+            `${TWO}` + // action: TWO
+            '24' // action: end
+        );
+        await app.execute(ctxAddr);
+        await checkStackTail(StackValue, stack, 0, []);
+      });
+    });
+
     describe('if-else', () => {
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;

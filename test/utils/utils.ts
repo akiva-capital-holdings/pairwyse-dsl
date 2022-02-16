@@ -114,6 +114,28 @@ export async function checkStackTail(
   }
 }
 
+export async function checkStackTailv2(
+  SV: StackValue__factory,
+  stack: Stack,
+  expectedValues: number[],
+  type: 'string' | 'number' = 'number',
+  badLenErr = 'Bad stack length',
+  badValueErr = 'Bad stack value'
+) {
+  for (let i = 0; i < expectedValues.length; i++) {
+    await checkStack(
+      SV,
+      stack,
+      expectedValues.length,
+      expectedValues[expectedValues.length - 1 - i],
+      i,
+      type,
+      badLenErr,
+      badValueErr
+    );
+  }
+}
+
 /**
  * Test stack with two values that combines into a single value after the
  * operation. Ex. 1 > 2 = 0

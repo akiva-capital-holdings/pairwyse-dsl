@@ -74,34 +74,50 @@ describe('Parser', () => {
       await expect(app.parse(ctxAddr, '?!')).to.be.revertedWith('Parser: "?!" command is unknown');
     });
 
+    it('if condition', async () => {
+      const ONE = new Array(64).join('0') + 1;
+      const TWO = new Array(64).join('0') + 2;
+      const FOUR = new Array(64).join('0') + 4;
+
+      await app.parseCodeExt(ctxAddr, [
+        'bool',
+        'true',
+        'if',
+        'action',
+        'uint256',
+        FOUR,
+        'end',
+        'action',
+        'uint256',
+        ONE,
+        'uint256',
+        TWO,
+        'end',
+      ]);
+
+      const expected =
+        '0x' +
+        '18' + // bool
+        '01' + // true
+        '25' + // if
+        '0027' + // position of the `action` branch
+        '1a' + // uin256
+        `${FOUR}` + // FOUR
+        '24' + // end of body
+        '1a' + // action: uint256
+        `${ONE}` + // action: ONE
+        '1a' + // action: uint256
+        `${TWO}` + // action: TWO
+        '24'; // action: end
+      expect(await ctx.program()).to.equal(expected);
+    });
+
     it('if-else condition', async () => {
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;
       const THREE = new Array(64).join('0') + 3;
       const FOUR = new Array(64).join('0') + 4;
 
-      // to Preprocessor
-      // await app.parse(
-      //   ctxAddr,
-      //   `
-      //   bool true
-      //   ifelse good bad
-
-      //   uint256 ${FOUR}
-      //   end
-
-      //   good {
-      //     uint256 ${ONE}
-      //     uint256 ${TWO}
-      //   }
-
-      //   bad {
-      //     uint256 ${THREE}
-      //   }
-      //   `
-      // );
-
-      // to Parser
       await app.parseCodeExt(ctxAddr, [
         'bool',
         'true',
@@ -123,7 +139,6 @@ describe('Parser', () => {
         'end',
       ]);
 
-      // to Executor
       const expected =
         '0x' +
         '18' + // bool

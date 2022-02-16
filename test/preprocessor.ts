@@ -290,6 +290,43 @@ describe('Preprocessor', () => {
       expect(cmds).to.eql(expected);
     });
 
+    it('if expression', async () => {
+      const ONE = new Array(64).join('0') + 1;
+      const TWO = new Array(64).join('0') + 2;
+      const FOUR = new Array(64).join('0') + 4;
+
+      const program = `
+        bool true
+        if action
+
+        uint256 ${FOUR}
+        end
+
+        action {
+          uint256 ${ONE}
+          uint256 ${TWO}
+        }
+        `;
+
+      const cmds = await app.callStatic.transform(ctxAddr, program);
+      const expected = [
+        'bool',
+        'true',
+        'if',
+        'action',
+        'uint256',
+        FOUR,
+        'end',
+        'action',
+        'uint256',
+        ONE,
+        'uint256',
+        TWO,
+        'end',
+      ];
+      expect(cmds).to.eql(expected);
+    });
+
     it('if-else expression', async () => {
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;

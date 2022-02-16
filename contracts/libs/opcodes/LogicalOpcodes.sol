@@ -34,6 +34,24 @@ library LogicalOpcodes {
         _ctx.setPc(last.getUint256() > 0 ? _posTrueBranch : _posFalseBranch);
     }
 
+    function opIf(IContext _ctx) public {
+        if (_ctx.stack().length() == 0) {
+            OpcodeHelpers.putToStack(_ctx, 0); // for if condition to work all the time
+        }
+
+        StackValue last = _ctx.stack().pop();
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type in the stack');
+
+        uint16 _posTrueBranch = getUint16(_ctx);
+
+        if (last.getUint256() != 0) {
+            _ctx.setNextPc(_ctx.pc());
+            _ctx.setPc(_posTrueBranch);
+        } else {
+            _ctx.setNextPc(_ctx.program().length);
+        }
+    }
+
     function opEnd(IContext _ctx) public {
         _ctx.setPc(_ctx.nextpc());
         _ctx.setNextPc(_ctx.program().length);

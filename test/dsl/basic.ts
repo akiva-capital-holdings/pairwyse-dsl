@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { parseEther } from 'ethers/lib/utils';
 import { App, Context, Parser, Stack, StackValue__factory } from '../../typechain';
-import { checkStack, checkStackTail, hex4Bytes } from '../utils/utils';
+import { checkStack, checkStackTail, checkStackTailv2, hex4Bytes } from '../utils/utils';
 
 describe('DSL: basic', () => {
   let stack: Stack;
@@ -651,6 +651,42 @@ describe('DSL: basic', () => {
     await app.execute();
     expect(await dai.balanceOf(receiver.address)).to.equal(oneDAI);
     await checkStack(StackValue, stack, 1, 1);
+  });
+
+  it('if branch', async () => {
+    const ONE = new Array(64).join('0') + 1;
+    const TWO = new Array(64).join('0') + 2;
+    const FIVE = new Array(64).join('0') + 5;
+    const SIX = new Array(64).join('0') + 6;
+    const SEVEN = new Array(64).join('0') + 7;
+
+    await app.parse(`
+    
+      uint256 ${ONE}
+    
+      bool true
+      bool false
+
+      if C
+      ifelse D E
+
+      uint256 ${TWO}
+      end
+
+      C {
+        uint256 ${FIVE}
+      }
+
+      D {
+        uint256 ${SIX}
+      }
+
+      E {
+        uint256 ${SEVEN}
+      }
+    `);
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [1, 6, 2]);
   });
 
   it('TIMESTAMP > PREV_MONTH', async () => {
