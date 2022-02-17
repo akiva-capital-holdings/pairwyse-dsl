@@ -161,17 +161,18 @@ describe('Conditional transactions', () => {
   });
 
   it('test two transactions', async () => {
-    // Set variables
-    await app.setStorageAddress(hex4Bytes('ETH_RECEIVER'), bob.address);
-    await app.setStorageAddress(hex4Bytes('TOKEN_RECEIVER'), alice.address);
-    await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
-    const oneEth = ethers.utils.parseEther('1');
-    const tenTokens = ethers.utils.parseEther('10');
-
     // Deploy Token contract
     const token = await (await ethers.getContractFactory('Token'))
       .connect(bob)
       .deploy(ethers.utils.parseEther('1000'));
+
+    // Set variables
+    const oneEth = ethers.utils.parseEther('1');
+    const tenTokens = ethers.utils.parseEther('10');
+    await app.setStorageAddress(hex4Bytes('ETH_RECEIVER'), bob.address);
+    await app.setStorageAddress(hex4Bytes('TOKEN_RECEIVER'), alice.address);
+    await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
+    await app.setStorageUint256(hex4Bytes('TOKEN_ADDR'), token.address);
 
     txs.push({
       signatory: alice.address,
@@ -182,9 +183,7 @@ describe('Conditional transactions', () => {
     });
     txs.push({
       signatory: bob.address,
-      transactionStr: `transfer ${token.address.substring(
-        2
-      )} TOKEN_RECEIVER ${tenTokens.toString()}`,
+      transactionStr: `transfer TOKEN_ADDR TOKEN_RECEIVER ${tenTokens.toString()}`,
       conditionStr: 'blockTimestamp > loadLocal uint256 LOCK_TIME',
       transactionCtx: await ContextCont.deploy(),
       conditionCtx: await ContextCont.deploy(),

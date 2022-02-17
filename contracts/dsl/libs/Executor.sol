@@ -22,7 +22,6 @@ library Executor {
             bytes4 selector = _ctx.selectorByOpcode(opcodeByte1);
             require(selector != 0x0, 'Executor: did not find selector for opcode');
             IContext.OpcodeLibNames _libName = _ctx.opcodeLibNameByOpcode(opcodeByte1);
-            // require(_libName exists, 'Executor: did not find selector for opcode'); // TODO: add this check
             _ctx.incPc(1);
 
             address _lib;

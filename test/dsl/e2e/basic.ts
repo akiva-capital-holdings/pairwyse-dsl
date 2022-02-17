@@ -624,10 +624,10 @@ describe('DSL: basic', () => {
     await dai.transfer(app.address, oneDAI);
     expect(await dai.balanceOf(app.address)).to.equal(oneDAI);
 
+    await app.setStorageAddress(hex4Bytes('DAI'), dai.address);
     await app.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
-    const DAI = dai.address.substring(2);
 
-    await app.parse(`transfer ${DAI} RECEIVER ${oneDAI.toString()}`);
+    await app.parse(`transfer DAI RECEIVER ${oneDAI.toString()}`);
     await app.execute();
     expect(await dai.balanceOf(receiver.address)).to.equal(oneDAI);
     await checkStack(StackValue, stack, 1, 1);

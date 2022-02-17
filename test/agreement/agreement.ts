@@ -321,7 +321,7 @@ describe('Agreement', () => {
       {
         signatory: bob.address,
         transaction: `
-              (transfer ${TOKEN} BOB ${tenTokens.toString()})
+              (transfer TOKEN_ADDR BOB ${tenTokens.toString()})
           and (setLocalBool LENDER_WITHDRAW_INSURERS true)
         `,
         condition: `
@@ -334,7 +334,7 @@ describe('Agreement', () => {
       {
         signatory: carl.address,
         transaction: `
-              (transfer ${TOKEN} CARL ${tenTokens.toString()})
+              (transfer TOKEN_ADDR CARL ${tenTokens.toString()})
           and (setLocalBool INSURER_RECEIVED_TOKENS_BACK true)
         `,
         condition: `

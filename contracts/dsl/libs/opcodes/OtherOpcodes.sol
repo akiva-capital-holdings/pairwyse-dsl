@@ -104,7 +104,9 @@ library OtherOpcodes {
     // TODO: get token address from variable, not from the address itself in string as a parameter
     function opTransfer(IContext _ctx) public {
         // console.log('opTransfer');
-        address token = opAddressGet(_ctx);
+        address payable token = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
         // console.log('token', token);
         address payable recipient = payable(
             address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))

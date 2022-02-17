@@ -1,234 +1,169 @@
-// import { expect } from 'chai';
-// import { ethers } from 'hardhat';
-// /* eslint-disable camelcase */
-// import { Contract } from 'ethers';
-// import {
-//   Stack__factory,
-//   StackValue__factory,
-//   Context,
-//   Stack,
-//   ComparatorOpcodesMock,
-// } from '../../../typechain';
-// import {
-//   testOpLt,
-//   testOpGt,
-//   testOpLe,
-//   testOpGe,
-//   testOpAnd,
-//   testOpOr,
-//   testOpXor,
-// } from '../../utils/testOps';
-// import { checkStack, pushToStack, testTwoInputOneOutput } from '../../utils/utils';
-// import { TestCaseUint256 } from '../../types';
-// /* eslint-enable camelcase */
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+/* eslint-disable camelcase */
+import {
+  Stack__factory,
+  StackValue__factory,
+  Context,
+  Stack,
+  SetOpcodesMock,
+} from '../../../../typechain';
+import { checkStack, pushToStack } from '../../../utils/utils';
 
-// describe('Comparator opcodes', () => {
-//   // eslint-disable-next-line camelcase
-//   let StackCont: Stack__factory;
-//   // eslint-disable-next-line camelcase
-//   let StackValue: StackValue__factory;
-//   let app: ComparatorOpcodesMock;
-//   let ctx: Context;
-//   let ctxAddr: string;
-//   let stack: Stack;
+describe('Set opcodes', () => {
+  let StackCont: Stack__factory;
+  let StackValue: StackValue__factory;
+  let app: SetOpcodesMock;
+  let ctx: Context;
+  let ctxAddr: string;
+  let stack: Stack;
+  /* eslint-enable camelcase */
 
-//   before(async () => {
-//     StackCont = await ethers.getContractFactory('Stack');
-//     StackValue = await ethers.getContractFactory('StackValue');
+  before(async () => {
+    StackCont = await ethers.getContractFactory('Stack');
+    StackValue = await ethers.getContractFactory('StackValue');
 
-//     ctx = await (await ethers.getContractFactory('Context')).deploy();
-//     ctxAddr = ctx.address;
+    ctx = await (await ethers.getContractFactory('Context')).deploy();
+    ctxAddr = ctx.address;
 
-//     // Deploy libraries
-//     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-//     const otherOpcodesLib = await (
-//       await ethers.getContractFactory('OtherOpcodes', {
-//         libraries: { OpcodeHelpers: opcodeHelpersLib.address },
-//       })
-//     ).deploy();
-//     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
+    // Deploy libraries
+    const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
+    const setOpcodesLib = await (
+      await ethers.getContractFactory('SetOpcodes', {
+        libraries: { OpcodeHelpers: opcodeHelpersLib.address },
+      })
+    ).deploy();
 
-//     // Deploy ComparatorOpcodesMock
-//     app = await (
-//       await ethers.getContractFactory('ComparatorOpcodesMock', {
-//         libraries: { OtherOpcodes: otherOpcodesLib.address },
-//       })
-//     ).deploy();
+    // Deploy SetOpcodesMock
+    app = await (
+      await ethers.getContractFactory('SetOpcodesMock', {
+        libraries: { SetOpcodes: setOpcodesLib.address },
+      })
+    ).deploy();
 
-//     // Deploy Parser
-//     const parser = await (
-//       await ethers.getContractFactory('Parser', {
-//         libraries: { StringUtils: stringLib.address },
-//       })
-//     ).deploy();
+    // Create Stack instance
+    const stackAddr = await ctx.stack();
+    stack = await ethers.getContractAt('Stack', stackAddr);
 
-//     // Create Stack instance
-//     const stackAddr = await ctx.stack();
-//     stack = await ethers.getContractAt('Stack', stackAddr);
+    // Setup
+    await ctx.initOpcodes();
+    await ctx.setAppAddress(ctx.address);
+    await ctx.setSetOpcodesAddr(setOpcodesLib.address);
+  });
 
-//     // Setup
-//     await parser.initOpcodes(ctxAddr);
-//     await ctx.setAppAddress(ctx.address);
-//     await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
-//   });
+  afterEach(async () => {
+    await ctx.setPc(0);
+    await stack.clear();
+  });
 
-//   afterEach(async () => {
-//     await ctx.setPc(0);
-//     await stack.clear();
-//   });
+  describe('opAnd', () => {
+    it('errors', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [1, '5']);
+      await expect(app.opAnd(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
 
-//   it('opLoadLocalAny', async () => {
-//     await ctx.setProgram('0x1a');
-//     await expect(app.opLoadLocalAny(ctxAddr)).to.be.revertedWith(
-//       'Opcodes: mustCall call not success'
-//     );
-//   });
+      await pushToStack(StackValue, ctx, StackCont, ['5', '5']);
+      await expect(app.opAnd(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
+    });
 
-//   it('opLoadLocalGet', async () => {
-//     await ctx.setProgram('0x1a000000');
-//     await expect(app.opLoadLocalGet(ctxAddr, 'hey()')).to.be.revertedWith(
-//       'Opcodes: opLoadLocal call not success'
-//     );
-//   });
+    it('success', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [1, 1]);
+      await app.opAnd(ctxAddr);
+      await checkStack(StackValue, stack, 1, 1);
 
-//   it('opLoadRemote', async () => {
-//     const ctxAddrCut = ctxAddr.substring(2);
-//     await ctx.setProgram(`0x1a000000${ctxAddrCut}`);
-//     await expect(app.opLoadRemote(ctxAddr, 'hey()')).to.be.revertedWith(
-//       'Opcodes: opLoadRemote call not success'
-//     );
-//   });
+      await stack.clear();
+      await ctx.setPc(0);
 
-//   it('opLoadRemoteAny', async () => {});
+      await pushToStack(StackValue, ctx, StackCont, [3, 2222]);
+      await app.opAnd(ctxAddr);
+      await checkStack(StackValue, stack, 1, 1);
 
-//   describe('block', () => {
-//     it('blockNumber', async () => {
-//       const ctxStackAddress = await ctx.stack();
-//       StackCont.attach(ctxStackAddress);
+      await stack.clear();
+      await ctx.setPc(0);
 
-//       // 0x05 is NUMBER
-//       await ctx.setProgram('0x15');
+      await pushToStack(StackValue, ctx, StackCont, [2, 0]);
+      await app.opAnd(ctxAddr);
+      await checkStack(StackValue, stack, 1, 0);
 
-//       const opBlockResult = await app.opBlockNumber(ctxAddr);
+      await stack.clear();
+      await ctx.setPc(0);
 
-//       // stack size is 1
-//       expect(await stack.length()).to.equal(1);
+      await pushToStack(StackValue, ctx, StackCont, [0, 0]);
+      await app.opAnd(ctxAddr);
+      await checkStack(StackValue, stack, 1, 0);
+    });
+  });
 
-//       // get result
-//       const svResultAddress = await stack.stack(0);
-//       const svResult = StackValue.attach(svResultAddress);
+  describe('opOr', () => {
+    it('errors', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [1, '5']);
+      await expect(app.opOr(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
 
-//       expect(await svResult.getUint256()).to.equal(opBlockResult.blockNumber);
-//     });
+      await pushToStack(StackValue, ctx, StackCont, ['5', '5']);
+      await expect(app.opOr(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
+    });
 
-//     // Block timestamp doesn't work because Hardhat doesn't return timestamp
-//     it('blockTimestamp', async () => {
-//       const ctxStackAddress = await ctx.stack();
-//       StackCont.attach(ctxStackAddress);
+    it('success', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [1, 1]);
+      await app.opOr(ctxAddr);
+      await checkStack(StackValue, stack, 1, 1);
 
-//       // 0x16 is Timestamp
-//       await ctx.setProgram('0x16');
+      await stack.clear();
+      await ctx.setPc(0);
 
-//       await app.opBlockTimestamp(ctxAddr);
+      await pushToStack(StackValue, ctx, StackCont, [3, 2222]);
+      await app.opOr(ctxAddr);
+      await checkStack(StackValue, stack, 1, 1);
 
-//       // stack size is 1
-//       expect(await stack.length()).to.equal(1);
+      await stack.clear();
+      await ctx.setPc(0);
 
-//       // get result
-//       const svResultAddress = await stack.stack(0);
-//       const svResult = StackValue.attach(svResultAddress);
+      await pushToStack(StackValue, ctx, StackCont, [2, 0]);
+      await app.opOr(ctxAddr);
+      await checkStack(StackValue, stack, 1, 1);
 
-//       const lastBlockTimestamp = (
-//         await ethers.provider.getBlock(
-//           // eslint-disable-next-line no-underscore-dangle
-//           ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
-//         )
-//       ).timestamp;
+      await stack.clear();
+      await ctx.setPc(0);
 
-//       expect((await svResult.getUint256()).toNumber()).to.be.approximately(
-//         lastBlockTimestamp,
-//         1000
-//       );
-//     });
+      await pushToStack(StackValue, ctx, StackCont, [0, 0]);
+      await app.opOr(ctxAddr);
+      await checkStack(StackValue, stack, 1, 0);
+    });
+  });
 
-//     it('blockChainId', async () => {
-//       const ctxStackAddress = await ctx.stack();
-//       StackCont.attach(ctxStackAddress);
+  describe('opXor', () => {
+    it('errors', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [1, '5']);
+      await expect(app.opXor(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
 
-//       // 0x17 is ChainID
-//       await ctx.setProgram('0x17');
+      await pushToStack(StackValue, ctx, StackCont, ['5', '5']);
+      await expect(app.opXor(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
+    });
 
-//       const opBlockResult = await app.opBlockChainId(ctxAddr);
+    it('success', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [1, 1]);
+      await app.opXor(ctxAddr);
+      await checkStack(StackValue, stack, 1, 0);
 
-//       // stack size is 1
-//       expect(await stack.length()).to.equal(1);
+      await stack.clear();
+      await ctx.setPc(0);
 
-//       // get result
-//       const svResultAddress = await stack.stack(0);
-//       const svResult = StackValue.attach(svResultAddress);
+      await pushToStack(StackValue, ctx, StackCont, [3, 2222]);
+      await app.opXor(ctxAddr);
+      await checkStack(StackValue, stack, 1, 0);
 
-//       expect(await svResult.getUint256()).to.equal(opBlockResult.chainId);
-//     });
-//   });
+      await stack.clear();
+      await ctx.setPc(0);
 
-//   it('opMsgSender', async () => {
-//     const [first, second] = await ethers.getSigners();
+      await pushToStack(StackValue, ctx, StackCont, [2, 0]);
+      await app.opXor(ctxAddr);
+      await checkStack(StackValue, stack, 1, 1);
 
-//     await app.opMsgSender(ctxAddr);
-//     await checkStack(StackValue, stack, 1, 0);
-//     await stack.clear();
+      await stack.clear();
+      await ctx.setPc(0);
 
-//     await ctx.setMsgSender(first.address);
-//     await app.opMsgSender(ctxAddr);
-//     await checkStack(StackValue, stack, 1, first.address);
-//     await stack.clear();
-
-//     await ctx.setMsgSender(second.address);
-//     await app.opMsgSender(ctxAddr);
-//     await checkStack(StackValue, stack, 1, second.address);
-//   });
-
-//   it('opLoadLocalUint256', async () => {});
-
-//   it('opLoadLocalBytes32', async () => {});
-
-//   it('opLoadLocalBool', async () => {});
-
-//   it('opLoadLocalAddress', async () => {});
-
-//   it('opLoadRemoteUint256', async () => {});
-
-//   it('opLoadRemoteBytes32', async () => {});
-
-//   it('opLoadRemoteBool', async () => {});
-
-//   it('opLoadRemoteAddress', async () => {});
-
-//   it('opBool', async () => {});
-
-//   it('opUint256', async () => {});
-
-//   it('opSendEth', async () => {});
-
-//   it('opTransfer', async () => {});
-
-//   it('opTransferFrom', async () => {});
-
-//   it('opUint256Get', async () => {});
-
-//   it('putUint256ToStack', async () => {});
-
-//   it('nextBytes', async () => {});
-
-//   it('nextBytes1', async () => {});
-
-//   it('nextBranchSelector', async () => {});
-
-//   it('opLoadLocalGet', async () => {});
-
-//   it('opAddressGet', async () => {});
-
-//   it('opLoadLocal', async () => {});
-
-//   it('opLoadRemote', async () => {});
-// });
+      await pushToStack(StackValue, ctx, StackCont, [0, 0]);
+      await app.opXor(ctxAddr);
+      await checkStack(StackValue, stack, 1, 0);
+    });
+  });
+});
