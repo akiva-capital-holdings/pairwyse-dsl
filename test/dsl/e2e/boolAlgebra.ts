@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat';
-import { App, Context, Parser, Stack, StackValue__factory } from '../../typechain';
-import { checkStack } from '../utils/utils';
+import { App, Context, Parser, Stack, StackValue__factory } from '../../../typechain';
+import { checkStack } from '../../utils/utils';
 
 describe('Boolean Algebra', () => {
   let stack: Stack;

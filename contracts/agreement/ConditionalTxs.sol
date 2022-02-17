@@ -2,13 +2,13 @@
 pragma solidity ^0.8.0;
 
 // import { IConditionalTxs } from '../interfaces/IConditionalTxs.sol';
-import { IContext } from '../interfaces/IContext.sol';
-import { ComparatorOpcodes } from '../libs/opcodes/ComparatorOpcodes.sol';
-import { LogicalOpcodes } from '../libs/opcodes/LogicalOpcodes.sol';
-import { SetOpcodes } from '../libs/opcodes/SetOpcodes.sol';
-import { OtherOpcodes } from '../libs/opcodes/OtherOpcodes.sol';
-import { Executor } from '../libs/Executor.sol';
-import { Storage } from './Storage.sol';
+import { IContext } from '../dsl/interfaces/IContext.sol';
+import { ComparatorOpcodes } from '../dsl/libs/opcodes/ComparatorOpcodes.sol';
+import { LogicalOpcodes } from '../dsl/libs/opcodes/LogicalOpcodes.sol';
+import { SetOpcodes } from '../dsl/libs/opcodes/SetOpcodes.sol';
+import { OtherOpcodes } from '../dsl/libs/opcodes/OtherOpcodes.sol';
+import { Executor } from '../dsl/libs/Executor.sol';
+import { Storage } from '../dsl/helpers/Storage.sol';
 
 import 'hardhat/console.sol';
 

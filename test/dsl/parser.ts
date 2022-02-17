@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Context, ParserMock } from '../typechain';
+import { Context, ParserMock } from '../../typechain';
 
 describe('Parser', () => {
   let sender: SignerWithAddress;

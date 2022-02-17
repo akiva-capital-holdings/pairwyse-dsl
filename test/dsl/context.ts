@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { ContextMock } from '../typechain';
+import { ContextMock } from '../../typechain';
 
 describe('Context', () => {
   let app: ContextMock;

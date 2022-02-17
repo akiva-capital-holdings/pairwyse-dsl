@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IParser } from '../interfaces/IParser.sol';
-import { IContext } from '../interfaces/IContext.sol';
-import { ConditionalTxs } from '../helpers/ConditionalTxs.sol';
-import { Context } from '../Context.sol';
+import { IParser } from '../dsl/interfaces/IParser.sol';
+import { IContext } from '../dsl/interfaces/IContext.sol';
+import { Context } from '../dsl/Context.sol';
+import { ConditionalTxs } from './ConditionalTxs.sol';
 
 import 'hardhat/console.sol';
 

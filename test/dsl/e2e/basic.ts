@@ -1,8 +1,8 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { parseEther } from 'ethers/lib/utils';
-import { App, Context, Parser, Stack, StackValue__factory } from '../../typechain';
-import { checkStack, checkStackTail, checkStackTailv2, hex4Bytes } from '../utils/utils';
+import { App, Context, Parser, Stack, StackValue__factory } from '../../../typechain';
+import { checkStack, checkStackTail, checkStackTailv2, hex4Bytes } from '../../utils/utils';
 
 describe('DSL: basic', () => {
   let stack: Stack;

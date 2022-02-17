@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { StringUtilsMock } from '../../typechain';
+import { StringUtilsMock } from '../../../typechain';
 
 describe('StringUtils', () => {
   let app: StringUtilsMock;

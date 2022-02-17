@@ -3,10 +3,10 @@ import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
 import { Contract } from 'ethers';
-import { hex4Bytes } from './utils/utils';
-import { Agreement } from '../typechain/Agreement';
-import { Parser } from '../typechain/Parser';
-import { ConditionalTxs } from '../typechain';
+import { hex4Bytes } from '../utils/utils';
+import { Agreement } from '../../typechain/Agreement';
+import { Parser } from '../../typechain/Parser';
+import { ConditionalTxs } from '../../typechain';
 
 // TODO: add more complex tests with more steps. Possible problem: contract call run out of gas and made the transaction revert
 describe('Agreement', () => {

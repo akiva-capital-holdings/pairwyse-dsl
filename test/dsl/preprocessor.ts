@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Preprocessor } from '../typechain';
-import { Testcase } from './types';
+import { Preprocessor } from '../../typechain';
+import { Testcase } from '../types';
 
 describe('Preprocessor', () => {
   let app: Preprocessor;

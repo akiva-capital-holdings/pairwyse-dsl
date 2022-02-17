@@ -7,8 +7,8 @@ import {
   Context,
   Stack,
   OtherOpcodesMock,
-} from '../../../typechain';
-import { checkStack } from '../../utils/utils';
+} from '../../../../typechain';
+import { checkStack } from '../../../utils/utils';
 
 describe('Other opcodes', () => {
   let StackCont: Stack__factory;

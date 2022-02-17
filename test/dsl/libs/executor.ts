@@ -2,9 +2,9 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Context, StackValue__factory, Stack } from '../../typechain';
-import { ExecutorMock } from '../../typechain/ExecutorMock';
-import { checkStack, checkStackTail, hex4Bytes } from '../utils/utils';
+import { Context, StackValue__factory, Stack } from '../../../typechain';
+import { ExecutorMock } from '../../../typechain/ExecutorMock';
+import { checkStack, checkStackTail, hex4Bytes } from '../../utils/utils';
 
 describe('Executor', () => {
   let ctx: Context;

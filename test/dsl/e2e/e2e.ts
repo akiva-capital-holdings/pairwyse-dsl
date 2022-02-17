@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
-import { E2EApp, Context, Preprocessor, Stack, StackValue__factory } from '../typechain';
-import { checkStack, hex4Bytes, hex4BytesShort } from './utils/utils';
+import { E2EApp, Context, Preprocessor, Stack, StackValue__factory } from '../../../typechain';
+import { checkStack, hex4Bytes, hex4BytesShort } from '../../utils/utils';
 
 async function getChainId() {
   return ethers.provider.getNetwork().then((network) => network.chainId);

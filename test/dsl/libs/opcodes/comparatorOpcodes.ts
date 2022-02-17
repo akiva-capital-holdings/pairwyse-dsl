@@ -6,8 +6,8 @@ import {
   Context,
   Stack,
   ComparatorOpcodesMock,
-} from '../../../typechain';
-import { checkStack, pushToStack } from '../../utils/utils';
+} from '../../../../typechain';
+import { checkStack, pushToStack } from '../../../utils/utils';
 /* eslint-enable camelcase */
 
 describe('Comparator opcodes', () => {

@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Stack, StackValue__factory } from '../../typechain';
+import { Stack, StackValue__factory } from '../../../typechain';
 
 describe('Stack', () => {
   let stack: Stack;
