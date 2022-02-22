@@ -117,7 +117,7 @@ export async function checkStackTail(
 export async function checkStackTailv2(
   SV: StackValue__factory,
   stack: Stack,
-  expectedValues: number[],
+  expectedValues: (number|string)[],
   type: 'string' | 'number' = 'number',
   badLenErr = 'Bad stack length',
   badValueErr = 'Bad stack value'

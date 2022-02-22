@@ -8,7 +8,7 @@ import {
   Stack,
   OtherOpcodesMock,
 } from '../../../../typechain';
-import { checkStack } from '../../../utils/utils';
+import { checkStack, checkStackTailv2, hex4Bytes } from '../../../utils/utils';
 
 describe('Other opcodes', () => {
   let StackCont: Stack__factory;
@@ -167,29 +167,111 @@ describe('Other opcodes', () => {
     await checkStack(StackValue, stack, 1, second.address);
   });
 
-  it('opLoadLocalUint256', async () => {});
+  it('opLoadLocalUint256', async () => {
+    const testValue = 1;
+    const bytes32TestValueName = hex4Bytes('NUMBER');
 
-  it('opLoadLocalBytes32', async () => {});
+    await app.setStorageUint256(bytes32TestValueName, testValue);
 
-  it('opLoadLocalBool', async () => {});
+    await app.opLoadLocalUint256(ctxAddr);
+    await checkStackTailv2(StackValue, stack, [testValue]);
+  });
 
-  it('opLoadLocalAddress', async () => {});
+  it('opLoadLocalBytes32', async () => {
+    const testValue = hex4Bytes('123456');
+    const bytes32TestValueName = hex4Bytes('BYTES');
 
-  it('opLoadRemoteUint256', async () => {});
+    await app.setStorageBytes32(bytes32TestValueName, testValue);
 
-  it('opLoadRemoteBytes32', async () => {});
+    await app.opLoadLocalBytes32(ctxAddr);
+    await checkStackTailv2(StackValue, stack, [testValue]);
+  });
 
-  it('opLoadRemoteBool', async () => {});
+  it('opLoadLocalBool', async () => {
+    const testValue = true;
+    const bytes32TestValueName = hex4Bytes('BOOL');
+    
+    await app.setStorageBool(bytes32TestValueName, testValue);
 
-  it('opLoadRemoteAddress', async () => {});
+    await app.opLoadLocalBool(ctxAddr);
+    await checkStackTailv2(StackValue, stack, [testValue.toString()]);
+  });
 
-  it('opBool', async () => {});
+  it('opLoadLocalAddress', async () => {
+    const [addr] = await ethers.getSigners();
+    const testValue = addr.address;
+    const bytes32TestValueName = hex4Bytes('ADDRESS');
 
-  it('opUint256', async () => {});
+    await app.setStorageAddress(bytes32TestValueName, testValue);
 
-  it('opSendEth', async () => {});
+    await app.opLoadLocalAddress(ctxAddr);
+    await checkStackTailv2(StackValue, stack, [testValue]);
+  });
 
-  it('opTransfer', async () => {});
+  it('opLoadRemoteUint256', async () => {
+    const testValue = 1;
+    const bytes32TestValueName = hex4Bytes('NUMBER');
+
+    await app.setStorageUint256(bytes32TestValueName, testValue);
+
+    const number = bytes32TestValueName.substring(2, 10);
+    await ctx.setProgram(`0x1c01${number}${app.address}`);
+    await app.opLoadRemoteUint256(ctxAddr);
+    await checkStackTailv2(StackValue, stack, [testValue]);
+  });
+
+  it('opLoadRemoteBytes32', async () => {
+    const testValue = hex4Bytes('123456');
+    const bytes32TestValueName = hex4Bytes('BYTES');
+
+    await app.setStorageBytes32(bytes32TestValueName, testValue);
+
+    const bytes = bytes32TestValueName.substring(2, 10);
+    await ctx.setProgram(`0x1c04${bytes}${app.address}`);
+    await app.opLoadRemoteBytes32(ctxAddr);
+    await checkStack(StackValue, stack, 1, testValue);
+  });
+
+  it('opLoadRemoteBool', async () => {
+    // const testValue = true;
+
+    // await pushToStack(StackValue, ctx, StackCont, [testValue.toString()]);
+    // await checkStack(StackValue, stack, 1, testValue.toString());
+  });
+
+  it('opLoadRemoteAddress', async () => {
+    // const [addr1] = await ethers.getSigners();
+    // const testValue = addr1.address;
+
+    // await pushToStack(StackValue, ctx, StackCont, [testValue]);
+    // await checkStack(StackValue, stack, 1, testValue);
+  });
+
+  it('opBool', async () => {
+
+  });
+
+  it('opUint256', async () => {
+
+  });
+
+  it('opSendEth', async () => {
+    // const [receiver] = await ethers.getSigners();
+    // const testAmount = ethers.BigNumber.from('1').mul(10 ** 18).toString();
+
+    // await pushToStack(StackValue, ctx, StackCont, [receiver.address, testAmount]);
+    // await checkStack(StackValue, stack, 2, testAmount);
+
+    // app.opSendEth(ctxAddr);
+  });
+
+  it('opTransfer', async () => {
+    // const [receiver, token] = await ethers.getSigners();
+    // const testAmount = ethers.BigNumber.from('1').mul(10 ** 18).toString();
+
+    // await pushToStack(StackValue, ctx, StackCont, [receiver.address, token.address, testAmount]);
+    // app.opTransfer(ctxAddr);
+  });
 
   it('opTransferFrom', async () => {});
 
