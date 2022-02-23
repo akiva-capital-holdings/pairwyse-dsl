@@ -141,6 +141,39 @@ contract Context is IContext {
             2
         );
 
+        addOpcodeForOperator(
+            '+',
+            0x26,
+            SetOpcodes.opAdd.selector,
+            0x0,
+            OpcodeLibNames.SetOpcodes,
+            2
+        );
+        addOpcodeForOperator(
+            '-',
+            0x27,
+            SetOpcodes.opSub.selector,
+            0x0,
+            OpcodeLibNames.SetOpcodes,
+            2
+        );
+        addOpcodeForOperator(
+            '*',
+            0x28,
+            SetOpcodes.opMul.selector,
+            0x0,
+            OpcodeLibNames.SetOpcodes,
+            3
+        );
+        addOpcodeForOperator(
+            '/',
+            0x29,
+            SetOpcodes.opDiv.selector,
+            0x0,
+            OpcodeLibNames.SetOpcodes,
+            3
+        );
+
         // Branching
         addOpcode(
             'ifelse',

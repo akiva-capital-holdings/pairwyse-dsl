@@ -9,12 +9,13 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @title Set operator opcodes
  * @notice Opcodes for set operators such as AND, OR, XOR
  */
+// TODO: rename to LogicalOpcodes
 library SetOpcodes {
     using UnstructuredStorage for bytes32;
     using StringUtils for string;
@@ -62,5 +63,53 @@ library SetOpcodes {
             ((prev.getUint256() == 0) && (last.getUint256() > 0));
 
         OpcodeHelpers.putToStack(_ctx, result ? 1 : 0);
+    }
+
+    function opAdd(IContext _ctx) public {
+        StackValue last = _ctx.stack().pop();
+        StackValue prev = _ctx.stack().pop();
+
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+
+        uint256 result = prev.getUint256() + last.getUint256();
+
+        OpcodeHelpers.putToStack(_ctx, result);
+    }
+
+    function opSub(IContext _ctx) public {
+        StackValue last = _ctx.stack().pop();
+        StackValue prev = _ctx.stack().pop();
+
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+
+        uint256 result = prev.getUint256() - last.getUint256();
+
+        OpcodeHelpers.putToStack(_ctx, result);
+    }
+
+    function opMul(IContext _ctx) public {
+        StackValue last = _ctx.stack().pop();
+        StackValue prev = _ctx.stack().pop();
+
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+
+        uint256 result = prev.getUint256() * last.getUint256();
+
+        OpcodeHelpers.putToStack(_ctx, result);
+    }
+
+    function opDiv(IContext _ctx) public {
+        StackValue last = _ctx.stack().pop();
+        StackValue prev = _ctx.stack().pop();
+
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+
+        uint256 result = prev.getUint256() / last.getUint256();
+
+        OpcodeHelpers.putToStack(_ctx, result);
     }
 }

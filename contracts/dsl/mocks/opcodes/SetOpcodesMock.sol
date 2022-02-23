@@ -24,4 +24,8 @@ contract SetOpcodesMock {
     function opXor(IContext _ctx) public {
         SetOpcodes.opXor(_ctx);
     }
+
+    function opAdd(IContext _ctx) public {
+        SetOpcodes.opAdd(_ctx);
+    }
 }

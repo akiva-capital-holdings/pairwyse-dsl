@@ -1,20 +1,24 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { parseEther } from 'ethers/lib/utils';
+import { parseEther, parseUnits } from 'ethers/lib/utils';
 import { Contract } from 'ethers';
 import { hex4Bytes } from '../utils/utils';
 import { Agreement } from '../../typechain/Agreement';
 import { Parser } from '../../typechain/Parser';
-import { ConditionalTxs } from '../../typechain';
+import { ConditionalTxs, Context__factory } from '../../typechain';
+import { TxObject } from '../types';
 
-// TODO: add more complex tests with more steps. Possible problem: contract call run out of gas and made the transaction revert
 describe('Agreement', () => {
+  let ContextCont: Context__factory;
   let parser: Parser;
   let agreement: Agreement;
+  let whale: SignerWithAddress;
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
   let carl: SignerWithAddress;
+  let GP: SignerWithAddress;
+  let LP: SignerWithAddress;
   let anybody: SignerWithAddress;
   let comparatorOpcodesLib: Contract;
   let logicalOpcodesLib: Contract;
@@ -22,12 +26,42 @@ describe('Agreement', () => {
   let otherOpcodesLib: Contract;
   let txsAddr: string;
   let txs: ConditionalTxs;
-
-  const ONE_MONTH = 60 * 60 * 24 * 30;
   let NEXT_MONTH: number;
 
+  const ONE_MONTH = 60 * 60 * 24 * 30;
+
+  // Add tx objects to Agreement
+  const addSteps = async (steps: TxObject[], Ctx: Context__factory) => {
+    const txIds: string[] = [];
+    let txCtx;
+    let cdCtx;
+
+    for await (const step of steps) {
+      txCtx = await Ctx.deploy();
+      cdCtx = await Ctx.deploy();
+      txIds.push(
+        await agreement.callStatic.update(
+          step.signatory,
+          step.transaction,
+          step.condition,
+          txCtx.address,
+          cdCtx.address
+        )
+      );
+      await agreement.update(
+        step.signatory,
+        step.transaction,
+        step.condition,
+        txCtx.address,
+        cdCtx.address
+      );
+    }
+
+    return txIds;
+  };
+
   before(async () => {
-    [alice, bob, carl, anybody] = await ethers.getSigners();
+    [whale, alice, bob, carl, GP, LP, anybody] = await ethers.getSigners();
 
     const lastBlockTimestamp = (
       await ethers.provider.getBlock(
@@ -37,6 +71,8 @@ describe('Agreement', () => {
     ).timestamp;
 
     NEXT_MONTH = lastBlockTimestamp + 60 * 60 * 24 * 30;
+
+    ContextCont = await ethers.getContractFactory('Context');
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
@@ -103,21 +139,12 @@ describe('Agreement', () => {
     await txs.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
     const signatory = alice.address;
-    const transaction = 'sendEth RECEIVER 1000000000000000000';
     const condition = 'blockTimestamp > loadLocal uint256 LOCK_TIME';
+    const transaction = 'sendEth RECEIVER 1000000000000000000';
 
     // Update
-    const Ctx = await ethers.getContractFactory('Context');
-    const txCtx = await Ctx.deploy();
-    const cdCtx = await Ctx.deploy();
-    const txId = await agreement.callStatic.update(
-      signatory,
-      transaction,
-      condition,
-      txCtx.address,
-      cdCtx.address
-    );
-    await agreement.update(signatory, transaction, condition, txCtx.address, cdCtx.address);
+    const txIds = await addSteps([{ signatory, condition, transaction }], ContextCont);
+    const txId = txIds[0];
 
     // Top up contract
     const oneEthBN = parseEther('1');
@@ -159,7 +186,6 @@ describe('Agreement', () => {
     await txs.setStorageAddress(hex4Bytes('ALICE'), alice.address);
     await txs.setStorageAddress(hex4Bytes('BOB'), bob.address);
 
-    // TODO: 'setLocal address BORROWER = msgSender'
     const steps = [
       // Alice deposits 1 ETH to SC
       {
@@ -197,32 +223,7 @@ describe('Agreement', () => {
     ];
 
     // Add tx objects to Agreement
-    const txIds: string[] = [];
-    let txCtx;
-    let cdCtx;
-
-    const Ctx = await ethers.getContractFactory('Context');
-
-    for await (const step of steps) {
-      txCtx = await Ctx.deploy();
-      cdCtx = await Ctx.deploy();
-      txIds.push(
-        await agreement.callStatic.update(
-          step.signatory,
-          step.transaction,
-          step.condition,
-          txCtx.address,
-          cdCtx.address
-        )
-      );
-      await agreement.update(
-        step.signatory,
-        step.transaction,
-        step.condition,
-        txCtx.address,
-        cdCtx.address
-      );
-    }
+    const txIds = await addSteps(steps, ContextCont);
 
     // Alice deposits 1 ETH to SC
     // await expect(agreement.connect(alice).execute(txIds[0], { value: 0 })).to.be.revertedWith(
@@ -271,7 +272,6 @@ describe('Agreement', () => {
     await txs.setStorageAddress(hex4Bytes('CARL'), carl.address);
     await txs.setStorageAddress(hex4Bytes('TRANSACTIONS'), txsAddr);
 
-    // TODO: 'setLocal address BORROWER = msgSender'
     const steps = [
       // Alice deposits 1 ETH to SC
       {
@@ -344,32 +344,7 @@ describe('Agreement', () => {
     ];
 
     // Add tx objects to Agreement
-    const txIds: string[] = [];
-    let txCtx;
-    let cdCtx;
-
-    const Ctx = await ethers.getContractFactory('Context');
-
-    for await (const step of steps) {
-      txCtx = await Ctx.deploy();
-      cdCtx = await Ctx.deploy();
-      txIds.push(
-        await agreement.callStatic.update(
-          step.signatory,
-          step.transaction,
-          step.condition,
-          txCtx.address,
-          cdCtx.address
-        )
-      );
-      await agreement.update(
-        step.signatory,
-        step.transaction,
-        step.condition,
-        txCtx.address,
-        cdCtx.address
-      );
-    }
+    const txIds = await addSteps(steps, ContextCont);
 
     // Alice deposits 1 ETH to SC
     console.log('Alice deposits 1 ETH to SC');
@@ -426,5 +401,55 @@ describe('Agreement', () => {
     //   carl,
     //   tenTokens
     // );
+  });
+
+  it.skip('Business case', async () => {
+    const dai = await (await ethers.getContractFactory('Token'))
+      .connect(whale)
+      .deploy(parseUnits('1000000', 18));
+    // await token.connect(bob).transfer(carl.address, tenTokens);
+
+    // // Set variables
+    // await txs.setStorageAddress(hex4Bytes('TOKEN_ADDR'), token.address);
+    // await txs.setStorageAddress(hex4Bytes('ALICE'), alice.address);
+    // await txs.setStorageUint256(hex4Bytes('EXPIRY'), NEXT_MONTH);
+    // await txs.setStorageAddress(hex4Bytes('BOB'), bob.address);
+    // await txs.setStorageAddress(hex4Bytes('CARL'), carl.address);
+    // await txs.setStorageAddress(hex4Bytes('TRANSACTIONS'), txsAddr);
+
+    /**
+     * Step 1 (pre) | Set INITIAL_FUNDS_TARGET and FUND_PLACEMENT_DATE
+     *
+     *
+     */
+
+    const stepsObj = {
+      'Step 1': {
+        signatory: GP.address,
+        transaction: `transferFrom DAI GP TRANSACTIONS_CONT ${parseUnits('20', 18).toString()}`,
+        condition: `
+              (blockTimestamp < loadLocal uint256 FUND_PLACEMENT_TIMESTAMP)
+          and (loadLocal uint256 GP_DEPOSIT_AMOUNT >= loadLocal uint256 INITIAL_FUNDS_TARGET * 2 / 100`,
+      },
+    };
+    const stepsKeys = Object.keys(stepsObj);
+    const stepsVals = Object.values(stepsObj);
+
+    // Add tx objects to Agreement
+    const txIds = await addSteps(stepsVals, ContextCont);
+    const steps = Object.fromEntries(stepsKeys.map((_, i) => [stepsKeys[i], stepsVals[i]]));
+
+    // Step 1 (pre)
+    console.log('Step 1 (pre)');
+    await txs.setStorageAddress(hex4Bytes('DAI'), dai.address);
+    await txs.setStorageAddress(hex4Bytes('GP'), GP.address);
+    await txs.setStorageAddress(hex4Bytes('TRANSACTIONS_CONT'), txsAddr);
+    await txs.setStorageUint256(hex4Bytes('INITIAL_FUNDS_TARGET'), parseUnits('1000', 18));
+    // await txs.setStorageUint256(hex4Bytes('GP_DEPOSIT_AMOUNT'), parseUnits('20', 18));
+    await txs.setStorageUint256(hex4Bytes('FUND_PLACEMENT_TIMESTAMP'), NEXT_MONTH);
+
+    // Step 1
+    console.log('Step 1');
+    // await agreement.connect(alice).execute(steps['Step 1 (pre)']);
   });
 });

@@ -21,3 +21,9 @@ export interface Testcase {
   expr: string;
   expected: unknown[];
 }
+
+export type TxObject = {
+  signatory: string;
+  condition: string;
+  transaction: string;
+};

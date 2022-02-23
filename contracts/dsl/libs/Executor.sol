@@ -7,6 +7,7 @@ import { IContext } from '../interfaces/IContext.sol';
 
 library Executor {
     function execute(IContext _ctx) public {
+        // console.logBytes(_ctx.program());
         require(_ctx.program().length > 0, 'Executor: empty program');
         while (_ctx.pc() < _ctx.program().length) {
             bytes memory opcodeBytes = _ctx.programAt(_ctx.pc(), 1);

@@ -88,6 +88,42 @@ describe('DSL: basic', () => {
     appAddrHex = app.address.slice(2);
   });
 
+  it('uint256 2 + uint256 3', async () => {
+    await app.parse('uint256 2 + uint256 3');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [5]);
+  });
+
+  it('uint256 7 - uint256 3', async () => {
+    await app.parse('uint256 7 - uint256 3');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [4]);
+  });
+
+  it('uint256 2 * uint256 3', async () => {
+    await app.parse('uint256 2 * uint256 3');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [6]);
+  });
+
+  it('uint256 2 / uint256 3', async () => {
+    await app.parse('uint256 2 / uint256 3');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [0]);
+  });
+
+  it('uint256 20 / uint256 3', async () => {
+    await app.parse('uint256 20 / uint256 3');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [6]);
+  });
+
+  it('uint256 21 / uint256 3', async () => {
+    await app.parse('uint256 21 / uint256 3');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [7]);
+  });
+
   it('uint256 1122334433', async () => {
     await app.parse('uint256 1122334433');
     await app.execute();

@@ -15,6 +15,7 @@ import { StackValue } from '../../helpers/Stack.sol';
  * @title Comparator operator opcodes
  * @notice Opcodes for comparator operators such as >, <, =, !, etc.
  */
+// TODO: rename to ComparisonOpcodes
 library ComparatorOpcodes {
     using UnstructuredStorage for bytes32;
     using StringUtils for string;
@@ -22,8 +23,9 @@ library ComparatorOpcodes {
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if they are equal.
      */
-    function opEq(IContext _ctx) public /** TODO: checkStackLength(2) */
-    {
+    function opEq(
+        IContext _ctx /** TODO: checkStackLength(2) */
+    ) public {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 

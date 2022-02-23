@@ -15,6 +15,7 @@ import 'hardhat/console.sol';
  * @title Logical operator opcodes
  * @notice Opcodes for logical operators such as if/esle, switch/case
  */
+// TODO: rename to BranchingOpcodes
 library LogicalOpcodes {
     using UnstructuredStorage for bytes32;
     using StringUtils for string;
