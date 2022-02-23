@@ -98,7 +98,7 @@ describe('Conditional transactions', () => {
     txs = [];
   });
 
-  it('test one transaction', async () => {
+  it.skip('test one transaction', async () => {
     // Set variables
     await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
     await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);

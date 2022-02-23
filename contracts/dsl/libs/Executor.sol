@@ -10,14 +10,7 @@ library Executor {
         require(_ctx.program().length > 0, 'Executor: empty program');
         while (_ctx.pc() < _ctx.program().length) {
             bytes memory opcodeBytes = _ctx.programAt(_ctx.pc(), 1);
-            bytes1 opcodeByte1;
-
-            // convert bytes to bytes1
-            assembly {
-                opcodeByte1 := mload(add(opcodeBytes, 0x20))
-            }
-
-            // console.logBytes4(opcodeByte1);
+            bytes1 opcodeByte1 = bytes1(uint8(opcodeBytes[0]));
 
             bytes4 selector = _ctx.selectorByOpcode(opcodeByte1);
             require(selector != 0x0, 'Executor: did not find selector for opcode');

@@ -261,7 +261,6 @@ describe('Agreement', () => {
     const token = await (await ethers.getContractFactory('Token'))
       .connect(bob)
       .deploy(parseEther('1000'));
-    const TOKEN = token.address.substring(2);
     await token.connect(bob).transfer(carl.address, tenTokens);
 
     // Set variables
