@@ -6,6 +6,7 @@ import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
 import 'hardhat-gas-reporter';
 import 'solidity-coverage';
+import 'hardhat-contract-sizer';
 
 dotenv.config();
 
@@ -23,7 +24,15 @@ task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
 // Go to https://hardhat.org/config/ to learn more
 
 const config: HardhatUserConfig = {
-  solidity: '0.8.4',
+  solidity: {
+    version: '0.8.11',
+    settings: {
+      optimizer: {
+        enabled: process.env.OPTIMIZER === 'true',
+        runs: 100,
+      },
+    },
+  },
   networks: {
     ropsten: {
       url: process.env.ROPSTEN_URL || '',
@@ -31,11 +40,20 @@ const config: HardhatUserConfig = {
     },
   },
   gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
+    enabled: process.env.REPORT_GAS === 'true',
     currency: 'USD',
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+  },
+  mocha: {
+    timeout: 1e6,
+  },
+  contractSizer: {
+    // alphaSort: true,
+    // disambiguatePaths: false,
+    runOnCompile: process.env.CONTRACT_SIZER === 'true',
+    // strict: true,
   },
 };
 

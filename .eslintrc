@@ -6,7 +6,7 @@
     "node": true
   },
   "plugins": ["@typescript-eslint"],
-  "extends": ["airbnb-base", "airbnb-typescript/base"],
+  "extends": ["airbnb-base", "airbnb-typescript/base", "prettier"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 12,
@@ -17,6 +17,7 @@
     "quotes": ["error", "single"],
     "no-restricted-syntax": ["off"],
     "no-await-in-loop": ["off"],
-    "max-len": ["error", 120]
+    "max-len": ["error", 100],
+    "no-plusplus": ["off"]
   }
 }

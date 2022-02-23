@@ -1,4 +1,5 @@
 {
-  "printWidth": 120,
-  "quotes": "single"
+  "printWidth": 100,
+  "bracketSpacing": true,
+  "singleQuote": true
 }
