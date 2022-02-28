@@ -710,6 +710,21 @@ describe('DSL: basic', () => {
     await checkStack(StackValue, stack, 1, 1);
   });
 
+  it('balance of', async () => {
+    const [user] = await ethers.getSigners();
+
+    const Token = await ethers.getContractFactory('Token');
+    const dai = await Token.connect(user).deploy(parseEther('1000'));
+
+    await app.setStorageAddress(hex4Bytes('DAI'), dai.address);
+    await app.setStorageAddress(hex4Bytes('USER'), user.address);
+
+    await app.parse('balanceOf DAI USER');
+    await app.execute();
+    // expect(await dai.balanceOf(user.address)).to.equal(parseEther('1000'));
+    await checkStack(StackValue, stack, 1, parseEther('1000'));
+  });
+
   it('if branch', async () => {
     const ONE = new Array(64).join('0') + 1;
     const TWO = new Array(64).join('0') + 2;

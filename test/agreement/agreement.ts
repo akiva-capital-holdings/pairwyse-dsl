@@ -405,7 +405,7 @@ describe('Agreement', () => {
     // );
   });
 
-  it.only('Business case', async () => {
+  it('Business case', async () => {
     const dai = await (await ethers.getContractFactory('Token'))
       .connect(whale)
       .deploy(parseUnits('1000000', 18));

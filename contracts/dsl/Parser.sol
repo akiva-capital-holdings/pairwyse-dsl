@@ -87,6 +87,11 @@ contract Parser is IParser, Storage {
         parseVariable(); // amount
     }
 
+    function asmBalanceOf() public {
+        parseVariable(); // token address
+        parseVariable(); // user address
+    }
+
     function asmIfelse() public {
         string memory _true = nextCmd();
         string memory _false = nextCmd();

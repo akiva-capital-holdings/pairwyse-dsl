@@ -138,6 +138,17 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctx, 1);
     }
 
+    function opBalanceOf(IContext _ctx) public {
+        address payable token = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        address payable user = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        uint256 balance = IERC20(token).balanceOf(user);
+        OpcodeHelpers.putToStack(_ctx, balance);
+    }
+
     function opTransferFromVar(IContext _ctx) public {
         address payable token = payable(
             address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))

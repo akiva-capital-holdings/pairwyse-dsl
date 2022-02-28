@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 
 import { expect } from 'chai';
-import { Contract, ethers } from 'ethers';
+import { BigNumber, Contract, ethers } from 'ethers';
 import { Stack__factory, StackValue__factory, Stack, Context, StackValue } from '../../typechain';
 import { OpConditionalTxFunc } from '../types';
 
@@ -70,7 +70,7 @@ export const checkStack = async (
   SV: StackValue__factory,
   stack: Stack,
   expectedLen: number,
-  expectedValue: number | string,
+  expectedValue: number | string | BigNumber,
   indexFromEnd: number = 0,
   type: 'string' | 'number' = 'number',
   badLenErr = 'Bad stack length',
