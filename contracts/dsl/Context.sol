@@ -256,6 +256,13 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         addOpcode(
+            'transferFromVar',
+            0x2a,
+            OtherOpcodes.opTransferFromVar.selector,
+            IParser.asmTransferFromVar.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
             'setLocalBool',
             0x21,
             OtherOpcodes.opSetLocalBool.selector,

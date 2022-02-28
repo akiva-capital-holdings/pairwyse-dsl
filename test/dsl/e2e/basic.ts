@@ -689,6 +689,27 @@ describe('DSL: basic', () => {
     await checkStack(StackValue, stack, 1, 1);
   });
 
+  it('transferFromVar', async () => {
+    const [owner, receiver] = await ethers.getSigners();
+
+    const Token = await ethers.getContractFactory('Token');
+    const dai = await Token.deploy(parseEther('1000'));
+
+    const oneDAI = parseEther('1');
+    await dai.connect(owner).approve(app.address, oneDAI);
+    expect(await dai.allowance(owner.address, app.address)).to.equal(oneDAI);
+
+    await app.setStorageAddress(hex4Bytes('DAI'), dai.address);
+    await app.setStorageAddress(hex4Bytes('OWNER'), owner.address);
+    await app.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
+    await app.setStorageUint256(hex4Bytes('AMOUNT'), oneDAI.toString());
+
+    await app.parse('transferFromVar DAI OWNER RECEIVER AMOUNT');
+    await app.execute();
+    expect(await dai.balanceOf(receiver.address)).to.equal(oneDAI);
+    await checkStack(StackValue, stack, 1, 1);
+  });
+
   it('if branch', async () => {
     const ONE = new Array(64).join('0') + 1;
     const TWO = new Array(64).join('0') + 2;

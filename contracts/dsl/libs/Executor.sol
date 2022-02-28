@@ -12,6 +12,7 @@ library Executor {
         while (_ctx.pc() < _ctx.program().length) {
             bytes memory opcodeBytes = _ctx.programAt(_ctx.pc(), 1);
             bytes1 opcodeByte1 = bytes1(uint8(opcodeBytes[0]));
+            // console.logBytes1(opcodeByte1);
 
             bytes4 selector = _ctx.selectorByOpcode(opcodeByte1);
             require(selector != 0x0, 'Executor: did not find selector for opcode');

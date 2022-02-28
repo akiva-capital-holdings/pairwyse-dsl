@@ -138,6 +138,25 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctx, 1);
     }
 
+    function opTransferFromVar(IContext _ctx) public {
+        address payable token = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        address payable from = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        address payable to = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        uint256 amount = uint256(opLoadLocalGet(_ctx, 'getStorageUint256(bytes32)'));
+        // console.log('token', token);
+        // console.log('from', from);
+        // console.log('to', to);
+        // console.log('amount', amount);
+        IERC20(token).transferFrom(from, to, amount);
+        OpcodeHelpers.putToStack(_ctx, 1);
+    }
+
     function opUint256Get(IContext _ctx) public returns (uint256) {
         bytes memory data = OpcodeHelpers.nextBytes(_ctx, 32);
 

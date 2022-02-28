@@ -6,7 +6,7 @@ import { IContext } from '../dsl/interfaces/IContext.sol';
 import { Context } from '../dsl/Context.sol';
 import { ConditionalTxs } from './ConditionalTxs.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 contract Agreement {
     IParser public parser;
@@ -26,12 +26,14 @@ contract Agreement {
         Context _transactionCtx,
         Context _conditionCtx
     ) external returns (bytes32 _txId) {
+        // console.log('update');
         _transactionCtx.initOpcodes();
         _conditionCtx.initOpcodes();
 
         _transactionCtx.setAppAddress(address(txs));
         _conditionCtx.setAppAddress(address(txs));
 
+        // console.log('addTx');
         _txId = txs.addTx(
             _signatory,
             _transactionStr,
@@ -58,17 +60,20 @@ contract Agreement {
     }
 
     function verify(bytes32 _txId) internal view returns (bool) {
+        // console.log('verify');
         (, , , address signatory, , ) = txs.txs(_txId);
         return signatory == msg.sender;
     }
 
     function validate(bytes32 _txId, uint256 _msgValue) internal returns (bool) {
+        // console.log('validate');
         (, IContext conditionCtx, , , , ) = txs.txs(_txId);
         txs.checkCondition(_txId, _msgValue);
         return conditionCtx.stack().seeLast().getUint256() == 0 ? false : true;
     }
 
     function fulfil(bytes32 _txId, uint256 _msgValue) internal returns (bool) {
+        // console.log('fulfil');
         (IContext transactionCtx, , , , , ) = txs.txs(_txId);
         txs.execTx(_txId, _msgValue);
         return transactionCtx.stack().seeLast().getUint256() == 0 ? false : true;

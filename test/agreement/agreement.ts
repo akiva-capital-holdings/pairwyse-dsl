@@ -27,6 +27,7 @@ describe('Agreement', () => {
   let txsAddr: string;
   let txs: ConditionalTxs;
   let NEXT_MONTH: number;
+  let NEXT_TWO_MONTH: number;
 
   const ONE_MONTH = 60 * 60 * 24 * 30;
 
@@ -70,7 +71,8 @@ describe('Agreement', () => {
       )
     ).timestamp;
 
-    NEXT_MONTH = lastBlockTimestamp + 60 * 60 * 24 * 30;
+    NEXT_MONTH = lastBlockTimestamp + ONE_MONTH;
+    NEXT_TWO_MONTH = lastBlockTimestamp + 2 * ONE_MONTH;
 
     ContextCont = await ethers.getContractFactory('Context');
 
@@ -403,53 +405,81 @@ describe('Agreement', () => {
     // );
   });
 
-  it.skip('Business case', async () => {
+  it.only('Business case', async () => {
     const dai = await (await ethers.getContractFactory('Token'))
       .connect(whale)
       .deploy(parseUnits('1000000', 18));
-    // await token.connect(bob).transfer(carl.address, tenTokens);
 
-    // // Set variables
-    // await txs.setStorageAddress(hex4Bytes('TOKEN_ADDR'), token.address);
-    // await txs.setStorageAddress(hex4Bytes('ALICE'), alice.address);
-    // await txs.setStorageUint256(hex4Bytes('EXPIRY'), NEXT_MONTH);
-    // await txs.setStorageAddress(hex4Bytes('BOB'), bob.address);
-    // await txs.setStorageAddress(hex4Bytes('CARL'), carl.address);
-    // await txs.setStorageAddress(hex4Bytes('TRANSACTIONS'), txsAddr);
-
-    /**
-     * Step 1 (pre) | Set INITIAL_FUNDS_TARGET and FUND_PLACEMENT_DATE
-     *
-     *
-     */
-
-    const stepsObj = {
-      'Step 1': {
+    const steps = [
+      // 1
+      {
         signatory: GP.address,
-        transaction: `transferFrom DAI GP TRANSACTIONS_CONT ${parseUnits('20', 18).toString()}`,
+        transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_DEPOSIT_AMOUNT',
         condition: `
-              (blockTimestamp < loadLocal uint256 FUND_PLACEMENT_TIMESTAMP)
-          and (loadLocal uint256 GP_DEPOSIT_AMOUNT >= loadLocal uint256 INITIAL_FUNDS_TARGET * 2 / 100`,
+              (blockTimestamp < loadLocal uint256 PLACEMENT_DATE)
+          and (
+            loadLocal uint256 GP_DEPOSIT_AMOUNT >=
+            loadLocal uint256 ((INITIAL_FUNDS_TARGET * uint256 2) / uint256 100)
+          )`,
       },
-    };
-    const stepsKeys = Object.keys(stepsObj);
-    const stepsVals = Object.values(stepsObj);
+      // 2
+      // Note: for now we're assuming that we have only one LP
+      {
+        signatory: LP.address,
+        transaction: `
+          transferFromVar DAI LP TRANSACTIONS_CONT LP_DEPOSIT_AMOUNT
+        `,
+        condition: `
+          (blockTimestamp >= loadLocal uint256 PLACEMENT_DATE)
+          and
+          (blockTimestamp < loadLocal uint256 CLOSING_DATE)
+        `,
+      },
+      // // 3
+      // {
+      //   signatory: GP.address,
+      //   transaction: `
+      //     transferFromVar DAI GP TRANSACTIONS_CONTRACT_ADDR REMAINING
+      //   `,
+      //   condition: `
+      //     (blockTimestamp in range 1 day of CLOSING_DATE)
+      //     and
+      //     (balanceOf DAI TRANSACTIONS_CONTRACT_ADDR >= ((FUNDS_TARGET * uint256 98) / uint256 100))
+      //   `,
+      // },
+    ];
 
     // Add tx objects to Agreement
-    const txIds = await addSteps(stepsVals, ContextCont);
-    const steps = Object.fromEntries(stepsKeys.map((_, i) => [stepsKeys[i], stepsVals[i]]));
+    const txIds = await addSteps(steps, ContextCont);
 
     // Step 1 (pre)
-    console.log('Step 1 (pre)');
+    console.log('Step 1');
+    const twenty = parseUnits('20', 18);
+    await dai.connect(whale).transfer(GP.address, twenty);
+    await dai.connect(GP).approve(txsAddr, twenty);
+
     await txs.setStorageAddress(hex4Bytes('DAI'), dai.address);
     await txs.setStorageAddress(hex4Bytes('GP'), GP.address);
     await txs.setStorageAddress(hex4Bytes('TRANSACTIONS_CONT'), txsAddr);
     await txs.setStorageUint256(hex4Bytes('INITIAL_FUNDS_TARGET'), parseUnits('1000', 18));
-    // await txs.setStorageUint256(hex4Bytes('GP_DEPOSIT_AMOUNT'), parseUnits('20', 18));
-    await txs.setStorageUint256(hex4Bytes('FUND_PLACEMENT_TIMESTAMP'), NEXT_MONTH);
+    await txs.setStorageUint256(hex4Bytes('GP_DEPOSIT_AMOUNT'), twenty);
+    await txs.setStorageUint256(hex4Bytes('PLACEMENT_DATE'), NEXT_MONTH);
 
     // Step 1
-    console.log('Step 1');
-    // await agreement.connect(alice).execute(steps['Step 1 (pre)']);
+    await agreement.connect(GP).execute(txIds[0]);
+
+    // Step 2 (pre)
+    console.log('Step 2');
+    await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
+    const nineHundred = parseUnits('900', 18);
+    await dai.connect(whale).transfer(LP.address, nineHundred);
+    await dai.connect(LP).approve(txsAddr, nineHundred);
+
+    await txs.setStorageAddress(hex4Bytes('LP'), LP.address);
+    await txs.setStorageUint256(hex4Bytes('LP_DEPOSIT_AMOUNT'), nineHundred);
+    await txs.setStorageUint256(hex4Bytes('CLOSING_DATE'), NEXT_TWO_MONTH);
+
+    // Step 2
+    await agreement.connect(LP).execute(txIds[1]);
   });
 });
