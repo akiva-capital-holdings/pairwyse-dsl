@@ -669,6 +669,26 @@ describe('DSL: basic', () => {
     await checkStack(StackValue, stack, 1, 1);
   });
 
+  it('transferVar', async () => {
+    const [, receiver] = await ethers.getSigners();
+
+    const Token = await ethers.getContractFactory('Token');
+    const dai = await Token.deploy(parseEther('1000'));
+
+    const oneDAI = parseEther('1');
+    await dai.transfer(app.address, oneDAI);
+    expect(await dai.balanceOf(app.address)).to.equal(oneDAI);
+
+    await app.setStorageAddress(hex4Bytes('DAI'), dai.address);
+    await app.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
+    await app.setStorageUint256(hex4Bytes('AMOUNT'), oneDAI.toString());
+
+    await app.parse('transferVar DAI RECEIVER AMOUNT');
+    await app.execute();
+    expect(await dai.balanceOf(receiver.address)).to.equal(oneDAI);
+    await checkStack(StackValue, stack, 1, 1);
+  });
+
   it('transferFrom', async () => {
     const [owner, receiver] = await ethers.getSigners();
 

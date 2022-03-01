@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther, parseUnits } from 'ethers/lib/utils';
-import { Contract } from 'ethers';
+import { BigNumber, Contract } from 'ethers';
 import { hex4Bytes } from '../utils/utils';
 import { Agreement } from '../../typechain/Agreement';
 import { Parser } from '../../typechain/Parser';
@@ -29,7 +29,8 @@ describe('Agreement', () => {
   let NEXT_MONTH: number;
   let NEXT_TWO_MONTH: number;
 
-  const ONE_MONTH = 60 * 60 * 24 * 30;
+  const ONE_DAY = 60 * 60 * 24;
+  const ONE_MONTH = ONE_DAY * 30;
 
   // Add tx objects to Agreement
   const addSteps = async (steps: TxObject[], Ctx: Context__factory) => {
@@ -405,11 +406,12 @@ describe('Agreement', () => {
     // );
   });
 
-  it('Business case', async () => {
+  it.only('Business case', async () => {
     const dai = await (await ethers.getContractFactory('Token'))
       .connect(whale)
       .deploy(parseUnits('1000000', 18));
 
+    // TODO: make sure the steps order is perceived
     const steps = [
       // 1
       {
@@ -435,51 +437,90 @@ describe('Agreement', () => {
           (blockTimestamp < loadLocal uint256 CLOSING_DATE)
         `,
       },
-      // // 3
-      // {
-      //   signatory: GP.address,
-      //   transaction: `
-      //     transferFromVar DAI GP TRANSACTIONS_CONTRACT_ADDR REMAINING
-      //   `,
-      //   condition: `
-      //     (blockTimestamp in range 1 day of CLOSING_DATE)
-      //     and
-      //     (balanceOf DAI TRANSACTIONS_CONTRACT_ADDR >= ((FUNDS_TARGET * uint256 98) / uint256 100))
-      //   `,
-      // },
+      // 3
+      {
+        signatory: GP.address,
+        transaction: `
+          transferFromVar DAI GP TRANSACTIONS_CONT REMAINING
+        `,
+        condition: `(blockTimestamp >= loadLocal uint256 CLOSING_DATE_MINUS_ONE_DAY)
+            and
+        (blockTimestamp <= loadLocal uint256 CLOSING_DATE_PLUS_ONE_DAY)
+          and
+        (balanceOf DAI TRANSACTIONS_CONT >=
+            ((loadLocal uint256 INITIAL_FUNDS_TARGET * uint256 98) / uint256 100)
+          )
+        `,
+      },
+      // 4
+      {
+        signatory: LP.address, // TODO: make available for anyone?
+        transaction: `
+          (transferVar DAI GP GP_DEPOSIT_AMOUNT)
+          and
+          (transferVar DAI LP LP_DEPOSIT_AMOUNT)`,
+        condition: `
+          (blockTimestamp > loadLocal uint256 CLOSING_DATE_PLUS_ONE_DAY)
+          and
+          (blockTimestamp < loadLocal uint256 FUND_INVESTMENT_DATE)
+        `,
+      },
     ];
 
     // Add tx objects to Agreement
     const txIds = await addSteps(steps, ContextCont);
 
-    // Step 1 (pre)
+    // Step 1
     console.log('Step 1');
-    const twenty = parseUnits('20', 18);
-    await dai.connect(whale).transfer(GP.address, twenty);
-    await dai.connect(GP).approve(txsAddr, twenty);
+    const GP_DEPOSIT_AMOUNT = parseUnits('20', 18);
+    await dai.connect(whale).transfer(GP.address, GP_DEPOSIT_AMOUNT);
+    await dai.connect(GP).approve(txsAddr, GP_DEPOSIT_AMOUNT);
 
     await txs.setStorageAddress(hex4Bytes('DAI'), dai.address);
     await txs.setStorageAddress(hex4Bytes('GP'), GP.address);
     await txs.setStorageAddress(hex4Bytes('TRANSACTIONS_CONT'), txsAddr);
     await txs.setStorageUint256(hex4Bytes('INITIAL_FUNDS_TARGET'), parseUnits('1000', 18));
-    await txs.setStorageUint256(hex4Bytes('GP_DEPOSIT_AMOUNT'), twenty);
+    await txs.setStorageUint256(hex4Bytes('GP_DEPOSIT_AMOUNT'), GP_DEPOSIT_AMOUNT);
     await txs.setStorageUint256(hex4Bytes('PLACEMENT_DATE'), NEXT_MONTH);
 
-    // Step 1
     await agreement.connect(GP).execute(txIds[0]);
 
-    // Step 2 (pre)
+    // Step 2
     console.log('Step 2');
     await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-    const nineHundred = parseUnits('900', 18);
-    await dai.connect(whale).transfer(LP.address, nineHundred);
-    await dai.connect(LP).approve(txsAddr, nineHundred);
+    const LP_DEPOSIT_AMOUNT = parseUnits('990', 18);
+    await dai.connect(whale).transfer(LP.address, LP_DEPOSIT_AMOUNT);
+    await dai.connect(LP).approve(txsAddr, LP_DEPOSIT_AMOUNT);
 
     await txs.setStorageAddress(hex4Bytes('LP'), LP.address);
-    await txs.setStorageUint256(hex4Bytes('LP_DEPOSIT_AMOUNT'), nineHundred);
+    await txs.setStorageUint256(hex4Bytes('LP_DEPOSIT_AMOUNT'), LP_DEPOSIT_AMOUNT);
     await txs.setStorageUint256(hex4Bytes('CLOSING_DATE'), NEXT_TWO_MONTH);
 
-    // Step 2
     await agreement.connect(LP).execute(txIds[1]);
+
+    // Step 3
+    console.log('Step 3');
+    await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH]);
+    const REMAINING = BigNumber.from(2).mul(LP_DEPOSIT_AMOUNT).div(98).sub(GP_DEPOSIT_AMOUNT);
+    console.log({ REMAINING: REMAINING.toString() });
+    await dai.connect(whale).transfer(GP.address, REMAINING);
+    await dai.connect(GP).approve(txsAddr, REMAINING);
+
+    await txs.setStorageUint256(hex4Bytes('CLOSING_DATE_MINUS_ONE_DAY'), NEXT_TWO_MONTH - ONE_DAY);
+    await txs.setStorageUint256(hex4Bytes('CLOSING_DATE_PLUS_ONE_DAY'), NEXT_TWO_MONTH + ONE_DAY);
+    await txs.setStorageUint256(hex4Bytes('REMAINING'), REMAINING);
+
+    await agreement.connect(GP).execute(txIds[2]);
+
+    // Step 4 (pre)
+    console.log('Step 4');
+    await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH + 2 * ONE_DAY]);
+    await txs.setStorageUint256(hex4Bytes('FUND_INVESTMENT_DATE'), NEXT_TWO_MONTH + 7 * ONE_DAY);
+
+    await expect(() => agreement.connect(LP).execute(txIds[3])).to.changeTokenBalances(
+      dai,
+      [GP, LP],
+      [GP_DEPOSIT_AMOUNT, LP_DEPOSIT_AMOUNT]
+    );
   });
 });

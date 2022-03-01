@@ -30,6 +30,8 @@ interface IParser {
 
     function asmTransfer() external;
 
+    function asmTransferVar() external;
+
     function asmTransferFrom() external;
 
     function asmBalanceOf() external;

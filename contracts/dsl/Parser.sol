@@ -68,9 +68,15 @@ contract Parser is IParser, Storage {
     }
 
     function asmTransfer() public {
-        parseVariable();
-        parseVariable();
-        asmUint256();
+        parseVariable(); // token address
+        parseVariable(); // receiver
+        asmUint256(); // amount
+    }
+
+    function asmTransferVar() public {
+        parseVariable(); // token address
+        parseVariable(); // receiver
+        parseVariable(); // amount
     }
 
     function asmTransferFrom() public {

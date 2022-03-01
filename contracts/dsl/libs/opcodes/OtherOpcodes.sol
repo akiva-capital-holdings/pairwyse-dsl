@@ -9,7 +9,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
@@ -32,6 +32,7 @@ library OtherOpcodes {
     }
 
     function opBlockTimestamp(IContext _ctx) public {
+        console.log('block.timestamp', block.timestamp);
         OpcodeHelpers.putToStack(_ctx, block.timestamp);
     }
 
@@ -101,7 +102,6 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctx, 1);
     }
 
-    // TODO: get token address from variable, not from the address itself in string as a parameter
     function opTransfer(IContext _ctx) public {
         // console.log('opTransfer');
         address payable token = payable(
@@ -113,6 +113,22 @@ library OtherOpcodes {
         );
         // console.log('recipient', recipient);
         uint256 amount = opUint256Get(_ctx);
+        // console.log('amount', amount);
+        IERC20(token).transfer(recipient, amount);
+        OpcodeHelpers.putToStack(_ctx, 1);
+    }
+
+    function opTransferVar(IContext _ctx) public {
+        // console.log('opTransfer');
+        address payable token = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        // console.log('token', token);
+        address payable recipient = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        // console.log('recipient', recipient);
+        uint256 amount = uint256(opLoadLocalGet(_ctx, 'getStorageUint256(bytes32)'));
         // console.log('amount', amount);
         IERC20(token).transfer(recipient, amount);
         OpcodeHelpers.putToStack(_ctx, 1);
@@ -146,6 +162,7 @@ library OtherOpcodes {
             address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
         );
         uint256 balance = IERC20(token).balanceOf(user);
+        console.log('balanceOf', balance);
         OpcodeHelpers.putToStack(_ctx, balance);
     }
 
@@ -234,6 +251,7 @@ library OtherOpcodes {
 
     function opLoadLocal(IContext _ctx, string memory funcSignature) public {
         bytes32 result = opLoadLocalGet(_ctx, funcSignature);
+        console.log('load local', uint256(result));
         OpcodeHelpers.putToStack(_ctx, uint256(result));
     }
 

@@ -249,6 +249,13 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         addOpcode(
+            'transferVar',
+            0x2c,
+            OtherOpcodes.opTransferVar.selector,
+            IParser.asmTransferVar.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
             'transferFrom',
             0x20,
             OtherOpcodes.opTransferFrom.selector,
