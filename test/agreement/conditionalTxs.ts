@@ -16,6 +16,8 @@ describe('Conditional transactions', () => {
   let NEXT_MONTH: number;
 
   type Txs = {
+    txId: number;
+    requiredTxs: number[];
     signatory: string;
     transactionStr: string;
     conditionStr: string;
@@ -98,12 +100,14 @@ describe('Conditional transactions', () => {
     txs = [];
   });
 
-  it.skip('test one transaction', async () => {
+  it('test one transaction', async () => {
     // Set variables
     await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
     await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
     txs.push({
+      txId: 1,
+      requiredTxs: [],
       signatory: alice.address,
       transactionStr: 'sendEth RECEIVER 1000000000000000000',
       conditionStr: 'blockTimestamp > loadLocal uint256 LOCK_TIME',
@@ -112,14 +116,9 @@ describe('Conditional transactions', () => {
     });
 
     // Set conditional transaction
-    const txId = await app.callStatic.addTx(
-      txs[0].signatory,
-      txs[0].transactionStr,
-      txs[0].conditionStr,
-      txs[0].transactionCtx.address,
-      txs[0].conditionCtx.address
-    );
     await app.addTx(
+      txs[0].txId,
+      txs[0].requiredTxs,
       txs[0].signatory,
       txs[0].transactionStr,
       txs[0].conditionStr,
@@ -140,7 +139,7 @@ describe('Conditional transactions', () => {
     await txs[0].conditionCtx.setAppAddress(app.address);
     await txs[0].conditionCtx.setMsgSender(alice.address);
 
-    const txn = await app.txs(txId);
+    const txn = await app.txs(txs[0].txId);
 
     await parser.parse(txn.transactionCtx, txn.transactionStr);
     await parser.parse(txn.conditionCtx, txn.conditionStr);
@@ -150,12 +149,15 @@ describe('Conditional transactions', () => {
     await anybody.sendTransaction({ to: app.address, value: oneEthBN });
 
     // Execute transaction
-    await expect(app.connect(alice).execTx(txId, 0)).to.be.revertedWith(
+    await expect(app.connect(alice).execTx(txs[0].txId, 0)).to.be.revertedWith(
       'ConditionalTxs: txn condition is not satisfied'
     );
     await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-    await expect(await app.connect(alice).execTx(txId, 0)).to.changeEtherBalance(bob, oneEthBN);
-    await expect(app.connect(alice).execTx(txId, 0)).to.be.revertedWith(
+    await expect(await app.connect(alice).execTx(txs[0].txId, 0)).to.changeEtherBalance(
+      bob,
+      oneEthBN
+    );
+    await expect(app.connect(alice).execTx(txs[0].txId, 0)).to.be.revertedWith(
       'ConditionalTxs: txn already was executed'
     );
   });
@@ -175,6 +177,8 @@ describe('Conditional transactions', () => {
     await app.setStorageUint256(hex4Bytes('TOKEN_ADDR'), token.address);
 
     txs.push({
+      txId: 1,
+      requiredTxs: [],
       signatory: alice.address,
       transactionStr: 'sendEth ETH_RECEIVER 1000000000000000000',
       conditionStr: 'bool true',
@@ -182,6 +186,8 @@ describe('Conditional transactions', () => {
       conditionCtx: await ContextCont.deploy(),
     });
     txs.push({
+      txId: 2,
+      requiredTxs: [],
       signatory: bob.address,
       transactionStr: `transfer TOKEN_ADDR TOKEN_RECEIVER ${tenTokens.toString()}`,
       conditionStr: 'blockTimestamp > loadLocal uint256 LOCK_TIME',
@@ -190,14 +196,9 @@ describe('Conditional transactions', () => {
     });
 
     // Set conditional transaction
-    const txId1 = await app.callStatic.addTx(
-      txs[0].signatory,
-      txs[0].transactionStr,
-      txs[0].conditionStr,
-      txs[0].transactionCtx.address,
-      txs[0].conditionCtx.address
-    );
     await app.addTx(
+      txs[0].txId,
+      txs[0].requiredTxs,
       txs[0].signatory,
       txs[0].transactionStr,
       txs[0].conditionStr,
@@ -206,14 +207,9 @@ describe('Conditional transactions', () => {
     );
 
     // Set conditional transaction
-    const txId2 = await app.callStatic.addTx(
-      txs[1].signatory,
-      txs[1].transactionStr,
-      txs[1].conditionStr,
-      txs[1].transactionCtx.address,
-      txs[1].conditionCtx.address
-    );
     await app.addTx(
+      txs[1].txId,
+      txs[1].requiredTxs,
       txs[1].signatory,
       txs[1].transactionStr,
       txs[1].conditionStr,
@@ -246,8 +242,8 @@ describe('Conditional transactions', () => {
     await txs[1].conditionCtx.setAppAddress(app.address);
     await txs[1].conditionCtx.setMsgSender(bob.address);
 
-    const txn1 = await app.txs(txId1);
-    const txn2 = await app.txs(txId2);
+    const txn1 = await app.txs(txs[0].txId);
+    const txn2 = await app.txs(txs[1].txId);
 
     await parser.parse(txn1.transactionCtx, txn1.transactionStr);
     await parser.parse(txn1.conditionCtx, txn1.conditionStr);
@@ -262,9 +258,12 @@ describe('Conditional transactions', () => {
     expect(await token.balanceOf(app.address)).to.equal(tenTokens);
 
     // Execute transactions
-    await expect(await app.connect(alice).execTx(txId1, 0)).to.changeEtherBalance(bob, oneEth);
+    await expect(await app.connect(alice).execTx(txs[0].txId, 0)).to.changeEtherBalance(
+      bob,
+      oneEth
+    );
     await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-    await expect(() => app.connect(bob).execTx(txId2, 0)).to.changeTokenBalance(
+    await expect(() => app.connect(bob).execTx(txs[1].txId, 0)).to.changeTokenBalance(
       token,
       alice,
       tenTokens

@@ -12,7 +12,13 @@ contract Agreement {
     IParser public parser;
     ConditionalTxs public txs;
 
-    event NewTransaction(bytes32 txId, address signatory, string transaction, string conditionStr);
+    event NewTransaction(
+        uint256 txId,
+        uint256[] requiredTxs,
+        address signatory,
+        string transaction,
+        string conditionStr
+    );
 
     constructor(IParser _parser) {
         parser = _parser;
@@ -20,12 +26,14 @@ contract Agreement {
     }
 
     function update(
+        uint256 _txId,
+        uint256[] memory _requiredTxs,
         address _signatory,
         string memory _transactionStr,
         string memory _conditionStr,
         Context _transactionCtx,
         Context _conditionCtx
-    ) external returns (bytes32 _txId) {
+    ) external {
         console.log('update');
         _transactionCtx.initOpcodes();
         _conditionCtx.initOpcodes();
@@ -34,7 +42,9 @@ contract Agreement {
         _conditionCtx.setAppAddress(address(txs));
 
         // console.log('addTx');
-        _txId = txs.addTx(
+        txs.addTx(
+            _txId,
+            _requiredTxs,
             _signatory,
             _transactionStr,
             _conditionStr,
@@ -49,30 +59,30 @@ contract Agreement {
         parser.parse(transactionCtx, _transactionStr);
         parser.parse(conditionCtx, _conditionStr);
 
-        emit NewTransaction(_txId, _signatory, _transactionStr, _conditionStr);
+        emit NewTransaction(_txId, _requiredTxs, _signatory, _transactionStr, _conditionStr);
     }
 
-    function execute(bytes32 _txId) external payable {
+    function execute(uint256 _txId) external payable {
         payable(txs).transfer(msg.value);
         require(verify(_txId), 'Agreement: bad tx signatory');
         require(validate(_txId, msg.value), 'Agreement: tx condition is not satisfied');
         require(fulfil(_txId, msg.value), 'Agreement: tx fulfilment error');
     }
 
-    function verify(bytes32 _txId) internal view returns (bool) {
+    function verify(uint256 _txId) internal view returns (bool) {
         console.log('verify');
         (, , , address signatory, , ) = txs.txs(_txId);
         return signatory == msg.sender;
     }
 
-    function validate(bytes32 _txId, uint256 _msgValue) internal returns (bool) {
+    function validate(uint256 _txId, uint256 _msgValue) internal returns (bool) {
         console.log('validate');
         (, IContext conditionCtx, , , , ) = txs.txs(_txId);
         txs.checkCondition(_txId, _msgValue);
         return conditionCtx.stack().seeLast().getUint256() == 0 ? false : true;
     }
 
-    function fulfil(bytes32 _txId, uint256 _msgValue) internal returns (bool) {
+    function fulfil(uint256 _txId, uint256 _msgValue) internal returns (bool) {
         console.log('fulfil');
         (IContext transactionCtx, , , , , ) = txs.txs(_txId);
         txs.execTx(_txId, _msgValue);

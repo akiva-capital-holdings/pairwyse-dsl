@@ -23,6 +23,8 @@ export interface Testcase {
 }
 
 export type TxObject = {
+  txId: number;
+  requiredTxs: number[];
   signatory: string;
   condition: string;
   transaction: string;

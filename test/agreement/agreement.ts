@@ -9,7 +9,7 @@ import { Parser } from '../../typechain/Parser';
 import { ConditionalTxs, Context__factory } from '../../typechain';
 import { TxObject } from '../types';
 
-describe('Agreement', () => {
+describe.only('Agreement', () => {
   let ContextCont: Context__factory;
   let parser: Parser;
   let agreement: Agreement;
@@ -34,23 +34,15 @@ describe('Agreement', () => {
 
   // Add tx objects to Agreement
   const addSteps = async (steps: TxObject[], Ctx: Context__factory) => {
-    const txIds: string[] = [];
     let txCtx;
     let cdCtx;
 
     for await (const step of steps) {
       txCtx = await Ctx.deploy();
       cdCtx = await Ctx.deploy();
-      txIds.push(
-        await agreement.callStatic.update(
-          step.signatory,
-          step.transaction,
-          step.condition,
-          txCtx.address,
-          cdCtx.address
-        )
-      );
       await agreement.update(
+        step.txId,
+        step.requiredTxs,
         step.signatory,
         step.transaction,
         step.condition,
@@ -58,8 +50,6 @@ describe('Agreement', () => {
         cdCtx.address
       );
     }
-
-    return txIds;
   };
 
   before(async () => {
@@ -141,13 +131,14 @@ describe('Agreement', () => {
     await txs.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
     await txs.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
+    const txId = 1;
+    const requiredTxs: number[] = [];
     const signatory = alice.address;
     const condition = 'blockTimestamp > loadLocal uint256 LOCK_TIME';
     const transaction = 'sendEth RECEIVER 1000000000000000000';
 
     // Update
-    const txIds = await addSteps([{ signatory, condition, transaction }], ContextCont);
-    const txId = txIds[0];
+    await addSteps([{ txId, requiredTxs, signatory, condition, transaction }], ContextCont);
 
     // Top up contract
     const oneEthBN = parseEther('1');
@@ -192,70 +183,90 @@ describe('Agreement', () => {
     const steps = [
       // Alice deposits 1 ETH to SC
       {
+        txId: 1,
+        requiredTxs: [],
         signatory: alice.address,
-        transaction: `
-              (msgValue == uint256 ${oneEth})
-          and (setLocalBool BORROWER_DEPOSITED true)`,
-        condition: 'loadLocal bool BORROWER_DEPOSITED == bool false',
+        // transaction: `
+        //       (msgValue == uint256 ${oneEth})
+        //   and (setLocalBool BORROWER_DEPOSITED true)`,
+        // condition: 'loadLocal bool BORROWER_DEPOSITED == bool false',
+        transaction: `msgValue == uint256 ${oneEth}`,
+        condition: 'bool true',
       },
       // Bob lends 10 tokens to Alice
       {
+        txId: 2,
+        requiredTxs: [1],
         signatory: bob.address,
-        transaction: `
-              (transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()})
-          and (setLocalBool LENDER_DEPOSITED true)
-        `,
-        condition: `
-              (loadLocal bool BORROWER_DEPOSITED == bool true)
-          and (loadLocal bool LENDER_DEPOSITED == bool false)
-        `,
+        // transaction: `
+        //       (transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()})
+        //   and (setLocalBool LENDER_DEPOSITED true)
+        // `,
+        // condition: `
+        //       (loadLocal bool BORROWER_DEPOSITED == bool true)
+        //   and (loadLocal bool LENDER_DEPOSITED == bool false)
+        // `,
+        transaction: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
+        condition: 'bool true',
       },
       // Alice returns 10 tokens to Bob and collects 1 ETH
       {
+        txId: 3,
+        requiredTxs: [2],
         signatory: alice.address,
+        // transaction: `
+        //       (transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()})
+        //   and (sendEth ALICE ${oneEth})
+        //   and (setLocalBool OBLIGATIONS_SETTLED true)
+        // `,
+        // condition: `
+        //       (loadLocal bool LENDER_DEPOSITED == bool true)
+        //   and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
+        // `,
         transaction: `
               (transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()})
           and (sendEth ALICE ${oneEth})
-          and (setLocalBool OBLIGATIONS_SETTLED true)
         `,
-        condition: `
-              (loadLocal bool LENDER_DEPOSITED == bool true)
-          and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
-        `,
+        condition: 'bool true',
       },
     ];
 
     // Add tx objects to Agreement
-    const txIds = await addSteps(steps, ContextCont);
+    await addSteps(steps, ContextCont);
 
     // Alice deposits 1 ETH to SC
-    // await expect(agreement.connect(alice).execute(txIds[0], { value: 0 })).to.be.revertedWith(
-    //   'Agreement: tx fulfilment error'
-    // );
-    // await expect(
-    //   agreement.connect(alice).execute(txIds[0], { value: parseEther('2') })
-    // ).to.be.revertedWith('Agreement: tx fulfilment error');
-    // console.log('Alice deposits 1 ETH to SC');
-    await agreement.connect(alice).execute(txIds[0], { value: oneEth });
+    await expect(agreement.connect(alice).execute(1, { value: 0 })).to.be.revertedWith(
+      'Agreement: tx fulfilment error'
+    );
+    await expect(
+      agreement.connect(alice).execute(1, { value: parseEther('2') })
+    ).to.be.revertedWith('Agreement: tx fulfilment error');
+    await expect(agreement.connect(bob).execute(2)).to.be.revertedWith(
+      'ConditionalTxs: required tx #1 was not executed'
+    );
+    await expect(agreement.connect(alice).execute(3)).to.be.revertedWith(
+      'ConditionalTxs: required tx #2 was not executed'
+    );
+
+    await agreement.connect(alice).execute(1, { value: oneEth });
+
     expect(await ethers.provider.getBalance(txsAddr)).to.equal(oneEth);
+    await expect(agreement.connect(alice).execute(1, { value: oneEth })).to.be.revertedWith(
+      'ConditionalTxs: txn already was executed'
+    );
 
     // Bob lends 10 tokens to Alice
-    // console.log('Bob lends 10 tokens to Alice');
     await token.connect(bob).approve(txsAddr, tenTokens);
-    await expect(() => agreement.connect(bob).execute(txIds[1])).to.changeTokenBalance(
+    await expect(() => agreement.connect(bob).execute(2)).to.changeTokenBalance(
       token,
       alice,
       tenTokens
     );
 
     // Alice returns 10 tokens to Bob and collects 1 ETH
-    // console.log('Alice returns 10 tokens to Bob and collects 1 ETH');
     expect(await token.balanceOf(alice.address)).to.equal(tenTokens);
     await token.connect(alice).approve(txsAddr, tenTokens);
-    await expect(await agreement.connect(alice).execute(txIds[2])).to.changeEtherBalance(
-      alice,
-      oneEth
-    );
+    await expect(await agreement.connect(alice).execute(3)).to.changeEtherBalance(alice, oneEth);
     expect(await token.balanceOf(alice.address)).to.equal(0);
   });
 
@@ -278,87 +289,124 @@ describe('Agreement', () => {
     const steps = [
       // Alice deposits 1 ETH to SC
       {
+        txId: 1,
+        requiredTxs: [],
         signatory: alice.address,
-        transaction: `
-              (msgValue == uint256 ${oneEth})
-          and (setLocalBool BORROWER_DEPOSITED true)`,
-        condition: 'loadLocal bool BORROWER_DEPOSITED == bool false',
+        // transaction: `
+        //       (msgValue == uint256 ${oneEth})
+        //   and (setLocalBool BORROWER_DEPOSITED true)`,
+        // condition: 'loadLocal bool BORROWER_DEPOSITED == bool false',
+        transaction: `msgValue == uint256 ${oneEth}`,
+        condition: 'bool true',
       },
       // Carl deposits 10 tokens to Agreement
       {
+        txId: 2,
+        requiredTxs: [],
         signatory: carl.address,
-        transaction: `
-              (transferFrom TOKEN_ADDR CARL TRANSACTIONS ${tenTokens.toString()})
-          and (setLocalBool INSURER_DEPOSITED true)
-        `,
-        condition: 'loadLocal bool INSURER_DEPOSITED == bool false',
+        // transaction: `
+        //       (transferFrom TOKEN_ADDR CARL TRANSACTIONS ${tenTokens.toString()})
+        //   and (setLocalBool INSURER_DEPOSITED true)
+        // `,
+        // condition: 'loadLocal bool INSURER_DEPOSITED == bool false',
+        transaction: `transferFrom TOKEN_ADDR CARL TRANSACTIONS ${tenTokens.toString()}`,
+        condition: 'bool true',
       },
       // Bob lends 10 tokens to Alice
       {
+        txId: 3,
+        requiredTxs: [1],
         signatory: bob.address,
-        transaction: `
-              (transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()})
-          and (setLocalBool LENDER_DEPOSITED true)
-        `,
-        condition: `
-              (loadLocal bool BORROWER_DEPOSITED == bool true)
-          and (loadLocal bool LENDER_DEPOSITED == bool false)
-        `,
+        // transaction: `
+        //       (transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()})
+        //   and (setLocalBool LENDER_DEPOSITED true)
+        // `,
+        // condition: `
+        //       (loadLocal bool BORROWER_DEPOSITED == bool true)
+        //   and (loadLocal bool LENDER_DEPOSITED == bool false)
+        // `,
+        transaction: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
+        condition: 'bool true',
       },
       // Alice returns 10 tokens to Bob and collects 1 ETH
       {
+        txId: 4,
+        requiredTxs: [3],
         signatory: alice.address,
+        // transaction: `
+        //       (transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()})
+        //   and (sendEth ALICE ${oneEth})
+        //   and (setLocalBool OBLIGATIONS_SETTLED true)
+        // `,
+        // condition: `
+        //       (loadLocal bool LENDER_DEPOSITED == bool true)
+        //   and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
+        // `,
         transaction: `
               (transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()})
           and (sendEth ALICE ${oneEth})
           and (setLocalBool OBLIGATIONS_SETTLED true)
         `,
-        condition: `
-              (loadLocal bool LENDER_DEPOSITED == bool true)
-          and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
-        `,
+        condition: 'bool true',
       },
       // If Alice didn't return 10 tokens to Bob before EXPIRY
       // then Bob can collect 10 tokens from Carl
       {
+        txId: 5,
+        requiredTxs: [],
         signatory: bob.address,
+        // transaction: `
+        //       (transfer TOKEN_ADDR BOB ${tenTokens.toString()})
+        //   and (setLocalBool LENDER_WITHDRAW_INSURERS true)
+        // `,
+        // condition: `
+        //       (blockTimestamp > loadLocal uint256 EXPIRY)
+        //   and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
+        //   and (loadLocal bool LENDER_WITHDRAW_INSURERS == bool false)
+        // `,
         transaction: `
-              (transfer TOKEN_ADDR BOB ${tenTokens.toString()})
+              transfer TOKEN_ADDR BOB ${tenTokens.toString()}
           and (setLocalBool LENDER_WITHDRAW_INSURERS true)
         `,
         condition: `
-              (blockTimestamp > loadLocal uint256 EXPIRY)
+              blockTimestamp > loadLocal uint256 EXPIRY
           and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
-          and (loadLocal bool LENDER_WITHDRAW_INSURERS == bool false)
         `,
       },
       // If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens
       {
+        txId: 6,
+        requiredTxs: [],
         signatory: carl.address,
-        transaction: `
-              (transfer TOKEN_ADDR CARL ${tenTokens.toString()})
-          and (setLocalBool INSURER_RECEIVED_TOKENS_BACK true)
-        `,
+        // transaction: `
+        //       (transfer TOKEN_ADDR CARL ${tenTokens.toString()})
+        //   and (setLocalBool INSURER_RECEIVED_TOKENS_BACK true)
+        // `,
+        // condition: `
+        //       (blockTimestamp > loadLocal uint256 EXPIRY)
+        //   and (loadLocal bool LENDER_WITHDRAW_INSURERS == bool false)
+        //   and (loadLocal bool INSURER_RECEIVED_TOKENS_BACK == bool false)`,
+        transaction: `transfer TOKEN_ADDR CARL ${tenTokens.toString()}`,
         condition: `
-              (blockTimestamp > loadLocal uint256 EXPIRY)
+              blockTimestamp > loadLocal uint256 EXPIRY
           and (loadLocal bool LENDER_WITHDRAW_INSURERS == bool false)
-          and (loadLocal bool INSURER_RECEIVED_TOKENS_BACK == bool false)`,
+        `,
       },
     ];
 
     // Add tx objects to Agreement
-    const txIds = await addSteps(steps, ContextCont);
+    await addSteps(steps, ContextCont);
 
     // Alice deposits 1 ETH to SC
     console.log('Alice deposits 1 ETH to SC');
-    await agreement.connect(alice).execute(txIds[0], { value: oneEth });
+    await agreement.connect(alice).execute(1, { value: oneEth });
     expect(await ethers.provider.getBalance(txsAddr)).to.equal(oneEth);
 
     // Carl deposits 10 tokens to SC
     console.log('Carl deposits 10 tokens to SC');
     // console.log((await token.balanceOf(carl.address)).toString());
     await token.connect(carl).approve(txsAddr, tenTokens);
-    await expect(() => agreement.connect(carl).execute(txIds[1])).to.changeTokenBalance(
+    await expect(() => agreement.connect(carl).execute(2)).to.changeTokenBalance(
       token,
       txs,
       tenTokens
@@ -367,43 +415,40 @@ describe('Agreement', () => {
     // Bob lends 10 tokens to Alice
     console.log('Bob lends 10 tokens to Alice');
     await token.connect(bob).approve(txsAddr, tenTokens);
-    await expect(() => agreement.connect(bob).execute(txIds[2])).to.changeTokenBalance(
+    await expect(() => agreement.connect(bob).execute(3)).to.changeTokenBalance(
       token,
       alice,
       tenTokens
     );
 
     // Alice returns 10 tokens to Bob and collects 1 ETH
-    // console.log('Alice returns 10 tokens to Bob and collects 1 ETH');
-    // expect(await token.balanceOf(alice.address)).to.equal(tenTokens);
-    // await token.connect(alice).approve(txsAddr, tenTokens);
-    // await expect(await agreement.connect(alice).execute(txIds[3])).to.changeEtherBalance(
-    //   alice,
-    //   oneEth
-    // );
-    // expect(await token.balanceOf(alice.address)).to.equal(0);
+    console.log('Alice returns 10 tokens to Bob and collects 1 ETH');
+    expect(await token.balanceOf(alice.address)).to.equal(tenTokens);
+    await token.connect(alice).approve(txsAddr, tenTokens);
+    await expect(await agreement.connect(alice).execute(4)).to.changeEtherBalance(alice, oneEth);
+    expect(await token.balanceOf(alice.address)).to.equal(0);
 
-    // If Alice didn't return 10 tokens to Bob before EXPIRY
-    // then Bob can collect 10 tokens from Carl
-    await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-    console.log(
-      'If Alice didn not return 10 tokens to Bob before EXPIRY then ' +
-        'Bob can collect 10 tokens from Carl'
-    );
-    await expect(() => agreement.connect(bob).execute(txIds[4])).to.changeTokenBalance(
-      token,
-      bob,
-      tenTokens
-    );
-
-    // // If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens
+    // // If Alice didn't return 10 tokens to Bob before EXPIRY
+    // // then Bob can collect 10 tokens from Carl
     // await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-    // console.log('If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens');
-    // await expect(() => agreement.connect(carl).execute(txIds[5])).to.changeTokenBalance(
+    // console.log(
+    //   'If Alice didn not return 10 tokens to Bob before EXPIRY then ' +
+    //     'Bob can collect 10 tokens from Carl'
+    // );
+    // await expect(() => agreement.connect(bob).execute(5)).to.changeTokenBalance(
     //   token,
-    //   carl,
+    //   bob,
     //   tenTokens
     // );
+
+    // If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens
+    await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
+    console.log('If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens');
+    await expect(() => agreement.connect(carl).execute(6)).to.changeTokenBalance(
+      token,
+      carl,
+      tenTokens
+    );
   });
 
   it.only('Business case', async () => {
@@ -413,8 +458,9 @@ describe('Agreement', () => {
 
     // TODO: make sure the steps order is perceived
     const steps = [
-      // 1
       {
+        txId: 1,
+        requiredTxs: [],
         signatory: GP.address,
         transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_DEPOSIT_AMOUNT',
         condition: `
@@ -424,9 +470,10 @@ describe('Agreement', () => {
             loadLocal uint256 ((INITIAL_FUNDS_TARGET * uint256 2) / uint256 100)
           )`,
       },
-      // 2
       // Note: for now we're assuming that we have only one LP
       {
+        txId: 2,
+        requiredTxs: [1],
         signatory: LP.address,
         transaction: `
           transferFromVar DAI LP TRANSACTIONS_CONT LP_DEPOSIT_AMOUNT
@@ -437,8 +484,9 @@ describe('Agreement', () => {
           (blockTimestamp < loadLocal uint256 CLOSING_DATE)
         `,
       },
-      // 3
       {
+        txId: 3,
+        requiredTxs: [2],
         signatory: GP.address,
         transaction: `
           transferFromVar DAI GP TRANSACTIONS_CONT REMAINING
@@ -452,8 +500,9 @@ describe('Agreement', () => {
           )
         `,
       },
-      // 4
       {
+        txId: 4,
+        requiredTxs: [3],
         signatory: LP.address, // TODO: make available for anyone?
         transaction: `
           (transferVar DAI GP GP_DEPOSIT_AMOUNT)
@@ -468,7 +517,7 @@ describe('Agreement', () => {
     ];
 
     // Add tx objects to Agreement
-    const txIds = await addSteps(steps, ContextCont);
+    await addSteps(steps, ContextCont);
 
     // Step 1
     console.log('Step 1');
@@ -483,7 +532,7 @@ describe('Agreement', () => {
     await txs.setStorageUint256(hex4Bytes('GP_DEPOSIT_AMOUNT'), GP_DEPOSIT_AMOUNT);
     await txs.setStorageUint256(hex4Bytes('PLACEMENT_DATE'), NEXT_MONTH);
 
-    await agreement.connect(GP).execute(txIds[0]);
+    await agreement.connect(GP).execute(1);
 
     // Step 2
     console.log('Step 2');
@@ -496,7 +545,7 @@ describe('Agreement', () => {
     await txs.setStorageUint256(hex4Bytes('LP_DEPOSIT_AMOUNT'), LP_DEPOSIT_AMOUNT);
     await txs.setStorageUint256(hex4Bytes('CLOSING_DATE'), NEXT_TWO_MONTH);
 
-    await agreement.connect(LP).execute(txIds[1]);
+    await agreement.connect(LP).execute(2);
 
     // Step 3
     console.log('Step 3');
@@ -510,14 +559,14 @@ describe('Agreement', () => {
     await txs.setStorageUint256(hex4Bytes('CLOSING_DATE_PLUS_ONE_DAY'), NEXT_TWO_MONTH + ONE_DAY);
     await txs.setStorageUint256(hex4Bytes('REMAINING'), REMAINING);
 
-    await agreement.connect(GP).execute(txIds[2]);
+    await agreement.connect(GP).execute(3);
 
     // Step 4 (pre)
     console.log('Step 4');
     await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH + 2 * ONE_DAY]);
     await txs.setStorageUint256(hex4Bytes('FUND_INVESTMENT_DATE'), NEXT_TWO_MONTH + 7 * ONE_DAY);
 
-    await expect(() => agreement.connect(LP).execute(txIds[3])).to.changeTokenBalances(
+    await expect(() => agreement.connect(LP).execute(4)).to.changeTokenBalances(
       dai,
       [GP, LP],
       [GP_DEPOSIT_AMOUNT, LP_DEPOSIT_AMOUNT]
