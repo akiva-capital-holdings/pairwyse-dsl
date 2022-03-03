@@ -13,7 +13,6 @@ describe('Conditional transactions', () => {
   let anybody: SignerWithAddress;
 
   const ONE_MONTH = 60 * 60 * 24 * 30;
-  let NEXT_MONTH: number;
 
   type Txs = {
     txId: number;
@@ -29,15 +28,6 @@ describe('Conditional transactions', () => {
 
   before(async () => {
     [alice, bob, anybody] = await ethers.getSigners();
-
-    const lastBlockTimestamp = (
-      await ethers.provider.getBlock(
-        // eslint-disable-next-line no-underscore-dangle
-        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
-      )
-    ).timestamp;
-
-    NEXT_MONTH = lastBlockTimestamp + 60 * 60 * 24 * 30;
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
@@ -101,6 +91,15 @@ describe('Conditional transactions', () => {
   });
 
   it('test one transaction', async () => {
+    const lastBlockTimestamp = (
+      await ethers.provider.getBlock(
+        // eslint-disable-next-line no-underscore-dangle
+        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
+      )
+    ).timestamp;
+
+    const NEXT_MONTH = lastBlockTimestamp + 60 * 60 * 24 * 30;
+
     // Set variables
     await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
     await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
@@ -163,6 +162,15 @@ describe('Conditional transactions', () => {
   });
 
   it('test two transactions', async () => {
+    const lastBlockTimestamp = (
+      await ethers.provider.getBlock(
+        // eslint-disable-next-line no-underscore-dangle
+        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
+      )
+    ).timestamp;
+
+    const NEXT_MONTH = lastBlockTimestamp + 60 * 60 * 24 * 30;
+
     // Deploy Token contract
     const token = await (await ethers.getContractFactory('Token'))
       .connect(bob)

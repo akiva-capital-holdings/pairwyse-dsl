@@ -9,7 +9,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
@@ -32,7 +32,7 @@ library OtherOpcodes {
     }
 
     function opBlockTimestamp(IContext _ctx) public {
-        console.log('block.timestamp', block.timestamp);
+        // console.log('block.timestamp', block.timestamp);
         OpcodeHelpers.putToStack(_ctx, block.timestamp);
     }
 
@@ -162,7 +162,7 @@ library OtherOpcodes {
             address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
         );
         uint256 balance = IERC20(token).balanceOf(user);
-        console.log('balanceOf', balance);
+        // console.log('balanceOf', balance);
         OpcodeHelpers.putToStack(_ctx, balance);
     }
 
@@ -251,7 +251,7 @@ library OtherOpcodes {
 
     function opLoadLocal(IContext _ctx, string memory funcSignature) public {
         bytes32 result = opLoadLocalGet(_ctx, funcSignature);
-        console.log('load local', uint256(result));
+        // console.log('load local', uint256(result));
         OpcodeHelpers.putToStack(_ctx, uint256(result));
     }
 

@@ -101,6 +101,7 @@ library SetOpcodes {
         OpcodeHelpers.putToStack(_ctx, result);
     }
 
+    // Note: integer division. Example: 5 / 2 = 2
     function opDiv(IContext _ctx) public {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
