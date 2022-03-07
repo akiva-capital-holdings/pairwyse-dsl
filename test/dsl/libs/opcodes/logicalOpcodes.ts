@@ -1,14 +1,13 @@
-// import { expect } from 'chai';
-// import { ethers } from 'hardhat';
-// /* eslint-disable camelcase */
-// import { Contract } from 'ethers';
-// import {
-//   Stack__factory,
-//   StackValue__factory,
-//   Context,
-//   Stack,
-//   ComparatorOpcodesMock,
-// } from '../../../typechain';
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+/* eslint-disable camelcase */
+import {
+  Stack__factory,
+  StackValue__factory,
+  Context,
+  Stack,
+  LogicalOpcodesMock,
+} from '../../../../typechain';
 // import {
 //   testOpLt,
 //   testOpGt,
@@ -18,217 +17,124 @@
 //   testOpOr,
 //   testOpXor,
 // } from '../../utils/testOps';
-// import { checkStack, pushToStack, testTwoInputOneOutput } from '../../utils/utils';
-// import { TestCaseUint256 } from '../../types';
-// /* eslint-enable camelcase */
+import { pushToStack } from '../../../utils/utils';
+/* eslint-enable camelcase */
 
-// describe('Comparator opcodes', () => {
-//   // eslint-disable-next-line camelcase
-//   let StackCont: Stack__factory;
-//   // eslint-disable-next-line camelcase
-//   let StackValue: StackValue__factory;
-//   let app: ComparatorOpcodesMock;
-//   let ctx: Context;
-//   let ctxAddr: string;
-//   let stack: Stack;
+describe('Logical opcodes', () => {
+  // eslint-disable-next-line camelcase
+  let StackCont: Stack__factory;
+  // eslint-disable-next-line camelcase
+  let StackValue: StackValue__factory;
+  let app: LogicalOpcodesMock;
+  let ctx: Context;
+  let ctxAddr: string;
+  let stack: Stack;
 
-//   before(async () => {
-//     StackCont = await ethers.getContractFactory('Stack');
-//     StackValue = await ethers.getContractFactory('StackValue');
+  before(async () => {
+    StackCont = await ethers.getContractFactory('Stack');
+    StackValue = await ethers.getContractFactory('StackValue');
 
-//     ctx = await (await ethers.getContractFactory('Context')).deploy();
-//     ctxAddr = ctx.address;
+    ctx = await (await ethers.getContractFactory('Context')).deploy();
+    ctxAddr = ctx.address;
 
-//     // Deploy libraries
-//     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-//     const otherOpcodesLib = await (
-//       await ethers.getContractFactory('OtherOpcodes', {
-//         libraries: { OpcodeHelpers: opcodeHelpersLib.address },
-//       })
-//     ).deploy();
-//     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
+    // Deploy libraries
+    const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
+    const logicalOpcodesLib = await (
+      await ethers.getContractFactory('LogicalOpcodes', {
+        libraries: { OpcodeHelpers: opcodeHelpersLib.address },
+      })
+    ).deploy();
 
-//     // Deploy ComparatorOpcodesMock
-//     app = await (
-//       await ethers.getContractFactory('ComparatorOpcodesMock', {
-//         libraries: { OtherOpcodes: otherOpcodesLib.address },
-//       })
-//     ).deploy();
+    // Deploy ComparatorOpcodesMock
+    app = await (
+      await ethers.getContractFactory('LogicalOpcodesMock', {
+        libraries: { LogicalOpcodes: logicalOpcodesLib.address },
+      })
+    ).deploy();
 
-//     // Deploy Parser
-//     const parser = await (
-//       await ethers.getContractFactory('Parser', {
-//         libraries: { StringUtils: stringLib.address },
-//       })
-//     ).deploy();
+    // Create Stack instance
+    const stackAddr = await ctx.stack();
+    stack = await ethers.getContractAt('Stack', stackAddr);
 
-//     // Create Stack instance
-//     const stackAddr = await ctx.stack();
-//     stack = await ethers.getContractAt('Stack', stackAddr);
+    // Setup
+    await ctx.initOpcodes();
+    await ctx.setAppAddress(ctx.address);
+    await ctx.setOtherOpcodesAddr(logicalOpcodesLib.address);
+  });
 
-//     // Setup
-//     await parser.initOpcodes(ctxAddr);
-//     await ctx.setAppAddress(ctx.address);
-//     await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
-//   });
+  afterEach(async () => {
+    await ctx.setPc(0);
+    await stack.clear();
+  });
 
-//   afterEach(async () => {
-//     await ctx.setPc(0);
-//     await stack.clear();
-//   });
+  it('opIfelse', async () => {
+    const testBranchTrue = 0x01;
+    const testBranchFalse = 0x02;
 
-//   it('opLoadLocalAny', async () => {
-//     await ctx.setProgram('0x1a');
-//     await expect(app.opLoadLocalAny(ctxAddr)).to.be.revertedWith(
-//       'Opcodes: mustCall call not success'
-//     );
-//   });
+    await ctx.setProgram(`0x${testBranchTrue}${testBranchFalse}`);
+    await pushToStack(StackValue, ctx, StackCont, [1]);
 
-//   it('opLoadLocalGet', async () => {
-//     await ctx.setProgram('0x1a000000');
-//     await expect(app.opLoadLocalGet(ctxAddr, 'hey()')).to.be.revertedWith(
-//       'Opcodes: opLoadLocal call not success'
-//     );
-//   });
+    await app.opIfelse(ctxAddr);
 
-//   it('opLoadRemote', async () => {
-//     const ctxAddrCut = ctxAddr.substring(2);
-//     await ctx.setProgram(`0x1a000000${ctxAddrCut}`);
-//     await expect(app.opLoadRemote(ctxAddr, 'hey()')).to.be.revertedWith(
-//       'Opcodes: opLoadRemote call not success'
-//     );
-//   });
+    let pc = await ctx.pc();
 
-//   it('opLoadRemoteAny', async () => {});
+    expect(pc).to.be.equal(testBranchTrue);
 
-//   describe('block', () => {
-//     it('blockNumber', async () => {
-//       const ctxStackAddress = await ctx.stack();
-//       StackCont.attach(ctxStackAddress);
+    await ctx.setPc(0);
+    await pushToStack(StackValue, ctx, StackCont, [0]);
 
-//       // 0x05 is NUMBER
-//       await ctx.setProgram('0x15');
+    await app.opIfelse(ctxAddr);
 
-//       const opBlockResult = await app.opBlockNumber(ctxAddr);
+    pc = await ctx.pc();
 
-//       // stack size is 1
-//       expect(await stack.length()).to.equal(1);
+    expect(pc).to.be.equal(testBranchFalse);
+  });
 
-//       // get result
-//       const svResultAddress = await stack.stack(0);
-//       const svResult = StackValue.attach(svResultAddress);
+  it('opIf', async () => {
+    const testBranchTrue = 0x01;
 
-//       expect(await svResult.getUint256()).to.equal(opBlockResult.blockNumber);
-//     });
+    await ctx.setProgram(`0x${testBranchTrue}`);
+    await pushToStack(StackValue, ctx, StackCont, [1]);
 
-//     // Block timestamp doesn't work because Hardhat doesn't return timestamp
-//     it('blockTimestamp', async () => {
-//       const ctxStackAddress = await ctx.stack();
-//       StackCont.attach(ctxStackAddress);
+    await app.opIf(ctxAddr);
 
-//       // 0x16 is Timestamp
-//       await ctx.setProgram('0x16');
+    let pc = await ctx.pc();
 
-//       await app.opBlockTimestamp(ctxAddr);
+    expect(pc).to.be.equal(testBranchTrue);
 
-//       // stack size is 1
-//       expect(await stack.length()).to.equal(1);
+    await ctx.setPc(0);
+    await pushToStack(StackValue, ctx, StackCont, [0]);
 
-//       // get result
-//       const svResultAddress = await stack.stack(0);
-//       const svResult = StackValue.attach(svResultAddress);
+    await app.opIf(ctxAddr);
 
-//       const lastBlockTimestamp = (
-//         await ethers.provider.getBlock(
-//           // eslint-disable-next-line no-underscore-dangle
-//           ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
-//         )
-//       ).timestamp;
+    pc = await ctx.pc();
+    const programLength = await (await ctx.program()).length;
 
-//       expect((await svResult.getUint256()).toNumber()).to.be.approximately(
-//         lastBlockTimestamp,
-//         1000
-//       );
-//     });
+    expect(pc).to.be.equal(programLength);
+  });
 
-//     it('blockChainId', async () => {
-//       const ctxStackAddress = await ctx.stack();
-//       StackCont.attach(ctxStackAddress);
+  it('opEnd', async () => {
 
-//       // 0x17 is ChainID
-//       await ctx.setProgram('0x17');
+    await ctx.setProgram('0xAAFCCEADFADCC');
 
-//       const opBlockResult = await app.opBlockChainId(ctxAddr);
+    await app.opEnd(ctxAddr);
 
-//       // stack size is 1
-//       expect(await stack.length()).to.equal(1);
+    const pc = await ctx.pc();
+    const nextPc = await ctx.nextpc();
+    const programLength = await (await ctx.program()).length;
 
-//       // get result
-//       const svResultAddress = await stack.stack(0);
-//       const svResult = StackValue.attach(svResultAddress);
+    expect(pc).to.be.equal(0);
+    expect(nextPc).to.be.equal(programLength);
+  });
 
-//       expect(await svResult.getUint256()).to.equal(opBlockResult.chainId);
-//     });
-//   });
+  it('getUint16', async () => {
+    const testValue = 10;
+    
+    await ctx.setProgram(`0x${testValue}`);
 
-//   it('opMsgSender', async () => {
-//     const [first, second] = await ethers.getSigners();
+    const result = await app.callStatic.getUint16(ctxAddr);
 
-//     await app.opMsgSender(ctxAddr);
-//     await checkStack(StackValue, stack, 1, 0);
-//     await stack.clear();
+    expect(result).to.be.equal(testValue);
+  });
 
-//     await ctx.setMsgSender(first.address);
-//     await app.opMsgSender(ctxAddr);
-//     await checkStack(StackValue, stack, 1, first.address);
-//     await stack.clear();
-
-//     await ctx.setMsgSender(second.address);
-//     await app.opMsgSender(ctxAddr);
-//     await checkStack(StackValue, stack, 1, second.address);
-//   });
-
-//   it('opLoadLocalUint256', async () => {});
-
-//   it('opLoadLocalBytes32', async () => {});
-
-//   it('opLoadLocalBool', async () => {});
-
-//   it('opLoadLocalAddress', async () => {});
-
-//   it('opLoadRemoteUint256', async () => {});
-
-//   it('opLoadRemoteBytes32', async () => {});
-
-//   it('opLoadRemoteBool', async () => {});
-
-//   it('opLoadRemoteAddress', async () => {});
-
-//   it('opBool', async () => {});
-
-//   it('opUint256', async () => {});
-
-//   it('opSendEth', async () => {});
-
-//   it('opTransfer', async () => {});
-
-//   it('opTransferFrom', async () => {});
-
-//   it('opUint256Get', async () => {});
-
-//   it('putUint256ToStack', async () => {});
-
-//   it('nextBytes', async () => {});
-
-//   it('nextBytes1', async () => {});
-
-//   it('nextBranchSelector', async () => {});
-
-//   it('opLoadLocalGet', async () => {});
-
-//   it('opAddressGet', async () => {});
-
-//   it('opLoadLocal', async () => {});
-
-//   it('opLoadRemote', async () => {});
-// });
+});
