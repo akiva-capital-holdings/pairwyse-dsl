@@ -17,7 +17,7 @@ contract LogicalOpcodesMock {
         LogicalOpcodes.opEnd(_ctx);
     }
 
-    function getUint16(IContext _ctx) public {
-        LogicalOpcodes.getUint16(_ctx);
+    function getUint16(IContext _ctx) public returns(uint16) {
+        return LogicalOpcodes.getUint16(_ctx);
     }
 }

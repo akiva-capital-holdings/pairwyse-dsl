@@ -162,3 +162,11 @@ export const testTwoInputOneOutput = async (
   await opFunc(opcodes)(context.address);
   await checkStack(SV, stack, 1, result);
 };
+
+/**
+ * Returns number of bytes in hex string
+ * @param bytes Hex value in string
+ * @returns Number
+ */
+export const getBytesStringLength = (bytes: string) => 
+  bytes.replace('0x', '').length / 2;
