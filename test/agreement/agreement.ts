@@ -456,11 +456,13 @@ describe('Agreement', () => {
     );
   });
 
-  it('Business case', async () => {
+  it.only('Business case', async () => {
     const dai = await (await ethers.getContractFactory('Token'))
       .connect(whale)
       .deploy(parseUnits('1000000', 18));
 
+    // TODO: make all variable calculations inside DSL
+    // TODO: check is possible to over/underflow in DSL with Math operations
     const steps = [
       {
         txId: 1,
@@ -496,15 +498,14 @@ describe('Agreement', () => {
         transaction: `
           transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAIN
         `,
-        condition: 'bool true',
-        //         condition: `(blockTimestamp >= loadLocal uint256 LOW_LIM)
-        //     and
-        // (blockTimestamp <= loadLocal uint256 UP_LIM)
-        //   and
-        // (balanceOf DAI TRANSACTIONS_CONT >=
-        //     ((loadLocal uint256 INITIAL_FUNDS_TARGET * uint256 98) / uint256 100)
-        //   )
-        //         `,
+        condition: `(blockTimestamp >= loadLocal uint256 LOW_LIM)
+            and
+        (blockTimestamp <= loadLocal uint256 UP_LIM)
+          and
+        (balanceOf DAI TRANSACTIONS_CONT >=
+            ((loadLocal uint256 INITIAL_FUNDS_TARGET * uint256 98) / uint256 100)
+          )
+                `,
       },
       {
         txId: 4,
@@ -525,6 +526,71 @@ describe('Agreement', () => {
     uint256 200 * loadLocal uint256 LP_INITIAL)
   and (blockTimestamp > loadLocal uint256 UP_LIM)
   and (blockTimestamp < loadLocal uint256 FID)`,
+      },
+      {
+        txId: 5,
+        requiredTxs: [3],
+        signatory: GP.address,
+        transaction: 'transferVar DAI GP PURCHASE_AMOUNT',
+        condition: `
+          (blockTimestamp >= loadLocal uint256 FID)
+          and
+          (uint256 10 * loadLocal uint256 PURCHASE_AMOUNT
+            <= uint256 9 * loadLocal uint256 INITIAL_FUNDS_TARGET)
+        `,
+      },
+      {
+        txId: 6,
+        requiredTxs: [],
+        signatory: GP.address, // TODO: make `anyone`
+        // TODO: swap ETH for DAI
+        transaction: 'transferFromVar DAI WHALE TRANSACTIONS_CONT SOME_DAI',
+        condition: 'blockTimestamp >= loadLocal uint256 FID + loadLocal uint256 ONE_YEAR',
+      },
+      {
+        txId: 71,
+        requiredTxs: [6],
+        signatory: GP.address,
+        transaction: 'transferVar DAI GP MANAGEMENT_FEE',
+        condition: `
+          (uint256 100 * loadLocal uint256 MANAGEMENT_FEE
+            <= uint256 2 * loadLocal uint256 LP_INITIAL)
+        `,
+      },
+      {
+        txId: 72,
+        requiredTxs: [6],
+        signatory: GP.address,
+        transaction: 'transferVar DAI GP GP_TO_WITHDRAW',
+        condition: `
+          (
+            uint256 10 * loadLocal uint256 GP_TO_WITHDRAW
+            <= uint256 2 * loadLocal uint256 CARRY
+          )
+        `,
+        // Note: CARRY = PROFIT - UNMOVABLE
+      },
+      {
+        txId: 73,
+        requiredTxs: [6],
+        signatory: GP.address,
+        // TODO: GP_INITIAL_SUB_LOSS = GP_INITIAL - LOSS
+        transaction: 'transferVar DAI GP GP_INITIAL_SUB_LOSS',
+        condition: 'bool true',
+      },
+      {
+        txId: 81,
+        requiredTxs: [6],
+        signatory: LP.address,
+        transaction: 'transferVar DAI LP LP_WITHDRAW_PROFIT',
+        condition: 'bool true',
+      },
+      {
+        txId: 82,
+        requiredTxs: [6],
+        signatory: LP.address,
+        transaction: 'transferVar DAI LP LP_WITHDRAW_INITIAL',
+        condition: 'bool true',
       },
     ];
 
@@ -573,26 +639,127 @@ describe('Agreement', () => {
     console.log('Step 3');
     await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH]);
     const REMAINING = BigNumber.from(2).mul(LP_INITIAL).div(98).sub(GP_INITIAL);
-    // console.log({ REMAINING: REMAINING.toString() });
     await dai.connect(whale).transfer(GP.address, REMAINING);
     await dai.connect(GP).approve(txsAddr, REMAINING);
 
     await txs.setStorageUint256(hex4Bytes('LOW_LIM'), NEXT_TWO_MONTH - ONE_DAY);
     await txs.setStorageUint256(hex4Bytes('UP_LIM'), NEXT_TWO_MONTH + ONE_DAY);
-    // await txs.setStorageUint256(hex4Bytes('GP_REMAIN'), REMAINING);
+    await txs.setStorageUint256(hex4Bytes('GP_REMAIN'), REMAINING);
 
-    // await agreement.connect(GP).execute(3);
+    await agreement.connect(GP).execute(3);
 
-    // Step 4 (pre)
-    console.log('Step 4');
-    await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH + 2 * ONE_DAY]);
-    // fund investment date
-    await txs.setStorageUint256(hex4Bytes('FID'), NEXT_TWO_MONTH + 7 * ONE_DAY);
+    // Step 4
+    // console.log('Step 4');
+    // await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH + 2 * ONE_DAY]);
+    // // fund investment date
+    // await txs.setStorageUint256(hex4Bytes('FID'), NEXT_TWO_MONTH + 7 * ONE_DAY);
 
-    await expect(() => agreement.connect(LP).execute(4)).to.changeTokenBalances(
+    // await expect(() => agreement.connect(LP).execute(4)).to.changeTokenBalances(
+    //   dai,
+    //   [GP, LP],
+    //   [GP_INITIAL, LP_INITIAL]
+    // );
+
+    // Step 5
+    console.log('Step 5');
+    const PURCHASE_AMOUNT = parseUnits('900', 18);
+    const FID = NEXT_TWO_MONTH + 7 * ONE_DAY;
+
+    await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH + 7 * ONE_DAY]);
+    await txs.setStorageUint256(hex4Bytes('FID'), FID);
+    await txs.setStorageUint256(hex4Bytes('PURCHASE_AMOUNT'), PURCHASE_AMOUNT);
+
+    await expect(() => agreement.connect(GP).execute(5)).to.changeTokenBalance(
       dai,
-      [GP, LP],
-      [GP_INITIAL, LP_INITIAL]
+      GP,
+      PURCHASE_AMOUNT
     );
+    await dai.connect(GP).transfer(txsAddr, PURCHASE_AMOUNT);
+
+    // Step 6
+    console.log('Step 6');
+    const ONE_YEAR = 365 * ONE_DAY;
+    const WHALE = whale.address;
+    const SOME_DAI = parseUnits('200', 18);
+
+    await ethers.provider.send('evm_setNextBlockTimestamp', [FID + ONE_YEAR]);
+
+    await txs.setStorageUint256(hex4Bytes('WHALE'), WHALE);
+    await txs.setStorageUint256(hex4Bytes('SOME_DAI'), SOME_DAI);
+    await dai.connect(whale).approve(txsAddr, SOME_DAI);
+
+    await agreement.connect(GP).execute(6);
+    expect(await dai.balanceOf(txsAddr)).to.equal(
+      GP_INITIAL.add(LP_INITIAL).add(REMAINING).add(SOME_DAI)
+    );
+
+    // Step 7a
+    console.log('Step 7a');
+    const MANAGEMENT_FEE = LP_INITIAL.mul(2).div(100);
+
+    await txs.setStorageUint256(hex4Bytes('MANAGEMENT_FEE'), MANAGEMENT_FEE);
+    await expect(() => agreement.connect(GP).execute(71)).to.changeTokenBalance(
+      dai,
+      GP,
+      MANAGEMENT_FEE
+    );
+
+    // Step 7b
+    console.log('Step 7b');
+    const HURDLE = 9; // 9%
+    const UNMOVABLE = BigNumber.from(HURDLE).mul(LP_INITIAL).div(100);
+    const DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
+    const PROFIT = DAI_BAL_OF_TXS.sub(GP_INITIAL).sub(LP_INITIAL);
+    const CARRY = PROFIT.sub(UNMOVABLE);
+    const GP_TO_WITHDRAW = PROFIT.sub(UNMOVABLE).mul(2).div(10);
+
+    await txs.setStorageUint256(hex4Bytes('PROFIT'), PROFIT);
+    await txs.setStorageUint256(hex4Bytes('CARRY'), CARRY);
+    await txs.setStorageUint256(hex4Bytes('GP_TO_WITHDRAW'), GP_TO_WITHDRAW);
+
+    await expect(() => agreement.connect(GP).execute(72)).to.changeTokenBalance(
+      dai,
+      GP,
+      GP_TO_WITHDRAW
+    );
+
+    // Step 7c
+    console.log('Step 7c');
+    const LOSS = parseUnits('3', 18);
+    const GP_INITIAL_SUB_LOSS = GP_INITIAL.sub(LOSS);
+
+    await txs.setStorageUint256(hex4Bytes('GP_INITIAL_SUB_LOSS'), GP_INITIAL_SUB_LOSS);
+
+    await expect(() => agreement.connect(GP).execute(73)).to.changeTokenBalance(
+      dai,
+      GP,
+      GP_INITIAL_SUB_LOSS
+    );
+
+    // Step 8a
+    console.log('Step 8a');
+    const LP_WITHDRAW_PROFIT = PROFIT.sub(CARRY);
+
+    await txs.setStorageUint256(hex4Bytes('LP_WITHDRAW_PROFIT'), LP_WITHDRAW_PROFIT);
+
+    await expect(() => agreement.connect(LP).execute(81)).to.changeTokenBalance(
+      dai,
+      LP,
+      LP_WITHDRAW_PROFIT
+    );
+
+    // Step 8b
+    console.log('Step 8b');
+    const LP_WITHDRAW_INITIAL = LP_INITIAL.sub(MANAGEMENT_FEE).sub(LOSS);
+
+    await txs.setStorageUint256(hex4Bytes('LP_WITHDRAW_INITIAL'), LP_WITHDRAW_INITIAL);
+
+    await expect(() => agreement.connect(LP).execute(82)).to.changeTokenBalance(
+      dai,
+      LP,
+      LP_WITHDRAW_INITIAL
+    );
+
+    console.log({ remainingOnConract: (await dai.balanceOf(txsAddr)).toString() });
   });
 });
