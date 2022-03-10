@@ -366,6 +366,26 @@ describe('DSL: basic', () => {
     expect(await app.getStorageBool(hex4Bytes('BOOLVAR'))).to.equal(false);
   });
 
+  it('setLocalUint256', async () => {
+    await app.parse('setLocalUint256 UINTVAR 15');
+    await app.execute();
+    expect(await app.getStorageUint256(hex4Bytes('UINTVAR'))).to.equal(15);
+    await app.parse('setLocalUint256 UINTVAR 239423894');
+    await app.execute();
+    expect(await app.getStorageUint256(hex4Bytes('UINTVAR'))).to.equal(239423894);
+  });
+
+  it('setUint256', async () => {
+    await app.parse('(uint256 4 + uint256 17) setUint256 VAR');
+    await app.execute();
+    expect(await app.getStorageUint256(hex4Bytes('VAR'))).to.equal(21);
+
+    await app.setStorageUint256(hex4Bytes('X'), 10);
+    await app.parse('(loadLocal uint256 X + uint256 15) setUint256 VAR');
+    await app.execute();
+    expect(await app.getStorageUint256(hex4Bytes('VAR'))).to.equal(25);
+  });
+
   describe('loadLocal', () => {
     it('loadLocal uint256 NUMBER', async () => {
       await app.setStorageUint256(hex4Bytes('NUMBER'), 777);

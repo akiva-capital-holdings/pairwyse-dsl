@@ -277,6 +277,20 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         addOpcode(
+            'setLocalUint256',
+            0x2d,
+            OtherOpcodes.opSetLocalUint256.selector,
+            IParser.asmSetLocalUint256.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
+            'setUint256',
+            0x2e,
+            OtherOpcodes.opSetUint256.selector,
+            IParser.asmSetUint256.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
             'msgValue',
             0x22,
             OtherOpcodes.opMsgValue.selector,

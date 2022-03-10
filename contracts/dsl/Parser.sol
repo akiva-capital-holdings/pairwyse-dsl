@@ -9,7 +9,7 @@ import { ByteUtils } from './libs/ByteUtils.sol';
 import { Storage } from './helpers/Storage.sol';
 import { Preprocessor } from './Preprocessor.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 contract Parser is IParser, Storage {
     using StringUtils for string;
@@ -39,6 +39,17 @@ contract Parser is IParser, Storage {
     function asmSetLocalBool() public {
         parseVariable();
         asmBool();
+    }
+
+    // setLocalUint256 VARNAME 12345
+    function asmSetLocalUint256() public {
+        parseVariable();
+        asmUint256();
+    }
+
+    // (uint256 5 + uint256 7) setUint256 VARNAME
+    function asmSetUint256() public {
+        parseVariable();
     }
 
     function asmLoadLocal(IContext _ctx) public {

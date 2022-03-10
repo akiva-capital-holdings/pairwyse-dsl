@@ -49,7 +49,47 @@ library OtherOpcodes {
     }
 
     function opSetLocalBool(IContext _ctx) public {
-        opSetLocal(_ctx, 'setStorageBool(bytes32,bool)');
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+
+        bytes memory data = OpcodeHelpers.nextBytes(_ctx, 1);
+        bool _boolVal = uint8(data[0]) == 1;
+
+        // Set local variable by it's hex
+        (bool success, ) = _ctx.appAddress().call(
+            abi.encodeWithSignature('setStorageBool(bytes32,bool)', _varNameB32, _boolVal)
+        );
+        require(success, 'Opcodes: opSetLocal call not success');
+        OpcodeHelpers.putToStack(_ctx, 1);
+    }
+
+    function opSetLocalUint256(IContext _ctx) public {
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+
+        bytes memory data = OpcodeHelpers.nextBytes(_ctx, 32);
+        uint256 _val = uint256(bytes32(data));
+
+        // Set local variable by it's hex
+        (bool success, ) = _ctx.appAddress().call(
+            abi.encodeWithSignature('setStorageUint256(bytes32,uint256)', _varNameB32, _val)
+        );
+        require(success, 'Opcodes: opSetLocal call not success');
+        OpcodeHelpers.putToStack(_ctx, 1);
+    }
+
+    function opSetUint256(IContext _ctx) public {
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+
+        StackValue _last = _ctx.stack().pop();
+        require(_last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+        uint256 _val = _last.getUint256();
+
+        // Set local variable by it's hex
+        (bool success, ) = _ctx.appAddress().call(
+            abi.encodeWithSignature('setStorageUint256(bytes32,uint256)', _varNameB32, _val)
+        );
+        require(success, 'Opcodes: opSetLocal call not success');
+
+        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     function opLoadLocalUint256(IContext _ctx) public {
@@ -195,20 +235,6 @@ library OtherOpcodes {
         }
 
         return uint256(result);
-    }
-
-    function opSetLocal(IContext _ctx, string memory _funcSignature) public {
-        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
-
-        bytes memory data = OpcodeHelpers.nextBytes(_ctx, 1);
-        bool _boolVal = uint8(data[0]) == 1;
-
-        // Set local variable by it's hex
-        (bool success, ) = _ctx.appAddress().call(
-            abi.encodeWithSignature(_funcSignature, _varNameB32, _boolVal)
-        );
-        require(success, 'Opcodes: opSetLocal call not success');
-        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     function opLoadLocalGet(IContext _ctx, string memory funcSignature)
