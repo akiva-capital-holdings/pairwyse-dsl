@@ -456,13 +456,19 @@ describe('Agreement', () => {
     );
   });
 
-  it('Business case', async () => {
+  it.only('Business case', async () => {
     const dai = await (await ethers.getContractFactory('Token'))
       .connect(whale)
       .deploy(parseUnits('1000000', 18));
 
-    // TODO: make all variable calculations inside DSL
     // TODO: check is possible to over/underflow in DSL with Math operations
+    // TODO: global variables storage through DSL - should be already possible
+    // TODO: ? global stack for Agreement ?
+    // clarification about ETH/DAI swaps
+
+    // TODO: 1. make `condition` an array of conditions
+    // TODO: 2. make all variable calculations inside DSL
+    // TODO: 3. fix remaining funds on Agreement issue
     const steps = [
       {
         txId: 1,
