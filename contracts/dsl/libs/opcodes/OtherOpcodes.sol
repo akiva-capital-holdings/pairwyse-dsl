@@ -9,7 +9,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
@@ -113,7 +113,6 @@ library OtherOpcodes {
         );
         // console.log('recipient', recipient);
         uint256 amount = opUint256Get(_ctx);
-        // console.log('amount', amount);
         IERC20(token).transfer(recipient, amount);
         OpcodeHelpers.putToStack(_ctx, 1);
     }
@@ -133,7 +132,6 @@ library OtherOpcodes {
         // console.log('token', token);
         // console.log('from', from);
         // console.log('to', to);
-        // console.log('amount', amount);
         IERC20(token).transferFrom(from, to, amount);
         OpcodeHelpers.putToStack(_ctx, 1);
     }

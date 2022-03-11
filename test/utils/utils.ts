@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 
 import { expect } from 'chai';
-import { Contract, ethers } from 'ethers';
+import { BigNumber, Contract, ethers } from 'ethers';
 import { Stack__factory, StackValue__factory, Stack, Context, StackValue } from '../../typechain';
 import { OpConditionalTxFunc } from '../types';
 
@@ -170,3 +170,18 @@ export const testTwoInputOneOutput = async (
  */
 export const getBytesStringLength = (bytes: string) => 
   bytes.replace('0x', '').length / 2;
+
+  /**
+   * Converts raw uint256 string to padded hex value 
+   * @param uint256Str String representing raw uint256 value
+   * @returns Padded hex uint256
+   */
+export const uint256StrToHex = (uint256Str: string) => {
+  const uint256Raw = BigNumber.from(uint256Str).toHexString().substring(2);
+
+  // NOTE(Nikita): 32bytes is 64 symbols, 2 symbols per byte
+  //               hence padding is 64 symbols - hex symbols of value
+  const padding = '0'.repeat(64 - uint256Raw.length);
+
+  return padding + uint256Raw;
+}

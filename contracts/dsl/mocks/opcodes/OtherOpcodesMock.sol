@@ -6,6 +6,11 @@ import { OtherOpcodes } from '../../libs/opcodes/OtherOpcodes.sol';
 import { Storage } from '../../helpers/Storage.sol';
 
 contract OtherOpcodesMock is Storage {
+
+    receive() payable external {
+
+    }
+
     function opLoadLocalAny(IContext _ctx) public {
         OtherOpcodes.opLoadLocalAny(_ctx);
     }
@@ -85,14 +90,6 @@ contract OtherOpcodesMock is Storage {
     function opUint256Get(IContext _ctx) public returns (uint256) {
         return OtherOpcodes.opUint256Get(_ctx);
     }
-
-    // function putUint256ToStack(IContext _ctx, uint256 result) private {}
-
-    // function nextBytes(IContext _ctx, uint256 size) private returns (bytes memory out) {}
-
-    // function nextBytes1(IContext _ctx) private returns (bytes1) {}
-
-    // function nextBranchSelector(IContext _ctx, string memory baseOpName) private returns (bytes4) {}
 
     function opLoadLocalGet(IContext _ctx, string memory funcSignature)
         public
