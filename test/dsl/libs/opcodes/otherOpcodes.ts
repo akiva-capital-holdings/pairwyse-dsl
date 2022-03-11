@@ -49,13 +49,12 @@ describe('Other opcodes', () => {
 
     // Setup
     await ctx.initOpcodes();
-    await ctx.setAppAddress(ctx.address);
+    await ctx.setAppAddress(app.address);
     await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
 
     // Deploy test ERC20 and mint some to ctx
 
     testERC20 = await (await ethers.getContractFactory('ERC20Mintable')).deploy('Test', 'TST');
-
   });
 
   afterEach(async () => {
@@ -204,7 +203,7 @@ describe('Other opcodes', () => {
   it('opLoadLocalBool', async () => {
     const testValue = true;
     const bytes32TestValueName = hex4Bytes('BOOL');
-    
+
     await app.setStorageBool(bytes32TestValueName, testValue);
 
     await app.opLoadLocalBool(ctxAddr);
@@ -291,11 +290,13 @@ describe('Other opcodes', () => {
     receiver.sendTransaction({
       from: receiver.address,
       to: ctxAddr,
-      value: fundAmount
-    })
+      value: fundAmount,
+    });
 
     const testAddress = receiver.address;
-    const testAmount = ethers.BigNumber.from('1').mul(10 ** 18).toString();
+    const testAmount = ethers.BigNumber.from('1')
+      .mul(10 ** 18)
+      .toString();
 
     await ctx.setProgram(`0x${testAddress}${testAmount}`);
 
@@ -313,7 +314,7 @@ describe('Other opcodes', () => {
 
     await app.opTransfer(ctxAddr);
     await checkStackTailv2(StackValue, stack, ['1']);
-    
+
     const balanceOfReceiver = await testERC20.balanceOf(receiver.address);
 
     expect(balanceOfReceiver).to.be.equal(testAmount);
@@ -345,10 +346,9 @@ describe('Other opcodes', () => {
     const result = app.callStatic.opUint256Get(ctxAddr);
 
     expect(result).to.be.equal(testAmount);
-
   });
 
-  // NOTE(Nikita): Commented tests relate to 
+  // NOTE(Nikita): Commented tests relate to
   //               opcodeHelpers module, which has
   //               it's own tests
   // it('putUint256ToStack', async () => {
@@ -396,7 +396,6 @@ describe('Other opcodes', () => {
     await app.opLoadLocal(ctxAddr, testSignature);
 
     checkStackTailv2(StackValue, stack, [testValue]);
-
   });
 
   it('opLoadRemote', async () => {
