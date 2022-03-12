@@ -8,7 +8,7 @@ import {
   Stack,
   OtherOpcodesMock,
 } from '../../../../typechain';
-import { checkStack } from '../../../utils/utils';
+import { checkStack, hex4Bytes } from '../../../utils/utils';
 
 describe('Other opcodes', () => {
   let StackCont: Stack__factory;
@@ -47,7 +47,7 @@ describe('Other opcodes', () => {
 
     // Setup
     await ctx.initOpcodes();
-    await ctx.setAppAddress(ctx.address);
+    await ctx.setAppAddress(app.address);
     await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
   });
 
@@ -210,4 +210,18 @@ describe('Other opcodes', () => {
   it('opLoadLocal', async () => {});
 
   it('opLoadRemote', async () => {});
+
+  it('opSetLocalUint256', async () => {
+    const testVal = '1000';
+    const uint256Raw = ethers.BigNumber.from(testVal).toHexString().substring(2);
+    const padding = '0'.repeat(64 - uint256Raw.length);
+    const testValHexPadded = padding + uint256Raw;
+
+    const bytes32ValueName = hex4Bytes('NUMBER');
+    const number = bytes32ValueName.substring(2, 10);
+
+    await ctx.setProgram(`0x${number}${testValHexPadded}`);
+
+    await app.opSetLocalUint256(ctxAddr);
+  });
 });

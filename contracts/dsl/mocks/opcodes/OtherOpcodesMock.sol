@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 
 import { IContext } from '../../interfaces/IContext.sol';
 import { OtherOpcodes } from '../../libs/opcodes/OtherOpcodes.sol';
+import { Storage } from '../../helpers/Storage.sol';
 
-contract OtherOpcodesMock {
+contract OtherOpcodesMock is Storage {
     function opLoadLocalAny(IContext _ctx) public {
         OtherOpcodes.opLoadLocalAny(_ctx);
     }
@@ -104,5 +105,9 @@ contract OtherOpcodesMock {
 
     function opLoadRemote(IContext _ctx, string memory funcSignature) public {
         OtherOpcodes.opLoadRemote(_ctx, funcSignature);
+    }
+
+    function opSetLocalUint256(IContext _ctx) public {
+        OtherOpcodes.opSetLocalUint256(_ctx);
     }
 }
