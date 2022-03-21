@@ -41,31 +41,9 @@ contract Agreement {
         Context _conditionCtx
     ) external {
         // console.log('update');
-        // _transactionCtx.initOpcodes();
-        // _conditionCtx.initOpcodes();
-
-        // _transactionCtx.setAppAddress(address(txs));
-        // _conditionCtx.setAppAddress(address(txs));
-
-        // console.log('addTx');
-        txs.addTx(
-            _txId,
-            _requiredTxs,
-            _signatory,
-            _transactionStr, // TODO: remove program string from the `txs`
-            _conditionStr, // TODO: remove program string from the `txs`
-            _transactionCtx,
-            _conditionCtx
-        );
-
-        // _transactionCtx.setMsgSender(msg.sender);
-        // _conditionCtx.setMsgSender(msg.sender);
-
-        (IContext transactionCtx, IContext conditionCtx, , , , ) = txs.txs(_txId);
-        // parser.parse(transactionCtx, _transactionStr);
-        // parser.parse(conditionCtx, _conditionStr);
-        // parser.parse(transactionCtx, 'bool true');
-        // parser.parse(conditionCtx, 'bool true');
+        txs.addTxBlueprint(_txId, _requiredTxs, _signatory);
+        txs.addTxCondition(_txId, _conditionStr, _conditionCtx);
+        txs.addTxTransaction(_txId, _transactionStr, _transactionCtx);
 
         emit NewTransaction(_txId, _requiredTxs, _signatory, _transactionStr, _conditionStr);
     }
@@ -79,20 +57,25 @@ contract Agreement {
 
     function verify(uint256 _txId) internal view returns (bool) {
         // console.log('verify');
-        (, , , address signatory, , ) = txs.txs(_txId);
+        (, , address signatory, ) = txs.txs(_txId);
         return signatory == msg.sender;
     }
 
     function validate(uint256 _txId, uint256 _msgValue) internal returns (bool) {
         // console.log('validate');
-        (, IContext conditionCtx, , , , ) = txs.txs(_txId);
-        txs.checkCondition(_txId, _msgValue);
-        return conditionCtx.stack().seeLast().getUint256() == 0 ? false : true;
+        uint256 _len = txs.conditionCtxsLen(_txId);
+        txs.checkConditions(_txId, _msgValue);
+
+        uint256 _result;
+        for (uint256 i = 0; i < _len; i++) {
+            _result += txs.conditionCtxs(_txId, i).stack().seeLast().getUint256();
+        }
+        return _result == _len;
     }
 
     function fulfil(uint256 _txId, uint256 _msgValue) internal returns (bool) {
         // console.log('fulfil');
-        (IContext transactionCtx, , , , , ) = txs.txs(_txId);
+        (IContext transactionCtx, , , ) = txs.txs(_txId);
         txs.execTx(_txId, _msgValue);
         return transactionCtx.stack().seeLast().getUint256() == 0 ? false : true;
     }

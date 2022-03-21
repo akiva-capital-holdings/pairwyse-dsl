@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-// import { IConditionalTxs } from '../interfaces/IConditionalTxs.sol';
 import { IContext } from '../dsl/interfaces/IContext.sol';
 import { ComparatorOpcodes } from '../dsl/libs/opcodes/ComparatorOpcodes.sol';
 import { LogicalOpcodes } from '../dsl/libs/opcodes/LogicalOpcodes.sol';
@@ -15,53 +14,61 @@ import 'hardhat/console.sol';
 
 contract ConditionalTxs is Storage {
     struct Tx {
-        // uint256 txId;
         uint256[] requiredTxs;
         IContext transactionCtx;
-        IContext conditionCtx;
         bool isExecuted;
         address signatory;
         string transactionStr;
-        string conditionStr;
     }
 
     mapping(uint256 => Tx) public txs;
+    mapping(uint256 => IContext[]) public conditionCtxs;
+    mapping(uint256 => string[]) public conditionStrs;
 
-    // event NewTx(bytes32 txId);
+    function conditionCtxsLen(uint256 _txId) external view returns (uint256) {
+        return conditionCtxs[_txId].length;
+    }
 
-    function addTx(
+    function conditionStrsLen(uint256 _txId) external view returns (uint256) {
+        return conditionStrs[_txId].length;
+    }
+
+    function addTxBlueprint(
         uint256 _txId,
         uint256[] memory _requiredTxs,
-        address _signatory,
-        string memory _transactionStr,
+        address _signatory
+    ) external {
+        Tx memory txn = Tx(_requiredTxs, IContext(address(0)), false, _signatory, '');
+        txs[_txId] = txn;
+    }
+
+    function addTxCondition(
+        uint256 _txId,
         string memory _conditionStr,
-        IContext _transactionCtx,
         IContext _conditionCtx
     ) external {
-        Tx memory txn = Tx(
-            // _txId,
-            _requiredTxs,
-            _transactionCtx,
-            _conditionCtx,
-            false,
-            _signatory,
-            _transactionStr,
-            _conditionStr
-        );
-
         _conditionCtx.setComparatorOpcodesAddr(address(ComparatorOpcodes));
         _conditionCtx.setLogicalOpcodesAddr(address(LogicalOpcodes));
         _conditionCtx.setSetOpcodesAddr(address(SetOpcodes));
         _conditionCtx.setOtherOpcodesAddr(address(OtherOpcodes));
 
+        conditionCtxs[_txId].push(_conditionCtx);
+        conditionStrs[_txId].push(_conditionStr);
+    }
+
+    function addTxTransaction(
+        uint256 _txId,
+        string memory _transactionStr,
+        IContext _transactionCtx
+    ) external {
+        // TODO: require txId hash at least 1 condition
         _transactionCtx.setComparatorOpcodesAddr(address(ComparatorOpcodes));
         _transactionCtx.setLogicalOpcodesAddr(address(LogicalOpcodes));
         _transactionCtx.setSetOpcodesAddr(address(SetOpcodes));
         _transactionCtx.setOtherOpcodesAddr(address(OtherOpcodes));
 
-        // txId = hashTx(_signatory, _transactionStr, _conditionStr);
-        txs[_txId] = txn;
-        // emit NewTx(txId);
+        txs[_txId].transactionCtx = _transactionCtx;
+        txs[_txId].transactionStr = _transactionStr;
     }
 
     // solhint-disable-next-line no-empty-blocks
@@ -73,7 +80,10 @@ contract ConditionalTxs is Storage {
     ) external {
         // console.log('execTx');
         Tx memory txn = txs[_txId];
-        require(checkCondition(_txId, _msgValue), 'ConditionalTxs: txn condition is not satisfied');
+        require(
+            checkConditions(_txId, _msgValue),
+            'ConditionalTxs: txn condition is not satisfied'
+        );
         require(!txn.isExecuted, 'ConditionalTxs: txn already was executed');
 
         txn.transactionCtx.setMsgValue(_msgValue);
@@ -81,11 +91,11 @@ contract ConditionalTxs is Storage {
         txs[_txId].isExecuted = true;
     }
 
-    function checkCondition(
+    function checkConditions(
         uint256 _txId,
         uint256 _msgValue /*onlyOwner*/
     ) public returns (bool) {
-        // console.log('checkCondition');
+        // console.log('checkConditions');
         Tx memory txn = txs[_txId];
 
         Tx memory requiredTx;
@@ -103,16 +113,14 @@ contract ConditionalTxs is Storage {
             );
         }
 
-        txn.conditionCtx.setMsgValue(_msgValue);
-        Executor.execute(txn.conditionCtx);
-        return txn.conditionCtx.stack().seeLast().getUint256() == 0 ? false : true;
+        bool _res;
+        for (uint256 i = 0; i < conditionCtxs[_txId].length; i++) {
+            conditionCtxs[_txId][i].setMsgValue(_msgValue);
+            Executor.execute(conditionCtxs[_txId][i]);
+            _res = _res && conditionCtxs[_txId][i].stack().seeLast().getUint256() == 0
+                ? false
+                : true;
+        }
+        return _res;
     }
-
-    // function hashTx(
-    //     address _signatory,
-    //     string memory _transaction,
-    //     string memory _condition
-    // ) internal pure returns (bytes32) {
-    //     return keccak256(abi.encodePacked(_signatory, _transaction, _condition));
-    // }
 }
