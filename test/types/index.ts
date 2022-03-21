@@ -26,6 +26,6 @@ export type TxObject = {
   txId: number;
   requiredTxs: number[];
   signatory: string;
-  condition: string;
+  conditions: string[];
   transaction: string;
 };

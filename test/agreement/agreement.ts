@@ -36,13 +36,16 @@ describe('Agreement', () => {
   // Add tx objects to Agreement
   const addSteps = async (steps: TxObject[], Ctx: Context__factory) => {
     let txCtx;
-    let cdCtx;
 
     for await (const step of steps) {
       txCtx = await Ctx.deploy();
-      cdCtx = await Ctx.deploy();
+      const cdCtxsAddrs = [];
 
-      await agreement.parse(step.condition, cdCtx.address);
+      for (let i = 0; i < step.conditions.length; i++) {
+        const cond = await Ctx.deploy();
+        cdCtxsAddrs.push(cond.address);
+        await agreement.parse(step.conditions[i], cond.address);
+      }
       await agreement.parse(step.transaction, txCtx.address);
 
       await agreement.update(
@@ -50,9 +53,9 @@ describe('Agreement', () => {
         step.requiredTxs,
         step.signatory,
         step.transaction,
-        step.condition,
+        step.conditions,
         txCtx.address,
-        cdCtx.address
+        cdCtxsAddrs
       );
     }
   };
@@ -139,11 +142,11 @@ describe('Agreement', () => {
     const txId = 1;
     const requiredTxs: number[] = [];
     const signatory = alice.address;
-    const condition = 'blockTimestamp > loadLocal uint256 LOCK_TIME';
+    const conditions = ['blockTimestamp > loadLocal uint256 LOCK_TIME'];
     const transaction = 'sendEth RECEIVER 1000000000000000000';
 
     // Update
-    await addSteps([{ txId, requiredTxs, signatory, condition, transaction }], ContextCont);
+    await addSteps([{ txId, requiredTxs, signatory, conditions, transaction }], ContextCont);
 
     // Top up contract
     const oneEthBN = parseEther('1');
@@ -191,53 +194,34 @@ describe('Agreement', () => {
         txId: 1,
         requiredTxs: [],
         signatory: alice.address,
-        // transaction: `
-        //       (msgValue == uint256 ${oneEth})
-        //   and (setLocalBool BORROWER_DEPOSITED true)`,
-        // condition: 'loadLocal bool BORROWER_DEPOSITED == bool false',
         transaction: `msgValue == uint256 ${oneEth}`,
-        condition: 'bool true',
+        conditions: ['bool true'],
       },
       // Bob lends 10 tokens to Alice
       {
         txId: 2,
         requiredTxs: [1],
         signatory: bob.address,
-        // transaction: `
-        //       (transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()})
-        //   and (setLocalBool LENDER_DEPOSITED true)
-        // `,
-        // condition: `
-        //       (loadLocal bool BORROWER_DEPOSITED == bool true)
-        //   and (loadLocal bool LENDER_DEPOSITED == bool false)
-        // `,
         transaction: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
-        condition: 'bool true',
+        conditions: ['bool true'],
       },
       // Alice returns 10 tokens to Bob and collects 1 ETH
       {
         txId: 3,
         requiredTxs: [2],
         signatory: alice.address,
-        // transaction: `
-        //       (transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()})
-        //   and (sendEth ALICE ${oneEth})
-        //   and (setLocalBool OBLIGATIONS_SETTLED true)
-        // `,
-        // condition: `
-        //       (loadLocal bool LENDER_DEPOSITED == bool true)
-        //   and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
-        // `,
         transaction: `
               (transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()})
           and (sendEth ALICE ${oneEth})
         `,
-        condition: 'bool true',
+        conditions: ['bool true'],
       },
     ];
 
     // Add tx objects to Agreement
+    console.log('before addSteps');
     await addSteps(steps, ContextCont);
+    console.log('after addSteps');
 
     // Alice deposits 1 ETH to SC
     await expect(agreement.connect(alice).execute(1, { value: 0 })).to.be.revertedWith(
@@ -298,7 +282,7 @@ describe('Agreement', () => {
         requiredTxs: [],
         signatory: alice.address,
         transaction: `msgValue == uint256 ${oneEth}`,
-        condition: 'bool true',
+        conditions: ['bool true'],
       },
       // Carl deposits 10 tokens to Agreement
       {
@@ -306,7 +290,7 @@ describe('Agreement', () => {
         requiredTxs: [],
         signatory: carl.address,
         transaction: `transferFrom TOKEN_ADDR CARL TRANSACTIONS ${tenTokens.toString()}`,
-        condition: 'bool true',
+        conditions: ['bool true'],
       },
       // Bob lends 10 tokens to Alice
       {
@@ -314,7 +298,7 @@ describe('Agreement', () => {
         requiredTxs: [1],
         signatory: bob.address,
         transaction: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
-        condition: 'bool true',
+        conditions: ['bool true'],
       },
       // Alice returns 10 tokens to Bob and collects 1 ETH
       {
@@ -326,7 +310,7 @@ describe('Agreement', () => {
           and (sendEth ALICE ${oneEth})
           and (setLocalBool OBLIGATIONS_SETTLED true)
         `,
-        condition: 'bool true',
+        conditions: ['bool true'],
       },
       // If Alice didn't return 10 tokens to Bob before EXPIRY
       // then Bob can collect 10 tokens from Carl
@@ -338,10 +322,12 @@ describe('Agreement', () => {
               transfer TOKEN_ADDR BOB ${tenTokens.toString()}
           and (setLocalBool LENDER_WITHDRAW_INSURERS true)
         `,
-        condition: `
+        conditions: [
+          `
               blockTimestamp > loadLocal uint256 EXPIRY
           and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
         `,
+        ],
       },
       // If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens
       {
@@ -349,10 +335,12 @@ describe('Agreement', () => {
         requiredTxs: [],
         signatory: carl.address,
         transaction: `transfer TOKEN_ADDR CARL ${tenTokens.toString()}`,
-        condition: `
+        conditions: [
+          `
               blockTimestamp > loadLocal uint256 EXPIRY
           and (loadLocal bool LENDER_WITHDRAW_INSURERS == bool false)
         `,
+        ],
       },
     ];
 
@@ -432,12 +420,14 @@ describe('Agreement', () => {
         requiredTxs: [],
         signatory: GP.address,
         transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_INITIAL',
-        condition: `
+        conditions: [
+          `
               (blockTimestamp < loadLocal uint256 PLACEMENT_DATE)
           and (
             loadLocal uint256 GP_INITIAL >=
             loadLocal uint256 ((INITIAL_FUNDS_TARGET * uint256 2) / uint256 100)
           )`,
+        ],
       },
       // Note: for now we're assuming that we have only one LP
       {
@@ -447,11 +437,13 @@ describe('Agreement', () => {
         transaction: `
           transferFromVar DAI LP TRANSACTIONS_CONT LP_INITIAL
         `,
-        condition: `
+        conditions: [
+          `
           (blockTimestamp >= loadLocal uint256 PLACEMENT_DATE)
           and
           (blockTimestamp < loadLocal uint256 CLOSING_DATE)
         `,
+        ],
       },
       {
         txId: 3,
@@ -461,7 +453,8 @@ describe('Agreement', () => {
         transaction: `
           transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAIN
         `,
-        condition: `(blockTimestamp >= loadLocal uint256 LOW_LIM)
+        conditions: [
+          `(blockTimestamp >= loadLocal uint256 LOW_LIM)
             and
         (blockTimestamp <= loadLocal uint256 UP_LIM)
           and
@@ -469,6 +462,7 @@ describe('Agreement', () => {
             ((loadLocal uint256 INITIAL_FUNDS_TARGET * uint256 98) / uint256 100)
           )
                 `,
+        ],
       },
       {
         txId: 4,
@@ -483,12 +477,14 @@ describe('Agreement', () => {
          * if LP / GP > 98 / 2. But due to integer division precision errors we add just a little
          * more to 98 (make it 98.05) to eliminate division errors.
          */
-        condition: `
+        conditions: [
+          `
   (uint256 9805 * (loadLocal uint256 GP_REMAIN + loadLocal uint256 GP_INITIAL)
     <
     uint256 200 * loadLocal uint256 LP_INITIAL)
   and (blockTimestamp > loadLocal uint256 UP_LIM)
   and (blockTimestamp < loadLocal uint256 FID)`,
+        ],
       },
       {
         // Note: here we don't return ETH to the contract but just withdraw DAI and then return the
@@ -499,12 +495,14 @@ describe('Agreement', () => {
         requiredTxs: [3],
         signatory: GP.address,
         transaction: 'transferVar DAI GP PURCHASE_AMOUNT',
-        condition: `
+        conditions: [
+          `
           (blockTimestamp >= loadLocal uint256 FID)
           and
           (uint256 10 * loadLocal uint256 PURCHASE_AMOUNT
             <= uint256 9 * loadLocal uint256 INITIAL_FUNDS_TARGET)
         `,
+        ],
       },
       {
         // Note: as we've skipped transferring ETH in the previous step (step 5) then by
@@ -516,38 +514,40 @@ describe('Agreement', () => {
         signatory: GP.address, // TODO: make `anyone`
         // TODO: swap ETH for DAI
         transaction: 'transferFromVar DAI WHALE TRANSACTIONS_CONT SOME_DAI',
-        condition: 'blockTimestamp >= loadLocal uint256 FID + loadLocal uint256 ONE_YEAR',
+        conditions: ['blockTimestamp >= loadLocal uint256 FID + loadLocal uint256 ONE_YEAR'],
       },
       {
         txId: 71,
         requiredTxs: [6],
         signatory: GP.address,
         transaction: 'transferVar DAI GP MANAGEMENT_FEE',
-        condition: `
+        conditions: [
+          `
           (uint256 100 * loadLocal uint256 MANAGEMENT_FEE
             <= uint256 2 * loadLocal uint256 LP_INITIAL)
         `,
+        ],
       },
       {
         txId: 72,
         requiredTxs: [6],
         signatory: GP.address,
         transaction: 'transferVar DAI GP CARRY',
-        condition: 'bool true',
+        conditions: ['bool true'],
       },
       {
         txId: 73,
         requiredTxs: [6],
         signatory: GP.address,
         transaction: 'transferVar DAI GP GP_TO_WITHDRAW',
-        condition: 'bool true',
+        conditions: ['bool true'],
       },
       {
         txId: 8,
         requiredTxs: [6],
         signatory: LP.address,
         transaction: 'transferVar DAI LP LP_TO_WITHDRAW',
-        condition: 'bool true',
+        conditions: ['bool true'],
       },
     ];
 

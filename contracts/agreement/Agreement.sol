@@ -17,7 +17,7 @@ contract Agreement {
         uint256[] requiredTxs,
         address signatory,
         string transaction,
-        string conditionStr
+        string[] conditionStrs
     );
 
     constructor(IParser _parser) {
@@ -36,16 +36,18 @@ contract Agreement {
         uint256[] memory _requiredTxs,
         address _signatory,
         string memory _transactionStr,
-        string memory _conditionStr,
+        string[] memory _conditionStrs,
         Context _transactionCtx,
-        Context _conditionCtx
+        Context[] memory _conditionCtxs
     ) external {
         // console.log('update');
         txs.addTxBlueprint(_txId, _requiredTxs, _signatory);
-        txs.addTxCondition(_txId, _conditionStr, _conditionCtx);
+        for (uint256 i = 0; i < _conditionCtxs.length; i++) {
+            txs.addTxCondition(_txId, _conditionStrs[i], _conditionCtxs[i]);
+        }
         txs.addTxTransaction(_txId, _transactionStr, _transactionCtx);
 
-        emit NewTransaction(_txId, _requiredTxs, _signatory, _transactionStr, _conditionStr);
+        emit NewTransaction(_txId, _requiredTxs, _signatory, _transactionStr, _conditionStrs);
     }
 
     function execute(uint256 _txId) external payable {
