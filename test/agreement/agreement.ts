@@ -449,19 +449,20 @@ describe('Agreement', () => {
         txId: 3,
         requiredTxs: [2],
         signatory: GP.address,
-        // TODO: calculate GP_REMAIN variable inside DSL
         transaction: `
-          transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAIN
+          transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAINING
         `,
         conditions: [
+          `(
+            uint256 2 * loadLocal uint256 LP_INITIAL / uint256 98 - loadLocal uint256 GP_INITIAL
+           ) setUint256 GP_REMAINING`,
           `(blockTimestamp >= loadLocal uint256 LOW_LIM)
-            and
-        (blockTimestamp <= loadLocal uint256 UP_LIM)
-          and
-        (balanceOf DAI TRANSACTIONS_CONT >=
-            ((loadLocal uint256 INITIAL_FUNDS_TARGET * uint256 98) / uint256 100)
-          )
-                `,
+             and
+           (blockTimestamp <= loadLocal uint256 UP_LIM)
+             and
+           (balanceOf DAI TRANSACTIONS_CONT >=
+             ((loadLocal uint256 INITIAL_FUNDS_TARGET * uint256 98) / uint256 100)
+           )`,
         ],
       },
       {
@@ -469,9 +470,9 @@ describe('Agreement', () => {
         requiredTxs: [2],
         signatory: LP.address, // TODO: make available for everyone?
         transaction: `
-          (transferVar DAI GP GP_INITIAL)
-          and
-          (transferVar DAI LP LP_INITIAL)`,
+              (transferVar DAI GP GP_INITIAL)
+              and
+              (transferVar DAI LP LP_INITIAL)`,
         /**
          * Note: 9805 and 200 are 98.05 and 2.00 numbers respectively. The condition should be true
          * if LP / GP > 98 / 2. But due to integer division precision errors we add just a little
@@ -479,29 +480,26 @@ describe('Agreement', () => {
          */
         conditions: [
           `
-  (uint256 9805 * (loadLocal uint256 GP_REMAIN + loadLocal uint256 GP_INITIAL)
-    <
-    uint256 200 * loadLocal uint256 LP_INITIAL)
-  and (blockTimestamp > loadLocal uint256 UP_LIM)
-  and (blockTimestamp < loadLocal uint256 FID)`,
+      (uint256 9805 * (loadLocal uint256 GP_REMAIN + loadLocal uint256 GP_INITIAL)
+        <
+        uint256 200 * loadLocal uint256 LP_INITIAL)
+      and (blockTimestamp > loadLocal uint256 UP_LIM)
+      and (blockTimestamp < loadLocal uint256 FID)`,
         ],
       },
       {
         // Note: here we don't return ETH to the contract but just withdraw DAI and then return the
         //       same amount of DAI
-        // TODO: PURCHASE_AMOUNT should be not <= 90% of INITIAL_FUNDS_TARGET
-        //       but <= 90% DAI.balanceOf(address(this contract))
         txId: 5,
         requiredTxs: [3],
         signatory: GP.address,
         transaction: 'transferVar DAI GP PURCHASE_AMOUNT',
         conditions: [
-          `
-          (blockTimestamp >= loadLocal uint256 FID)
-          and
-          (uint256 10 * loadLocal uint256 PURCHASE_AMOUNT
-            <= uint256 9 * loadLocal uint256 INITIAL_FUNDS_TARGET)
-        `,
+          `(blockTimestamp >= loadLocal uint256 FID)
+              and
+           (uint256 10 * loadLocal uint256 PURCHASE_AMOUNT
+              <= uint256 9 * (balanceOf DAI TRANSACTIONS_CONT))
+            `,
         ],
       },
       {
@@ -522,10 +520,11 @@ describe('Agreement', () => {
         signatory: GP.address,
         transaction: 'transferVar DAI GP MANAGEMENT_FEE',
         conditions: [
+          '(loadLocal uint256 LP_INITIAL * uint256 2 / uint256 100) setUint256 MANAGEMENT_FEE',
           `
-          (uint256 100 * loadLocal uint256 MANAGEMENT_FEE
-            <= uint256 2 * loadLocal uint256 LP_INITIAL)
-        `,
+              (uint256 100 * loadLocal uint256 MANAGEMENT_FEE
+                <= uint256 2 * loadLocal uint256 LP_INITIAL)
+            `,
         ],
       },
       {
@@ -533,26 +532,89 @@ describe('Agreement', () => {
         requiredTxs: [6],
         signatory: GP.address,
         transaction: 'transferVar DAI GP CARRY',
-        conditions: ['bool true'],
+        conditions: [
+          `(
+            balanceOf DAI TRANSACTIONS_CONT -
+              loadLocal uint256 GP_INITIAL -
+              loadLocal uint256 LP_INITIAL -
+              loadLocal uint256 GP_REMAINING
+            ) setUint256 PROFIT`,
+          `(
+            loadLocal uint256 LP_INITIAL *
+              loadLocal uint256 HURDLE /
+              uint256 100
+            ) setUint256 THRESHOLD`,
+          '(loadLocal uint256 PROFIT - loadLocal uint256 THRESHOLD) setUint256 DELTA',
+          '(loadLocal uint256 DELTA * uint256 20 / uint256 100) setUint256 CARRY',
+        ],
       },
       {
         txId: 73,
         requiredTxs: [6],
         signatory: GP.address,
         transaction: 'transferVar DAI GP GP_TO_WITHDRAW',
-        conditions: ['bool true'],
+        conditions: [
+          `
+          (loadLocal uint256 PROFIT > uint256 0)
+          ifelse ZERO_LOSS NON_ZERO_LOSS
+          end
+
+          ZERO_LOSS {
+            (uint256 0) setUint256 LOSS
+          }
+
+          NON_ZERO_LOSS {
+            (loadLocal uint256 GP_INITIAL +
+              loadLocal uint256 LP_INITIAL +
+              loadLocal uint256 GP_REMAINING -
+              (balanceOf DAI TRANSACTIONS_CONT)
+            ) setUint256 LOSS
+          }
+          `,
+          `(loadLocal uint256 GP_INITIAL +
+              loadLocal uint256 GP_REMAINING -
+              loadLocal uint256 LOSS
+            ) setUint256 GP_TO_WITHDRAW`,
+        ],
       },
       {
         txId: 8,
         requiredTxs: [6],
         signatory: LP.address,
         transaction: 'transferVar DAI LP LP_TO_WITHDRAW',
-        conditions: ['bool true'],
+        conditions: [
+          '(loadLocal uint256 PROFIT - loadLocal uint256 CARRY) setUint256 LP_PROFIT',
+          `(
+            (loadLocal uint256 GP_INITIAL - loadLocal uint256  GP_REMAINING) >
+            loadLocal uint256 LOSS
+          )
+          ifelse ZERO NON_ZERO
+          end
+
+          ZERO {
+            (uint256 0) setUint256 UNCOVERED_NET_LOSSES
+          }
+
+          NON_ZERO {
+            (loadLocal uint256 LOSS -
+              loadLocal uint256 GP_INITIAL -
+              loadLocal uint256 GP_REMAINING
+            ) setUint256 UNCOVERED_NET_LOSSES
+          }
+          `,
+          `(loadLocal uint256 LP_INITIAL +
+              loadLocal uint256 LP_PROFIT -
+              loadLocal uint256 MANAGEMENT_FEE -
+              loadLocal uint256 UNCOVERED_NET_LOSSES
+            ) setUint256 LP_TO_WITHDRAW`,
+        ],
       },
     ];
 
     // Add tx objects to Agreement
+    console.log('Adding logical steps into agreement...');
     await addSteps(steps, ContextCont);
+    console.log('Done!');
 
     LAST_BLOCK_TIMESTAMP = (
       await ethers.provider.getBlock(
@@ -604,7 +666,6 @@ describe('Agreement', () => {
 
     await txs.setStorageUint256(hex4Bytes('LOW_LIM'), NEXT_TWO_MONTH - ONE_DAY);
     await txs.setStorageUint256(hex4Bytes('UP_LIM'), NEXT_TWO_MONTH + ONE_DAY);
-    await txs.setStorageUint256(hex4Bytes('GP_REMAIN'), GP_REMAINING);
 
     await agreement.connect(GP).execute(3);
     console.log({ DAI_BAL_OF_TXS: (await dai.balanceOf(txsAddr)).toString() });
@@ -623,7 +684,9 @@ describe('Agreement', () => {
 
     // Step 5
     console.log('Step 5');
-    const PURCHASE_AMOUNT = parseUnits('900', 18);
+    let DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
+    const PURCHASE_AMOUNT = DAI_BAL_OF_TXS.mul(9).div(10);
+    console.log({ PURCHASE_AMOUNT: PURCHASE_AMOUNT.toString() });
     const FID = NEXT_TWO_MONTH + 7 * ONE_DAY; // FID = Fund Investment Date
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH + 7 * ONE_DAY]);
@@ -660,7 +723,6 @@ describe('Agreement', () => {
     console.log('Step 7a');
     const MANAGEMENT_FEE = LP_INITIAL.mul(2).div(100);
 
-    await txs.setStorageUint256(hex4Bytes('MANAGEMENT_FEE'), MANAGEMENT_FEE);
     await expect(() => agreement.connect(GP).execute(71)).to.changeTokenBalance(
       dai,
       GP,
@@ -670,7 +732,7 @@ describe('Agreement', () => {
 
     // Step 7b
     console.log('Step 7b');
-    const DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
+    DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
     const PROFIT = DAI_BAL_OF_TXS.sub(GP_INITIAL).sub(LP_INITIAL).sub(GP_REMAINING);
     console.log({ PROFIT: PROFIT.toString() });
     const HURDLE = 9; // 9%
@@ -679,24 +741,21 @@ describe('Agreement', () => {
     const CARRY = DELTA.mul(20).div(100); // DELTA * 20%
     console.log({ CARRY: CARRY.toString() });
 
-    await txs.setStorageUint256(hex4Bytes('PROFIT'), PROFIT);
-    await txs.setStorageUint256(hex4Bytes('CARRY'), CARRY);
+    await txs.setStorageUint256(hex4Bytes('HURDLE'), HURDLE);
 
     await expect(() => agreement.connect(GP).execute(72)).to.changeTokenBalance(dai, GP, CARRY);
     console.log({ DAI_BAL_OF_TXS: (await dai.balanceOf(txsAddr)).toString() });
 
     // Step 7c
     console.log('Step 7c');
-    // TODO: calculate LOSS
-    //       if (profit > 0) loss = 0
-    //       else loss = GP_INITIAL + LP_INITIAL + GP_REMAINING - DAI_BAL_OF_TXS
-    const LOSS = BigNumber.from(0);
+    DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
+    const LOSS = PROFIT.gt(0)
+      ? BigNumber.from(0)
+      : GP_INITIAL.add(LP_INITIAL).add(GP_REMAINING).sub(DAI_BAL_OF_TXS);
     // TODO: make sure if LOSS > (GP_INITIAL + GP_REMAINING) then there will be no error and
     //       GP_TO_WITHDRAW will be set to 0
     const GP_TO_WITHDRAW = GP_INITIAL.add(GP_REMAINING).sub(LOSS);
     console.log({ GP_TO_WITHDRAW: GP_TO_WITHDRAW.toString() });
-
-    await txs.setStorageUint256(hex4Bytes('GP_TO_WITHDRAW'), GP_TO_WITHDRAW);
 
     await expect(() => agreement.connect(GP).execute(73)).to.changeTokenBalance(
       dai,
@@ -716,8 +775,6 @@ describe('Agreement', () => {
     console.log({ UNCOVERED_NET_LOSSES: UNCOVERED_NET_LOSSES.toString() });
     const LP_TO_WITHDRAW = LP_INITIAL.add(LP_PROFIT).sub(MANAGEMENT_FEE).sub(UNCOVERED_NET_LOSSES);
     console.log({ LP_TO_WITHDRAW: LP_TO_WITHDRAW.toString() });
-
-    await txs.setStorageUint256(hex4Bytes('LP_TO_WITHDRAW'), LP_TO_WITHDRAW);
 
     await expect(() => agreement.connect(LP).execute(8)).to.changeTokenBalance(
       dai,
