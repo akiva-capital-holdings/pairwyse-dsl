@@ -126,7 +126,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
     txId: 73,
     requiredTxs: [6],
     signatory: GP.address,
-    transaction: 'transferVar DAI GP GP_TO_WITHDRAW',
+    transaction: 'transferVar DAI GP GP_PRINICIPAL',
     conditions: [
       `
           (loadLocal uint256 PROFIT > uint256 0)
@@ -151,25 +151,31 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
           end
 
           WITHDRAW_ZERO {
-            (uint256 0) setUint256 GP_TO_WITHDRAW
+            (uint256 0) setUint256 GP_PRINICIPAL
           }
 
           WITHDRAW_NON_ZERO {
             (loadLocal uint256 GP_INITIAL +
               loadLocal uint256 GP_REMAINING -
               loadLocal uint256 LOSS
-            ) setUint256 GP_TO_WITHDRAW
+            ) setUint256 GP_PRINICIPAL
           }
       `,
     ],
   },
   {
-    txId: 8,
+    txId: 81,
     requiredTxs: [6],
     signatory: LP.address,
-    transaction: 'transferVar DAI LP LP_TO_WITHDRAW',
+    transaction: 'transferVar DAI LP LP_PROFIT',
+    conditions: ['(loadLocal uint256 PROFIT - loadLocal uint256 CARRY) setUint256 LP_PROFIT'],
+  },
+  {
+    txId: 82,
+    requiredTxs: [6],
+    signatory: LP.address,
+    transaction: 'transferVar DAI LP LP_PRINCIPAL',
     conditions: [
-      '(loadLocal uint256 PROFIT - loadLocal uint256 CARRY) setUint256 LP_PROFIT',
       `(
          (loadLocal uint256 GP_INITIAL - loadLocal uint256  GP_REMAINING) >
          loadLocal uint256 LOSS
@@ -188,11 +194,10 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
          ) setUint256 UNCOVERED_NET_LOSSES
        }
       `,
-      `(loadLocal uint256 LP_INITIAL +
-         loadLocal uint256 LP_PROFIT -
+      `(loadLocal uint256 LP_INITIAL -
          loadLocal uint256 MANAGEMENT_FEE -
          loadLocal uint256 UNCOVERED_NET_LOSSES
-       ) setUint256 LP_TO_WITHDRAW`,
+       ) setUint256 LP_PRINCIPAL`,
     ],
   },
 ];

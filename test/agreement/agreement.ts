@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { parseEther, parseUnits } from 'ethers/lib/utils';
+import { formatEther, parseEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber, Contract } from 'ethers';
 import { hex4Bytes } from '../utils/utils';
 import { businessCaseSteps } from '../data/agreement/businessCase';
@@ -220,9 +220,7 @@ describe('Agreement', () => {
     ];
 
     // Add tx objects to Agreement
-    console.log('before addSteps');
     await addSteps(steps, ContextCont);
-    console.log('after addSteps');
 
     // Alice deposits 1 ETH to SC
     await expect(agreement.connect(alice).execute(1, { value: 0 })).to.be.revertedWith(
@@ -430,7 +428,7 @@ describe('Agreement', () => {
     const GP_INITIAL = parseUnits('20', 18);
     await dai.connect(whale).transfer(GP.address, GP_INITIAL);
     await dai.connect(GP).approve(txsAddr, GP_INITIAL);
-    console.log(`GP Initial Deposit = ${ethers.utils.formatEther(GP_INITIAL)} DAI`);
+    console.log(`GP Initial Deposit = ${formatEther(GP_INITIAL)} DAI`);
 
     await txs.setStorageAddress(hex4Bytes('DAI'), dai.address);
     await txs.setStorageAddress(hex4Bytes('GP'), GP.address);
@@ -440,7 +438,7 @@ describe('Agreement', () => {
     await txs.setStorageUint256(hex4Bytes('PLACEMENT_DATE'), NEXT_MONTH);
 
     await agreement.connect(GP).execute(1);
-    console.log(`Cash Balance = ${ethers.utils.formatEther(await dai.balanceOf(txsAddr))} DAI`);
+    console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
 
     // Step 2
     console.log('\nStep 2');
@@ -448,14 +446,14 @@ describe('Agreement', () => {
     const LP_INITIAL = parseUnits('990', 18);
     await dai.connect(whale).transfer(LP.address, LP_INITIAL);
     await dai.connect(LP).approve(txsAddr, LP_INITIAL);
-    console.log(`LP Initial Deposit = ${ethers.utils.formatEther(LP_INITIAL)} DAI`);
+    console.log(`LP Initial Deposit = ${formatEther(LP_INITIAL)} DAI`);
 
     await txs.setStorageAddress(hex4Bytes('LP'), LP.address);
     await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
     await txs.setStorageUint256(hex4Bytes('CLOSING_DATE'), NEXT_TWO_MONTH);
 
     await agreement.connect(LP).execute(2);
-    console.log(`Cash Balance = ${ethers.utils.formatEther(await dai.balanceOf(txsAddr))} DAI`);
+    console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
 
     // Step 3
     console.log('\nStep 3');
@@ -463,14 +461,14 @@ describe('Agreement', () => {
     const GP_REMAINING = BigNumber.from(2).mul(LP_INITIAL).div(98).sub(GP_INITIAL);
     await dai.connect(whale).transfer(GP.address, GP_REMAINING);
     await dai.connect(GP).approve(txsAddr, GP_REMAINING);
-    console.log(`GP Gap Deposit = ${ethers.utils.formatEther(GP_REMAINING)} DAI`);
+    console.log(`GP Gap Deposit = ${formatEther(GP_REMAINING)} DAI`);
 
     // Note: we give GP 2 days time to obtain a 98% / 2% ratio of LP / GP deposits
     await txs.setStorageUint256(hex4Bytes('LOW_LIM'), NEXT_TWO_MONTH - ONE_DAY);
     await txs.setStorageUint256(hex4Bytes('UP_LIM'), NEXT_TWO_MONTH + ONE_DAY);
 
     await agreement.connect(GP).execute(3);
-    console.log(`Cash Balance = ${ethers.utils.formatEther(await dai.balanceOf(txsAddr))} DAI`);
+    console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
 
     // Step 4
     // console.log('\nStep 4');
@@ -488,7 +486,7 @@ describe('Agreement', () => {
     console.log('\nStep 5');
     let DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
     const PURCHASE_AMOUNT = DAI_BAL_OF_TXS.mul(9).div(10);
-    console.log(`GP ETH Asset Purchase = ${ethers.utils.formatEther(PURCHASE_AMOUNT)} DAI`);
+    console.log(`GP ETH Asset Purchase = ${formatEther(PURCHASE_AMOUNT)} DAI`);
     const FID = NEXT_TWO_MONTH + 7 * ONE_DAY; // FID = Fund Investment Date
 
     await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH + 7 * ONE_DAY]);
@@ -501,7 +499,7 @@ describe('Agreement', () => {
       PURCHASE_AMOUNT
     );
     await dai.connect(GP).transfer(txsAddr, PURCHASE_AMOUNT);
-    console.log(`Cash Balance = ${ethers.utils.formatEther(await dai.balanceOf(txsAddr))} DAI`);
+    console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
 
     // Step 6
     console.log('\nStep 6');
@@ -514,25 +512,25 @@ describe('Agreement', () => {
     await txs.setStorageUint256(hex4Bytes('WHALE'), WHALE);
     await txs.setStorageUint256(hex4Bytes('SOME_DAI'), SOME_DAI);
     await dai.connect(whale).approve(txsAddr, SOME_DAI);
-    console.log(`Fund Investment Return = ${ethers.utils.formatEther(SOME_DAI)} DAI`);
+    console.log(`Fund Investment Return = ${formatEther(SOME_DAI)} DAI`);
 
     await agreement.connect(GP).execute(6);
     expect(await dai.balanceOf(txsAddr)).to.equal(
       GP_INITIAL.add(LP_INITIAL).add(GP_REMAINING).add(SOME_DAI)
     );
-    console.log(`Cash Balance = ${ethers.utils.formatEther(await dai.balanceOf(txsAddr))} DAI`);
+    console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
 
     // Step 7a
     console.log('\nStep 7a');
     const MANAGEMENT_FEE = LP_INITIAL.mul(2).div(100);
-    console.log(`GP Management Fee = ${ethers.utils.formatEther(MANAGEMENT_FEE)} DAI`);
+    console.log(`GP Management Fee = ${formatEther(MANAGEMENT_FEE)} DAI`);
 
     await expect(() => agreement.connect(GP).execute(71)).to.changeTokenBalance(
       dai,
       GP,
       MANAGEMENT_FEE
     );
-    console.log(`Cash Balance = ${ethers.utils.formatEther(await dai.balanceOf(txsAddr))} DAI`);
+    console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
 
     // Step 7b
     console.log('\nStep 7b');
@@ -542,19 +540,19 @@ describe('Agreement', () => {
       .sub(LP_INITIAL)
       .sub(GP_REMAINING);
 
-    console.log(`Fund Profit = ${ethers.utils.formatEther(PROFIT)} DAI`);
+    console.log(`Fund Profit = ${formatEther(PROFIT)} DAI`);
     const HURDLE = 9; // 9%
     const THRESHOLD = LP_INITIAL.mul(HURDLE).div(100);
     const DELTA = PROFIT.sub(THRESHOLD);
     const CARRY = DELTA.mul(20).div(100); // DELTA * 20%
 
     // const Part1 =
-    console.log(`GP Carry Charge = ${ethers.utils.formatEther(CARRY)} DAI`);
+    console.log(`GP Carry Charge = ${formatEther(CARRY)} DAI`);
 
     await txs.setStorageUint256(hex4Bytes('HURDLE'), HURDLE);
 
     await expect(() => agreement.connect(GP).execute(72)).to.changeTokenBalance(dai, GP, CARRY);
-    console.log(`Cash Balance = ${ethers.utils.formatEther(await dai.balanceOf(txsAddr))} DAI`);
+    console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
 
     // Step 7c
     console.log('\nStep 7c');
@@ -562,38 +560,46 @@ describe('Agreement', () => {
     const LOSS = PROFIT.gt(0)
       ? BigNumber.from(0)
       : GP_INITIAL.add(LP_INITIAL).add(GP_REMAINING).sub(DAI_BAL_OF_TXS);
-    console.log(`Fund Total Loss = ${ethers.utils.formatEther(LOSS)} DAI`);
-    const GP_TO_WITHDRAW = LOSS.gt(GP_INITIAL.add(GP_REMAINING))
+    console.log(`Fund Total Loss = ${formatEther(LOSS)} DAI`);
+    const GP_PRINICIPAL = LOSS.gt(GP_INITIAL.add(GP_REMAINING))
       ? BigNumber.from(0)
       : GP_INITIAL.add(GP_REMAINING).sub(LOSS);
-    console.log(`GP Principal To Withdraw = ${ethers.utils.formatEther(GP_TO_WITHDRAW)} DAI`);
+    console.log(`GP Principal = ${formatEther(GP_PRINICIPAL)} DAI`);
 
     await expect(() => agreement.connect(GP).execute(73)).to.changeTokenBalance(
       dai,
       GP,
-      GP_TO_WITHDRAW
+      GP_PRINICIPAL
     );
-    console.log(`Cash Balance = ${ethers.utils.formatEther(await dai.balanceOf(txsAddr))} DAI`);
+    console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
 
-    // Step 8
-    console.log('\nStep 8');
+    // Step 8a
+    console.log('\nStep 8a');
     const LP_PROFIT = PROFIT.sub(CARRY);
-    console.log(`LP Investment Profit = ${ethers.utils.formatEther(LP_PROFIT)} DAI`);
+    console.log(`LP Investment Profit = ${formatEther(LP_PROFIT)} DAI`);
+    await expect(() => agreement.connect(LP).execute(81)).to.changeTokenBalance(dai, LP, LP_PROFIT);
+    DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
+    console.log(`Cash Balance = ${formatEther(DAI_BAL_OF_TXS)} DAI`);
+
+    // Step 8b
+    console.log('\nStep 8b');
 
     const UNCOVERED_NET_LOSSES = GP_INITIAL.sub(GP_REMAINING).gte(LOSS)
       ? BigNumber.from(0)
       : LOSS.sub(GP_INITIAL).sub(GP_REMAINING);
-    console.log(`Uncovered Net Losses = ${ethers.utils.formatEther(UNCOVERED_NET_LOSSES)} DAI`);
-    const LP_TO_WITHDRAW = LP_INITIAL.add(LP_PROFIT).sub(MANAGEMENT_FEE).sub(UNCOVERED_NET_LOSSES);
-    console.log(`LP Principal To Withdraw = ${ethers.utils.formatEther(LP_TO_WITHDRAW)} DAI`);
+    console.log(`Uncovered Net Losses = ${formatEther(UNCOVERED_NET_LOSSES)} DAI`);
+    const LP_PRINCIPAL = LP_INITIAL.sub(MANAGEMENT_FEE).sub(UNCOVERED_NET_LOSSES);
+    console.log(`LP Principal = ${formatEther(LP_PRINCIPAL)} DAI`);
 
-    await expect(() => agreement.connect(LP).execute(8)).to.changeTokenBalance(
+    await expect(() => agreement.connect(LP).execute(82)).to.changeTokenBalance(
       dai,
       LP,
-      LP_TO_WITHDRAW
+      LP_PRINCIPAL
     );
     DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
-    console.log(`Cash Balance = ${ethers.utils.formatEther(DAI_BAL_OF_TXS)} DAI`);
+    console.log(`Cash Balance = ${formatEther(DAI_BAL_OF_TXS)} DAI`);
+
+    // No funds should left on Agreement
     expect(DAI_BAL_OF_TXS).to.equal(0);
   });
 });
