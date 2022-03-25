@@ -4,13 +4,13 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { formatEther, parseEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber, Contract } from 'ethers';
 import { hex4Bytes } from '../utils/utils';
-import { businessCaseSteps } from '../data/agreement/businessCase';
+import { aliceAndBobSteps, aliceBobAndCarl, businessCaseSteps } from '../data/agreement';
 import { Agreement } from '../../typechain/Agreement';
 import { Parser } from '../../typechain/Parser';
 import { ConditionalTxs, Context__factory } from '../../typechain';
 import { TxObject } from '../types';
 
-describe('Agreement', () => {
+describe.only('Agreement', () => {
   let ContextCont: Context__factory;
   let parser: Parser;
   let agreement: Agreement;
@@ -189,38 +189,8 @@ describe('Agreement', () => {
     await txs.setStorageAddress(hex4Bytes('ALICE'), alice.address);
     await txs.setStorageAddress(hex4Bytes('BOB'), bob.address);
 
-    const steps = [
-      // Alice deposits 1 ETH to SC
-      {
-        txId: 1,
-        requiredTxs: [],
-        signatory: alice.address,
-        transaction: `msgValue == uint256 ${oneEth}`,
-        conditions: ['bool true'],
-      },
-      // Bob lends 10 tokens to Alice
-      {
-        txId: 2,
-        requiredTxs: [1],
-        signatory: bob.address,
-        transaction: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
-        conditions: ['bool true'],
-      },
-      // Alice returns 10 tokens to Bob and collects 1 ETH
-      {
-        txId: 3,
-        requiredTxs: [2],
-        signatory: alice.address,
-        transaction: `
-              (transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()})
-          and (sendEth ALICE ${oneEth})
-        `,
-        conditions: ['bool true'],
-      },
-    ];
-
     // Add tx objects to Agreement
-    await addSteps(steps, ContextCont);
+    await addSteps(aliceAndBobSteps(alice, bob, oneEth, tenTokens), ContextCont);
 
     // Alice deposits 1 ETH to SC
     await expect(agreement.connect(alice).execute(1, { value: 0 })).to.be.revertedWith(
@@ -274,77 +244,8 @@ describe('Agreement', () => {
     await txs.setStorageAddress(hex4Bytes('CARL'), carl.address);
     await txs.setStorageAddress(hex4Bytes('TRANSACTIONS'), txsAddr);
 
-    const steps = [
-      // Alice deposits 1 ETH to SC
-      {
-        txId: 1,
-        requiredTxs: [],
-        signatory: alice.address,
-        transaction: `msgValue == uint256 ${oneEth}`,
-        conditions: ['bool true'],
-      },
-      // Carl deposits 10 tokens to Agreement
-      {
-        txId: 2,
-        requiredTxs: [],
-        signatory: carl.address,
-        transaction: `transferFrom TOKEN_ADDR CARL TRANSACTIONS ${tenTokens.toString()}`,
-        conditions: ['bool true'],
-      },
-      // Bob lends 10 tokens to Alice
-      {
-        txId: 3,
-        requiredTxs: [1],
-        signatory: bob.address,
-        transaction: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
-        conditions: ['bool true'],
-      },
-      // Alice returns 10 tokens to Bob and collects 1 ETH
-      {
-        txId: 4,
-        requiredTxs: [3],
-        signatory: alice.address,
-        transaction: `
-              (transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()})
-          and (sendEth ALICE ${oneEth})
-          and (setLocalBool OBLIGATIONS_SETTLED true)
-        `,
-        conditions: ['bool true'],
-      },
-      // If Alice didn't return 10 tokens to Bob before EXPIRY
-      // then Bob can collect 10 tokens from Carl
-      {
-        txId: 5,
-        requiredTxs: [],
-        signatory: bob.address,
-        transaction: `
-              transfer TOKEN_ADDR BOB ${tenTokens.toString()}
-          and (setLocalBool LENDER_WITHDRAW_INSURERS true)
-        `,
-        conditions: [
-          `
-              blockTimestamp > loadLocal uint256 EXPIRY
-          and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
-        `,
-        ],
-      },
-      // If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens
-      {
-        txId: 6,
-        requiredTxs: [],
-        signatory: carl.address,
-        transaction: `transfer TOKEN_ADDR CARL ${tenTokens.toString()}`,
-        conditions: [
-          `
-              blockTimestamp > loadLocal uint256 EXPIRY
-          and (loadLocal bool LENDER_WITHDRAW_INSURERS == bool false)
-        `,
-        ],
-      },
-    ];
-
     // Add tx objects to Agreement
-    await addSteps(steps, ContextCont);
+    await addSteps(aliceBobAndCarl(alice, bob, carl, oneEth, tenTokens), ContextCont);
 
     // Alice deposits 1 ETH to SC
     console.log('Alice deposits 1 ETH to SC');
@@ -401,6 +302,7 @@ describe('Agreement', () => {
   });
 
   it.only('Business case', async () => {
+    const GP_FAILS_TO_DO_GAP_DEPOSIT = false;
     const dai = await (await ethers.getContractFactory('Token'))
       .connect(whale)
       .deploy(parseUnits('1000000', 18));
@@ -455,151 +357,164 @@ describe('Agreement', () => {
     await agreement.connect(LP).execute(2);
     console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
 
-    // Step 3
-    console.log('\nStep 3');
-    await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH]);
-    const GP_REMAINING = BigNumber.from(2).mul(LP_INITIAL).div(98).sub(GP_INITIAL);
-    await dai.connect(whale).transfer(GP.address, GP_REMAINING);
-    await dai.connect(GP).approve(txsAddr, GP_REMAINING);
-    console.log(`GP Gap Deposit = ${formatEther(GP_REMAINING)} DAI`);
+    if (GP_FAILS_TO_DO_GAP_DEPOSIT) {
+      // Step 4
+      console.log('\nStep 4');
+      await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH + 2 * ONE_DAY]);
+      await txs.setStorageUint256(hex4Bytes('FUND_INVESTMENT_DATE'), NEXT_TWO_MONTH + 7 * ONE_DAY);
 
-    // Note: we give GP 2 days time to obtain a 98% / 2% ratio of LP / GP deposits
-    await txs.setStorageUint256(hex4Bytes('LOW_LIM'), NEXT_TWO_MONTH - ONE_DAY);
-    await txs.setStorageUint256(hex4Bytes('UP_LIM'), NEXT_TWO_MONTH + ONE_DAY);
+      console.log(`LP withdraws LP Initial Deposit = ${formatEther(LP_INITIAL)} DAI`);
+      console.log(`GP withdraws GP Initial Deposit = ${formatEther(GP_INITIAL)} DAI`);
 
-    await agreement.connect(GP).execute(3);
-    console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+      await expect(() => agreement.connect(LP).execute(4)).to.changeTokenBalances(
+        dai,
+        [GP, LP],
+        [GP_INITIAL, LP_INITIAL]
+      );
+      console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+    } else {
+      // Step 3
+      console.log('\nStep 3');
+      await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH]);
+      const GP_REMAINING = BigNumber.from(2).mul(LP_INITIAL).div(98).sub(GP_INITIAL);
+      await dai.connect(whale).transfer(GP.address, GP_REMAINING);
+      await dai.connect(GP).approve(txsAddr, GP_REMAINING);
+      console.log(`GP Gap Deposit = ${formatEther(GP_REMAINING)} DAI`);
 
-    // Step 4
-    // console.log('\nStep 4');
-    // await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH + 2 * ONE_DAY]);
-    // // fund investment date
-    // await txs.setStorageUint256(hex4Bytes('FID'), NEXT_TWO_MONTH + 7 * ONE_DAY);
+      // Note: we give GP 2 days time to obtain a 98% / 2% ratio of LP / GP deposits
+      await txs.setStorageUint256(hex4Bytes('LOW_LIM'), NEXT_TWO_MONTH - ONE_DAY);
+      await txs.setStorageUint256(hex4Bytes('UP_LIM'), NEXT_TWO_MONTH + ONE_DAY);
 
-    // await expect(() => agreement.connect(LP).execute(4)).to.changeTokenBalances(
-    //   dai,
-    //   [GP, LP],
-    //   [GP_INITIAL, LP_INITIAL]
-    // );
+      await agreement.connect(GP).execute(3);
+      console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
 
-    // Step 5
-    console.log('\nStep 5');
-    let DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
-    const PURCHASE_AMOUNT = DAI_BAL_OF_TXS.mul(9).div(10);
-    console.log(`GP ETH Asset Purchase = ${formatEther(PURCHASE_AMOUNT)} DAI`);
-    const FID = NEXT_TWO_MONTH + 7 * ONE_DAY; // FID = Fund Investment Date
+      // Step 5
+      console.log('\nStep 5');
+      let DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
+      const PURCHASE_AMOUNT = DAI_BAL_OF_TXS.mul(9).div(10);
+      const TRADE_LOSS = parseUnits('10', 18);
+      console.log(`GP ETH Asset Purchase = ${formatEther(PURCHASE_AMOUNT)} DAI`);
+      const FUND_INVESTMENT_DATE = NEXT_TWO_MONTH + 7 * ONE_DAY;
 
-    await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH + 7 * ONE_DAY]);
-    await txs.setStorageUint256(hex4Bytes('FID'), FID);
-    await txs.setStorageUint256(hex4Bytes('PURCHASE_AMOUNT'), PURCHASE_AMOUNT);
+      await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH + 7 * ONE_DAY]);
+      await txs.setStorageUint256(hex4Bytes('FUND_INVESTMENT_DATE'), FUND_INVESTMENT_DATE);
+      await txs.setStorageUint256(hex4Bytes('PURCHASE_AMOUNT'), PURCHASE_AMOUNT);
 
-    await expect(() => agreement.connect(GP).execute(5)).to.changeTokenBalance(
-      dai,
-      GP,
-      PURCHASE_AMOUNT
-    );
-    await dai.connect(GP).transfer(txsAddr, PURCHASE_AMOUNT);
-    console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+      await expect(() => agreement.connect(GP).execute(5)).to.changeTokenBalance(
+        dai,
+        GP,
+        PURCHASE_AMOUNT
+      );
+      await dai.connect(GP).transfer(txsAddr, PURCHASE_AMOUNT.sub(TRADE_LOSS));
+      console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
 
-    // Step 6
-    console.log('\nStep 6');
-    const ONE_YEAR = 365 * ONE_DAY;
-    const WHALE = whale.address;
-    const SOME_DAI = parseUnits('200', 18);
+      // Step 6
+      console.log('\nStep 6');
+      const ONE_YEAR = 365 * ONE_DAY;
+      const WHALE = whale.address;
+      const SOME_DAI = parseUnits('0', 18);
 
-    await ethers.provider.send('evm_setNextBlockTimestamp', [FID + ONE_YEAR]);
+      await ethers.provider.send('evm_setNextBlockTimestamp', [FUND_INVESTMENT_DATE + ONE_YEAR]);
 
-    await txs.setStorageUint256(hex4Bytes('WHALE'), WHALE);
-    await txs.setStorageUint256(hex4Bytes('SOME_DAI'), SOME_DAI);
-    await dai.connect(whale).approve(txsAddr, SOME_DAI);
-    console.log(`Fund Investment Return = ${formatEther(SOME_DAI)} DAI`);
+      await txs.setStorageUint256(hex4Bytes('WHALE'), WHALE);
+      await txs.setStorageUint256(hex4Bytes('SOME_DAI'), SOME_DAI);
+      await dai.connect(whale).approve(txsAddr, SOME_DAI);
+      console.log(`Fund Investment Return = ${formatEther(SOME_DAI)} DAI`);
 
-    await agreement.connect(GP).execute(6);
-    expect(await dai.balanceOf(txsAddr)).to.equal(
-      GP_INITIAL.add(LP_INITIAL).add(GP_REMAINING).add(SOME_DAI)
-    );
-    console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+      await agreement.connect(GP).execute(6);
+      console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
 
-    // Step 7a
-    console.log('\nStep 7a');
-    const MANAGEMENT_FEE = LP_INITIAL.mul(2).div(100);
-    console.log(`GP Management Fee = ${formatEther(MANAGEMENT_FEE)} DAI`);
+      // Step 7a
+      console.log('\nStep 7a');
+      const MANAGEMENT_FEE = LP_INITIAL.mul(2).div(100);
+      console.log(`GP Management Fee = ${formatEther(MANAGEMENT_FEE)} DAI`);
 
-    await expect(() => agreement.connect(GP).execute(71)).to.changeTokenBalance(
-      dai,
-      GP,
-      MANAGEMENT_FEE
-    );
-    console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+      await expect(() => agreement.connect(GP).execute(71)).to.changeTokenBalance(
+        dai,
+        GP,
+        MANAGEMENT_FEE
+      );
+      console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
 
-    // Step 7b
-    console.log('\nStep 7b');
-    DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
-    const PROFIT = DAI_BAL_OF_TXS.add(MANAGEMENT_FEE)
-      .sub(GP_INITIAL)
-      .sub(LP_INITIAL)
-      .sub(GP_REMAINING);
+      // Step 7b
+      console.log('\nStep 7b');
+      DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
+      let PROFIT = DAI_BAL_OF_TXS.add(MANAGEMENT_FEE)
+        .sub(GP_INITIAL)
+        .sub(LP_INITIAL)
+        .sub(GP_REMAINING);
+      PROFIT = PROFIT.gt(0) ? PROFIT : BigNumber.from(0);
+      console.log(`Fund Profit = ${formatEther(PROFIT)} DAI`);
+      const HURDLE = 9; // 9%
+      const THRESHOLD = LP_INITIAL.mul(HURDLE).div(100);
+      const DELTA = PROFIT.gt(0) ? PROFIT.sub(THRESHOLD) : BigNumber.from(0);
+      const PROFIT_PART = 20; // 20%
+      const CARRY = DELTA.mul(PROFIT_PART).div(100);
 
-    console.log(`Fund Profit = ${formatEther(PROFIT)} DAI`);
-    const HURDLE = 9; // 9%
-    const THRESHOLD = LP_INITIAL.mul(HURDLE).div(100);
-    const DELTA = PROFIT.sub(THRESHOLD);
-    const CARRY = DELTA.mul(20).div(100); // DELTA * 20%
+      console.log(`GP Carry Charge = ${formatEther(CARRY)} DAI`);
 
-    // const Part1 =
-    console.log(`GP Carry Charge = ${formatEther(CARRY)} DAI`);
+      await txs.setStorageUint256(hex4Bytes('HURDLE'), HURDLE);
+      await txs.setStorageUint256(hex4Bytes('PROFIT_PART'), PROFIT_PART);
 
-    await txs.setStorageUint256(hex4Bytes('HURDLE'), HURDLE);
+      await expect(() => agreement.connect(GP).execute(72)).to.changeTokenBalance(dai, GP, CARRY);
+      console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
 
-    await expect(() => agreement.connect(GP).execute(72)).to.changeTokenBalance(dai, GP, CARRY);
-    console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+      // Step 7c
+      console.log('\nStep 7c');
+      DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
+      const LOSS = PROFIT.gt(0)
+        ? BigNumber.from(0)
+        : GP_INITIAL.add(LP_INITIAL).add(GP_REMAINING).sub(DAI_BAL_OF_TXS).sub(MANAGEMENT_FEE);
+      console.log(`Fund Total Loss = ${formatEther(LOSS)} DAI`);
+      const GP_PRINICIPAL = LOSS.gt(GP_INITIAL.add(GP_REMAINING))
+        ? BigNumber.from(0)
+        : GP_INITIAL.add(GP_REMAINING).sub(LOSS);
+      console.log(`GP Principal = ${formatEther(GP_PRINICIPAL)} DAI`);
 
-    // Step 7c
-    console.log('\nStep 7c');
-    DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
-    const LOSS = PROFIT.gt(0)
-      ? BigNumber.from(0)
-      : GP_INITIAL.add(LP_INITIAL).add(GP_REMAINING).sub(DAI_BAL_OF_TXS);
-    console.log(`Fund Total Loss = ${formatEther(LOSS)} DAI`);
-    const GP_PRINICIPAL = LOSS.gt(GP_INITIAL.add(GP_REMAINING))
-      ? BigNumber.from(0)
-      : GP_INITIAL.add(GP_REMAINING).sub(LOSS);
-    console.log(`GP Principal = ${formatEther(GP_PRINICIPAL)} DAI`);
+      await expect(() => agreement.connect(GP).execute(73)).to.changeTokenBalance(
+        dai,
+        GP,
+        GP_PRINICIPAL
+      );
+      console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
 
-    await expect(() => agreement.connect(GP).execute(73)).to.changeTokenBalance(
-      dai,
-      GP,
-      GP_PRINICIPAL
-    );
-    console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+      // Step 8a
+      console.log('\nStep 8a');
+      const LP_PROFIT = PROFIT.gt(0) ? PROFIT.sub(CARRY) : 0;
+      console.log(`LP Investment Profit = ${formatEther(LP_PROFIT)} DAI`);
+      await expect(() => agreement.connect(LP).execute(81)).to.changeTokenBalance(
+        dai,
+        LP,
+        LP_PROFIT
+      );
+      DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
+      console.log(`Cash Balance = ${formatEther(DAI_BAL_OF_TXS)} DAI`);
 
-    // Step 8a
-    console.log('\nStep 8a');
-    const LP_PROFIT = PROFIT.sub(CARRY);
-    console.log(`LP Investment Profit = ${formatEther(LP_PROFIT)} DAI`);
-    await expect(() => agreement.connect(LP).execute(81)).to.changeTokenBalance(dai, LP, LP_PROFIT);
-    DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
-    console.log(`Cash Balance = ${formatEther(DAI_BAL_OF_TXS)} DAI`);
+      // Step 8b
+      console.log('\nStep 8b');
 
-    // Step 8b
-    console.log('\nStep 8b');
+      const UNCOVERED_NET_LOSSES = GP_INITIAL.sub(GP_REMAINING).gte(LOSS)
+        ? BigNumber.from(0)
+        : LOSS.sub(GP_INITIAL).sub(GP_REMAINING);
+      console.log(`Uncovered Net Losses = ${formatEther(UNCOVERED_NET_LOSSES)} DAI`);
+      const LP_PRINCIPAL = LP_INITIAL.sub(MANAGEMENT_FEE).sub(UNCOVERED_NET_LOSSES);
+      console.log(`LP Principal = ${formatEther(LP_PRINCIPAL)} DAI`);
 
-    const UNCOVERED_NET_LOSSES = GP_INITIAL.sub(GP_REMAINING).gte(LOSS)
-      ? BigNumber.from(0)
-      : LOSS.sub(GP_INITIAL).sub(GP_REMAINING);
-    console.log(`Uncovered Net Losses = ${formatEther(UNCOVERED_NET_LOSSES)} DAI`);
-    const LP_PRINCIPAL = LP_INITIAL.sub(MANAGEMENT_FEE).sub(UNCOVERED_NET_LOSSES);
-    console.log(`LP Principal = ${formatEther(LP_PRINCIPAL)} DAI`);
-
-    await expect(() => agreement.connect(LP).execute(82)).to.changeTokenBalance(
-      dai,
-      LP,
-      LP_PRINCIPAL
-    );
-    DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
-    console.log(`Cash Balance = ${formatEther(DAI_BAL_OF_TXS)} DAI`);
+      await expect(() => agreement.connect(LP).execute(82)).to.changeTokenBalance(
+        dai,
+        LP,
+        LP_PRINCIPAL
+      );
+      console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+    }
 
     // No funds should left on Agreement
-    expect(DAI_BAL_OF_TXS).to.equal(0);
+    expect(await dai.balanceOf(txsAddr)).to.equal(0);
   });
+
+  // TODO: Business case tests
+  // 1. GP fails to balance LP deposit
+  // 2. GP balances LP depotis; No Losses
+  // 3. Loss covered by GP
+  // 4. Loss not covered by GP
 });
