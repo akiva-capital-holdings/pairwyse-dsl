@@ -143,6 +143,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
     signatory: GP.address,
     transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAINING',
     conditions: [
+      `loadLocal uint256 GP_INITIAL +
+        loadLocal uint256 LP_INITIAL >= loadLocal uint256 INITIAL_FUNDS_TARGET`,
       `(uint256 2 * loadLocal uint256 LP_INITIAL / uint256 98 - loadLocal uint256 GP_INITIAL
          ) setUint256 GP_REMAINING`,
       `(blockTimestamp >= loadLocal uint256 LOW_LIM)
@@ -249,7 +251,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
       `(loadLocal uint256 PROFIT > loadLocal uint256 THRESHOLD)
         ifelse NONZERO_DELTA ZERO_DELTA
         end
-        
+
         NONZERO_DELTA {
           (loadLocal uint256 PROFIT - loadLocal uint256 THRESHOLD) setUint256 DELTA
         }
