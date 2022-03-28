@@ -375,30 +375,40 @@ describe('Preprocessor', () => {
     });
   });
 
-  describe.only('Single line comment in user-input', async () => {
-    it('returns an empty program if commented one-line command', async () => {});
+  describe('Single line comment in user-input', async () => {
+    it.only('returns an empty program if commented one-line command', async () => {
+      const input = `
+      // uint256 2 * uint256 5
+      bool true
+      `;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      // expect(cmds).to.eql([]);
+    });
+
     it('returns an empty program if commented all lines of program', async () => {});
-    it('returns an expected program if a comment located before the command', async () => {});
-    it('returns an expected program if a comment located below the command', async () => {});
+    it('returns an expected program if a comment located next to the command line', async () => {});
+
     it('returns an expected program if comments located before and below the command', async () => {});
     it('returns an expected program if a comment located between two lines of commands', async () => {});
     it('returns an expected program even if a comment contains a command', async () => {});
     it('returns an expected program if a comment contains another single comment', async () => {});
     it('returns an expected program if a comment contains a multiple comment', async () => {});
-    it('returns an expected program if a comment located next to the command line', async () => {});
-  });
-
-  describe.only('Multiple line comments in user-input', async () => {
-    it('returns an empty program if commented one-line command', async () => {});
-    it('returns an empty program if commented all lines of program', async () => {});
-    it('returns an error/empty program if a comment was not closed', async () => {});
     it('returns an expected program if a comment located before the command', async () => {});
     it('returns an expected program if a comment located below the command', async () => {});
+  });
+
+  describe('Multiple line comments in user-input', async () => {
+    it('returns an empty program if commented one-line command', async () => {});
+    it('returns an empty program if commented all lines of program', async () => {});
+    it('returns an expected program if a comment located next to the command line', async () => {});
+    it('returns an error/empty program if a comment was not closed', async () => {});
     it('returns an expected program if comments located before and below the command', async () => {});
     it('returns an expected program if a comment located between two lines of commands', async () => {});
+
+    it('returns an expected program if a comment located before the command', async () => {});
+    it('returns an expected program if a comment located below the command', async () => {});
     it('returns an expected program if a comment contains a single comment', async () => {});
     it('returns an expected program if a comment contains a multiple comment', async () => {});
-    it('returns an expected program if a comment located next to the command line', async () => {});
     it('returns an expected program if a comment opens next to the command and closes below', async () => {});
     it('returns an expected program if a comment opens higher the command and closes at the beginning of the command', async () => {});
   });
