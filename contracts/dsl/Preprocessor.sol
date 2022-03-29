@@ -115,8 +115,8 @@ contract Preprocessor {
     }
 
     /*
-        This function is removing one/multi line comments from the program.
-        Removes all multi line comments at first, as they can contain simple comments
+        This function is removing one/multi line
+        comments from the program.
     */
     function cleanProgram(string memory _program) public returns (string memory _result) {
         string memory char;
@@ -137,9 +137,10 @@ contract Preprocessor {
     }
 
     /*
-        Returns the index of the '\n' symbol or the index of the last symbol
+        Returns the index of the '\n' symbol or
+        the index of the last symbol of the program
     */
-    function _findEndSymbol(uint256 _indexStart, string memory _program) internal pure returns (uint256){
+    function _findEndSymbol(uint256 _indexStart, string memory _program) internal pure returns (uint256) {
         string memory char;
         for (uint256 indexEnd = _indexStart; indexEnd < _program.length(); indexEnd++) {
             char = _program.char(indexEnd);
@@ -151,9 +152,10 @@ contract Preprocessor {
     }
 
     /*
-        Returns the index of the '\n' symbol or the index of the last symbol
+        Returns the index of the end of comment or
+        the index of the last symbol of the program
     */
-    function _findEndMultiSymbol(uint256 _indexStart, string memory _program) internal pure returns (uint256){
+    function _findEndMultiSymbol(uint256 _indexStart, string memory _program) internal pure returns (uint256) {
         string memory char;
         for (uint256 indexEnd = _indexStart; indexEnd < _program.length(); indexEnd++) {
             char = _program.char(indexEnd);
