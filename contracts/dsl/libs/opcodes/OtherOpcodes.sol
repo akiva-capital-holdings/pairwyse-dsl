@@ -243,14 +243,4 @@ library OtherOpcodes {
 
         OpcodeHelpers.putToStack(_ctx, uint256(result));
     }
-
-    function opComment(IContext _ctx) public {
-        bytes memory comment = OpcodeHelpers.nextBytes(_ctx, 2);
-        // Convert bytes to bytes32
-        bytes32 commentB32;
-        assembly {
-            commentB32 := mload(add(comment, 0x20))
-        }
-        OpcodeHelpers.putToStack(_ctx, uint256(commentB32));
-    }
 }

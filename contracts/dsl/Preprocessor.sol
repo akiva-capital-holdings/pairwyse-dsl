@@ -14,6 +14,7 @@ contract Preprocessor {
 
     function transform(IContext _ctx, string memory _program) external returns (string[] memory) {
         Stack stack = new Stack();
+        _program = cleanProgram(_program);
         string[] memory code = split(_program);
         return infixToPostfix(_ctx, code, stack);
     }
@@ -52,7 +53,6 @@ contract Preprocessor {
             result.push(buffer);
             buffer = '';
         }
-
         return result;
     }
 
@@ -112,5 +112,60 @@ contract Preprocessor {
             if (op.equal(_ctx.operators(i))) return true;
         }
         return false;
+    }
+
+    /*
+        This function is removing one/multi line comments from the program.
+        Removes all multi line comments at first, as they can contain simple comments
+    */
+    function cleanProgram(string memory _program) public returns (string memory _result) {
+        string memory char;
+        for (uint256 i = 0; i < _program.length(); i++) {
+            char = _program.char(i);
+            if(char.equal('/') && i+1 <= _program.length()) {
+                char = _program.char(i+1);
+                // find the end symbol '\n' and rewrite the main index
+                if(char.equal('*')) {
+                    i = _findEndMultiSymbol(i+1, _program);
+                } else if(char.equal('/')) {
+                    i = _findEndSymbol(i+1, _program);
+                }
+            } else {
+                _result = _result.concat(char);
+            }
+        }
+    }
+
+    /*
+        Returns the index of the '\n' symbol or the index of the last symbol
+    */
+    function _findEndSymbol(uint256 _indexStart, string memory _program) internal pure returns (uint256){
+        string memory char;
+        for (uint256 indexEnd = _indexStart; indexEnd < _program.length(); indexEnd++) {
+            char = _program.char(indexEnd);
+            if(char.equal('\n')) {
+                return indexEnd;
+            }
+        }
+        return _program.length()-1;
+    }
+
+    /*
+        Returns the index of the '\n' symbol or the index of the last symbol
+    */
+    function _findEndMultiSymbol(uint256 _indexStart, string memory _program) internal pure returns (uint256){
+        string memory char;
+        for (uint256 indexEnd = _indexStart; indexEnd < _program.length(); indexEnd++) {
+            char = _program.char(indexEnd);
+            if(char.equal('*')) {
+                if(indexEnd+1 <= _program.length()) {
+                    char = _program.char(indexEnd+1);
+                    if(char.equal('/')) {
+                        return indexEnd+1;
+                    }
+                }
+            }
+        }
+        return _program.length()-1;
     }
 }

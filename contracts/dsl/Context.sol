@@ -237,30 +237,6 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
 
-        addOpcode(
-            '//',
-            0x26,
-            OtherOpcodes.opComment.selector,
-            0x0,
-            OpcodeLibNames.OtherOpcodes
-        );
-
-        addOpcode(
-            '/*',
-            0x27,
-            OtherOpcodes.opComment.selector,
-            0x0,
-            OpcodeLibNames.OtherOpcodes
-        );
-
-        addOpcode(
-            '*/',
-            0x28,
-            OtherOpcodes.opComment.selector,
-            0x0,
-            OpcodeLibNames.OtherOpcodes
-        );
-
         // Complex Opcodes with sub Opcodes (branches)
         string memory name = 'loadLocal';
         addOpcode(
