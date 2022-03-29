@@ -159,12 +159,10 @@ contract Preprocessor {
         string memory char;
         for (uint256 indexEnd = _indexStart; indexEnd < _program.length(); indexEnd++) {
             char = _program.char(indexEnd);
-            if(char.equal('*')) {
-                if(indexEnd+1 <= _program.length()) {
-                    char = _program.char(indexEnd+1);
-                    if(char.equal('/')) {
-                        return indexEnd+1;
-                    }
+            if(char.equal('*') && indexEnd+1 <= _program.length()) {
+                char = _program.char(indexEnd+1);
+                if(char.equal('/')) {
+                    return indexEnd+1;
                 }
             }
         }
