@@ -8,14 +8,16 @@ import {
   Stack,
   OtherOpcodesMock,
   ERC20Mintable,
+  Storage,
 } from '../../../../typechain';
 import { checkStack, checkStackTailv2, hex4Bytes, uint256StrToHex } from '../../../utils/utils';
 
-describe.only('Other opcodes', () => {
+describe('Other opcodes', () => {
   let StackCont: Stack__factory;
   let StackValue: StackValue__factory;
   /* eslint-enable camelcase */
   let app: OtherOpcodesMock;
+  let anotherApp: Storage;
   let ctx: Context;
   let ctxAddr: string;
   let stack: Stack;
@@ -46,6 +48,9 @@ describe.only('Other opcodes', () => {
     // Create Stack instance
     const stackAddr = await ctx.stack();
     stack = await ethers.getContractAt('Stack', stackAddr);
+
+    // Deploy Storage contract to simulate another app (needed for testing loadRemove opcodes)
+    anotherApp = await (await ethers.getContractFactory('Storage')).deploy();
 
     // Setup
     await ctx.initOpcodes();
@@ -225,56 +230,52 @@ describe.only('Other opcodes', () => {
     await checkStackTailv2(StackValue, stack, [testValue]);
   });
 
-  // TODO: use remote contract address for var storage
   it('opLoadRemoteUint256', async () => {
     const testValue = 1;
     const bytes32TestValueName = hex4Bytes('NUMBER');
 
-    await app.setStorageUint256(bytes32TestValueName, testValue);
+    await anotherApp.setStorageUint256(bytes32TestValueName, testValue);
 
     const number = bytes32TestValueName.substring(2, 10);
 
-    await ctx.setProgram(`0x${number}${app.address.substring(2)}`);
+    await ctx.setProgram(`0x${number}${anotherApp.address.substring(2)}`);
     await app.opLoadRemoteUint256(ctxAddr);
     await checkStackTailv2(StackValue, stack, [testValue]);
   });
 
-  // TODO: use remote contract address for var storage
   it('opLoadRemoteBytes32', async () => {
     const testValue = hex4Bytes('123456');
     const bytes32TestValueName = hex4Bytes('BYTES');
 
-    await app.setStorageBytes32(bytes32TestValueName, testValue);
+    await anotherApp.setStorageBytes32(bytes32TestValueName, testValue);
 
     const bytes = bytes32TestValueName.substring(2, 10);
-    await ctx.setProgram(`0x${bytes}${app.address.substring(2)}`);
+    await ctx.setProgram(`0x${bytes}${anotherApp.address.substring(2)}`);
     await app.opLoadRemoteBytes32(ctxAddr);
     await checkStackTailv2(StackValue, stack, [testValue]);
   });
 
-  // TODO: use remote contract address for var storage
   it('opLoadRemoteBool', async () => {
     const testValue = true;
     const bytes32TestValueName = hex4Bytes('BOOLEAN');
 
-    await app.setStorageBool(bytes32TestValueName, testValue);
+    await anotherApp.setStorageBool(bytes32TestValueName, testValue);
 
     const bool = bytes32TestValueName.substring(2, 10);
-    await ctx.setProgram(`0x${bool}${app.address.substring(2)}`);
+    await ctx.setProgram(`0x${bool}${anotherApp.address.substring(2)}`);
     await app.opLoadRemoteBool(ctxAddr);
     await checkStackTailv2(StackValue, stack, [+testValue]);
   });
 
-  // TODO: use remote contract address for var storage
   it('opLoadRemoteAddress', async () => {
     const [addr1] = await ethers.getSigners();
     const testValue = addr1.address;
     const bytes32TestValueName = hex4Bytes('ADDRESS');
 
-    await app.setStorageAddress(bytes32TestValueName, testValue);
+    await anotherApp.setStorageAddress(bytes32TestValueName, testValue);
 
     const addr = bytes32TestValueName.substring(2, 10);
-    await ctx.setProgram(`0x${addr}${app.address.substring(2)}`);
+    await ctx.setProgram(`0x${addr}${anotherApp.address.substring(2)}`);
     await app.opLoadRemoteAddress(ctxAddr);
     await checkStackTailv2(StackValue, stack, [testValue]);
   });
@@ -421,16 +422,15 @@ describe.only('Other opcodes', () => {
     checkStackTailv2(StackValue, stack, [testValue]);
   });
 
-  // TODO: use remote contract address for var storage
   it('opLoadRemote', async () => {
     const testValue = hex4Bytes('123456');
     const bytes32TestValueName = hex4Bytes('BYTES');
     const testSignature = 'getStorageBytes32(bytes32)';
 
-    await app.setStorageBytes32(bytes32TestValueName, testValue);
+    await anotherApp.setStorageBytes32(bytes32TestValueName, testValue);
 
     const bytes = bytes32TestValueName.substring(2, 10);
-    await ctx.setProgram(`0x${bytes}${app.address.substring(2)}`);
+    await ctx.setProgram(`0x${bytes}${anotherApp.address.substring(2)}`);
     await app.opLoadRemote(ctxAddr, testSignature);
     await checkStackTailv2(StackValue, stack, [testValue]);
   });
