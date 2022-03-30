@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import { IStorage } from '../interfaces/IStorage.sol';
 import { UnstructuredStorage } from '../libs/UnstructuredStorage.sol';
 
+// TODO: make a library
 contract Storage is IStorage {
     using UnstructuredStorage for bytes32;
 
