@@ -139,8 +139,13 @@ describe('Preprocessor', () => {
             ==
           msgSender
         `;
+      const expected = [
+        '\n', 'loadLocal', 'address',
+        'SENDER', '\n', '==',
+        '\n', 'msgSender', '\n'
+      ];
       const res = await app.callStatic.split(input);
-      expect(res).to.eql(jsTransform(input));
+      expect(res).to.eql(expected);
     });
 
     it('all together', async () => {
@@ -159,8 +164,24 @@ describe('Preprocessor', () => {
           )
         )
         `;
+      const expected = [
+        '\n',        '(',         '\n',
+        '(',         '\n',        'blockTimestamp',
+        '>',         'loadLocal', 'uint256',
+        'INIT',      '\n',        ')',
+        '\n',        'and',       '\n',
+        '(',         '\n',        'blockTimestamp',
+        '<',         'loadLocal', 'uint256',
+        'EXPIRY',    '\n',        'or',
+        '\n',        '(',         '\n',
+        'loadLocal', 'bool',      'RISK',
+        '!=',        'bool',      'true',
+        '\n',        ')',         '\n',
+        ')',         '\n',        ')',
+        '\n'
+      ]
       const res = await app.callStatic.split(input);
-      expect(res).to.eql(jsTransform(input));
+      expect(res).to.eql(expected);
     });
   });
 
@@ -372,6 +393,148 @@ describe('Preprocessor', () => {
         'end',
       ];
       expect(cmds).to.eql(expected);
+    });
+  });
+
+  describe('Single line comment in user-input', async () => {
+    it('returns an empty program if commented one-line command', async () => {
+      const input = '// uint256 2 * uint256 5';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql([]);
+    });
+
+    it('returns an empty program if commented all lines of program', async () => {
+      const input = `
+        // uint256 2 * uint256 5
+        // bool true
+      `;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql([]);
+    });
+
+    it('returns an expected program if a comment located next to the command line', async () => {
+      const input = `
+        // uint256 2 * uint256 5
+        bool true
+      `;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(['bool', 'true']);
+    });
+
+    it('returns an expected program if a comment located between two lines of commands', async () => {
+      const input = `
+        bool false
+        // uint256 2 * uint256 5
+        bool true
+      `;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(['bool', 'false', 'bool', 'true']);
+    });
+
+    it('returns an expected program if comments located before and below the command', async () => {});
+    it('returns an expected program even if a comment contains a command', async () => {});
+    it('returns an expected program if a comment contains another single comment', async () => {});
+    it('returns an expected program if a comment contains a multiple comment', async () => {});
+    it('returns an expected program if a comment located before the command', async () => {});
+    it('returns an expected program if a comment located below the command', async () => {});
+    it('returns an expected program if a comment located next to the command (w/o spaces) ', async () => {
+      // TODO: for the moment commenting w/o spaces returns incorrect code.
+      // ex: ['//uint256', '2', '*', 'uint256', '5']
+      const input = `
+        //uint256 2 * uint256 5
+      `;
+      const expected = ['uint256', '2', '*', 'uint256', '5'];
+      // expect(cmds).to.eql(expected);
+    });
+  });
+
+  describe('Multiple line comments in user-input', async () => {
+    it('returns an empty program if commented one-line command', async () => {
+      const input = `
+        /* uint256 2 * uint256 5 */
+      `;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql([]);
+    });
+
+    it('returns an empty program if commented all lines of program', async () => {
+      const input = `
+        /*
+        uint256 2 * uint256 5
+        bool true
+        smt
+        */
+      `;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql([]);
+    });
+
+    it('returns an expected program if a comment located next to the command line', async () => {
+      const input = `
+        uint256 2 * uint256 5
+        /*
+        //bool true
+        smt
+        */
+      `;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(['uint256', '2', '*' , 'uint256', '5']);
+    });
+
+    it('returns an expected program if comments located before and below the command', async () => {
+      const input = `
+        uint256 2 * uint256 5
+        /*
+        //123
+        smt
+        */
+        bool true
+      `;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(['uint256', '2', '*' , 'uint256', '5', 'bool', 'true']);
+    });
+
+    it('returns an only the first command if a comment was not closed', async () => {const input = `
+        bool false
+        // wow test
+        /*
+        smt
+        bool true
+      `;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(['bool', 'false']);
+    });
+
+    it('returns an expected program if a different comments located between two lines of commands', async () => {
+      const input = `
+        // wow test
+        uint256 2 * uint256 5
+        /*
+        //123
+        smt
+        */
+        bool true
+        // wow test 2
+      `;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(['uint256', '2', '*' , 'uint256', '5', 'bool', 'true']);
+    });
+
+    it('returns an expected program if a comment located before the command', async () => {});
+    it('returns an expected program if a comment located below the command', async () => {});
+    it('returns an expected program if a comment contains a single comment', async () => {});
+    it('returns an expected program if a comment contains a multiple comment', async () => {});
+    it('returns an expected program if a comment opens next to the command and closes below', async () => {});
+    it('returns an expected program if a comment opens higher the command and closes at the beginning of the command', async () => {});
+    it('returns an expected program if a comment located next to the command (w/o spaces) ', async () => {
+      // TODO: for the moment commenting w/o spaces returns incorrect code.
+      // ex: ['/*uint256', '2', '*', 'uint256', '5*/']
+      const input = `
+        /*uint256 2 * uint256 5*/
+      `;
+      const expected = ['uint256', '2', '*', 'uint256', '5'];
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      // expect(cmds).to.eql(expected);
     });
   });
 });
