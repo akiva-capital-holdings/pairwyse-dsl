@@ -5,7 +5,7 @@ import { IContext } from './interfaces/IContext.sol';
 import { Stack, StackValue } from './helpers/Stack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract Preprocessor {
     using StringUtils for string;
@@ -34,7 +34,7 @@ contract Preprocessor {
             }
 
             // console.log("char: %s", char);
-            if (char.equal('\n') || char.equal(' ') || char.equal('(') || char.equal(')')) {
+            if (char.equal(' ') || char.equal('\n') || char.equal('(') || char.equal(')')) {
                 if (buffer.length() > 0) {
                     result.push(buffer);
                     buffer = '';
