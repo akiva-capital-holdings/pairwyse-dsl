@@ -51,6 +51,24 @@ library OtherOpcodes {
         opSetLocal(_ctx, 'setStorageBool(bytes32,bool)');
     }
 
+    function opSetLocalUint256(IContext _ctx) public {
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+
+        bytes memory data = OpcodeHelpers.nextBytes(_ctx, 32);
+        uint256 _val;
+
+        assembly {
+            _val := mload(add(data, 0x20))
+        }
+
+        // Set local variable by it's hex
+        (bool success, ) = _ctx.appAddress().call(
+            abi.encodeWithSignature('setStorageUint256(bytes32,uint256)', _varNameB32, _val)
+        );
+        require(success, 'Opcodes: opSetLocalUint256 call not success');
+        OpcodeHelpers.putToStack(_ctx, 1);
+    }
+
     function opLoadLocalUint256(IContext _ctx) public {
         opLoadLocal(_ctx, 'getStorageUint256(bytes32)');
     }
@@ -113,7 +131,6 @@ library OtherOpcodes {
         );
         // console.log('recipient', recipient);
         uint256 amount = opUint256Get(_ctx);
-        // console.log('amount', amount);
         IERC20(token).transfer(recipient, amount);
         OpcodeHelpers.putToStack(_ctx, 1);
     }
@@ -133,7 +150,6 @@ library OtherOpcodes {
         // console.log('token', token);
         // console.log('from', from);
         // console.log('to', to);
-        // console.log('amount', amount);
         IERC20(token).transferFrom(from, to, amount);
         OpcodeHelpers.putToStack(_ctx, 1);
     }

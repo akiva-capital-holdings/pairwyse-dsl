@@ -8,7 +8,8 @@ import { Agreement } from '../../typechain/Agreement';
 import { Parser } from '../../typechain/Parser';
 import { ConditionalTxs } from '../../typechain';
 
-// TODO: add more complex tests with more steps. Possible problem: contract call run out of gas and made the transaction revert
+// TODO: add more complex tests with more steps. Possible problem: contract call run out of gas and
+//       made the transaction revert
 describe('Agreement', () => {
   let parser: Parser;
   let agreement: Agreement;

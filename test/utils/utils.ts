@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 
 import { expect } from 'chai';
-import { Contract, ethers } from 'ethers';
+import { BigNumber, Contract, ethers } from 'ethers';
 import { Stack__factory, StackValue__factory, Stack, Context, StackValue } from '../../typechain';
 import { OpConditionalTxFunc } from '../types';
 
@@ -117,7 +117,7 @@ export async function checkStackTail(
 export async function checkStackTailv2(
   SV: StackValue__factory,
   stack: Stack,
-  expectedValues: number[],
+  expectedValues: (number | string)[],
   type: 'string' | 'number' = 'number',
   badLenErr = 'Bad stack length',
   badValueErr = 'Bad stack value'
@@ -161,4 +161,27 @@ export const testTwoInputOneOutput = async (
   const stack = await pushToStack(SV, context, ST, [value1, value2]);
   await opFunc(opcodes)(context.address);
   await checkStack(SV, stack, 1, result);
+};
+
+/**
+ * Returns number of bytes in hex string
+ * @param bytes Hex value in string
+ * @returns Number
+ */
+export const getBytesStringLength = (bytes: string) => bytes.replace('0x', '').length / 2;
+
+/**
+ * Converts raw uint256 string to padded hex value
+ * @param uint256Str String or number representing raw uint256 value
+ * @param pad Pad size in bytes
+ * @returns Padded hex uint256
+ */
+export const uint256StrToHex = (uint256Str: string | number, pad = 32) => {
+  const uint256Raw = BigNumber.from(uint256Str).toHexString().substring(2);
+
+  // Note: each byte is represented with 2 symbols inside the string. Ex. 32bytes is 64 symbols,
+  //       2 symbols per byte
+  const padding = '0'.repeat(pad * 2 - uint256Raw.length);
+
+  return padding.concat(uint256Raw);
 };

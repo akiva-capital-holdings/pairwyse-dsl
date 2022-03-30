@@ -3,8 +3,14 @@ pragma solidity ^0.8.0;
 
 import { IContext } from '../../interfaces/IContext.sol';
 import { OtherOpcodes } from '../../libs/opcodes/OtherOpcodes.sol';
+import { Storage } from '../../helpers/Storage.sol';
 
-contract OtherOpcodesMock {
+contract OtherOpcodesMock is Storage {
+
+    receive() payable external {
+
+    }
+
     function opLoadLocalAny(IContext _ctx) public {
         OtherOpcodes.opLoadLocalAny(_ctx);
     }
@@ -81,15 +87,9 @@ contract OtherOpcodesMock {
         OtherOpcodes.opTransferFrom(_ctx);
     }
 
-    // function opUint256Get(IContext _ctx) private returns (uint256) {}
-
-    // function putUint256ToStack(IContext _ctx, uint256 result) private {}
-
-    // function nextBytes(IContext _ctx, uint256 size) private returns (bytes memory out) {}
-
-    // function nextBytes1(IContext _ctx) private returns (bytes1) {}
-
-    // function nextBranchSelector(IContext _ctx, string memory baseOpName) private returns (bytes4) {}
+    function opUint256Get(IContext _ctx) public returns (uint256) {
+        return OtherOpcodes.opUint256Get(_ctx);
+    }
 
     function opLoadLocalGet(IContext _ctx, string memory funcSignature)
         public
@@ -98,11 +98,19 @@ contract OtherOpcodesMock {
         return OtherOpcodes.opLoadLocalGet(_ctx, funcSignature);
     }
 
-    // function opAddressGet(IContext _ctx) private returns (address) {}
+    function opAddressGet(IContext _ctx) public returns (address) {
+        return OtherOpcodes.opAddressGet(_ctx);
+    }
 
-    // function opLoadLocal(IContext _ctx, string memory funcSignature) private {}
+    function opLoadLocal(IContext _ctx, string memory funcSignature) public {
+        OtherOpcodes.opLoadLocal(_ctx, funcSignature);
+    }
 
     function opLoadRemote(IContext _ctx, string memory funcSignature) public {
         OtherOpcodes.opLoadRemote(_ctx, funcSignature);
+    }
+
+    function opSetLocalUint256(IContext _ctx) public {
+        OtherOpcodes.opSetLocalUint256(_ctx);
     }
 }
