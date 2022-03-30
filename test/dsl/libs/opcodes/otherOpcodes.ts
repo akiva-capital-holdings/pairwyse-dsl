@@ -11,7 +11,7 @@ import {
 } from '../../../../typechain';
 import { checkStack, checkStackTailv2, hex4Bytes, uint256StrToHex } from '../../../utils/utils';
 
-describe('Other opcodes', () => {
+describe.only('Other opcodes', () => {
   let StackCont: Stack__factory;
   let StackValue: StackValue__factory;
   /* eslint-enable camelcase */
@@ -53,7 +53,6 @@ describe('Other opcodes', () => {
     await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
 
     // Deploy test ERC20 and mint some to ctx
-
     testERC20 = await (await ethers.getContractFactory('ERC20Mintable')).deploy('Test', 'TST');
   });
 
@@ -226,6 +225,7 @@ describe('Other opcodes', () => {
     await checkStackTailv2(StackValue, stack, [testValue]);
   });
 
+  // TODO: use remote contract address for var storage
   it('opLoadRemoteUint256', async () => {
     const testValue = 1;
     const bytes32TestValueName = hex4Bytes('NUMBER');
@@ -239,6 +239,7 @@ describe('Other opcodes', () => {
     await checkStackTailv2(StackValue, stack, [testValue]);
   });
 
+  // TODO: use remote contract address for var storage
   it('opLoadRemoteBytes32', async () => {
     const testValue = hex4Bytes('123456');
     const bytes32TestValueName = hex4Bytes('BYTES');
@@ -251,6 +252,7 @@ describe('Other opcodes', () => {
     await checkStackTailv2(StackValue, stack, [testValue]);
   });
 
+  // TODO: use remote contract address for var storage
   it('opLoadRemoteBool', async () => {
     const testValue = true;
     const bytes32TestValueName = hex4Bytes('BOOLEAN');
@@ -263,6 +265,7 @@ describe('Other opcodes', () => {
     await checkStackTailv2(StackValue, stack, [+testValue]);
   });
 
+  // TODO: use remote contract address for var storage
   it('opLoadRemoteAddress', async () => {
     const [addr1] = await ethers.getSigners();
     const testValue = addr1.address;
@@ -291,25 +294,27 @@ describe('Other opcodes', () => {
   it('opSendEth', async () => {
     const [receiver] = await ethers.getSigners();
 
-    const fundAmount = '0000000000000000000000000000000000000000000000000000000100000000';
+    const fundAmountUint = 1e8;
+    const fundAmountHex = uint256StrToHex(fundAmountUint);
 
-    await (await receiver.sendTransaction({
-      from: receiver.address,
-      to: app.address,
-      value: `0x${fundAmount}`
-    })).wait();
+    await (
+      await receiver.sendTransaction({
+        from: receiver.address,
+        to: app.address,
+        value: `0x${fundAmountHex}`,
+      })
+    ).wait();
 
     const testAddress = receiver.address;
-    const testAmount = fundAmount;
 
     const bytes32TestAddressName = hex4Bytes('ADDRESS');
 
     await app.setStorageAddress(bytes32TestAddressName, testAddress);
 
     const address = bytes32TestAddressName.substring(2, 10);
-    await ctx.setProgram(`0x${address}${testAmount}`);
+    await ctx.setProgram(`0x${address}${fundAmountHex}`);
 
-    await app.opSendEth(ctxAddr);
+    await expect(() => app.opSendEth(ctxAddr)).to.changeEtherBalance(receiver, fundAmountUint);
     await checkStackTailv2(StackValue, stack, ['1']);
   });
 
@@ -342,7 +347,7 @@ describe('Other opcodes', () => {
     const testAmount = '1000';
 
     await testERC20.mint(sender.address, testAmount);
-    await testERC20.approve(app.address,     testAmount, { from: sender.address });
+    await testERC20.approve(app.address, testAmount, { from: sender.address });
 
     const bytes32TestAddressName1 = hex4Bytes('ADDRESS1');
     const bytes32TestAddressName2 = hex4Bytes('ADDRESS2');
@@ -356,9 +361,7 @@ describe('Other opcodes', () => {
     const address2 = bytes32TestAddressName2.substring(2, 10);
     const address3 = bytes32TestAddressName3.substring(2, 10);
 
-    await ctx.setProgram(
-        `0x${address1}${address2}${address3}${uint256StrToHex(testAmount)}`
-    );
+    await ctx.setProgram(`0x${address1}${address2}${address3}${uint256StrToHex(testAmount)}`);
 
     await app.opTransferFrom(ctxAddr);
     await checkStackTailv2(StackValue, stack, ['1']);
@@ -418,6 +421,7 @@ describe('Other opcodes', () => {
     checkStackTailv2(StackValue, stack, [testValue]);
   });
 
+  // TODO: use remote contract address for var storage
   it('opLoadRemote', async () => {
     const testValue = hex4Bytes('123456');
     const bytes32TestValueName = hex4Bytes('BYTES');

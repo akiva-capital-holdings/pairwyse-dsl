@@ -117,7 +117,7 @@ export async function checkStackTail(
 export async function checkStackTailv2(
   SV: StackValue__factory,
   stack: Stack,
-  expectedValues: (number|string)[],
+  expectedValues: (number | string)[],
   type: 'string' | 'number' = 'number',
   badLenErr = 'Bad stack length',
   badValueErr = 'Bad stack value'
@@ -168,20 +168,20 @@ export const testTwoInputOneOutput = async (
  * @param bytes Hex value in string
  * @returns Number
  */
-export const getBytesStringLength = (bytes: string) => 
-  bytes.replace('0x', '').length / 2;
+export const getBytesStringLength = (bytes: string) => bytes.replace('0x', '').length / 2;
 
-  /**
-   * Converts raw uint256 string to padded hex value 
-   * @param uint256Str String representing raw uint256 value
-   * @returns Padded hex uint256
-   */
-export const uint256StrToHex = (uint256Str: string) => {
+/**
+ * Converts raw uint256 string to padded hex value
+ * @param uint256Str String or number representing raw uint256 value
+ * @param pad Pad size in bytes
+ * @returns Padded hex uint256
+ */
+export const uint256StrToHex = (uint256Str: string | number, pad = 32) => {
   const uint256Raw = BigNumber.from(uint256Str).toHexString().substring(2);
 
-  // NOTE(Nikita): 32bytes is 64 symbols, 2 symbols per byte
-  //               hence padding is 64 symbols - hex symbols of value
-  const padding = '0'.repeat(64 - uint256Raw.length);
+  // Note: each byte is represented with 2 symbols inside the string. Ex. 32bytes is 64 symbols,
+  //       2 symbols per byte
+  const padding = '0'.repeat(pad * 2 - uint256Raw.length);
 
-  return padding + uint256Raw;
-}
+  return padding.concat(uint256Raw);
+};
