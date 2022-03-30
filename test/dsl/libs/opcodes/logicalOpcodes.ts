@@ -8,23 +8,12 @@ import {
   Stack,
   LogicalOpcodesMock,
 } from '../../../../typechain';
-// import {
-//   testOpLt,
-//   testOpGt,
-//   testOpLe,
-//   testOpGe,
-//   testOpAnd,
-//   testOpOr,
-//   testOpXor,
-// } from '../../utils/testOps';
-import { getBytesStringLength, pushToStack } from '../../../utils/utils';
-/* eslint-enable camelcase */
+import { getBytesStringLength, pushToStack, uint256StrToHex } from '../../../utils/utils';
 
 describe('Logical opcodes', () => {
-  // eslint-disable-next-line camelcase
   let StackCont: Stack__factory;
-  // eslint-disable-next-line camelcase
   let StackValue: StackValue__factory;
+  /* eslint-enable camelcase */
   let app: LogicalOpcodesMock;
   let ctx: Context;
   let ctxAddr: string;
@@ -45,7 +34,7 @@ describe('Logical opcodes', () => {
       })
     ).deploy();
 
-    // Deploy ComparatorOpcodesMock
+    // Deploy LogicalOpcodesMock
     app = await (
       await ethers.getContractFactory('LogicalOpcodesMock', {
         libraries: { LogicalOpcodes: logicalOpcodesLib.address },
@@ -102,11 +91,11 @@ describe('Logical opcodes', () => {
     let nextPc = await ctx.nextpc();
 
     expect(pc).to.be.equal(testBranchTrue);
-    // NOTE(Nikita): opIf internally calls getUint16 and sets nextpc after check,
-    //               hence there is no way to get intermediate pc.
-    //               So in this case nextPc should be equal 2 because of getUint16 incrementing pc
-    //               by 2 and opIf is only operation called.
-    expect(nextPc).to.be.equal(2); 
+    // Note: opIf internally calls getUint16 and sets nextpc after check,
+    //       hence there is no way to get intermediate pc.
+    //       So in this case nextPc should be equal 2 because of getUint16 incrementing pc
+    //       by 2 and opIf is only operation called.
+    expect(nextPc).to.be.equal(2);
 
     await ctx.setPc(0);
     await pushToStack(StackValue, ctx, StackCont, [0]);
@@ -114,36 +103,32 @@ describe('Logical opcodes', () => {
     await app.opIf(ctxAddr);
 
     nextPc = await ctx.nextpc();
-    const programLength = getBytesStringLength(await (await ctx.program()));
+    const programLength = getBytesStringLength(await ctx.program());
 
     expect(nextPc).to.be.equal(programLength);
   });
 
   it('opEnd', async () => {
-
     await ctx.setProgram('0xAAFCCEADFADC');
 
     await app.opEnd(ctxAddr);
 
     const pc = await ctx.pc();
     const nextPc = await ctx.nextpc();
-    const programLength = getBytesStringLength(await (await ctx.program()));
+    const programLength = getBytesStringLength(await ctx.program());
 
-    // NOTE(Nikita): Initially pc is 2
-    // TODO(Nikita): Investigate this case and check that 2 for initial pc is
-    //               correct value
     expect(pc).to.be.equal(2);
     expect(nextPc).to.be.equal(programLength);
   });
 
   it('getUint16', async () => {
-    const testValue = '000a';
-    
-    await ctx.setProgram(`0x${testValue}`);
+    const testValueUint256 = 10;
+    const testValueHex = uint256StrToHex(10, 2);
+
+    await ctx.setProgram(`0x${testValueHex}`);
 
     const result = await app.callStatic.getUint16(ctxAddr);
 
-    expect(result).to.be.equal(parseInt(`0x${testValue}`, 16));
+    expect(result).to.be.equal(testValueUint256);
   });
-
 });
