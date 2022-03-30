@@ -5,7 +5,7 @@ import { IContext } from './interfaces/IContext.sol';
 import { Stack, StackValue } from './helpers/Stack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract Preprocessor {
     using StringUtils for string;
@@ -34,10 +34,14 @@ contract Preprocessor {
             }
 
             // console.log("char: %s", char);
-            if (char.equal(' ') || char.equal('\n') || char.equal('(') || char.equal(')')) {
+            if (char.equal('\n') || char.equal(' ') || char.equal('(') || char.equal(')')) {
                 if (buffer.length() > 0) {
                     result.push(buffer);
                     buffer = '';
+                }
+                // TODO: looks like it needs to remove the double check here
+                if (char.equal('\n')) {
+                    result.push(char);
                 }
             } else {
                 buffer = buffer.concat(char);
@@ -64,9 +68,23 @@ contract Preprocessor {
         delete result;
         string memory chunk;
         // console.log("\n\n", chunk);
+        uint256 i = 0;
 
-        for (uint256 i = 0; i < _code.length; i++) {
+        while(i < _code.length) {
             chunk = _code[i];
+
+            if(chunk.equal('/*')) {
+                i = _findEndSymbol(i, _code, '*/');
+                i += 1;
+                continue;
+            } else if(chunk.equal('//')) {
+                i = _findEndSymbol(i, _code, '\n');
+                i += 1;
+                continue;
+            } else if(chunk.equal('\n')) {
+                i += 1;
+                continue;
+            }
 
             if (isOperator(_ctx, chunk)) {
                 // console.log("%s is an operator", chunk);
@@ -91,6 +109,8 @@ contract Preprocessor {
                 // console.log("result push: %s", chunk);
                 result.push(chunk);
             }
+
+            i += 1;
         }
 
         while (_stack.length() > 0) {
@@ -112,5 +132,24 @@ contract Preprocessor {
             if (op.equal(_ctx.operators(i))) return true;
         }
         return false;
+    }
+
+    /**
+    *  Returns the index of the symbol or
+    *  the index of the last symbol of the program
+    */
+    function _findEndSymbol(
+        uint256 _indexStart,
+        string[] memory _code,
+        string memory _endSymbol) internal pure returns (uint256) {
+
+        string memory chunk;
+        for (uint256 indexEnd = _indexStart; indexEnd < _code.length; indexEnd++) {
+            chunk = _code[indexEnd];
+            if(chunk.equal(_endSymbol)) {
+                return indexEnd;
+            }
+        }
+        return _code.length-1;
     }
 }
