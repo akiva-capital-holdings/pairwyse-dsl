@@ -9,7 +9,7 @@ import { ByteUtils } from './libs/ByteUtils.sol';
 import { Storage } from './helpers/Storage.sol';
 import { Preprocessor } from './Preprocessor.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 contract Parser is IParser, Storage {
     using StringUtils for string;
@@ -41,6 +41,17 @@ contract Parser is IParser, Storage {
         asmBool();
     }
 
+    // setLocalUint256 VARNAME 12345
+    function asmSetLocalUint256() public {
+        parseVariable();
+        asmUint256();
+    }
+
+    // (uint256 5 + uint256 7) setUint256 VARNAME
+    function asmSetUint256() public {
+        parseVariable();
+    }
+
     function asmLoadLocal(IContext _ctx) public {
         parseBranchOf(_ctx, 'loadLocal');
         parseVariable();
@@ -68,16 +79,34 @@ contract Parser is IParser, Storage {
     }
 
     function asmTransfer() public {
-        parseVariable();
-        parseVariable();
-        asmUint256();
+        parseVariable(); // token address
+        parseVariable(); // receiver
+        asmUint256(); // amount
+    }
+
+    function asmTransferVar() public {
+        parseVariable(); // token address
+        parseVariable(); // receiver
+        parseVariable(); // amount
     }
 
     function asmTransferFrom() public {
-        parseVariable();
-        parseVariable();
-        parseVariable();
-        asmUint256();
+        parseVariable(); // token address
+        parseVariable(); // from
+        parseVariable(); // to
+        asmUint256(); // amount
+    }
+
+    function asmTransferFromVar() public {
+        parseVariable(); // token address
+        parseVariable(); // from
+        parseVariable(); // to
+        parseVariable(); // amount
+    }
+
+    function asmBalanceOf() public {
+        parseVariable(); // token address
+        parseVariable(); // user address
     }
 
     function asmIfelse() public {

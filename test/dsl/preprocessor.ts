@@ -27,9 +27,13 @@ describe('Preprocessor', () => {
 
     await ctx.addOperatorExt('swap', 3);
     await ctx.addOperatorExt('and', 3);
+    await ctx.addOperatorExt('*', 3);
+    await ctx.addOperatorExt('/', 3);
 
     await ctx.addOperatorExt('xor', 2);
     await ctx.addOperatorExt('or', 2);
+    await ctx.addOperatorExt('+', 2);
+    await ctx.addOperatorExt('-', 2);
 
     await ctx.addOperatorExt('==', 1);
     await ctx.addOperatorExt('<', 1);
@@ -48,6 +52,11 @@ describe('Preprocessor', () => {
 
   describe('infix to postfix', () => {
     const tests: Testcase[] = [
+      {
+        name: 'simple math',
+        expr: 'uint256 1 + uint256 2',
+        expected: ['uint256', '1', 'uint256', '2', '+'],
+      },
       {
         name: 'simple',
         expr: 'loadLocal address SENDER == msgSender',

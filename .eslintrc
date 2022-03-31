@@ -18,6 +18,7 @@
     "no-restricted-syntax": ["off"],
     "no-await-in-loop": ["off"],
     "max-len": ["error", 100],
-    "no-plusplus": ["off"]
+    "no-plusplus": ["off"],
+    "import/prefer-default-export": "off"
   }
 }

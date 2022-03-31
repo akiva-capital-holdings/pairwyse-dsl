@@ -7,10 +7,15 @@ import { IContext } from '../interfaces/IContext.sol';
 
 library Executor {
     function execute(IContext _ctx) public {
+        // console.logBytes(_ctx.program());
         require(_ctx.program().length > 0, 'Executor: empty program');
+        // if (_ctx.program().length == 0) {
+        //     _ctx.setProgram('0x1801'); // if program is empty then set it to `bool true`
+        // }
         while (_ctx.pc() < _ctx.program().length) {
             bytes memory opcodeBytes = _ctx.programAt(_ctx.pc(), 1);
             bytes1 opcodeByte1 = bytes1(uint8(opcodeBytes[0]));
+            // console.logBytes1(opcodeByte1);
 
             bytes4 selector = _ctx.selectorByOpcode(opcodeByte1);
             require(selector != 0x0, 'Executor: did not find selector for opcode');

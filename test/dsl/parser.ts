@@ -33,6 +33,27 @@ describe('Parser', () => {
   });
 
   describe('parse', () => {
+    // it.only('the maximum length of statement', async () => {
+    //   await app.parse(
+    //     ctxAddr,
+    //     `
+    //   (uint256 9805
+    //     * (loadLocal uint256 GP_DEPOSIT_REMAINING + loadLocal uint256 GP_DEPOSIT_INITIAL)
+    //   <
+    //   uint256 200
+    //     * loadLocal uint256 LP_DEPOSIT_INITIAL)
+    //   and
+    //   (blockTimestamp > loadLocal uint256 CLOSING_DATE_PLUS_ONE_DAY)
+    //   and
+    //   (blockTimestamp < loadLocal uint256 FUND_INVESTMENT_DATE)
+    //   and
+    //   (blockTimestamp < loadLocal uint256 FUND_INVESTMENT_DATE)
+    //   and
+
+    // `
+    //   );
+    // });
+
     it('error: delegatecall to asmSelector failed', async () => {
       await expect(app.parse(ctxAddr, 'uint256')).to.be.revertedWith(
         'delegatecall to asmSelector failed'

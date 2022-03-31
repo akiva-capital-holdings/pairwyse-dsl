@@ -141,6 +141,39 @@ contract Context is IContext {
             2
         );
 
+        addOpcodeForOperator(
+            '+',
+            0x26,
+            SetOpcodes.opAdd.selector,
+            0x0,
+            OpcodeLibNames.SetOpcodes,
+            2
+        );
+        addOpcodeForOperator(
+            '-',
+            0x27,
+            SetOpcodes.opSub.selector,
+            0x0,
+            OpcodeLibNames.SetOpcodes,
+            2
+        );
+        addOpcodeForOperator(
+            '*',
+            0x28,
+            SetOpcodes.opMul.selector,
+            0x0,
+            OpcodeLibNames.SetOpcodes,
+            3
+        );
+        addOpcodeForOperator(
+            '/',
+            0x29,
+            SetOpcodes.opDiv.selector,
+            0x0,
+            OpcodeLibNames.SetOpcodes,
+            3
+        );
+
         // Branching
         addOpcode(
             'ifelse',
@@ -216,10 +249,24 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         addOpcode(
+            'transferVar',
+            0x2c,
+            OtherOpcodes.opTransferVar.selector,
+            IParser.asmTransferVar.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
             'transferFrom',
             0x20,
             OtherOpcodes.opTransferFrom.selector,
             IParser.asmTransferFrom.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
+            'transferFromVar',
+            0x2a,
+            OtherOpcodes.opTransferFromVar.selector,
+            IParser.asmTransferFromVar.selector,
             OpcodeLibNames.OtherOpcodes
         );
         addOpcode(
@@ -230,10 +277,31 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         addOpcode(
+            'setLocalUint256',
+            0x2d,
+            OtherOpcodes.opSetLocalUint256.selector,
+            IParser.asmSetLocalUint256.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
+            'setUint256',
+            0x2e,
+            OtherOpcodes.opSetUint256.selector,
+            IParser.asmSetUint256.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
             'msgValue',
             0x22,
             OtherOpcodes.opMsgValue.selector,
             0x0,
+            OpcodeLibNames.OtherOpcodes
+        );
+        addOpcode(
+            'balanceOf',
+            0x2b,
+            OtherOpcodes.opBalanceOf.selector,
+            IParser.asmBalanceOf.selector,
             OpcodeLibNames.OtherOpcodes
         );
 

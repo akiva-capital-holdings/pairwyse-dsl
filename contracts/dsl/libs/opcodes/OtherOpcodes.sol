@@ -32,6 +32,7 @@ library OtherOpcodes {
     }
 
     function opBlockTimestamp(IContext _ctx) public {
+        // console.log('block.timestamp', block.timestamp);
         OpcodeHelpers.putToStack(_ctx, block.timestamp);
     }
 
@@ -48,7 +49,47 @@ library OtherOpcodes {
     }
 
     function opSetLocalBool(IContext _ctx) public {
-        opSetLocal(_ctx, 'setStorageBool(bytes32,bool)');
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+
+        bytes memory data = OpcodeHelpers.nextBytes(_ctx, 1);
+        bool _boolVal = uint8(data[0]) == 1;
+
+        // Set local variable by it's hex
+        (bool success, ) = _ctx.appAddress().call(
+            abi.encodeWithSignature('setStorageBool(bytes32,bool)', _varNameB32, _boolVal)
+        );
+        require(success, 'Opcodes: opSetLocal call not success');
+        OpcodeHelpers.putToStack(_ctx, 1);
+    }
+
+    function opSetLocalUint256(IContext _ctx) public {
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+
+        bytes memory data = OpcodeHelpers.nextBytes(_ctx, 32);
+        uint256 _val = uint256(bytes32(data));
+
+        // Set local variable by it's hex
+        (bool success, ) = _ctx.appAddress().call(
+            abi.encodeWithSignature('setStorageUint256(bytes32,uint256)', _varNameB32, _val)
+        );
+        require(success, 'Opcodes: opSetLocal call not success');
+        OpcodeHelpers.putToStack(_ctx, 1);
+    }
+
+    function opSetUint256(IContext _ctx) public {
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+
+        StackValue _last = _ctx.stack().pop();
+        require(_last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+        uint256 _val = _last.getUint256();
+
+        // Set local variable by it's hex
+        (bool success, ) = _ctx.appAddress().call(
+            abi.encodeWithSignature('setStorageUint256(bytes32,uint256)', _varNameB32, _val)
+        );
+        require(success, 'Opcodes: opSetLocal call not success');
+
+        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     function opSetLocalUint256(IContext _ctx) public {
@@ -119,7 +160,6 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctx, 1);
     }
 
-    // TODO: get token address from variable, not from the address itself in string as a parameter
     function opTransfer(IContext _ctx) public {
         // console.log('opTransfer');
         address payable token = payable(
@@ -131,6 +171,22 @@ library OtherOpcodes {
         );
         // console.log('recipient', recipient);
         uint256 amount = opUint256Get(_ctx);
+        IERC20(token).transfer(recipient, amount);
+        OpcodeHelpers.putToStack(_ctx, 1);
+    }
+
+    function opTransferVar(IContext _ctx) public {
+        // console.log('opTransfer');
+        address payable token = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        // console.log('token', token);
+        address payable recipient = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        // console.log('recipient', recipient);
+        uint256 amount = uint256(opLoadLocalGet(_ctx, 'getStorageUint256(bytes32)'));
+        // console.log('amount', amount);
         IERC20(token).transfer(recipient, amount);
         OpcodeHelpers.putToStack(_ctx, 1);
     }
@@ -154,6 +210,37 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctx, 1);
     }
 
+    function opBalanceOf(IContext _ctx) public {
+        address payable token = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        address payable user = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        uint256 balance = IERC20(token).balanceOf(user);
+        // console.log('balanceOf', balance);
+        OpcodeHelpers.putToStack(_ctx, balance);
+    }
+
+    function opTransferFromVar(IContext _ctx) public {
+        address payable token = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        address payable from = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        address payable to = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
+        );
+        uint256 amount = uint256(opLoadLocalGet(_ctx, 'getStorageUint256(bytes32)'));
+        // console.log('token', token);
+        // console.log('from', from);
+        // console.log('to', to);
+        // console.log('amount', amount);
+        IERC20(token).transferFrom(from, to, amount);
+        OpcodeHelpers.putToStack(_ctx, 1);
+    }
+
     function opUint256Get(IContext _ctx) public returns (uint256) {
         bytes memory data = OpcodeHelpers.nextBytes(_ctx, 32);
 
@@ -164,20 +251,6 @@ library OtherOpcodes {
         }
 
         return uint256(result);
-    }
-
-    function opSetLocal(IContext _ctx, string memory _funcSignature) public {
-        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
-
-        bytes memory data = OpcodeHelpers.nextBytes(_ctx, 1);
-        bool _boolVal = uint8(data[0]) == 1;
-
-        // Set local variable by it's hex
-        (bool success, ) = _ctx.appAddress().call(
-            abi.encodeWithSignature(_funcSignature, _varNameB32, _boolVal)
-        );
-        require(success, 'Opcodes: opSetLocal call not success');
-        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     function opLoadLocalGet(IContext _ctx, string memory funcSignature)
@@ -220,6 +293,7 @@ library OtherOpcodes {
 
     function opLoadLocal(IContext _ctx, string memory funcSignature) public {
         bytes32 result = opLoadLocalGet(_ctx, funcSignature);
+        // console.log('load local', uint256(result));
         OpcodeHelpers.putToStack(_ctx, uint256(result));
     }
 

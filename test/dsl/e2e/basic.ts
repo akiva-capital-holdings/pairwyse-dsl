@@ -88,6 +88,42 @@ describe('DSL: basic', () => {
     appAddrHex = app.address.slice(2);
   });
 
+  it('uint256 2 + uint256 3', async () => {
+    await app.parse('uint256 2 + uint256 3');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [5]);
+  });
+
+  it('uint256 7 - uint256 3', async () => {
+    await app.parse('uint256 7 - uint256 3');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [4]);
+  });
+
+  it('uint256 2 * uint256 3', async () => {
+    await app.parse('uint256 2 * uint256 3');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [6]);
+  });
+
+  it('uint256 2 / uint256 3', async () => {
+    await app.parse('uint256 2 / uint256 3');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [0]);
+  });
+
+  it('uint256 20 / uint256 3', async () => {
+    await app.parse('uint256 20 / uint256 3');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [6]);
+  });
+
+  it('uint256 21 / uint256 3', async () => {
+    await app.parse('uint256 21 / uint256 3');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [7]);
+  });
+
   it('uint256 1122334433', async () => {
     await app.parse('uint256 1122334433');
     await app.execute();
@@ -328,6 +364,26 @@ describe('DSL: basic', () => {
     await app.parse('setLocalBool BOOLVAR false');
     await app.execute();
     expect(await app.getStorageBool(hex4Bytes('BOOLVAR'))).to.equal(false);
+  });
+
+  it('setLocalUint256', async () => {
+    await app.parse('setLocalUint256 UINTVAR 15');
+    await app.execute();
+    expect(await app.getStorageUint256(hex4Bytes('UINTVAR'))).to.equal(15);
+    await app.parse('setLocalUint256 UINTVAR 239423894');
+    await app.execute();
+    expect(await app.getStorageUint256(hex4Bytes('UINTVAR'))).to.equal(239423894);
+  });
+
+  it('setUint256', async () => {
+    await app.parse('(uint256 4 + uint256 17) setUint256 VAR');
+    await app.execute();
+    expect(await app.getStorageUint256(hex4Bytes('VAR'))).to.equal(21);
+
+    await app.setStorageUint256(hex4Bytes('X'), 10);
+    await app.parse('(loadLocal uint256 X + uint256 15) setUint256 VAR');
+    await app.execute();
+    expect(await app.getStorageUint256(hex4Bytes('VAR'))).to.equal(25);
   });
 
   describe('loadLocal', () => {
@@ -633,6 +689,26 @@ describe('DSL: basic', () => {
     await checkStack(StackValue, stack, 1, 1);
   });
 
+  it('transferVar', async () => {
+    const [, receiver] = await ethers.getSigners();
+
+    const Token = await ethers.getContractFactory('Token');
+    const dai = await Token.deploy(parseEther('1000'));
+
+    const oneDAI = parseEther('1');
+    await dai.transfer(app.address, oneDAI);
+    expect(await dai.balanceOf(app.address)).to.equal(oneDAI);
+
+    await app.setStorageAddress(hex4Bytes('DAI'), dai.address);
+    await app.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
+    await app.setStorageUint256(hex4Bytes('AMOUNT'), oneDAI.toString());
+
+    await app.parse('transferVar DAI RECEIVER AMOUNT');
+    await app.execute();
+    expect(await dai.balanceOf(receiver.address)).to.equal(oneDAI);
+    await checkStack(StackValue, stack, 1, 1);
+  });
+
   it('transferFrom', async () => {
     const [owner, receiver] = await ethers.getSigners();
 
@@ -651,6 +727,42 @@ describe('DSL: basic', () => {
     await app.execute();
     expect(await dai.balanceOf(receiver.address)).to.equal(oneDAI);
     await checkStack(StackValue, stack, 1, 1);
+  });
+
+  it('transferFromVar', async () => {
+    const [owner, receiver] = await ethers.getSigners();
+
+    const Token = await ethers.getContractFactory('Token');
+    const dai = await Token.deploy(parseEther('1000'));
+
+    const oneDAI = parseEther('1');
+    await dai.connect(owner).approve(app.address, oneDAI);
+    expect(await dai.allowance(owner.address, app.address)).to.equal(oneDAI);
+
+    await app.setStorageAddress(hex4Bytes('DAI'), dai.address);
+    await app.setStorageAddress(hex4Bytes('OWNER'), owner.address);
+    await app.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
+    await app.setStorageUint256(hex4Bytes('AMOUNT'), oneDAI.toString());
+
+    await app.parse('transferFromVar DAI OWNER RECEIVER AMOUNT');
+    await app.execute();
+    expect(await dai.balanceOf(receiver.address)).to.equal(oneDAI);
+    await checkStack(StackValue, stack, 1, 1);
+  });
+
+  it('balance of', async () => {
+    const [user] = await ethers.getSigners();
+
+    const Token = await ethers.getContractFactory('Token');
+    const dai = await Token.connect(user).deploy(parseEther('1000'));
+
+    await app.setStorageAddress(hex4Bytes('DAI'), dai.address);
+    await app.setStorageAddress(hex4Bytes('USER'), user.address);
+
+    await app.parse('balanceOf DAI USER');
+    await app.execute();
+    // expect(await dai.balanceOf(user.address)).to.equal(parseEther('1000'));
+    await checkStack(StackValue, stack, 1, parseEther('1000'));
   });
 
   it('if branch', async () => {

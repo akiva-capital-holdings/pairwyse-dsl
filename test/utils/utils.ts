@@ -70,7 +70,7 @@ export const checkStack = async (
   SV: StackValue__factory,
   stack: Stack,
   expectedLen: number,
-  expectedValue: number | string,
+  expectedValue: number | string | BigNumber,
   indexFromEnd: number = 0,
   type: 'string' | 'number' = 'number',
   badLenErr = 'Bad stack length',
@@ -95,7 +95,7 @@ export async function checkStackTail(
   SV: StackValue__factory,
   stack: Stack,
   expectedLen: number,
-  expectedValues: number[],
+  expectedValues: (number | string)[],
   type: 'string' | 'number' = 'number',
   badLenErr = 'Bad stack length',
   badValueErr = 'Bad stack value'
