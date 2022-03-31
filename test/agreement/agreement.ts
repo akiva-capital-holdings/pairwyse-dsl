@@ -536,7 +536,7 @@ describe('Agreement', () => {
     );
   });
 
-  describe.only('Business case', () => {
+  describe('Business case', () => {
     businessCaseTest(
       'GP fails to balance LP deposit',
       parseUnits('20', 18), // GP_INITIAL
