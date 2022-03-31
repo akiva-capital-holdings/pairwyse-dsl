@@ -9,7 +9,15 @@ contract LogicalOpcodesMock {
         LogicalOpcodes.opIfelse(_ctx);
     }
 
+    function opIf(IContext _ctx) public {
+        LogicalOpcodes.opIf(_ctx);
+    }
+
     function opEnd(IContext _ctx) public {
         LogicalOpcodes.opEnd(_ctx);
+    }
+
+    function getUint16(IContext _ctx) public returns(uint16) {
+        return LogicalOpcodes.getUint16(_ctx);
     }
 }
