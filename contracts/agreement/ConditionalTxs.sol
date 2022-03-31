@@ -21,9 +21,9 @@ contract ConditionalTxs is Storage {
         string transactionStr;
     }
 
-    mapping(uint256 => Tx) public txs;
-    mapping(uint256 => IContext[]) public conditionCtxs;
-    mapping(uint256 => string[]) public conditionStrs;
+    mapping(uint256 => Tx) public txs; // txId => Tx struct
+    mapping(uint256 => IContext[]) public conditionCtxs; // txId => condition Context
+    mapping(uint256 => string[]) public conditionStrs; // txId => DSL condition as string
 
     function conditionCtxsLen(uint256 _txId) external view returns (uint256) {
         return conditionCtxs[_txId].length;
@@ -61,7 +61,10 @@ contract ConditionalTxs is Storage {
         string memory _transactionStr,
         IContext _transactionCtx
     ) external {
-        // TODO: require txId hash at least 1 condition
+        require(
+            conditionStrs[_txId].length > 0,
+            'The transaction should have at least one condition'
+        );
         _transactionCtx.setComparatorOpcodesAddr(address(ComparatorOpcodes));
         _transactionCtx.setLogicalOpcodesAddr(address(LogicalOpcodes));
         _transactionCtx.setSetOpcodesAddr(address(SetOpcodes));

@@ -166,15 +166,4 @@ describe('Set opcodes', () => {
       await checkStack(StackValue, stack, 1, 0);
     });
   });
-
-  // describe('opAdd', () => {
-  //   it('success', async () => {
-  //     const ONE = new Array(64).join('0') + 1;
-  //     const TWO = new Array(64).join('0') + 2;
-  //     await ctx.setProgram(`0x26${ONE}${TWO}`);
-  //     console.log(`0x26${ONE}${TWO}`);
-  //     await app.opAdd(ctxAddr);
-  //     await checkStackTailv2(StackValue, stack, [3]);
-  //   });
-  // });
 });
