@@ -10,7 +10,10 @@ import { Parser } from '../../typechain/Parser';
 import { ConditionalTxs, Context__factory } from '../../typechain';
 import { TxObject } from '../types';
 
-describe('Agreement', () => {
+// TODO: test 2 business case: LP tries to exec step 4 after GP does balancing. This attempt fails.
+//       No change in balances. Console msg that step 4 can't be executed
+
+describe.only('Agreement', () => {
   let ContextCont: Context__factory;
   let parser: Parser;
   let agreement: Agreement;
@@ -40,17 +43,25 @@ describe('Agreement', () => {
     let txCtx;
 
     for await (const step of steps) {
+      console.log(`\n🧩 Step #${step.txId}`);
       txCtx = await Ctx.deploy();
       const cdCtxsAddrs = [];
 
-      for (let i = 0; i < step.conditions.length; i++) {
+      for (let j = 0; j < step.conditions.length; j++) {
         const cond = await Ctx.deploy();
         cdCtxsAddrs.push(cond.address);
-        await agreement.parse(step.conditions[i], cond.address);
+        await agreement.parse(step.conditions[j], cond.address);
       }
       await agreement.parse(step.transaction, txCtx.address);
 
-      await agreement.update(
+      console.log('\nDSL conditions');
+      for (let j = 0; j < step.conditions.length; j++) {
+        console.log(`\t${j + 1}. \x1b[34m${step.conditions[j]}\x1b[0m`);
+      }
+
+      console.log('\nDSL transaction');
+      console.log(`\t\x1b[35m${step.transaction}\x1b[0m`);
+      const { hash } = await agreement.update(
         step.txId,
         step.requiredTxs,
         step.signatory,
@@ -59,6 +70,7 @@ describe('Agreement', () => {
         txCtx.address,
         cdCtxsAddrs
       );
+      console.log(`DSL transaction hash: ${hash}`);
     }
   };
 
