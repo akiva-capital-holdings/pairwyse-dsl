@@ -502,7 +502,6 @@ describe('Preprocessor', () => {
       const cmds = await app.callStatic.transform(ctxAddr, input);
       expect(cmds).to.eql(['bool', 'true']);
     });
-
   });
 
   describe('Multiple line comments in user-input', async () => {
