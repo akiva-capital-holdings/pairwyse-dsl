@@ -18,6 +18,9 @@ contract Preprocessor {
         return infixToPostfix(_ctx, code, stack);
     }
 
+    /*
+    * Returns if the symbol exists by the index
+    */
     function canGetSymbol(uint256 _index, string memory _program) public returns(bool) {
         try _program.char(_index) {
             return true;
@@ -28,65 +31,72 @@ contract Preprocessor {
 
     function split(string memory _program) public returns (string[] memory) {
         delete result;
+        // a flag for checking if the part of a string is a comment
+        bool isCommented;
+        // a flag that uses for searching a correct end symbol
+        uint256 searchedSymbolLen;
+        uint256 i;
         string memory buffer;
+        string memory nextChar;
         
-        for (uint256 i = 0; i < _program.length(); i++) {
+        while(i < _program.length()) {
             string memory char = _program.char(i);
             string memory nextChar;
-            string memory nextChar2;
             // if-else conditions parsing
-            if (char.equal('{')) continue;
+            if (char.equal('{')) {
+                i += 1;
+                continue;
+            }
             if (char.equal('}')) {
                 result.push('end');
+                i += 1;
                 continue;
             }
 
-            if (char.equal('\n')) {
-                result.push(char);
-                continue;
-            }
-
-            /*
-            1. //smth
-            2. smth//
-            3. smth//smth 123
-            4. smth//smth\n123
-            */
-
-            if(canGetSymbol(i+1, _program) && canGetSymbol(i+2, _program)) {
-                nextChar = _program.char(i+1);
-                nextChar2 = _program.char(i+2);
-                if (nextChar.equal('/') && nextChar2.equal('/')) {
-                    if (buffer.length() > 0) {
-                        if(nextChar.equal(' ')) {
-                            buffer = buffer.concat(char);
+            if(!isCommented) {
+                if(canGetSymbol(i+1, _program)) { 
+                    nextChar = _program.char(i+1);
+                    if(char.equal('/') && nextChar.equal('/')) {
+                        searchedSymbolLen = 1;
+                        isCommented = true; // the comment string is appeared
+                        // change index to the next no-comment symbol
+                        // avoiding an additional iteration
+                        i += 2;
+                        continue;
+                    } else if(char.equal('/') && nextChar.equal('*')) {
+                        searchedSymbolLen = 2;
+                        isCommented = true;
+                        i += 2;
+                        continue;
+                    }
+                }
+            } else if(isCommented) {
+                if(searchedSymbolLen == 1) {
+                    if(char.equal('\n')) {
+                        i += 1;
+                        isCommented = false;
+                        continue;
+                    }
+                } else if(char.equal('*')) {
+                    if(canGetSymbol(i+1, _program)) {
+                        nextChar = _program.char(i+1);
+                        if(nextChar.equal('/')) {
+                            i += 2;
+                            isCommented = false;
+                            continue;
                         }
-                        result.push(buffer);
-                        buffer = '';
-                        result.push('//');
-                        continue;
-                    }
-                    // result.push('//');
-                }
-            }
-            if (char.equal('/') && canGetSymbol(i+1, _program)) {
-                nextChar = _program.char(i+1);
-                if (nextChar.equal('/') || nextChar.equal(' ')) {
-                    if (buffer.length() > 0) {        
-                        result.push(buffer);
-                        buffer = '';
-                        continue;
                     }
                 }
+                i += 1;
+                continue;
             }
 
             // console.log("char: %s", char);
-            if (char.equal(' ') || char.equal('(') || char.equal(')')) {
+            if (char.equal(' ') || char.equal('\n') || char.equal('(') || char.equal(')')) {
                 if (buffer.length() > 0) {
                     result.push(buffer);
                     buffer = '';
                 }
-                // TODO: looks like it needs to remove the double check here
                 
             } else {
                 buffer = buffer.concat(char);
@@ -95,6 +105,8 @@ contract Preprocessor {
             if (char.equal('(') || char.equal(')')) {
                 result.push(char);
             }
+
+            i += 1;
         }
 
         if (buffer.length() > 0) {
@@ -112,24 +124,9 @@ contract Preprocessor {
     ) public returns (string[] memory) {
         delete result;
         string memory chunk;
-        console.log("", chunk);
-        uint256 i = 0;
-
-        while(i < _code.length) {
+    
+        for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
-            // console.log(chunk);
-            if(chunk.equal('/*')) {
-                i = _findEndSymbol(i, _code, '*/');
-                i += 1;
-                continue;
-            } else if(chunk.equal('//')) {
-                i = _findEndSymbol(i, _code, '\n');
-                i += 1;
-                continue;
-            } else if(chunk.equal('\n')) {
-                i += 1;
-                continue;
-            }
 
             if (isOperator(_ctx, chunk)) {
                 // console.log("%s is an operator", chunk);
@@ -154,8 +151,6 @@ contract Preprocessor {
                 // console.log("result push: %s", chunk);
                 result.push(chunk);
             }
-
-            i += 1;
         }
 
         while (_stack.length() > 0) {
@@ -177,25 +172,5 @@ contract Preprocessor {
             if (op.equal(_ctx.operators(i))) return true;
         }
         return false;
-    }
-
-    /**
-    *  Returns the index of the symbol or
-    *  the index of the last symbol of the program
-    */
-    function _findEndSymbol(
-        uint256 _indexStart,
-        string[] memory _code,
-        string memory _endSymbol) internal returns (uint256) {
-
-        string memory chunk;
-        for (uint256 indexEnd = _indexStart; indexEnd < _code.length; indexEnd++) {
-            chunk = _code[indexEnd];
-            console.log(chunk);
-            if(chunk.equal(_endSymbol)) {
-                return indexEnd;
-            }
-        }
-        return _code.length-1;
     }
 }
