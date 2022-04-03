@@ -5,7 +5,7 @@ import { IContext } from './interfaces/IContext.sol';
 import { Stack, StackValue } from './helpers/Stack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract Preprocessor {
     using StringUtils for string;
