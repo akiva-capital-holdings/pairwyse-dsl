@@ -34,6 +34,8 @@ contract Preprocessor {
         // a flag for checking if the part of a string is a comment
         bool isCommented;
         // a flag that uses for searching a correct end symbol
+        // 1 - search \n symbol
+        // 2 - search */ symbol
         uint256 searchedSymbolLen;
         uint256 i;
         string memory buffer;
