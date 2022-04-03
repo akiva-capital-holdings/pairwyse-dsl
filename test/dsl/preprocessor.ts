@@ -405,7 +405,7 @@ describe('Preprocessor', () => {
     });
   });
 
-  describe('Single line comment in user-input', async () => {
+  describe.only('Single line comment in user-input', async () => {
     it('returns an empty program if commented one-line command', async () => {
       const input = '// uint256 2 * uint256 5';
       const cmds = await app.callStatic.transform(ctxAddr, input);
@@ -447,14 +447,42 @@ describe('Preprocessor', () => {
     it('returns an expected program if a comment located before the command', async () => {});
     it('returns an expected program if a comment located below the command', async () => {});
     it('returns an expected program if a comment located next to the command (w/o spaces) ', async () => {
-      // TODO: for the moment commenting w/o spaces returns incorrect code.
-      // ex: ['//uint256', '2', '*', 'uint256', '5']
       const input = `
-        //uint256 2 * uint256 5
+        bool true//uint256 2 * uint256 5
       `;
-      const expected = ['uint256', '2', '*', 'uint256', '5'];
-      // expect(cmds).to.eql(expected);
+      const expected = ['bool', 'true'];
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(expected);
     });
+
+    it('returns an expected program if a comment located just after to the command (with end line) ', async () => {
+      const input = `
+        bool true//smth
+        bool false
+      `;
+      const expected = ['bool', 'true', 'bool', 'false'];
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(expected);
+    });
+
+    it('returns an expected program if a comment located next to the command (with space) ', async () => {
+      const input = `
+        bool true// uint256 2 * uint256 5
+      `;
+      const expected = ['bool', 'true'];
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(expected);
+    });
+
+    it('returns an expected program if a comment located just before the command ', async () => {
+      const input = `
+        bool true //uint256 2 * uint256 5
+      `;
+      const expected = ['bool', 'true'];
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(expected);
+    });
+
   });
 
   describe('Multiple line comments in user-input', async () => {
@@ -536,14 +564,12 @@ describe('Preprocessor', () => {
     it('returns an expected program if a comment opens next to the command and closes below', async () => {});
     it('returns an expected program if a comment opens higher the command and closes at the beginning of the command', async () => {});
     it('returns an expected program if a comment located next to the command (w/o spaces) ', async () => {
-      // TODO: for the moment commenting w/o spaces returns incorrect code.
-      // ex: ['/*uint256', '2', '*', 'uint256', '5*/']
       const input = `
         /*uint256 2 * uint256 5*/
       `;
       const expected = ['uint256', '2', '*', 'uint256', '5'];
       const cmds = await app.callStatic.transform(ctxAddr, input);
-      // expect(cmds).to.eql(expected);
+      expect(cmds).to.eql(expected);
     });
   });
 });

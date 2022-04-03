@@ -5,7 +5,7 @@ import { IContext } from './interfaces/IContext.sol';
 import { Stack, StackValue } from './helpers/Stack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract Preprocessor {
     using StringUtils for string;
@@ -18,14 +18,22 @@ contract Preprocessor {
         return infixToPostfix(_ctx, code, stack);
     }
 
+    function canGetSymbol(uint256 _index, string memory _program) public returns(bool) {
+        try _program.char(_index) {
+            return true;
+        } catch Error(string memory) {
+            return false;
+        }
+    }
+
     function split(string memory _program) public returns (string[] memory) {
         delete result;
         string memory buffer;
-
-        // console.log("program len: %s", program.length());
+        
         for (uint256 i = 0; i < _program.length(); i++) {
             string memory char = _program.char(i);
-
+            string memory nextChar;
+            string memory nextChar2;
             // if-else conditions parsing
             if (char.equal('{')) continue;
             if (char.equal('}')) {
@@ -33,16 +41,53 @@ contract Preprocessor {
                 continue;
             }
 
+            if (char.equal('\n')) {
+                result.push(char);
+                continue;
+            }
+
+            /*
+            1. //smth
+            2. smth//
+            3. smth//smth 123
+            4. smth//smth\n123
+            */
+
+            if(canGetSymbol(i+1, _program) && canGetSymbol(i+2, _program)) {
+                nextChar = _program.char(i+1);
+                nextChar2 = _program.char(i+2);
+                if (nextChar.equal('/') && nextChar2.equal('/')) {
+                    if (buffer.length() > 0) {
+                        if(nextChar.equal(' ')) {
+                            buffer = buffer.concat(char);
+                        }
+                        result.push(buffer);
+                        buffer = '';
+                        result.push('//');
+                        continue;
+                    }
+                    // result.push('//');
+                }
+            }
+            if (char.equal('/') && canGetSymbol(i+1, _program)) {
+                nextChar = _program.char(i+1);
+                if (nextChar.equal('/') || nextChar.equal(' ')) {
+                    if (buffer.length() > 0) {        
+                        result.push(buffer);
+                        buffer = '';
+                        continue;
+                    }
+                }
+            }
+
             // console.log("char: %s", char);
-            if (char.equal(' ') || char.equal('\n') || char.equal('(') || char.equal(')')) {
+            if (char.equal(' ') || char.equal('(') || char.equal(')')) {
                 if (buffer.length() > 0) {
                     result.push(buffer);
                     buffer = '';
                 }
                 // TODO: looks like it needs to remove the double check here
-                if (char.equal('\n')) {
-                    result.push(char);
-                }
+                
             } else {
                 buffer = buffer.concat(char);
             }
@@ -67,12 +112,12 @@ contract Preprocessor {
     ) public returns (string[] memory) {
         delete result;
         string memory chunk;
-        // console.log("\n\n", chunk);
+        console.log("", chunk);
         uint256 i = 0;
 
         while(i < _code.length) {
             chunk = _code[i];
-
+            // console.log(chunk);
             if(chunk.equal('/*')) {
                 i = _findEndSymbol(i, _code, '*/');
                 i += 1;
@@ -141,11 +186,12 @@ contract Preprocessor {
     function _findEndSymbol(
         uint256 _indexStart,
         string[] memory _code,
-        string memory _endSymbol) internal pure returns (uint256) {
+        string memory _endSymbol) internal returns (uint256) {
 
         string memory chunk;
         for (uint256 indexEnd = _indexStart; indexEnd < _code.length; indexEnd++) {
             chunk = _code[indexEnd];
+            console.log(chunk);
             if(chunk.equal(_endSymbol)) {
                 return indexEnd;
             }
