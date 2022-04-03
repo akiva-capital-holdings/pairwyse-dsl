@@ -99,7 +99,6 @@ contract Preprocessor {
                     result.push(buffer);
                     buffer = '';
                 }
-                
             } else {
                 buffer = buffer.concat(char);
             }
@@ -107,7 +106,6 @@ contract Preprocessor {
             if (char.equal('(') || char.equal(')')) {
                 result.push(char);
             }
-
             i += 1;
         }
 
@@ -129,7 +127,6 @@ contract Preprocessor {
     
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
-
             if (isOperator(_ctx, chunk)) {
                 // console.log("%s is an operator", chunk);
                 while (
