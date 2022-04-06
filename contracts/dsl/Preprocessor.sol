@@ -18,30 +18,22 @@ contract Preprocessor {
         return infixToPostfix(_ctx, code, stack);
     }
 
-    function split(string memory _program) public returns (string[] memory) {
-        delete result;
-        // a flag for checking if the part of a string is a comment
+    /**
+    * @dev Searches the comments in the program and removes comment lines
+    * @param _program is a current program string
+    * @return _cleanedProgram new string program that contains only clean code without comments
+    */
+    function cleanString(string memory _program) public pure returns (string memory _cleanedProgram) {
         bool isCommented;
 
         // searchedSymbolLen is a flag that uses for searching a correct end symbol
-        // 1 - search \n symbol, 2 - search */ symbol
-        uint256 searchedSymbolLen;
-        uint256 tempIndex;
+        uint256 searchedSymbolLen; // 1 - search \n symbol, 2 - search */ symbol
+        uint256 tempIndex; // uses for checking if the index was changed
         uint256 i;
-        string memory buffer;
         string memory char;
+
         while(i < _program.length()) {
             char = _program.char(i);
-            // if-else conditions parsing
-            if (char.equal('{')) {
-                i += 1;
-                continue;
-            }
-            if (char.equal('}')) {
-                result.push('end');
-                i += 1;
-                continue;
-            }
             tempIndex = i;
             if(isCommented) {
                 (tempIndex, isCommented) = _getEndCommentSymbol(searchedSymbolLen, i, _program, char);
@@ -59,6 +51,26 @@ contract Preprocessor {
                 continue;
             }
 
+            _cleanedProgram = _cleanedProgram.concat(char);
+            i += 1;
+        }
+    }
+
+    function split(string memory _program) public returns (string[] memory) {
+        delete result;
+        string memory buffer;
+
+        // console.log("program len: %s", program.length());
+        for (uint256 i = 0; i < _program.length(); i++) {
+            string memory char = _program.char(i);
+
+            // if-else conditions parsing
+            if (char.equal('{')) continue;
+            if (char.equal('}')) {
+                result.push('end');
+                continue;
+            }
+
             // console.log("char: %s", char);
             if (char.equal(' ') || char.equal('\n') || char.equal('(') || char.equal(')')) {
                 if (buffer.length() > 0) {
@@ -72,14 +84,13 @@ contract Preprocessor {
             if (char.equal('(') || char.equal(')')) {
                 result.push(char);
             }
-
-            i += 1;
         }
 
         if (buffer.length() > 0) {
             result.push(buffer);
             buffer = '';
         }
+
         return result;
     }
 
