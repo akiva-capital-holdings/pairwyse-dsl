@@ -765,40 +765,54 @@ describe('DSL: basic', () => {
     await checkStack(StackValue, stack, 1, parseEther('1000'));
   });
 
-  it('if branch', async () => {
-    const ONE = new Array(64).join('0') + 1;
-    const TWO = new Array(64).join('0') + 2;
-    const FIVE = new Array(64).join('0') + 5;
-    const SIX = new Array(64).join('0') + 6;
-    const SEVEN = new Array(64).join('0') + 7;
+  describe('if-else statement', () => {
+    it('simple', async () => {
+      await app.parse(`
+        bool false
+        ifelse AA BB
+        end
+        AA {
+           (uint256 5) setUint256 A
+        }
+        BB {
+          (uint256 7) setUint256 A
+        }
+      `);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('A'))).to.equal(7);
+    });
 
-    await app.parse(`
+    it('complex', async () => {
+      const ONE = new Array(64).join('0') + 1;
+      const TWO = new Array(64).join('0') + 2;
+      const FIVE = new Array(64).join('0') + 5;
+      const SIX = new Array(64).join('0') + 6;
+      const SEVEN = new Array(64).join('0') + 7;
+
+      await app.parse(`
     
       uint256 ${ONE}
     
       bool true
+      bool true
       bool false
-
       if C
       ifelse D E
-
       uint256 ${TWO}
       end
-
       C {
         uint256 ${FIVE}
       }
-
       D {
         uint256 ${SIX}
       }
-
       E {
         uint256 ${SEVEN}
       }
     `);
-    await app.execute();
-    await checkStackTailv2(StackValue, stack, [1, 6, 2]);
+      await app.execute();
+      await checkStackTailv2(StackValue, stack, [1, 1, 6, 2]);
+    });
   });
 
   it('TIMESTAMP > PREV_MONTH', async () => {
