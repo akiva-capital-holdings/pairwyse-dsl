@@ -40,24 +40,27 @@ describe('Agreement', () => {
     let txCtx;
 
     for await (const step of steps) {
-      console.log(`\n🧩 Step #${step.txId}`);
+      console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
       txCtx = await Ctx.deploy();
       const cdCtxsAddrs = [];
+
+      console.log('\nTerm Conditions');
 
       for (let j = 0; j < step.conditions.length; j++) {
         const cond = await Ctx.deploy();
         cdCtxsAddrs.push(cond.address);
         await agreement.parse(step.conditions[j], cond.address);
+        console.log(
+          `\n\taddress: \x1b[35m${cond.address}\x1b[0m\n\tcondition ${j + 1}:\n\t\x1b[33m${
+            step.conditions[j]
+          }\x1b[0m`
+        );
       }
       await agreement.parse(step.transaction, txCtx.address);
+      console.log('\nTerm transaction');
+      console.log(`\n\taddress: \x1b[35m${txCtx.address}\x1b[0m`);
+      console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
 
-      console.log('\nDSL conditions');
-      for (let j = 0; j < step.conditions.length; j++) {
-        console.log(`\t${j + 1}. \x1b[34m${step.conditions[j]}\x1b[0m`);
-      }
-
-      console.log('\nDSL transaction');
-      console.log(`\t\x1b[35m${step.transaction}\x1b[0m`);
       const { hash } = await agreement.update(
         step.txId,
         step.requiredTxs,
@@ -67,7 +70,7 @@ describe('Agreement', () => {
         txCtx.address,
         cdCtxsAddrs
       );
-      console.log(`DSL transaction hash: ${hash}`);
+      console.log(`\nAgreement update transaction hash: \n\t\x1b[35m${hash}\x1b[0m`);
     }
   };
 
@@ -104,9 +107,10 @@ describe('Agreement', () => {
       //       0 then the DSL instruction will fall
 
       // Add tx objects to Agreement
-      console.log('Adding logical steps into agreement...');
+      console.log('\n\nUpdating Agreement Terms and Conditions...');
       await addSteps(businessCaseSteps(GP, LP), ContextCont);
-      console.log('Done!');
+      console.log('\n\nAgreement Updated with new Terms & Conditions');
+      console.log('\n\nTesting Agreement Execution...\n\n');
 
       LAST_BLOCK_TIMESTAMP = (
         await ethers.provider.getBlock(
@@ -119,7 +123,7 @@ describe('Agreement', () => {
       NEXT_TWO_MONTH = LAST_BLOCK_TIMESTAMP + 2 * ONE_MONTH;
 
       // Step 1
-      console.log('\n🏃 Step #1');
+      console.log('\n🏃 Agreement Lifecycle - Txn #1');
       await dai.connect(whale).transfer(GP.address, GP_INITIAL);
       await dai.connect(GP).approve(txsAddr, GP_INITIAL);
       console.log(`GP Initial Deposit = ${formatEther(GP_INITIAL)} DAI`);
@@ -131,11 +135,13 @@ describe('Agreement', () => {
       await txs.setStorageUint256(hex4Bytes('GP_INITIAL'), GP_INITIAL);
       await txs.setStorageUint256(hex4Bytes('PLACEMENT_DATE'), NEXT_MONTH);
 
-      await agreement.connect(GP).execute(1);
+      const txn1 = await agreement.connect(GP).execute(1);
       console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+      console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
+      console.log(`txn hash: \x1b[35m${txn1.hash}\x1b[0m`);
 
       // Step 2
-      console.log('\n🏃 Step #2');
+      console.log('\n🏃 Agreement Lifecycle - Txn #2');
       await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
       await dai.connect(whale).transfer(LP.address, LP_INITIAL);
       await dai.connect(LP).approve(txsAddr, LP_INITIAL);
@@ -145,13 +151,15 @@ describe('Agreement', () => {
       await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
       await txs.setStorageUint256(hex4Bytes('CLOSING_DATE'), NEXT_TWO_MONTH);
 
-      await agreement.connect(LP).execute(2);
+      const txn2 = await agreement.connect(LP).execute(2);
       console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+      console.log(`signatory: \x1b[35m${LP.address}\x1b[0m`);
+      console.log(`txn hash: \x1b[35m${txn2.hash}\x1b[0m`);
 
       let GP_REMAINING = BigNumber.from(0);
       if (!GP_FAILS_TO_DO_GAP_DEPOSIT) {
         // Step 3
-        console.log('\n🏃 Step #3');
+        console.log('\n🏃 Agreement Lifecycle - Txn #3');
         await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH]);
         GP_REMAINING = BigNumber.from(2).mul(LP_INITIAL).div(98).sub(GP_INITIAL);
         await dai.connect(whale).transfer(GP.address, GP_REMAINING);
@@ -164,39 +172,44 @@ describe('Agreement', () => {
         await txs.setStorageUint256(hex4Bytes('LOW_LIM'), GP_GAP_DEPOSIT_LOWER_TIME);
         await txs.setStorageUint256(hex4Bytes('UP_LIM'), GP_GAP_DEPOSIT_UPPER_TIME);
 
-        await agreement.connect(GP).execute(3);
+        const txn3 = await agreement.connect(GP).execute(3);
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+        console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
+        console.log(`txn hash: \x1b[35m${txn3.hash}\x1b[0m`);
       }
 
       // Step 4
-      console.log('\n🏃 Step #4');
+      console.log('\n🏃 Agreement Lifecycle - Txn #4');
       await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH + 2 * ONE_DAY]);
       await txs.setStorageUint256(hex4Bytes('FUND_INVESTMENT_DATE'), NEXT_TWO_MONTH + 7 * ONE_DAY);
 
       console.log(`LP withdraws LP Initial Deposit = ${formatEther(LP_INITIAL)} DAI`);
       console.log(`GP withdraws GP Initial Deposit = ${formatEther(GP_INITIAL)} DAI`);
 
+      let txn4;
       if (GP_FAILS_TO_DO_GAP_DEPOSIT) {
-        await expect(() => agreement.connect(LP).execute(4)).to.changeTokenBalances(
+        txn4 = await expect(() => agreement.connect(LP).execute(4)).to.changeTokenBalances(
           dai,
           [GP, LP],
           [GP_INITIAL, LP_INITIAL]
         );
       } else {
-        await expect(agreement.connect(LP).execute(4)).to.be.revertedWith(
+        txn4 = await expect(agreement.connect(LP).execute(4)).to.be.revertedWith(
           'Agreement: tx condition is not satisfied'
         );
         console.log(`\x1b[33m
 As GP did gap deposit, LP is not allowed to withdraw the funds.
-LP gets an error if tries to withdraw the funds after a 2%/98% ratio were achieved\x1b[0m
+LP incurs transaction error if tries to withdraw funds after investment closing date\x1b[0m
 `);
       }
       console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+      console.log(`signatory: \x1b[35m${LP.address}\x1b[0m`);
+      console.log(`txn hash: \x1b[35m${txn4}\x1b[0m`);
       // }
 
       if (!GP_FAILS_TO_DO_GAP_DEPOSIT) {
         // Step 5
-        console.log('\n🏃 Step #5');
+        console.log('\n🏃 Agreement Lifecycle - Txn #5');
         let DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
         const PURCHASE_AMOUNT = DAI_BAL_OF_TXS.mul(9).div(10);
         console.log(`GP ETH Asset Purchase = ${formatEther(PURCHASE_AMOUNT)} DAI`);
@@ -206,16 +219,18 @@ LP gets an error if tries to withdraw the funds after a 2%/98% ratio were achiev
         await txs.setStorageUint256(hex4Bytes('FUND_INVESTMENT_DATE'), FUND_INVESTMENT_DATE);
         await txs.setStorageUint256(hex4Bytes('PURCHASE_AMOUNT'), PURCHASE_AMOUNT);
 
-        await expect(() => agreement.connect(GP).execute(5)).to.changeTokenBalance(
+        const txn5 = await expect(() => agreement.connect(GP).execute(5)).to.changeTokenBalance(
           dai,
           GP,
           PURCHASE_AMOUNT
         );
         await dai.connect(GP).transfer(txsAddr, PURCHASE_AMOUNT.sub(TRADE_LOSS));
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+        console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
+        // console.log(`txn hash: \x1b[35m${txn5.hash}\x1b[0m`); // TODO
 
         // Step 6
-        console.log('\n🏃 Step #6');
+        console.log('\n🏃 Agreement Lifecycle - Txn #6');
         const WHALE = whale.address;
         const SOME_DAI = parseUnits('0', 18);
 
@@ -226,23 +241,27 @@ LP gets an error if tries to withdraw the funds after a 2%/98% ratio were achiev
         await dai.connect(whale).approve(txsAddr, SOME_DAI);
         console.log(`Fund Investment Return = ${formatEther(SOME_DAI)} DAI`);
 
-        await agreement.connect(GP).execute(6);
+        const txn6 = await agreement.connect(GP).execute(6);
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+        console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
+        console.log(`txn hash: \x1b[35m${txn6.hash}\x1b[0m`);
 
         // Step 7a
-        console.log('\n🏃 Step #71');
+        console.log('\n🏃 Agreement Lifecycle - Txn #71');
         const MANAGEMENT_FEE = LP_INITIAL.mul(MANAGEMENT_FEE_PERCENTAGE).div(100);
         console.log(`GP Management Fee = ${formatEther(MANAGEMENT_FEE)} DAI`);
 
-        await expect(() => agreement.connect(GP).execute(71)).to.changeTokenBalance(
+        const txn71 = await expect(() => agreement.connect(GP).execute(71)).to.changeTokenBalance(
           dai,
           GP,
           MANAGEMENT_FEE
         );
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+        console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
+        // console.log(`txn hash: \x1b[35m${txn6.hash}\x1b[0m`); // TODO
 
         // Step 7b
-        console.log('\n🏃 Step #72');
+        console.log('\n🏃 Agreement Lifecycle - Txn #72');
         DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
         let PROFIT = DAI_BAL_OF_TXS.add(MANAGEMENT_FEE)
           .sub(GP_INITIAL)
@@ -259,11 +278,17 @@ LP gets an error if tries to withdraw the funds after a 2%/98% ratio were achiev
         await txs.setStorageUint256(hex4Bytes('HURDLE'), HURDLE);
         await txs.setStorageUint256(hex4Bytes('PROFIT_PART'), PROFIT_PART);
 
-        await expect(() => agreement.connect(GP).execute(72)).to.changeTokenBalance(dai, GP, CARRY);
+        const txn72 = await expect(() => agreement.connect(GP).execute(72)).to.changeTokenBalance(
+          dai,
+          GP,
+          CARRY
+        );
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+        console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
+        // console.log(`txn hash: \x1b[35m${txn6.hash}\x1b[0m`); // TODO
 
         // Step 7c
-        console.log('\n🏃 Step #73');
+        console.log('\n🏃 Agreement Lifecycle - Txn #73');
         DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
         const LOSS = PROFIT.gt(0)
           ? BigNumber.from(0)
@@ -274,27 +299,31 @@ LP gets an error if tries to withdraw the funds after a 2%/98% ratio were achiev
           : GP_INITIAL.add(GP_REMAINING).sub(LOSS);
         console.log(`GP Principal = ${formatEther(GP_PRINICIPAL)} DAI`);
 
-        await expect(() => agreement.connect(GP).execute(73)).to.changeTokenBalance(
+        const txn73 = await expect(() => agreement.connect(GP).execute(73)).to.changeTokenBalance(
           dai,
           GP,
           GP_PRINICIPAL
         );
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+        console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
+        // console.log(`txn hash: \x1b[35m${txn73.hash}\x1b[0m`); // TODO
 
         // Step 8a
-        console.log('\n🏃 Step #81');
+        console.log('\n🏃 Agreement Lifecycle - Txn #81');
         const LP_PROFIT = PROFIT.gt(0) ? PROFIT.sub(CARRY) : 0;
         console.log(`LP Investment Profit = ${formatEther(LP_PROFIT)} DAI`);
-        await expect(() => agreement.connect(LP).execute(81)).to.changeTokenBalance(
+        const txn81 = await expect(() => agreement.connect(LP).execute(81)).to.changeTokenBalance(
           dai,
           LP,
           LP_PROFIT
         );
         DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
         console.log(`Cash Balance = ${formatEther(DAI_BAL_OF_TXS)} DAI`);
+        console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
+        // console.log(`txn hash: \x1b[35m${txn81.hash}\x1b[0m`); // TODO
 
         // Step 8b
-        console.log('\n🏃 Step #82');
+        console.log('\n🏃 Agreement Lifecycle - Txn #82');
 
         const UNCOVERED_NET_LOSSES = GP_INITIAL.sub(GP_REMAINING).gte(LOSS)
           ? BigNumber.from(0)
@@ -303,12 +332,14 @@ LP gets an error if tries to withdraw the funds after a 2%/98% ratio were achiev
         const LP_PRINCIPAL = LP_INITIAL.sub(MANAGEMENT_FEE).sub(UNCOVERED_NET_LOSSES);
         console.log(`LP Principal = ${formatEther(LP_PRINCIPAL)} DAI`);
 
-        await expect(() => agreement.connect(LP).execute(82)).to.changeTokenBalance(
+        const txn82 = await expect(() => agreement.connect(LP).execute(82)).to.changeTokenBalance(
           dai,
           LP,
           LP_PRINCIPAL
         );
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+        console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
+        // console.log(`txn hash: \x1b[35m${txn82.hash}\x1b[0m`); // TODO
         // }
 
         // No funds should left on Agreement
@@ -557,62 +588,54 @@ LP gets an error if tries to withdraw the funds after a 2%/98% ratio were achiev
     );
   });
 
-  describe('Business case', () => {
+  describe.only('Lifecycle Test', () => {
+    console.log('\n\n\n+--------------------------------------------------+');
+    console.log('| Scenario 1:  LP deposits; GP balances; No Losses |');
+    console.log('+--------------------------------------------------+');
+
     businessCaseTest(
-      'GP fails to balance LP deposit',
+      'Scenario 1:  LP deposits; GP balances; Profit Realized',
       parseUnits('20', 18), // GP_INITIAL
       parseUnits('990', 18), // LP_INITIAL
       parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // TRADE_LOSS
-      parseUnits('200', 18), // FUND_INVESTMENT_RETURN
+      parseUnits('0', 18), // CAPITAL_LOSS
+      parseUnits('200', 18), // CAPITAL_GAINS
       2, // MANAGEMENT_FEE_PERCENTAGE
       9, // HURDLE
       20, // PROFIT_PART
       false // GP_FAILS_TO_DO_GAP_DEPOSIT
     );
     businessCaseTest(
-      'GP balances LP depotis but LP tries to trigger withdrawing the funds',
+      'Scenario 2:  GP fails to balance LP deposit',
       parseUnits('20', 18), // GP_INITIAL
       parseUnits('990', 18), // LP_INITIAL
       parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // TRADE_LOSS
-      parseUnits('200', 18), // FUND_INVESTMENT_RETURN
+      parseUnits('0', 18), // CAPITAL_LOSS
+      parseUnits('200', 18), // CAPITAL_GAINS
       2, // MANAGEMENT_FEE_PERCENTAGE
       9, // HURDLE
       20, // PROFIT_PART
       true // GP_FAILS_TO_DO_GAP_DEPOSIT
     );
     businessCaseTest(
-      'GP balances LP depotis; No Losses',
+      'Scenario 3:  Loss incurred, fully covered by GP',
       parseUnits('20', 18), // GP_INITIAL
       parseUnits('990', 18), // LP_INITIAL
       parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // TRADE_LOSS
-      parseUnits('200', 18), // FUND_INVESTMENT_RETURN
+      parseUnits('10', 18), // CAPITAL_LOSS
+      parseUnits('0', 18), // CAPITAL_GAINS
       2, // MANAGEMENT_FEE_PERCENTAGE
       9, // HURDLE
       20, // PROFIT_PART
       false // GP_FAILS_TO_DO_GAP_DEPOSIT
     );
     businessCaseTest(
-      'Loss covered by GP',
+      'Scenario 4:  Loss incurred, not fully covered by GP',
       parseUnits('20', 18), // GP_INITIAL
       parseUnits('990', 18), // LP_INITIAL
       parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('10', 18), // TRADE_LOSS
-      parseUnits('0', 18), // FUND_INVESTMENT_RETURN
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
-    businessCaseTest(
-      'Loss not covered by GP',
-      parseUnits('20', 18), // GP_INITIAL
-      parseUnits('990', 18), // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('100', 18), // TRADE_LOSS
-      parseUnits('0', 18), // FUND_INVESTMENT_RETURN
+      parseUnits('100', 18), // CAPITAL_LOSS
+      parseUnits('0', 18), // CAPITAL_GAINS
       2, // MANAGEMENT_FEE_PERCENTAGE
       9, // HURDLE
       20, // PROFIT_PART
