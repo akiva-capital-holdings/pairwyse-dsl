@@ -588,11 +588,7 @@ LP incurs transaction error if tries to withdraw funds after investment closing 
     );
   });
 
-  describe.only('Lifecycle Test', () => {
-    console.log('\n\n\n+--------------------------------------------------+');
-    console.log('| Scenario 1:  LP deposits; GP balances; No Losses |');
-    console.log('+--------------------------------------------------+');
-
+  describe('Lifecycle Test', () => {
     businessCaseTest(
       'Scenario 1:  LP deposits; GP balances; Profit Realized',
       parseUnits('20', 18), // GP_INITIAL
