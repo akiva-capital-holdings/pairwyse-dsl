@@ -19,11 +19,15 @@ contract Preprocessor {
     }
 
     /**
-    * @dev Searches the comments in the program and removes comment lines
-    * @param _program is a current program string
-    * @return _cleanedProgram new string program that contains only clean code without comments
-    */
-    function cleanString(string memory _program) public pure returns (string memory _cleanedProgram) {
+     * @dev Searches the comments in the program and removes comment lines
+     * @param _program is a current program string
+     * @return _cleanedProgram new string program that contains only clean code without comments
+     */
+    function cleanString(string memory _program)
+        public
+        pure
+        returns (string memory _cleanedProgram)
+    {
         bool isCommented;
 
         // searchedSymbolLen is a flag that uses for searching a correct end symbol
@@ -32,21 +36,26 @@ contract Preprocessor {
         uint256 i;
         string memory char;
 
-        while(i < _program.length()) {
+        while (i < _program.length()) {
             char = _program.char(i);
             tempIndex = i;
-            if(isCommented) {
-                (tempIndex, isCommented) = _getEndCommentSymbol(searchedSymbolLen, i, _program, char);
+            if (isCommented) {
+                (tempIndex, isCommented) = _getEndCommentSymbol(
+                    searchedSymbolLen,
+                    i,
+                    _program,
+                    char
+                );
             } else {
                 (searchedSymbolLen, tempIndex, isCommented) = _getCommentSymbol(i, _program, char);
             }
 
-            if(tempIndex > i) {
+            if (tempIndex > i) {
                 i = tempIndex;
                 continue;
             }
 
-            if(isCommented) {
+            if (isCommented) {
                 i += 1;
                 continue;
             }
@@ -152,58 +161,68 @@ contract Preprocessor {
     }
 
     /**
-    * @dev Checks if a symbol is a comment, then increases _index to the next
-    * no-comment symbol avoiding an additional iteration
-    * @param _index is a current index of a char that might be changed
-    * @param _program is a current program string
-    * @return new index, searchedSymbolLen and isCommeted parameters
-    */
+     * @dev Checks if a symbol is a comment, then increases _index to the next
+     * no-comment symbol avoiding an additional iteration
+     * @param _index is a current index of a char that might be changed
+     * @param _program is a current program string
+     * @return new index, searchedSymbolLen and isCommeted parameters
+     */
     function _getCommentSymbol(
         uint256 _index,
         string memory _program,
-        string memory char) internal pure returns(uint256, uint256, bool) {        
-        if(_canGetSymbol(_index+1, _program)) {
-            string memory nextChar = _program.char(_index+1);
-            if(char.equal('/') && nextChar.equal('/')) {
-                return (1, _index+2, true);
-            } else if(char.equal('/') && nextChar.equal('*')) {
-                return (2, _index+2, true);
+        string memory char
+    )
+        internal
+        pure
+        returns (
+            uint256,
+            uint256,
+            bool
+        )
+    {
+        if (_canGetSymbol(_index + 1, _program)) {
+            string memory nextChar = _program.char(_index + 1);
+            if (char.equal('/') && nextChar.equal('/')) {
+                return (1, _index + 2, true);
+            } else if (char.equal('/') && nextChar.equal('*')) {
+                return (2, _index + 2, true);
             }
         }
         return (0, _index, false);
     }
 
     /**
-    * @dev Checks if a symbol is an end symbol of a comment, then increases _index to the next
-    * no-comment symbol avoiding an additional iteration
-    * @param _index is a current index of a char that might be changed
-    * @param _ssl is a searched symbol len that might be 0, 1, 2
-    * @param _program is a current program string
-    * @return new index and isCommeted parameters
-    */
+     * @dev Checks if a symbol is an end symbol of a comment, then increases _index to the next
+     * no-comment symbol avoiding an additional iteration
+     * @param _index is a current index of a char that might be changed
+     * @param _ssl is a searched symbol len that might be 0, 1, 2
+     * @param _program is a current program string
+     * @return new index and isCommeted parameters
+     */
     function _getEndCommentSymbol(
         uint256 _ssl,
         uint256 _index,
         string memory _program,
-        string memory char) internal pure returns(uint256, bool) {
-        if(_ssl == 1 && char.equal('\n')) {
-            return (_index+1, false);
-        } else if(_ssl == 2 && char.equal('*') && _canGetSymbol(_index+1, _program)) {
-            string memory nextChar = _program.char(_index+1);
-            if(nextChar.equal('/')) {
-                return (_index+2, false);
+        string memory char
+    ) internal pure returns (uint256, bool) {
+        if (_ssl == 1 && char.equal('\n')) {
+            return (_index + 1, false);
+        } else if (_ssl == 2 && char.equal('*') && _canGetSymbol(_index + 1, _program)) {
+            string memory nextChar = _program.char(_index + 1);
+            if (nextChar.equal('/')) {
+                return (_index + 2, false);
             }
         }
         return (_index, true);
     }
 
     /**
-    * @dev Checks if it is possible to get next char from a _program
-    * @param _index is a current index of a char
-    * @param _program is a current program string
-    * @return true if program has the next symbol, otherwise is false
-    */
-    function _canGetSymbol(uint256 _index, string memory _program) internal pure returns(bool) {
+     * @dev Checks if it is possible to get next char from a _program
+     * @param _index is a current index of a char
+     * @param _program is a current program string
+     * @return true if program has the next symbol, otherwise is false
+     */
+    function _canGetSymbol(uint256 _index, string memory _program) internal pure returns (bool) {
         try _program.char(_index) {
             return true;
         } catch Error(string memory) {

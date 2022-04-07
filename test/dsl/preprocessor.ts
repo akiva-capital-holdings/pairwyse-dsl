@@ -484,7 +484,7 @@ describe('Preprocessor', () => {
 
       it('a comment contains a multiple comment', async () => {
         const input = `
-          //bool false/*uint256 2 * uint256 5*/
+          //bool false/*uint256 2 * uint256 5*/bool true
           bool true
         `;
         const cleanString = await app.callStatic.cleanString(input);
@@ -603,15 +603,15 @@ describe('Preprocessor', () => {
         expect(cmds).to.eql([]);
       });
 
-      it(`a comment opens before and closes at the beginning of the command`, async () => {
-          const input = `
+      it('a comment opens before and closes at the beginning of the command', async () => {
+        const input = `
           /*
           uint256 2 * uint256 5
           */bool true
           `;
-          const cleanString = await app.callStatic.cleanString(input);
-          const cmds = await app.callStatic.transform(ctxAddr, cleanString);
-          expect(cmds).to.eql(['bool', 'true']);
+        const cleanString = await app.callStatic.cleanString(input);
+        const cmds = await app.callStatic.transform(ctxAddr, cleanString);
+        expect(cmds).to.eql(['bool', 'true']);
       });
 
       it('a comment located before the command', async () => {
@@ -620,9 +620,9 @@ describe('Preprocessor', () => {
           uint256 2 * uint256 5
           */bool true
           `;
-          const cleanString = await app.callStatic.cleanString(input);
-          const cmds = await app.callStatic.transform(ctxAddr, cleanString);
-          expect(cmds).to.eql(['bool', 'true']);
+        const cleanString = await app.callStatic.cleanString(input);
+        const cmds = await app.callStatic.transform(ctxAddr, cleanString);
+        expect(cmds).to.eql(['bool', 'true']);
       });
 
       it('a comment located below the command', async () => {
@@ -632,9 +632,9 @@ describe('Preprocessor', () => {
           uint256 2 * uint256 5
           */
           `;
-          const cleanString = await app.callStatic.cleanString(input);
-          const cmds = await app.callStatic.transform(ctxAddr, cleanString);
-          expect(cmds).to.eql(['bool', 'true']);
+        const cleanString = await app.callStatic.cleanString(input);
+        const cmds = await app.callStatic.transform(ctxAddr, cleanString);
+        expect(cmds).to.eql(['bool', 'true']);
       });
 
       it('a comment contains a multiple comment', async () => {
@@ -644,9 +644,9 @@ describe('Preprocessor', () => {
           uint256 /*2 * uint256 5*/
           */
           `;
-          const cleanString = await app.callStatic.cleanString(input);
-          const cmds = await app.callStatic.transform(ctxAddr, cleanString);
-          expect(cmds).to.eql(['bool', 'true', '*/']);
+        const cleanString = await app.callStatic.cleanString(input);
+        const cmds = await app.callStatic.transform(ctxAddr, cleanString);
+        expect(cmds).to.eql(['bool', 'true', '*/']);
       });
 
       it('a comment opens next to the command and closes below', async () => {
@@ -654,15 +654,17 @@ describe('Preprocessor', () => {
           bool true/*uint256 2 * uint256 5
           */
           `;
-          const cleanString = await app.callStatic.cleanString(input);
-          const cmds = await app.callStatic.transform(ctxAddr, cleanString);
-          expect(cmds).to.eql(['bool', 'true']);
+        const cleanString = await app.callStatic.cleanString(input);
+        const cmds = await app.callStatic.transform(ctxAddr, cleanString);
+        expect(cmds).to.eql(['bool', 'true']);
       });
 
       it('mix comments and commands', async () => {
         const input = `
-          /*123
-          */bool false
+          /**
+           * 123
+           */
+          bool false
           //
           uint256 2 * uint256 5 //
           //
@@ -671,13 +673,23 @@ describe('Preprocessor', () => {
           uint256 11111//commenthere/**/
           /*bool true */ bool false//comment here
           `;
-          const expected = []
-          const cleanString = await app.callStatic.cleanString(input);
-          const cmds = await app.callStatic.transform(ctxAddr, cleanString);
-          expect(cmds).to.eql([
-            'bool', 'false', 'uint256', '2', 'uint256', '5',
-            'bool', 'true', 'uint256', '11111', 'bool', 'false', '*'
-          ]);
+        const cleanString = await app.callStatic.cleanString(input);
+        const cmds = await app.callStatic.transform(ctxAddr, cleanString);
+        expect(cmds).to.eql([
+          'bool',
+          'false',
+          'uint256',
+          '2',
+          'uint256',
+          '5',
+          'bool',
+          'true',
+          'uint256',
+          '11111',
+          'bool',
+          'false',
+          '*',
+        ]);
       });
     });
   });
