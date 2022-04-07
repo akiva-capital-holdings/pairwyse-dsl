@@ -766,15 +766,16 @@ describe('DSL: basic', () => {
   });
 
   describe('if-else statement', () => {
-    it('simple', async () => {
+    it('simple; using `branch` keyword', async () => {
       await app.parse(`
         bool false
         ifelse AA BB
-        end
-        AA {
+
+        branch AA {
            (uint256 5) setUint256 A
         }
-        BB {
+
+        branch BB {
           (uint256 7) setUint256 A
         }
       `);
@@ -782,7 +783,7 @@ describe('DSL: basic', () => {
       expect(await app.getStorageUint256(hex4Bytes('A'))).to.equal(7);
     });
 
-    it('complex', async () => {
+    it('complex; using `end` keyword', async () => {
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;
       const FIVE = new Array(64).join('0') + 5;

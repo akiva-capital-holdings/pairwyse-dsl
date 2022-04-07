@@ -110,14 +110,14 @@ contract Parser is IParser, Storage {
     }
 
     function asmIfelse() public {
-        string memory _true = nextCmd();
-        string memory _false = nextCmd();
+        string memory _true = nextCmd(); // "positive" branch name
+        string memory _false = nextCmd(); // "negative" branch name
 
-        labelPos[_true] = program.length; // `true` branch position
-        program = bytes.concat(program, bytes2(0)); // placeholder for `true` branch offset
+        labelPos[_true] = program.length; // `positive` branch position
+        program = bytes.concat(program, bytes2(0)); // placeholder for `positive` branch offset
 
-        labelPos[_false] = program.length; // `false` branch position
-        program = bytes.concat(program, bytes2(0)); // placeholder for `false` branch offset
+        labelPos[_false] = program.length; // `negative` branch position
+        program = bytes.concat(program, bytes2(0)); // placeholder for `negative` branch offset
 
         // console.logBytes(program);
     }

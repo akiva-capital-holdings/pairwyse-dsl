@@ -190,6 +190,14 @@ contract Context is IContext {
             OpcodeLibNames.LogicalOpcodes
         );
         addOpcode('end', 0x24, LogicalOpcodes.opEnd.selector, 0x0, OpcodeLibNames.LogicalOpcodes);
+        // 'branch' tag gets replaced with 'end' tag. So this is just another name of the 'end' tag
+        addOpcode(
+            'branch',
+            0x2f,
+            LogicalOpcodes.opEnd.selector,
+            0x0,
+            OpcodeLibNames.LogicalOpcodes
+        );
 
         // Simple Opcodes
         addOpcode(

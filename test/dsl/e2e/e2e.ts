@@ -219,14 +219,13 @@ describe('End-to-end', () => {
       ifelse good bad
 
       uint256 ${FOUR}
-      end
 
-      good {
+      branch good {
         uint256 ${ONE}
         uint256 ${TWO}
       }
 
-      bad {
+      branch bad {
         uint256 ${THREE}
       }
       `;
@@ -239,13 +238,14 @@ describe('End-to-end', () => {
       'bad',
       'uint256',
       FOUR,
-      'end',
+      'branch',
       'good',
       'uint256',
       ONE,
       'uint256',
       TWO,
       'end',
+      'branch',
       'bad',
       'uint256',
       THREE,
@@ -263,15 +263,16 @@ describe('End-to-end', () => {
       '01' + // true
       '23' + // ifelse
       '0029' + // position of the `good` branch
-      '006c' + // position of the `bad` branch
+      '006d' + // position of the `bad` branch
       '1a' + // uin256
       `${FOUR}` + // FOUR
-      '24' + // end of body
+      '2f' + // branch tag
       '1a' + // good: uint256
       `${ONE}` + // good: ONE
       '1a' + // good: uint256
       `${TWO}` + // good: TWO
       '24' + // good: end
+      '2f' + // branch tag
       '1a' + // bad: uint256
       `${THREE}` + // bad: THREE
       '24'; // bad: end
