@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { App, Context, Parser, Stack, StackValue__factory } from '../../../typechain';
 import { hex4Bytes } from '../../utils/utils';
 
-describe('DSL: math', () => {
+describe.only('DSL: math', () => {
   let stack: Stack;
   let ctx: Context;
   let app: App;
@@ -13,6 +13,10 @@ describe('DSL: math', () => {
   let NEXT_MONTH: number;
   let PREV_MONTH: number;
   let lastBlockTimestamp: number;
+  // TODO: does js have a normal storage for a huge numbers?
+  // let max256 = Math.pow(2, 256) - 1;
+  // let max256 = ethers.BigNumber.from(`${max256}`);
+  let max256 = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
 
   before(async () => {
     lastBlockTimestamp = (
@@ -87,23 +91,113 @@ describe('DSL: math', () => {
     appAddrHex = app.address.slice(2);
   });
 
-  it('negative number error', async () => {
-    await app.parse('uint256 5 - uint256 6');
-    await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+  describe('division case', () => {
+    it('division by zero error', async () => {
+      await app.parse('uint256 5 / uint256 0');
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
 
-    await app.setStorageUint256(hex4Bytes('NUM1'), 10);
-    await app.setStorageUint256(hex4Bytes('NUM2'), 1000);
-    await app.parse('loadLocal uint256 NUM1 - loadLocal uint256 NUM2');
-    await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await app.setStorageUint256(hex4Bytes('NUM1'), 10);
+      await app.setStorageUint256(hex4Bytes('NUM2'), 0);
+      await app.parse('loadLocal uint256 NUM1 / loadLocal uint256 NUM2');
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+    });
+
+    it('division zero by zero error', async () => {
+      await app.parse('uint256 0 / uint256 0');
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+
+      await app.setStorageUint256(hex4Bytes('NUM1'), 0);
+      await app.setStorageUint256(hex4Bytes('NUM2'), 0);
+      await app.parse('loadLocal uint256 NUM1 / loadLocal uint256 NUM2');
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+    });
+
+    it('should divide zero by number', async () => {
+      await app.parse('uint256 0 / uint256 1');
+      await app.execute();
+
+      await app.setStorageUint256(hex4Bytes('NUM1'), 0);
+      await app.setStorageUint256(hex4Bytes('NUM2'), 1);
+      await app.parse('loadLocal uint256 NUM1 / loadLocal uint256 NUM2');
+      await app.execute();
+    });
   });
 
-  it('division by zero error', async () => {
-    await app.parse('uint256 5 / uint256 0');
-    await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+  describe('underflow case', () => {
+    it('negative number error', async () => {
+      await app.parse('uint256 5 - uint256 6');
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
 
-    await app.setStorageUint256(hex4Bytes('NUM1'), 10);
-    await app.setStorageUint256(hex4Bytes('NUM2'), 0);
-    await app.parse('loadLocal uint256 NUM1 / loadLocal uint256 NUM2');
-    await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await app.setStorageUint256(hex4Bytes('NUM1'), 10);
+      await app.setStorageUint256(hex4Bytes('NUM2'), 1000);
+      await app.parse('loadLocal uint256 NUM1 - loadLocal uint256 NUM2');
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+    });
+
+    it('returns error if the first number is 0', async () => {
+      await app.parse('uint256 0 - uint256 1');
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+
+      await app.setStorageUint256(hex4Bytes('NUM1'), 0);
+      await app.setStorageUint256(hex4Bytes('NUM2'), 1);
+      await app.parse('loadLocal uint256 NUM1 - loadLocal uint256 NUM2');
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+    });
+
+    it('no errors if both numbers are 0', async () => {
+      await app.parse('uint256 0 - uint256 0');
+      await app.execute();
+
+      await app.setStorageUint256(hex4Bytes('NUM1'), 0);
+      await app.setStorageUint256(hex4Bytes('NUM2'), 0);
+      await app.parse('loadLocal uint256 NUM1 - loadLocal uint256 NUM2');
+      await app.execute();
+    });
+  });
+
+  describe('overflow case', () => {
+    let preMax256 = '115792089237316195423570985008687907853269984665640564039457584007913129639934';
+
+    it('can not be added a maximum uint256 value to a simple one', async () => {
+      await app.parse(`uint256 ${max256} + uint256 1`);
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+    });
+
+    it('can not to be added a simple uint256 value to a maximum one', async () => {
+      await app.parse(`uint256 1 + uint256 ${max256}`);
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+    });
+
+    it('can not to be added a maximum uint256 value to the maximum one', async () => {
+      await app.parse(`uint256 ${max256} + uint256 ${max256}`);
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+    });
+
+    it('can be added a pre maximum uint256 value to the simple one', async () => {
+      await app.parse(`uint256 ${preMax256} + uint256 1`);
+      await app.execute();
+    });
+
+    it('can be added a simple uint256 value to pre maximum one', async () => {
+      await app.parse(`uint256 1 + uint256 ${preMax256}`);
+      await app.execute();
+    });
+
+    it(
+      'reverts if add a pre maximum uint256 value to the simple one that is bigger then uint256',
+      async () => {
+      await app.parse(`uint256 ${preMax256} + uint256 2`);
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+    });
+
+    it('no errors if both numbers are 0', async () => {
+      await app.parse('uint256 0 + uint256 0');
+      await app.execute();
+
+      await app.setStorageUint256(hex4Bytes('NUM1'), 0);
+      await app.setStorageUint256(hex4Bytes('NUM2'), 0);
+      await app.parse('loadLocal uint256 NUM1 + loadLocal uint256 NUM2');
+      await app.execute();
+    });
   });
 });
