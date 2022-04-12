@@ -348,6 +348,12 @@ describe('DSL: basic', () => {
       await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
+
+    // it.only('NOT NOT 3 = 1', async () => {
+    //   await app.parse('!! uint256 3');
+    //   await app.execute();
+    //   await checkStack(StackValue, stack, 1, 1);
+    // });
   });
 
   it('push false', async () => {
@@ -522,6 +528,21 @@ describe('DSL: basic', () => {
         await app.setStorageBytes32(
           hex4Bytes('BYTES2'),
           '0x1234500000000000000000000000000000000000000000000000000000000011'
+        );
+
+        await app.parse('loadLocal bytes32 BYTES == loadLocal bytes32 BYTES2');
+        await app.execute();
+        await checkStack(StackValue, stack, 1, 0);
+      });
+
+      it('should revert if values visually shifted, but still not the same', async () => {
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES'),
+          '0x0000000000000000000000000000000000000000000000000000000000100000'
+        );
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES2'),
+          '0x0000000000000000000000000000000000000000000000000000000000000010'
         );
 
         await app.parse('loadLocal bytes32 BYTES == loadLocal bytes32 BYTES2');
