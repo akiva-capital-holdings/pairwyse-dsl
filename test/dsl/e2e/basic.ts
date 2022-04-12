@@ -349,11 +349,17 @@ describe('DSL: basic', () => {
       await checkStack(StackValue, stack, 1, 0);
     });
 
-    // it.only('NOT NOT 3 = 1', async () => {
-    //   await app.parse('!! uint256 3');
-    //   await app.execute();
-    //   await checkStack(StackValue, stack, 1, 1);
-    // });
+    it('NOT NOT 3 = 1', async () => {
+      await app.parse('! (! uint256 3)');
+      await app.execute();
+      await checkStack(StackValue, stack, 1, 1);
+    });
+
+    it('NOT NOT NOT 3 = 1', async () => {
+      await app.parse('! (! (! uint256 3))');
+      await app.execute();
+      await checkStack(StackValue, stack, 1, 0);
+    });
   });
 
   it('push false', async () => {
@@ -447,6 +453,15 @@ describe('DSL: basic', () => {
       await checkStack(StackValue, stack, 1, 1);
     });
 
+    it('loadLocal uint256 TIMESTAMP > loadLocal uint256 NEXT_MONTH', async () => {
+      await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
+      await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
+
+      await app.parse('loadLocal uint256 TIMESTAMP > loadLocal uint256 NEXT_MONTH');
+      await app.execute();
+      await checkStack(StackValue, stack, 1, 0);
+    });
+
     it('loadLocal bool A (false)', async () => {
       await app.setStorageBool(hex4Bytes('A'), false);
 
@@ -470,6 +485,15 @@ describe('DSL: basic', () => {
       await app.parse('loadLocal bool A != loadLocal bool B');
       await app.execute();
       await checkStack(StackValue, stack, 1, 1);
+    });
+
+    it('NOR loadLocal bool A (false) != loadLocal bool B (true)', async () => {
+      await app.setStorageBool(hex4Bytes('A'), false);
+      await app.setStorageBool(hex4Bytes('B'), true);
+
+      await app.parse('! (loadLocal bool A != loadLocal bool B)');
+      await app.execute();
+      await checkStack(StackValue, stack, 1, 0);
     });
 
     describe('opLoadLocalAddress', () => {
@@ -680,6 +704,58 @@ describe('DSL: basic', () => {
         );
         await app.execute();
         await checkStack(StackValue, stack, 1, 0);
+      });
+
+      it('bytes32 calculates 3 - 1 in bytes32 ', async () => {
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES'),
+          '0x0000000000000000000000000000000000000000000000000000000000000003'
+        );
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES2'),
+          '0x0000000000000000000000000000000000000000000000000000000000000001'
+        );
+
+        await app.parse(
+          `loadRemote bytes32 BYTES ${appAddrHex} - loadRemote bytes32 BYTES2 ${appAddrHex}`
+        );
+        await app.execute();
+        // 3 - 1 = 2
+        await checkStack(StackValue, stack, 1, 2);
+      });
+
+      it('bytes32 calculates 0 - 2 ', async () => {
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES'),
+          '0x00000000000000000000000000000000000000000000000000000000000000000'
+        );
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES2'),
+          '0x00000000000000000000000000000000000000000000000000000000000000001'
+        );
+
+        await app.parse(
+          `loadRemote bytes32 BYTES ${appAddrHex} - loadRemote bytes32 BYTES2 ${appAddrHex}`
+        );
+        await app.execute();
+        // 0 - 1 = 0
+        await checkStack(StackValue, stack, 1, 0);
+      });
+
+      it.only('bytes32 should revert if max bytes + 1 ', async () => {
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES'),
+          '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+        );
+        await app.setStorageBytes32(
+          hex4Bytes('BYTES2'),
+          '0x0000000000000000000000000000000000000000000000000000000000000001'
+        );
+
+        await app.parse(
+          `loadRemote bytes32 BYTES ${appAddrHex} + loadRemote bytes32 BYTES2 ${appAddrHex}`
+        );
+        await expect(app.execute()).to.be.revertedWith('Executor: call not success');
       });
     });
   });
