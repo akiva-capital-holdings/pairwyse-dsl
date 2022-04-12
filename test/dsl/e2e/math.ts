@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { App, Context, Parser, Stack, StackValue__factory } from '../../../typechain';
 import { hex4Bytes } from '../../utils/utils';
 
-describe.only('DSL: math', () => {
+describe('DSL: math', () => {
   let stack: Stack;
   let ctx: Context;
   let app: App;

@@ -56,11 +56,11 @@ contract Stack {
     StackValue[] public stack;
 
     function length() external view returns (uint256) {
-        return stack.length;
+        return _length();
     }
 
     function seeLast() external view returns (StackValue) {
-        return stack[stack.length - 1];
+        return _seeLast();
     }
 
     function push(StackValue data) external {
@@ -68,7 +68,7 @@ contract Stack {
     }
 
     function pop() external returns (StackValue) {
-        StackValue data = stack[stack.length - 1];
+        StackValue data = _seeLast();
         stack.pop();
 
         return data;
@@ -76,5 +76,14 @@ contract Stack {
 
     function clear() external {
         delete stack;
+    }
+
+    function _length() internal view returns (uint256) {
+        return stack.length;
+    }
+
+    function _seeLast() internal view returns (StackValue) {
+        require(_length() > 0, "Stack: stack is empty");
+        return stack[_length() - 1];
     }
 }

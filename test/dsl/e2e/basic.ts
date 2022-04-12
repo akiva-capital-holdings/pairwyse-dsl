@@ -88,6 +88,30 @@ describe('DSL: basic', () => {
     appAddrHex = app.address.slice(2);
   });
 
+  it('uint256 0 + uint256 0', async () => {
+    await app.parse('uint256 0 + uint256 0');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [0]);
+  });
+
+  it('uint256 0 - uint256 0', async () => {
+    await app.parse('uint256 0 - uint256 0');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [0]);
+  });
+
+  it('uint256 0 + uint256 1', async () => {
+    await app.parse('uint256 0 + uint256 1');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [1]);
+  });
+
+  it('uint256 1 - uint256 0', async () => {
+    await app.parse('uint256 1 - uint256 0');
+    await app.execute();
+    await checkStackTailv2(StackValue, stack, [1]);
+  });
+
   it('uint256 2 + uint256 3', async () => {
     await app.parse('uint256 2 + uint256 3');
     await app.execute();

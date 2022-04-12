@@ -65,4 +65,38 @@ describe('Stack', () => {
     await stack.clear();
     expect(await stack.length()).to.equal(0);
   });
+
+  it('returns an error if tries to see an empty stack', async () => {
+    const svUint256 = await StackValueCont.deploy();
+    await stack.push(svUint256.address);
+    await svUint256.setUint256(1);
+    await stack.pop();
+    expect(await stack.length()).to.equal(0);
+    expect(stack.seeLast()).to.be.revertedWith('Stack: stack is empty');
+   });
+
+  it('stack in not empty if pushed a zero value', async () => {
+    const svUint256 = await StackValueCont.deploy();
+    await stack.push(svUint256.address);
+    await svUint256.setUint256(0);
+    expect(await stack.length()).to.equal(1);
+    expect(await svUint256.getUint256()).to.equal(0);
+   });
+
+  it('stack in not empty if pushed an empty string', async () => {
+    const svString = await StackValueCont.deploy();
+    await stack.push(svString.address);
+    await svString.setString('');
+    expect(await stack.length()).to.equal(1);
+    expect(await svString.getString()).to.equal('');
+   });
+
+  it('stack in not empty if pushed an empty address', async () => {
+    const zeroAddress = '0x0000000000000000000000000000000000000000';
+    const svAddress = await StackValueCont.deploy();
+    await stack.push(svAddress.address);
+    await svAddress.setAddress(zeroAddress);
+    expect(await stack.length()).to.equal(1);
+    expect(await svAddress.getAddress()).to.equal(zeroAddress);
+   });
 });
