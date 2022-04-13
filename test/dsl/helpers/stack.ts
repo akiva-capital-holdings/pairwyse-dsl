@@ -76,30 +76,31 @@ describe('Stack', () => {
    });
 
   it('stack in not empty if pushed a zero value', async () => {
-      
     const svUint256 = await StackValueCont.deploy();
     await stack.push(svUint256.address);
     await svUint256.setUint256(0);
     expect(await stack.length()).to.equal(1);
     expect(await svUint256.getUint256()).to.equal(0);
+    await stack.clear();
    });
 
   it('stack in not empty if pushed an empty string', async () => {
-      // TODO1: Expected "2" to be equal 1
+    expect(await stack.length()).to.equal(0);
     const svString = await StackValueCont.deploy();
     await stack.push(svString.address);
     await svString.setString('');
     expect(await stack.length()).to.equal(1);
     expect(await svString.getString()).to.equal('');
+    await stack.clear();
    });
 
   it('stack in not empty if pushed an empty address', async () => {
-      // TODO1: Expected "3" to be equal 1
     const zeroAddress = '0x0000000000000000000000000000000000000000';
     const svAddress = await StackValueCont.deploy();
     await stack.push(svAddress.address);
     await svAddress.setAddress(zeroAddress);
     expect(await stack.length()).to.equal(1);
     expect(await svAddress.getAddress()).to.equal(zeroAddress);
+    await stack.clear();
    });
 });

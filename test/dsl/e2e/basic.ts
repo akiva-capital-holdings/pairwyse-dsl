@@ -355,7 +355,7 @@ describe('DSL: basic', () => {
       await checkStack(StackValue, stack, 1, 1);
     });
 
-    it('NOT NOT NOT 3 = 1', async () => {
+    it('NOT NOT NOT 3 = 0', async () => {
       await app.parse('! (! (! uint256 3))');
       await app.execute();
       await checkStack(StackValue, stack, 1, 0);
@@ -886,7 +886,6 @@ describe('DSL: basic', () => {
 
   describe('if-else statement', () => {
     it('simple; using `branch` keyword', async () => {
-      // TODO1: reverted with reason string 'ByteUtils: 'end' index must be greater than 'start''
       await app.parse(`
         bool false
         ifelse AA BB
@@ -904,7 +903,6 @@ describe('DSL: basic', () => {
     });
 
     it('complex; using `end` keyword', async () => {
-      // TODO1: reverted with reason string 'ByteUtils: 'end' index must be greater than 'start''
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;
       const FIVE = new Array(64).join('0') + 5;

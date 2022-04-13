@@ -208,7 +208,6 @@ describe('End-to-end', () => {
   });
 
   it('if-else branch', async () => {
-    // TODO1: reverted with reason string 'ByteUtils: 'end' index must be greater than 'start''
     const ONE = new Array(64).join('0') + 1;
     const TWO = new Array(64).join('0') + 2;
     const THREE = new Array(64).join('0') + 3;
