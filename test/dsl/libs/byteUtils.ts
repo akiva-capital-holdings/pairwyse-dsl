@@ -26,14 +26,16 @@ describe('byteUtils', () => {
   });
 
   it('returns error if start index is greater than the end index', async () => {
-    expect(app.slice(data, 5, 1)).to.be.revertedWith('ByteUtils: \'end\' index must be greater than \'start\'');
-    expect(app.slice(data, 0, 0)).to.be.revertedWith('ByteUtils: \'end\' index must be greater than \'start\'');
-    expect(app.slice(data, 32, 32)).to.be.revertedWith('ByteUtils: \'end\' index must be greater than \'start\'');
+    let msg = 'ByteUtils: \'end\' index must be greater than \'start\'';
+    expect(app.slice(data, 5, 1)).to.be.revertedWith(msg);
+    expect(app.slice(data, 0, 0)).to.be.revertedWith(msg);
+    expect(app.slice(data, 32, 32)).to.be.revertedWith(msg);
   });
 
   it('returns error if end index greater than array length', async () => {
-    expect(app.slice(data, 4, 33)).to.be.revertedWith('ByteUtils: \'end\' is greater than the length of the array');
-    expect(app.slice(data, 23, 67)).to.be.revertedWith('ByteUtils: \'end\' is greater than the length of the array');
-    expect(app.slice(data, 0, 35)).to.be.revertedWith('ByteUtils: \'end\' is greater than the length of the array');
+    let msg = 'ByteUtils: \'end\' is greater than the length of the array';
+    expect(app.slice(data, 4, 33)).to.be.revertedWith(msg);
+    expect(app.slice(data, 23, 67)).to.be.revertedWith(msg);
+    expect(app.slice(data, 0, 35)).to.be.revertedWith(msg);
   });
 });
