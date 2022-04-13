@@ -53,6 +53,10 @@ library LogicalOpcodes {
         }
     }
 
+    function _getLast(IContext _ctx) public returns(StackValue) {
+        return _ctx.stack().pop();
+    }
+
     function opEnd(IContext _ctx) public {
         _ctx.setPc(_ctx.nextpc());
         _ctx.setNextPc(_ctx.program().length);
