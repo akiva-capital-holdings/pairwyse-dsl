@@ -22,6 +22,7 @@ library StringUtils {
     }
 
     // Convert an hexadecimal string (without "0x" prefix) to raw bytes
+    // TODO
     function fromHex(string memory s) public pure returns (bytes memory) {
         bytes memory ss = bytes(s);
         require(ss.length % 2 == 0, 'String: hex lenght not even'); // length must be even

@@ -10,6 +10,8 @@ import {
 } from '../../../../typechain';
 import { getBytesStringLength, pushToStack, uint256StrToHex } from '../../../utils/utils';
 
+// TODO: need more tests here without mocked opcodes.
+// TODO: add comments: what are these tests checking here?
 describe('Logical opcodes', () => {
   let StackCont: Stack__factory;
   let StackValue: StackValue__factory;
@@ -55,6 +57,7 @@ describe('Logical opcodes', () => {
     await ctx.setPc(0);
     await stack.clear();
   });
+
 
   it('opIfelse', async () => {
     const testBranchTrue = '0001';

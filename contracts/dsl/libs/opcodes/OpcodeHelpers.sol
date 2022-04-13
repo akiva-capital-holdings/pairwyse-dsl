@@ -26,6 +26,8 @@ library OpcodeHelpers {
         _ctx.stack().push(resultValue);
     }
 
+    // TODO: will be used these functions in the future?
+
     // function putToStack(IContext _ctx, string memory _value) public {
     //     StackValue resultValue = new StackValue();
     //     resultValue.setString(_value);
