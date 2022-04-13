@@ -96,6 +96,7 @@ describe('Parser', () => {
     });
 
     it('if condition', async () => {
+      // TODO1: 'ByteUtils: 'end' index must be greater than 'start''
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;
       const FOUR = new Array(64).join('0') + 4;
@@ -134,6 +135,7 @@ describe('Parser', () => {
     });
 
     it('if-else condition', async () => {
+      // TODO1: 'ByteUtils: 'end' index must be greater than 'start''
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;
       const THREE = new Array(64).join('0') + 3;

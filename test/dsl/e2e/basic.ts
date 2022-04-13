@@ -727,22 +727,20 @@ describe('DSL: basic', () => {
       it('bytes32 calculates 0 - 2 ', async () => {
         await app.setStorageBytes32(
           hex4Bytes('BYTES'),
-          '0x00000000000000000000000000000000000000000000000000000000000000000'
+          '0x0000000000000000000000000000000000000000000000000000000000000000'
         );
         await app.setStorageBytes32(
           hex4Bytes('BYTES2'),
-          '0x00000000000000000000000000000000000000000000000000000000000000001'
+          '0x0000000000000000000000000000000000000000000000000000000000000001'
         );
 
         await app.parse(
           `loadRemote bytes32 BYTES ${appAddrHex} - loadRemote bytes32 BYTES2 ${appAddrHex}`
         );
-        await app.execute();
-        // 0 - 1 = 0
-        await checkStack(StackValue, stack, 1, 0);
+        await expect(app.execute()).to.be.revertedWith('Executor: call not success');
       });
 
-      it.only('bytes32 should revert if max bytes + 1 ', async () => {
+      it('bytes32 should revert if max bytes + 1 ', async () => {
         await app.setStorageBytes32(
           hex4Bytes('BYTES'),
           '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
@@ -888,6 +886,7 @@ describe('DSL: basic', () => {
 
   describe('if-else statement', () => {
     it('simple; using `branch` keyword', async () => {
+      // TODO1: reverted with reason string 'ByteUtils: 'end' index must be greater than 'start''
       await app.parse(`
         bool false
         ifelse AA BB
@@ -905,6 +904,7 @@ describe('DSL: basic', () => {
     });
 
     it('complex; using `end` keyword', async () => {
+      // TODO1: reverted with reason string 'ByteUtils: 'end' index must be greater than 'start''
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;
       const FIVE = new Array(64).join('0') + 5;
