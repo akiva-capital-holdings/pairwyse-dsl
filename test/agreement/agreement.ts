@@ -198,9 +198,9 @@ describe('Agreement', () => {
           'Agreement: tx condition is not satisfied'
         );
         console.log(`\x1b[33m
-As GP did gap deposit, LP is not allowed to withdraw the funds.
-LP incurs transaction error if tries to withdraw funds after investment closing date\x1b[0m
-`);
+      As GP did gap deposit, LP is not allowed to withdraw the funds.
+      LP incurs transaction error if tries to withdraw funds after investment closing date\x1b[0m
+      `);
       }
       console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
       console.log(`signatory: \x1b[35m${LP.address}\x1b[0m`);
@@ -232,14 +232,14 @@ LP incurs transaction error if tries to withdraw funds after investment closing 
         // Step 6
         console.log('\n🏃 Agreement Lifecycle - Txn #6');
         const WHALE = whale.address;
-        const SOME_DAI = parseUnits('0', 18);
+        // const SOME_DAI = parseUnits('200', 18); // TODO: FUND_INVESTMENT_RETURN
 
         await ethers.provider.send('evm_setNextBlockTimestamp', [FUND_INVESTMENT_DATE + ONE_YEAR]);
 
         await txs.setStorageUint256(hex4Bytes('WHALE'), WHALE);
-        await txs.setStorageUint256(hex4Bytes('SOME_DAI'), SOME_DAI);
-        await dai.connect(whale).approve(txsAddr, SOME_DAI);
-        console.log(`Fund Investment Return = ${formatEther(SOME_DAI)} DAI`);
+        await txs.setStorageUint256(hex4Bytes('SOME_DAI'), FUND_INVESTMENT_RETURN);
+        await dai.connect(whale).approve(txsAddr, FUND_INVESTMENT_RETURN);
+        console.log(`Fund Investment Return = ${formatEther(FUND_INVESTMENT_RETURN)} DAI`);
 
         const txn6 = await agreement.connect(GP).execute(6);
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
@@ -270,7 +270,7 @@ LP incurs transaction error if tries to withdraw funds after investment closing 
         PROFIT = PROFIT.gt(0) ? PROFIT : BigNumber.from(0);
         console.log(`Fund Profit = ${formatEther(PROFIT)} DAI`);
         const THRESHOLD = LP_INITIAL.mul(HURDLE).div(100);
-        const DELTA = PROFIT.gt(0) ? PROFIT.sub(THRESHOLD) : BigNumber.from(0);
+        const DELTA = PROFIT.gt(THRESHOLD) ? PROFIT.sub(THRESHOLD) : BigNumber.from(0);
         const CARRY = DELTA.mul(PROFIT_PART).div(100);
 
         console.log(`GP Carry Charge = ${formatEther(CARRY)} DAI`);
@@ -283,6 +283,30 @@ LP incurs transaction error if tries to withdraw funds after investment closing 
           GP,
           CARRY
         );
+        console.log({
+          profit: {
+            local: PROFIT.toString(),
+            dsl: (await txs.getStorageUint256(hex4Bytes('PROFIT'))).toString(),
+          },
+        });
+        console.log({
+          threshold: {
+            local: THRESHOLD.toString(),
+            dsl: (await txs.getStorageUint256(hex4Bytes('THRESHOLD'))).toString(),
+          },
+        });
+        console.log({
+          delta: {
+            local: DELTA.toString(),
+            dsl: (await txs.getStorageUint256(hex4Bytes('DELTA'))).toString(),
+          },
+        });
+        console.log({
+          carry: {
+            local: CARRY.toString(),
+            dsl: (await txs.getStorageUint256(hex4Bytes('CARRY'))).toString(),
+          },
+        });
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
         console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
         // console.log(`txn hash: \x1b[35m${txn6.hash}\x1b[0m`); // TODO
@@ -588,7 +612,7 @@ LP incurs transaction error if tries to withdraw funds after investment closing 
     );
   });
 
-  describe('Lifecycle Test', () => {
+  describe.only('Lifecycle Test', () => {
     businessCaseTest(
       'Scenario 1:  LP deposits; GP balances; Profit Realized',
       parseUnits('20', 18), // GP_INITIAL
@@ -601,41 +625,41 @@ LP incurs transaction error if tries to withdraw funds after investment closing 
       20, // PROFIT_PART
       false // GP_FAILS_TO_DO_GAP_DEPOSIT
     );
-    businessCaseTest(
-      'Scenario 2:  GP fails to balance LP deposit',
-      parseUnits('20', 18), // GP_INITIAL
-      parseUnits('990', 18), // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200', 18), // CAPITAL_GAINS
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      true // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
-    businessCaseTest(
-      'Scenario 3:  Loss incurred, fully covered by GP',
-      parseUnits('20', 18), // GP_INITIAL
-      parseUnits('990', 18), // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('10', 18), // CAPITAL_LOSS
-      parseUnits('0', 18), // CAPITAL_GAINS
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
-    businessCaseTest(
-      'Scenario 4:  Loss incurred, not fully covered by GP',
-      parseUnits('20', 18), // GP_INITIAL
-      parseUnits('990', 18), // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('100', 18), // CAPITAL_LOSS
-      parseUnits('0', 18), // CAPITAL_GAINS
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 2:  GP fails to balance LP deposit',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   parseUnits('990', 18), // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200', 18), // CAPITAL_GAINS
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   true // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
+    // businessCaseTest(
+    //   'Scenario 3:  Loss incurred, fully covered by GP',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   parseUnits('990', 18), // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('10', 18), // CAPITAL_LOSS
+    //   parseUnits('0', 18), // CAPITAL_GAINS
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
+    // businessCaseTest(
+    //   'Scenario 4:  Loss incurred, not fully covered by GP',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   parseUnits('990', 18), // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('100', 18), // CAPITAL_LOSS
+    //   parseUnits('0', 18), // CAPITAL_GAINS
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
   });
 });
