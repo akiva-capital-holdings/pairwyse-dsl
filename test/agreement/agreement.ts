@@ -20,6 +20,8 @@ describe('Agreement', () => {
   let carl: SignerWithAddress;
   let GP: SignerWithAddress;
   let LP: SignerWithAddress;
+  let LP2: SignerWithAddress;
+  let LP3: SignerWithAddress;
   let anybody: SignerWithAddress;
   let comparatorOpcodesLib: Contract;
   let logicalOpcodesLib: Contract;
@@ -354,7 +356,7 @@ describe('Agreement', () => {
   };
 
   before(async () => {
-    [whale, alice, bob, carl, GP, LP, anybody] = await ethers.getSigners();
+    [whale, alice, bob, carl, GP, LP, LP2, LP3, anybody] = await ethers.getSigners();
 
     LAST_BLOCK_TIMESTAMP = (
       await ethers.provider.getBlock(
@@ -593,9 +595,9 @@ describe('Agreement', () => {
     );
   });
 
-  describe('Lifecycle Test', () => {
+  describe.only('Lifecycle Test', () => {
     businessCaseTest(
-      'Scenario 1:  LP deposits; GP balances; Profit Realized',
+      'Scenario 1:  One LP; LP deposits; GP balances; Profit Realized',
       parseUnits('20', 18), // GP_INITIAL
       parseUnits('990', 18), // LP_INITIAL
       parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
@@ -606,41 +608,53 @@ describe('Agreement', () => {
       20, // PROFIT_PART
       false // GP_FAILS_TO_DO_GAP_DEPOSIT
     );
-    businessCaseTest(
-      'Scenario 2:  GP fails to balance LP deposit',
-      parseUnits('20', 18), // GP_INITIAL
-      parseUnits('990', 18), // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200', 18), // CAPITAL_GAINS
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      true // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
-    businessCaseTest(
-      'Scenario 3:  Loss incurred, fully covered by GP',
-      parseUnits('20', 18), // GP_INITIAL
-      parseUnits('990', 18), // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('10', 18), // CAPITAL_LOSS
-      parseUnits('0', 18), // CAPITAL_GAINS
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
-    businessCaseTest(
-      'Scenario 4:  Loss incurred, not fully covered by GP',
-      parseUnits('20', 18), // GP_INITIAL
-      parseUnits('990', 18), // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('100', 18), // CAPITAL_LOSS
-      parseUnits('0', 18), // CAPITAL_GAINS
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 1.5:  Multiple LPs; LPs deposit; GP balances; Profit Realized',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   parseUnits('990', 18), // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200', 18), // CAPITAL_GAINS
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
+    // businessCaseTest(
+    //   'Scenario 2:  GP fails to balance LP deposit',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   parseUnits('990', 18), // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200', 18), // CAPITAL_GAINS
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   true // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
+    // businessCaseTest(
+    //   'Scenario 3:  Loss incurred, fully covered by GP',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   parseUnits('990', 18), // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('10', 18), // CAPITAL_LOSS
+    //   parseUnits('0', 18), // CAPITAL_GAINS
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
+    // businessCaseTest(
+    //   'Scenario 4:  Loss incurred, not fully covered by GP',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   parseUnits('990', 18), // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('100', 18), // CAPITAL_LOSS
+    //   parseUnits('0', 18), // CAPITAL_GAINS
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
   });
 });

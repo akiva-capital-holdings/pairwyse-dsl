@@ -54,7 +54,7 @@ contract Agreement {
         payable(txs).transfer(msg.value);
         require(verify(_txId), 'Agreement: bad tx signatory');
         require(validate(_txId, msg.value), 'Agreement: tx condition is not satisfied');
-        require(fulfil(_txId, msg.value), 'Agreement: tx fulfilment error');
+        require(fulfil(_txId, msg.value, msg.sender), 'Agreement: tx fulfilment error');
     }
 
     function verify(uint256 _txId) internal view returns (bool) {
@@ -78,10 +78,14 @@ contract Agreement {
         return _result == _len;
     }
 
-    function fulfil(uint256 _txId, uint256 _msgValue) internal returns (bool) {
+    function fulfil(
+        uint256 _txId,
+        uint256 _msgValue,
+        address _signatory
+    ) internal returns (bool) {
         // console.log('fulfil');
         (IContext transactionCtx, , ) = txs.txs(_txId);
-        txs.execTx(_txId, _msgValue);
+        txs.execTx(_txId, _msgValue, _signatory);
         return transactionCtx.stack().seeLast().getUint256() == 0 ? false : true;
     }
 }

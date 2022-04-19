@@ -23,7 +23,9 @@ contract ConditionalTxs is Storage {
     mapping(uint256 => Tx) public txs; // txId => Tx struct
     mapping(uint256 => IContext[]) public conditionCtxs; // txId => condition Context
     mapping(uint256 => string[]) public conditionStrs; // txId => DSL condition as string
-    mapping(uint256 => address[]) public signatories; // txId => DSL condition as string
+    mapping(uint256 => address[]) public signatories; // txId => signatory
+    // txId => (signatory => was tx executed by signatory)
+    mapping(uint256 => mapping(address => bool)) isExecutedBySignatory;
     uint256 public signatoriesLen;
 
     function conditionCtxsLen(uint256 _txId) external view returns (uint256) {
@@ -82,7 +84,8 @@ contract ConditionalTxs is Storage {
 
     function execTx(
         uint256 _txId,
-        uint256 _msgValue /*onlyOwner*/
+        uint256 _msgValue, /*onlyOwner*/
+        address _signatory
     ) external {
         // console.log('execTx');
         Tx memory txn = txs[_txId];
@@ -90,11 +93,25 @@ contract ConditionalTxs is Storage {
             checkConditions(_txId, _msgValue),
             'ConditionalTxs: txn condition is not satisfied'
         );
-        require(!txn.isExecuted, 'ConditionalTxs: txn already was executed');
+        require(
+            !isExecutedBySignatory[_txId][_signatory],
+            'ConditionalTxs: txn already was executed by this signatory'
+        );
 
         txn.transactionCtx.setMsgValue(_msgValue);
         Executor.execute(txn.transactionCtx);
-        txs[_txId].isExecuted = true;
+        isExecutedBySignatory[_txId][_signatory] = true;
+
+        // Check is tx was executed by all signatories
+        uint256 executionProgress;
+        address[] memory signatoriesOfTx = signatories[_txId];
+        for (uint256 i = 0; i < signatoriesLen; i++) {
+            if (isExecutedBySignatory[_txId][signatoriesOfTx[i]]) executionProgress++;
+        }
+        // If all signatories have executed the transaction - mark the tx as executed
+        if (executionProgress == signatoriesLen) {
+            txs[_txId].isExecuted = true;
+        }
     }
 
     function checkConditions(
