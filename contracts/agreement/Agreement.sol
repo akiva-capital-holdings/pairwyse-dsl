@@ -15,7 +15,7 @@ contract Agreement {
     event NewTransaction(
         uint256 txId,
         uint256[] requiredTxs,
-        address signatory,
+        address[] signatories,
         string transaction,
         string[] conditionStrs
     );
@@ -34,20 +34,20 @@ contract Agreement {
     function update(
         uint256 _txId,
         uint256[] memory _requiredTxs,
-        address _signatory,
+        address[] memory _signatories,
         string memory _transactionStr,
         string[] memory _conditionStrs,
         Context _transactionCtx,
         Context[] memory _conditionCtxs
     ) external {
         // console.log('update');
-        txs.addTxBlueprint(_txId, _requiredTxs, _signatory);
+        txs.addTxBlueprint(_txId, _requiredTxs, _signatories);
         for (uint256 i = 0; i < _conditionCtxs.length; i++) {
             txs.addTxCondition(_txId, _conditionStrs[i], _conditionCtxs[i]);
         }
         txs.addTxTransaction(_txId, _transactionStr, _transactionCtx);
 
-        emit NewTransaction(_txId, _requiredTxs, _signatory, _transactionStr, _conditionStrs);
+        emit NewTransaction(_txId, _requiredTxs, _signatories, _transactionStr, _conditionStrs);
     }
 
     function execute(uint256 _txId) external payable {
@@ -58,9 +58,12 @@ contract Agreement {
     }
 
     function verify(uint256 _txId) internal view returns (bool) {
-        // console.log('verify');
-        (, , address signatory, ) = txs.txs(_txId);
-        return signatory == msg.sender;
+        for (uint256 i = 0; i < txs.signatoriesLen(); i++) {
+            if (txs.signatories(_txId, i) == msg.sender) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function validate(uint256 _txId, uint256 _msgValue) internal returns (bool) {
@@ -77,7 +80,7 @@ contract Agreement {
 
     function fulfil(uint256 _txId, uint256 _msgValue) internal returns (bool) {
         // console.log('fulfil');
-        (IContext transactionCtx, , , ) = txs.txs(_txId);
+        (IContext transactionCtx, , ) = txs.txs(_txId);
         txs.execTx(_txId, _msgValue);
         return transactionCtx.stack().seeLast().getUint256() == 0 ? false : true;
     }

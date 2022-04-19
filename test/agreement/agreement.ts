@@ -64,7 +64,7 @@ describe('Agreement', () => {
       const { hash } = await agreement.update(
         step.txId,
         step.requiredTxs,
-        step.signatory,
+        step.signatories,
         step.transaction,
         step.conditions,
         txCtx.address,
@@ -434,12 +434,12 @@ describe('Agreement', () => {
 
     const txId = 1;
     const requiredTxs: number[] = [];
-    const signatory = alice.address;
+    const signatories = [alice.address];
     const conditions = ['blockTimestamp > loadLocal uint256 LOCK_TIME'];
     const transaction = 'sendEth RECEIVER 1000000000000000000';
 
     // Update
-    await addSteps([{ txId, requiredTxs, signatory, conditions, transaction }], ContextCont);
+    await addSteps([{ txId, requiredTxs, signatories, conditions, transaction }], ContextCont);
 
     // Top up contract
     const oneEthBN = parseEther('1');
@@ -593,7 +593,7 @@ describe('Agreement', () => {
     );
   });
 
-  describe.only('Lifecycle Test', () => {
+  describe('Lifecycle Test', () => {
     businessCaseTest(
       'Scenario 1:  LP deposits; GP balances; Profit Realized',
       parseUnits('20', 18), // GP_INITIAL
@@ -606,41 +606,41 @@ describe('Agreement', () => {
       20, // PROFIT_PART
       false // GP_FAILS_TO_DO_GAP_DEPOSIT
     );
-    // businessCaseTest(
-    //   'Scenario 2:  GP fails to balance LP deposit',
-    //   parseUnits('20', 18), // GP_INITIAL
-    //   parseUnits('990', 18), // LP_INITIAL
-    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('0', 18), // CAPITAL_LOSS
-    //   parseUnits('200', 18), // CAPITAL_GAINS
-    //   2, // MANAGEMENT_FEE_PERCENTAGE
-    //   9, // HURDLE
-    //   20, // PROFIT_PART
-    //   true // GP_FAILS_TO_DO_GAP_DEPOSIT
-    // );
-    // businessCaseTest(
-    //   'Scenario 3:  Loss incurred, fully covered by GP',
-    //   parseUnits('20', 18), // GP_INITIAL
-    //   parseUnits('990', 18), // LP_INITIAL
-    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('10', 18), // CAPITAL_LOSS
-    //   parseUnits('0', 18), // CAPITAL_GAINS
-    //   2, // MANAGEMENT_FEE_PERCENTAGE
-    //   9, // HURDLE
-    //   20, // PROFIT_PART
-    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    // );
-    // businessCaseTest(
-    //   'Scenario 4:  Loss incurred, not fully covered by GP',
-    //   parseUnits('20', 18), // GP_INITIAL
-    //   parseUnits('990', 18), // LP_INITIAL
-    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('100', 18), // CAPITAL_LOSS
-    //   parseUnits('0', 18), // CAPITAL_GAINS
-    //   2, // MANAGEMENT_FEE_PERCENTAGE
-    //   9, // HURDLE
-    //   20, // PROFIT_PART
-    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    // );
+    businessCaseTest(
+      'Scenario 2:  GP fails to balance LP deposit',
+      parseUnits('20', 18), // GP_INITIAL
+      parseUnits('990', 18), // LP_INITIAL
+      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+      parseUnits('0', 18), // CAPITAL_LOSS
+      parseUnits('200', 18), // CAPITAL_GAINS
+      2, // MANAGEMENT_FEE_PERCENTAGE
+      9, // HURDLE
+      20, // PROFIT_PART
+      true // GP_FAILS_TO_DO_GAP_DEPOSIT
+    );
+    businessCaseTest(
+      'Scenario 3:  Loss incurred, fully covered by GP',
+      parseUnits('20', 18), // GP_INITIAL
+      parseUnits('990', 18), // LP_INITIAL
+      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+      parseUnits('10', 18), // CAPITAL_LOSS
+      parseUnits('0', 18), // CAPITAL_GAINS
+      2, // MANAGEMENT_FEE_PERCENTAGE
+      9, // HURDLE
+      20, // PROFIT_PART
+      false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    );
+    businessCaseTest(
+      'Scenario 4:  Loss incurred, not fully covered by GP',
+      parseUnits('20', 18), // GP_INITIAL
+      parseUnits('990', 18), // LP_INITIAL
+      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+      parseUnits('100', 18), // CAPITAL_LOSS
+      parseUnits('0', 18), // CAPITAL_GAINS
+      2, // MANAGEMENT_FEE_PERCENTAGE
+      9, // HURDLE
+      20, // PROFIT_PART
+      false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    );
   });
 });

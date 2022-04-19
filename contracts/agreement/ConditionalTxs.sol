@@ -17,13 +17,14 @@ contract ConditionalTxs is Storage {
         uint256[] requiredTxs;
         IContext transactionCtx;
         bool isExecuted;
-        address signatory;
         string transactionStr;
     }
 
     mapping(uint256 => Tx) public txs; // txId => Tx struct
     mapping(uint256 => IContext[]) public conditionCtxs; // txId => condition Context
     mapping(uint256 => string[]) public conditionStrs; // txId => DSL condition as string
+    mapping(uint256 => address[]) public signatories; // txId => DSL condition as string
+    uint256 public signatoriesLen;
 
     function conditionCtxsLen(uint256 _txId) external view returns (uint256) {
         return conditionCtxs[_txId].length;
@@ -36,9 +37,11 @@ contract ConditionalTxs is Storage {
     function addTxBlueprint(
         uint256 _txId,
         uint256[] memory _requiredTxs,
-        address _signatory
+        address[] memory _signatories
     ) external {
-        Tx memory txn = Tx(_requiredTxs, IContext(address(0)), false, _signatory, '');
+        Tx memory txn = Tx(_requiredTxs, IContext(address(0)), false, '');
+        signatories[_txId] = _signatories;
+        signatoriesLen = _signatories.length;
         txs[_txId] = txn;
     }
 
