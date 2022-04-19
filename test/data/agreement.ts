@@ -200,7 +200,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
     requiredTxs: [],
     signatory: GP.address, // TODO: make `anyone`
     // TODO: swap ETH for DAI
-    transaction: 'transferFromVar DAI WHALE TRANSACTIONS_CONT SOME_DAI',
+    transaction: 'transferFromVar DAI WHALE TRANSACTIONS_CONT GP_PURCHASE_RETURN',
     conditions: [
       'blockTimestamp >= loadLocal uint256 FUND_INVESTMENT_DATE + loadLocal uint256 ONE_YEAR',
     ],
