@@ -15,7 +15,7 @@ import { StackValue } from '../../helpers/Stack.sol';
  * @title Set operator opcodes
  * @notice Opcodes for set operators such as AND, OR, XOR
  */
-// TODO: rename to LogicalOpcodes
+// TODO: rename to LogicalOpcodes. What kind of names will be the most convenient?
 library SetOpcodes {
     using UnstructuredStorage for bytes32;
     using StringUtils for string;

@@ -194,26 +194,28 @@ contract Preprocessor {
     /**
      * @dev Checks if a symbol is an end symbol of a comment, then increases _index to the next
      * no-comment symbol avoiding an additional iteration
-     * @param _index is a current index of a char that might be changed
+     * @param _i is a current index of a char that might be changed
      * @param _ssl is a searched symbol len that might be 0, 1, 2
-     * @param _program is a current program string
+     * @param _p is a current program string
      * @return new index and isCommeted parameters
      */
-    function _getEndCommentSymbol(
-        uint256 _ssl,
-        uint256 _index,
-        string memory _program,
-        string memory char
-    ) internal pure returns (uint256, bool) {
+    function _getEndCommentSymbol(uint256 _ssl, uint256 _i, string memory _p, string memory char) 
+        internal
+        pure
+        returns (
+            uint256,
+            bool
+        )
+    {
         if (_ssl == 1 && char.equal('\n')) {
-            return (_index + 1, false);
-        } else if (_ssl == 2 && char.equal('*') && _canGetSymbol(_index + 1, _program)) {
-            string memory nextChar = _program.char(_index + 1);
+            return (_i + 1, false);
+        } else if (_ssl == 2 && char.equal('*') && _canGetSymbol(_i + 1, _p)) {
+            string memory nextChar = _p.char(_i + 1);
             if (nextChar.equal('/')) {
-                return (_index + 2, false);
+                return (_i + 2, false);
             }
         }
-        return (_index, true);
+        return (_i, true);
     }
 
     /**
