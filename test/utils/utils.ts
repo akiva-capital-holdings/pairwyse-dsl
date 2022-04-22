@@ -1,8 +1,17 @@
 /* eslint-disable camelcase */
 
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { BigNumber, Contract, ethers } from 'ethers';
-import { Stack__factory, StackValue__factory, Stack, Context, StackValue } from '../../typechain';
+import { BigNumber, Contract, ContractTransaction, ethers } from 'ethers';
+import {
+  Stack__factory,
+  StackValue__factory,
+  Stack,
+  Context,
+  StackValue,
+  ERC20,
+  Token,
+} from '../../typechain';
 import { OpConditionalTxFunc } from '../types';
 
 /**
@@ -184,4 +193,32 @@ export const uint256StrToHex = (uint256Str: string | number, pad = 32) => {
   const padding = '0'.repeat(pad * 2 - uint256Raw.length);
 
   return padding.concat(uint256Raw);
+};
+
+/**
+ * Executes transaction, checks token balance change, and returns transaction hash.
+ * @param _tx Function that returns Ethereum transaction to be called. This transaction will do the
+ *            balance changing for _accounts.
+ * @param _token Token address to check
+ * @param _accounts Accounts which balance should change
+ * @param _expectedBalances Amounts on which _accounts balance should change
+ * @returns _tx transaction hash
+ */
+export const changeTokenBalanceAndGetTxHash = async (
+  _tx: () => Promise<ContractTransaction>,
+  _token: ERC20,
+  _accounts: SignerWithAddress[],
+  _expectedBalances: BigNumber[]
+) => {
+  const balsBefore = await Promise.all(
+    _accounts.map(async (_acc) => _token.balanceOf(_acc.address))
+  );
+  const { hash } = await _tx();
+  const balsAfter = await Promise.all(
+    _accounts.map(async (_acc) => _token.balanceOf(_acc.address))
+  );
+  for (let i = 0; i < balsBefore.length; i++) {
+    expect(balsAfter[i].sub(balsBefore[i])).to.equal(_expectedBalances[i]);
+  }
+  return hash;
 };

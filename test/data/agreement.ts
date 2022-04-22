@@ -234,9 +234,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
         HAS_PROFIT {
           (balanceOf DAI TRANSACTIONS_CONT +
             loadLocal uint256 MANAGEMENT_FEE -
-            loadLocal uint256 GP_INITIAL -
-            loadLocal uint256 LP_INITIAL -
-            loadLocal uint256 GP_REMAINING
+            loadLocal uint256 INITIAL_DEPOSIT
           ) setUint256 PROFIT
         }
 
