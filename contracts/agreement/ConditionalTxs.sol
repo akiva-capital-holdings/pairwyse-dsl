@@ -10,7 +10,7 @@ import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { Storage } from '../dsl/helpers/Storage.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 contract ConditionalTxs is Storage {
     struct Tx {
@@ -23,10 +23,10 @@ contract ConditionalTxs is Storage {
     mapping(uint256 => Tx) public txs; // txId => Tx struct
     mapping(uint256 => IContext[]) public conditionCtxs; // txId => condition Context
     mapping(uint256 => string[]) public conditionStrs; // txId => DSL condition as string
-    mapping(uint256 => address[]) public signatories; // txId => signatory
+    mapping(uint256 => address[]) public signatories; // txId => signatories
+    mapping(uint256 => uint256) public signatoriesLen; // txId => signarories length
     // txId => (signatory => was tx executed by signatory)
     mapping(uint256 => mapping(address => bool)) isExecutedBySignatory;
-    uint256 public signatoriesLen;
 
     function conditionCtxsLen(uint256 _txId) external view returns (uint256) {
         return conditionCtxs[_txId].length;
@@ -41,9 +41,11 @@ contract ConditionalTxs is Storage {
         uint256[] memory _requiredTxs,
         address[] memory _signatories
     ) external {
+        console.log('addTxBlueprint');
         Tx memory txn = Tx(_requiredTxs, IContext(address(0)), false, '');
         signatories[_txId] = _signatories;
-        signatoriesLen = _signatories.length;
+        console.log('_signatories.length', _signatories.length);
+        signatoriesLen[_txId] = _signatories.length;
         txs[_txId] = txn;
     }
 
@@ -105,11 +107,11 @@ contract ConditionalTxs is Storage {
         // Check is tx was executed by all signatories
         uint256 executionProgress;
         address[] memory signatoriesOfTx = signatories[_txId];
-        for (uint256 i = 0; i < signatoriesLen; i++) {
+        for (uint256 i = 0; i < signatoriesLen[_txId]; i++) {
             if (isExecutedBySignatory[_txId][signatoriesOfTx[i]]) executionProgress++;
         }
         // If all signatories have executed the transaction - mark the tx as executed
-        if (executionProgress == signatoriesLen) {
+        if (executionProgress == signatoriesLen[_txId]) {
             txs[_txId].isExecuted = true;
         }
     }

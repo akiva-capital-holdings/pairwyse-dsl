@@ -58,7 +58,7 @@ contract Agreement {
     }
 
     function verify(uint256 _txId) internal view returns (bool) {
-        for (uint256 i = 0; i < txs.signatoriesLen(); i++) {
+        for (uint256 i = 0; i < txs.signatoriesLen(_txId); i++) {
             if (txs.signatories(_txId, i) == msg.sender) {
                 return true;
             }
