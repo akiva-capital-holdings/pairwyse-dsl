@@ -628,7 +628,7 @@ describe('Agreement', () => {
     businessCaseTest(
       'Scenario 1:  One LP; LP deposits; GP balances; Profit Realized',
       parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL
+      [parseUnits('990', 18)], // LP_INITIAL_ARR
       parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
       parseUnits('0', 18), // CAPITAL_LOSS
       parseUnits('200', 18), // CAPITAL_GAINS
@@ -640,7 +640,7 @@ describe('Agreement', () => {
     // businessCaseTest(
     //   'Scenario 1.5:  Multiple LPs; LPs deposit; GP balances; Profit Realized',
     //   parseUnits('20', 18), // GP_INITIAL
-    //   parseUnits('990', 18), // LP_INITIAL
+    //   [parseUnits('790', 18), parseUnits('200', 18)], // LP_INITIAL_ARR
     //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
     //   parseUnits('0', 18), // CAPITAL_LOSS
     //   parseUnits('200', 18), // CAPITAL_GAINS
@@ -652,7 +652,7 @@ describe('Agreement', () => {
     // businessCaseTest(
     //   'Scenario 2:  GP fails to balance LP deposit',
     //   parseUnits('20', 18), // GP_INITIAL
-    //   [parseUnits('990', 18)], // LP_INITIAL
+    //   [parseUnits('990', 18)], // LP_INITIAL_ARR
     //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
     //   parseUnits('0', 18), // CAPITAL_LOSS
     //   parseUnits('200', 18), // CAPITAL_GAINS
@@ -664,7 +664,7 @@ describe('Agreement', () => {
     // businessCaseTest(
     //   'Scenario 3:  Loss incurred, fully covered by GP',
     //   parseUnits('20', 18), // GP_INITIAL
-    //   parseUnits('990', 18), // LP_INITIAL
+    //   parseUnits('990', 18), // LP_INITIAL_ARR
     //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
     //   parseUnits('10', 18), // CAPITAL_LOSS
     //   parseUnits('0', 18), // CAPITAL_GAINS
@@ -676,7 +676,7 @@ describe('Agreement', () => {
     // businessCaseTest(
     //   'Scenario 4:  Loss incurred, not fully covered by GP',
     //   parseUnits('20', 18), // GP_INITIAL
-    //   parseUnits('990', 18), // LP_INITIAL
+    //   parseUnits('990', 18), // LP_INITIAL_ARR
     //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
     //   parseUnits('100', 18), // CAPITAL_LOSS
     //   parseUnits('0', 18), // CAPITAL_GAINS

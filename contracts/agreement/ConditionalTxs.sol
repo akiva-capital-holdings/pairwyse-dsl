@@ -41,10 +41,8 @@ contract ConditionalTxs is Storage {
         uint256[] memory _requiredTxs,
         address[] memory _signatories
     ) external {
-        console.log('addTxBlueprint');
         Tx memory txn = Tx(_requiredTxs, IContext(address(0)), false, '');
         signatories[_txId] = _signatories;
-        console.log('_signatories.length', _signatories.length);
         signatoriesLen[_txId] = _signatories.length;
         txs[_txId] = txn;
     }
