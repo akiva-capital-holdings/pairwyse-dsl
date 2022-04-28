@@ -82,6 +82,8 @@ contract ConditionalTxs is Storage {
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
+    // TODO: make available only for Agreement. So that Agreement is in charge for ensuring that all
+    //       the conditions are met before executing the transaction
     function execTx(
         uint256 _txId,
         uint256 _msgValue, /*onlyOwner*/
@@ -89,10 +91,10 @@ contract ConditionalTxs is Storage {
     ) external {
         // console.log('execTx');
         Tx memory txn = txs[_txId];
-        require(
-            checkConditions(_txId, _msgValue),
-            'ConditionalTxs: txn condition is not satisfied'
-        );
+        // require(
+        //     checkConditions(_txId, _msgValue),
+        //     'ConditionalTxs: txn condition is not satisfied'
+        // );
         require(
             !isExecutedBySignatory[_txId][_signatory],
             'ConditionalTxs: txn already was executed by this signatory'

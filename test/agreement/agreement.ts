@@ -147,99 +147,41 @@ describe('Agreement', () => {
 
       // Step 2
       console.log('\n🏃 Agreement Lifecycle - Txn #2');
-      // // for (let i = 0; i < LP_INITIAL_ARR.length; i++) {
-      // for await (const [i, LP_INITIAL] of LP_INITIAL_ARR.entries()) {
-      //   // const LP_INITIAL = LP_INITIAL_ARR[i];
-      //   const LP = LPs[i];
-      //   await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-      //   await dai.connect(whale).transfer(LP.address, LP_INITIAL);
-      //   await dai.connect(LP).approve(txsAddr, LP_INITIAL);
-      //   console.log(`LP Initial Deposit = ${formatEther(LP_INITIAL)} DAI`);
-
-      //   await txs.setStorageAddress(hex4Bytes('LP'), LP.address);
-      //   await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
-      //   await txs.setStorageUint256(hex4Bytes('CLOSING_DATE'), NEXT_TWO_MONTH);
-
-      //   const txn2 = await agreement.connect(LP).execute(2);
-      //   console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
-      //   console.log(`signatory: \x1b[35m${LP.address}\x1b[0m`);
-      //   console.log(`txn hash: \x1b[35m${txn2.hash}\x1b[0m`);
-      // }
-      // const LP_INITIAL = LP_INITIAL_ARR[i];
-      let i = 0;
-      let LP_INITIAL = LP_INITIAL_ARR[i];
-      let LP = LPs[i];
-      console.log({
-        LP: LP.address,
-        LP_INITIAL: LP_INITIAL.toString(),
-      });
       await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-      await dai.connect(whale).transfer(LP.address, LP_INITIAL);
-      await dai.connect(LP).approve(txsAddr, LP_INITIAL);
-      console.log(`LP Initial Deposit = ${formatEther(LP_INITIAL)} DAI`);
+      let LP_TOTAL = BigNumber.from(0);
+      for await (const [i, LP_INITIAL] of LP_INITIAL_ARR.entries()) {
+        console.log(`\tLP #${i + 1}`);
+        const LP = LPs[i];
+        await dai.connect(whale).transfer(LP.address, LP_INITIAL);
+        await dai.connect(LP).approve(txsAddr, LP_INITIAL);
+        console.log(`LP Initial Deposit = ${formatEther(LP_INITIAL)} DAI`);
 
-      await txs.setStorageAddress(hex4Bytes('LP'), LP.address);
-      await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
-      await txs.setStorageUint256(hex4Bytes('CLOSING_DATE'), NEXT_TWO_MONTH);
+        await txs.setStorageAddress(hex4Bytes('LP'), LP.address);
+        await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
+        await txs.setStorageUint256(hex4Bytes('CLOSING_DATE'), NEXT_TWO_MONTH);
 
-      console.log({
-        LP_DSL: await txs.getStorageUint256(hex4Bytes('LP')),
-        LP_INITIAL_DSL: (await txs.getStorageUint256(hex4Bytes('LP_INITIAL'))).toString(),
-      });
+        const txn2 = await agreement.connect(LP).execute(2);
+        console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
+        console.log(`signatory: \x1b[35m${LP.address}\x1b[0m`);
+        console.log(`txn hash: \x1b[35m${txn2.hash}\x1b[0m`);
+        const DSL_LP_TOTAL = await txs.getStorageUint256(hex4Bytes('LP_TOTAL'));
+        console.log(`Total LP deposit = ${formatEther(DSL_LP_TOTAL)} DAI`);
 
-      let txn2 = await agreement.connect(LP).execute(2);
-      console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
-      console.log(`signatory: \x1b[35m${LP.address}\x1b[0m`);
-      console.log(`txn hash: \x1b[35m${txn2.hash}\x1b[0m`);
-      let LP_TOTAL = await txs.getStorageUint256(hex4Bytes('LP_TOTAL'));
-      console.log({ LP_TOTAL: LP_TOTAL.toString() });
-
-      i = 1;
-      LP_INITIAL = LP_INITIAL_ARR[i];
-      LP = LPs[i];
-      console.log({
-        LP: LP.address,
-        LP_INITIAL, // : LP_INITIAL.toString(),
-      });
-      // await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-      await dai.connect(whale).transfer(LP.address, LP_INITIAL);
-      await dai.connect(LP).approve(txsAddr, LP_INITIAL);
-      console.log(`LP Initial Deposit = ${formatEther(LP_INITIAL)} DAI`);
-
-      await txs.setStorageAddress(hex4Bytes('LP'), LP.address);
-      await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
-
-      console.log({
-        LP_DSL: await txs.getStorageUint256(hex4Bytes('LP')),
-        LP_INITIAL_DSL: (await txs.getStorageUint256(hex4Bytes('LP_INITIAL'))).toString(),
-      });
-      // await txs.setStorageUint256(hex4Bytes('CLOSING_DATE'), NEXT_TWO_MONTH);
-
-      txn2 = await agreement.connect(LP).execute(2);
-      console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
-      console.log(`signatory: \x1b[35m${LP.address}\x1b[0m`);
-      console.log(`txn hash: \x1b[35m${txn2.hash}\x1b[0m`);
-      LP_TOTAL = await txs.getStorageUint256(hex4Bytes('LP_TOTAL'));
-      console.log({ LP_TOTAL: LP_TOTAL.toString() });
-      console.log({
-        LP_INITIAL_DSL: (await txs.getStorageUint256(hex4Bytes('LP_INITIAL'))).toString(),
-      });
+        LP_TOTAL = LP_TOTAL.add(LP_INITIAL);
+        expect(LP_TOTAL).to.equal(DSL_LP_TOTAL);
+      }
 
       let GP_REMAINING = BigNumber.from(0);
       if (!GP_FAILS_TO_DO_GAP_DEPOSIT) {
         // Step 3
         console.log('\n🏃 Agreement Lifecycle - Txn #3');
-        LP_TOTAL = await txs.getStorageUint256(hex4Bytes('LP_TOTAL'));
-        // LP_TOTAL = LP_INITIAL_ARR.reduce((acc, x) => acc.add(x));
-        console.log({
-          LP_TOTAL: LP_TOTAL.toString(),
-          LP_INITIAL: LP_INITIAL.toString(),
-        });
+
         await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH]);
+
         GP_REMAINING = BigNumber.from(2).mul(LP_TOTAL).div(98).sub(GP_INITIAL);
         console.log({ GP_REMAINING: GP_REMAINING.toString() });
+
         await dai.connect(whale).transfer(GP.address, GP_REMAINING);
-        console.log(1);
         await dai.connect(GP).approve(txsAddr, GP_REMAINING);
         console.log(`GP Gap Deposit = ${formatEther(GP_REMAINING)} DAI`);
         const GP_GAP_DEPOSIT_LOWER_TIME = NEXT_TWO_MONTH - ONE_DAY;
@@ -249,6 +191,7 @@ describe('Agreement', () => {
         await txs.setStorageUint256(hex4Bytes('LOW_LIM'), GP_GAP_DEPOSIT_LOWER_TIME);
         await txs.setStorageUint256(hex4Bytes('UP_LIM'), GP_GAP_DEPOSIT_UPPER_TIME);
 
+        // TODO: expect to change txs DAI bal. for GP_REMAINING
         const txn3 = await agreement.connect(GP).execute(3);
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
         console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
@@ -315,7 +258,7 @@ describe('Agreement', () => {
 
         // Step 6
         console.log('\n🏃 Agreement Lifecycle - Txn #6');
-        const LP_TOTAL = await txs.getStorageUint256(hex4Bytes('LP_TOTAL'));
+        LP_TOTAL = await txs.getStorageUint256(hex4Bytes('LP_TOTAL'));
         const WHALE = whale.address;
         const GP_PURCHASE_RETURN = PURCHASE_AMOUNT.sub(CAPITAL_LOSS).add(CAPITAL_GAINS);
 
@@ -406,8 +349,10 @@ describe('Agreement', () => {
           // TODO: fix this ASAP!! Extremely unsafe!!!
           //       LP can set how much it will withdraw without any boundaries.
           await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
+          await txs.setStorageUint256(hex4Bytes('LP'), LP.address);
 
-          const LP_PROFIT = PROFIT.gt(0) ? PROFIT.sub(CARRY) : BigNumber.from(0);
+          const ALL_LPS_PROFIT = PROFIT.gt(0) ? PROFIT.sub(CARRY) : BigNumber.from(0);
+          const LP_PROFIT = ALL_LPS_PROFIT.mul(LP_INITIAL).div(LP_TOTAL);
           console.log(`LP Investment Profit = ${formatEther(LP_PROFIT)} DAI`);
 
           const txn81Hash = await changeTokenBalanceAndGetTxHash(
@@ -431,12 +376,14 @@ describe('Agreement', () => {
           // TODO: fix this ASAP!! Extremely unsafe!!!
           //       LP can set how much it will withdraw without any boundaries.
           await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
+          await txs.setStorageUint256(hex4Bytes('LP'), LP.address);
 
+          const MANAGEMENT_FEE_LP = MANAGEMENT_FEE.mul(LP_INITIAL).div(LP_TOTAL);
           const UNCOVERED_NET_LOSSES = GP_INITIAL.sub(GP_REMAINING).gte(LOSS)
             ? BigNumber.from(0)
             : LOSS.sub(GP_INITIAL).sub(GP_REMAINING);
           console.log(`Uncovered Net Losses = ${formatEther(UNCOVERED_NET_LOSSES)} DAI`);
-          const LP_PRINCIPAL = LP_INITIAL.sub(MANAGEMENT_FEE).sub(UNCOVERED_NET_LOSSES);
+          const LP_PRINCIPAL = LP_INITIAL.sub(MANAGEMENT_FEE_LP).sub(UNCOVERED_NET_LOSSES);
           console.log(`LP Principal = ${formatEther(LP_PRINCIPAL)} DAI`);
 
           const txn82Hash = await changeTokenBalanceAndGetTxHash(
@@ -709,18 +656,19 @@ describe('Agreement', () => {
     //   20, // PROFIT_PART
     //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
     // );
-    businessCaseTest(
-      'Scenario 1.5:  Multiple LPs; LPs deposit; GP balances; Profit Realized',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('790', 18), parseUnits('200', 18)], // LP_INITIAL_ARR
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200', 18), // CAPITAL_GAINS
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 1.5:  Multiple LPs; LPs deposit; GP balances; Profit Realized',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('300', 18), parseUnits('900', 18)], // LP_INITIAL_ARR
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200', 18), // CAPITAL_GAINS
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
+    // TODO: fix
     // businessCaseTest(
     //   'Scenario 2:  GP fails to balance LP deposit',
     //   parseUnits('20', 18), // GP_INITIAL
@@ -733,29 +681,29 @@ describe('Agreement', () => {
     //   20, // PROFIT_PART
     //   true // GP_FAILS_TO_DO_GAP_DEPOSIT
     // );
-    // businessCaseTest(
-    //   'Scenario 3:  Loss incurred, fully covered by GP',
-    //   parseUnits('20', 18), // GP_INITIAL
-    //   parseUnits('990', 18), // LP_INITIAL_ARR
-    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('10', 18), // CAPITAL_LOSS
-    //   parseUnits('0', 18), // CAPITAL_GAINS
-    //   2, // MANAGEMENT_FEE_PERCENTAGE
-    //   9, // HURDLE
-    //   20, // PROFIT_PART
-    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    // );
-    // businessCaseTest(
-    //   'Scenario 4:  Loss incurred, not fully covered by GP',
-    //   parseUnits('20', 18), // GP_INITIAL
-    //   parseUnits('990', 18), // LP_INITIAL_ARR
-    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('100', 18), // CAPITAL_LOSS
-    //   parseUnits('0', 18), // CAPITAL_GAINS
-    //   2, // MANAGEMENT_FEE_PERCENTAGE
-    //   9, // HURDLE
-    //   20, // PROFIT_PART
-    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    // );
+    businessCaseTest(
+      'Scenario 3:  Loss incurred, fully covered by GP',
+      parseUnits('20', 18), // GP_INITIAL
+      [parseUnits('990', 18)], // LP_INITIAL_ARR
+      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+      parseUnits('10', 18), // CAPITAL_LOSS
+      parseUnits('0', 18), // CAPITAL_GAINS
+      2, // MANAGEMENT_FEE_PERCENTAGE
+      9, // HURDLE
+      20, // PROFIT_PART
+      false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    );
+    businessCaseTest(
+      'Scenario 4:  Loss incurred, not fully covered by GP',
+      parseUnits('20', 18), // GP_INITIAL
+      [parseUnits('990', 18)], // LP_INITIAL_ARR
+      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+      parseUnits('100', 18), // CAPITAL_LOSS
+      parseUnits('0', 18), // CAPITAL_GAINS
+      2, // MANAGEMENT_FEE_PERCENTAGE
+      9, // HURDLE
+      20, // PROFIT_PART
+      false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    );
   });
 });

@@ -36,5 +36,6 @@ library Executor {
             (bool success, ) = _lib.delegatecall(abi.encodeWithSelector(selector, address(_ctx)));
             require(success, 'Executor: call not success');
         }
+        _ctx.setPc(0);
     }
 }

@@ -73,7 +73,7 @@ contract Agreement {
 
         uint256 _result;
         for (uint256 i = 0; i < _len; i++) {
-            _result += txs.conditionCtxs(_txId, i).stack().seeLast().getUint256();
+            _result += (txs.conditionCtxs(_txId, i).stack().seeLast().getUint256() > 0) ? 1 : 0;
         }
         return _result == _len;
     }
