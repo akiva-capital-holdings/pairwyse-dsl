@@ -775,18 +775,21 @@ describe('Agreement', () => {
     );
 
     // TODO: mixed logic related to Transaction NOT reverted for #4 and GP_FAILS_TO_DO_GAP_DEPOSIT and CAPITAL_GAINS
+    // TODO: txId: 4. Make sure that big minimum values won't influence on total funds that get LP and GP
+    // TODO: some of the funds can be on SC
     // businessCaseTest(
     //   'Scenario 11: DEPOSIT_MIN_PERCENT is 1%',
+    //   parseUnits('10', 18), // GP_INITIAL
     //   parseUnits('990', 18), // LP_INITIAL
     //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
     //   parseUnits('0', 18), // CAPITAL_LOSS
-    //   parseUnits('100', 18), // CAPITAL_GAINS,
+    //   parseUnits('200', 18), // CAPITAL_GAINS
     //   1, // DEPOSIT_MIN_PERCENT
     //   90, // PURCHASE_PERCENT
     //   2, // MANAGEMENT_FEE_PERCENTAGE
     //   9, // HURDLE
-    //   0, // PROFIT_PART
-    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    //   20, // PROFIT_PART
+    //   false, // GP_FAILS_TO_DO_GAP_DEPOSIT
     // );
 
     // TODO: What the result should be here if the Fund Investment
