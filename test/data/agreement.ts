@@ -121,7 +121,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
       `(blockTimestamp < loadLocal uint256 PLACEMENT_DATE)
        and (
          loadLocal uint256 GP_INITIAL >=
-         loadLocal uint256 ((INITIAL_FUNDS_TARGET * uint256 2) / uint256 100)
+         loadLocal uint256 ((INITIAL_FUNDS_TARGET * loadLocal uint256 DEPOSIT_MIN_PERCENT) / uint256 100)
        )`,
     ],
   },
@@ -145,7 +145,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
     conditions: [
       `loadLocal uint256 GP_INITIAL +
         loadLocal uint256 LP_INITIAL >= loadLocal uint256 INITIAL_FUNDS_TARGET`,
-      `(uint256 2 * loadLocal uint256 LP_INITIAL / uint256 98 - loadLocal uint256 GP_INITIAL
+      `(loadLocal uint256 DEPOSIT_MIN_PERCENT * loadLocal uint256 LP_INITIAL / uint256 98 - loadLocal uint256 GP_INITIAL
          ) setUint256 GP_REMAINING`,
       `(blockTimestamp >= loadLocal uint256 LOW_LIM)
          and
@@ -211,9 +211,9 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
     signatory: GP.address,
     transaction: 'transferVar DAI GP MANAGEMENT_FEE',
     conditions: [
-      '(loadLocal uint256 LP_INITIAL * uint256 2 / uint256 100) setUint256 MANAGEMENT_FEE',
+      '(loadLocal uint256 LP_INITIAL * loadLocal uint256 MANAGEMENT_PERCENT / uint256 100) setUint256 MANAGEMENT_FEE',
       `(uint256 100 * loadLocal uint256 MANAGEMENT_FEE
-         <= uint256 2 * loadLocal uint256 LP_INITIAL)`,
+         <= loadLocal uint256 MANAGEMENT_PERCENT * loadLocal uint256 LP_INITIAL)`,
     ],
   },
   {
