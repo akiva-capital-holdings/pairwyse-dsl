@@ -625,7 +625,7 @@ describe('Agreement', () => {
     );
   });
 
-  describe.only('Lifecycle Test', () => {
+  describe('Lifecycle Test', () => {
     // businessCaseTest(
     //   'Scenario 1:  LP deposits; GP balances; Profit Realized',
     //   parseUnits('20', 18), // GP_INITIAL
