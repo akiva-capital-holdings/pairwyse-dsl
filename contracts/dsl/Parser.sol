@@ -167,10 +167,10 @@ contract Parser is IParser, Storage {
         } else {
             program = bytes.concat(program, opcode);
 
-            bytes4 selector = _ctx.asmSelectors(cmd);
-            if (selector != 0x0) {
+            bytes4 _selector = _ctx.asmSelectors(cmd);
+            if (_selector != 0x0) {
                 (bool success, ) = address(this).delegatecall(
-                    abi.encodeWithSelector(selector, _ctx)
+                    abi.encodeWithSelector(_selector, _ctx)
                 );
                 require(success, 'Parser: delegatecall to asmSelector failed');
             }

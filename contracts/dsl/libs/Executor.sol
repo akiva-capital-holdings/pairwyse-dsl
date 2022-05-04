@@ -14,8 +14,8 @@ library Executor {
             bytes1 opcodeByte1 = bytes1(uint8(opcodeBytes[0]));
             // console.logBytes1(opcodeByte1);
 
-            bytes4 selector = _ctx.selectorByOpcode(opcodeByte1);
-            require(selector != 0x0, 'Executor: did not find selector for opcode');
+            bytes4 _selector = _ctx.selectorByOpcode(opcodeByte1);
+            require(_selector != 0x0, 'Executor: did not find selector for opcode');
             IContext.OpcodeLibNames _libName = _ctx.opcodeLibNameByOpcode(opcodeByte1);
             _ctx.incPc(1);
 
@@ -33,7 +33,7 @@ library Executor {
 
             // console.log('lib addr =', _lib);
 
-            (bool success, ) = _lib.delegatecall(abi.encodeWithSelector(selector, address(_ctx)));
+            (bool success, ) = _lib.delegatecall(abi.encodeWithSelector(_selector, address(_ctx)));
             require(success, 'Executor: call not success');
         }
         _ctx.setPc(0);

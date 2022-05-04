@@ -25,7 +25,7 @@ library LogicalOpcodes {
             OpcodeHelpers.putToStack(_ctx, 0); // for if-else condition to work all the time
         }
 
-        StackValue last = _ctx.stack().pop();
+        StackValue last = _getLast(_ctx);
         require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type in the stack');
 
         uint16 _posTrueBranch = getUint16(_ctx);
@@ -40,7 +40,7 @@ library LogicalOpcodes {
             OpcodeHelpers.putToStack(_ctx, 0); // for if condition to work all the time
         }
 
-        StackValue last = _ctx.stack().pop();
+        StackValue last = _getLast(_ctx);
         require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type in the stack');
 
         uint16 _posTrueBranch = getUint16(_ctx);
@@ -51,6 +51,10 @@ library LogicalOpcodes {
         } else {
             _ctx.setNextPc(_ctx.program().length);
         }
+    }
+
+    function _getLast(IContext _ctx) public returns(StackValue) {
+        return _ctx.stack().pop();
     }
 
     function opEnd(IContext _ctx) public {

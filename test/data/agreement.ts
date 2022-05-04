@@ -123,7 +123,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
         `(blockTimestamp < loadLocal uint256 PLACEMENT_DATE)
        and (
          loadLocal uint256 GP_INITIAL >=
-         loadLocal uint256 ((INITIAL_FUNDS_TARGET * uint256 2) / uint256 100)
+         loadLocal uint256 ((INITIAL_FUNDS_TARGET * loadLocal uint256 DEPOSIT_MIN_PERCENT) / uint256 100)
        )`,
       ],
     },
