@@ -10,7 +10,7 @@ import { Parser } from '../../typechain/Parser';
 import { ConditionalTxs, Context__factory } from '../../typechain';
 import { TxObject } from '../types';
 
-describe.only('Agreement', () => {
+describe('Agreement', () => {
   let ContextCont: Context__factory;
   let parser: Parser;
   let agreement: Agreement;
@@ -107,11 +107,7 @@ describe.only('Agreement', () => {
       //       0 then the DSL instruction will fall
 
       // Add tx objects to Agreement
-      // TODO: replace with one line using js features like `map(() => _)`
-      const LP_ARR = [];
-      for (let i = 0; i < LP_INITIAL_ARR.length; i++) {
-        LP_ARR.push(LPs[i]);
-      }
+      const LP_ARR = LPs.filter((_, i) => i < LP_INITIAL_ARR.length);
       console.log('\n\nUpdating Agreement Terms and Conditions...');
       await addSteps(businessCaseSteps(GP, LP_ARR), ContextCont);
       console.log('\n\nAgreement Updated with new Terms & Conditions');
@@ -191,11 +187,15 @@ describe.only('Agreement', () => {
         await txs.setStorageUint256(hex4Bytes('LOW_LIM'), GP_GAP_DEPOSIT_LOWER_TIME);
         await txs.setStorageUint256(hex4Bytes('UP_LIM'), GP_GAP_DEPOSIT_UPPER_TIME);
 
-        // TODO: expect to change txs DAI bal. for GP_REMAINING
-        const txn3 = await agreement.connect(GP).execute(3);
+        const txn3Hash = await changeTokenBalanceAndGetTxHash(
+          () => agreement.connect(GP).execute(3),
+          dai,
+          [GP],
+          [GP_REMAINING.mul(-1)]
+        );
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
         console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
-        console.log(`txn hash: \x1b[35m${txn3.hash}\x1b[0m`);
+        console.log(`txn hash: \x1b[35m${txn3Hash}\x1b[0m`);
       }
 
       // Step 4
@@ -206,8 +206,7 @@ describe.only('Agreement', () => {
       for (let i = 0; i < LP_INITIAL_ARR.length; i++) {
         const LP = LPs[i];
         const LP_INITIAL = LP_INITIAL_ARR[i];
-        // TODO: fix this ASAP!! Extremely unsafe!!!
-        //       LP can set how much it will withdraw without any boundaries.
+        // Note: Extremely unsafe!!! LP can set LP.address and LP_INITIAL by itself
         await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
 
         if (GP_FAILS_TO_DO_GAP_DEPOSIT) {
@@ -346,8 +345,7 @@ describe.only('Agreement', () => {
         for (let i = 0; i < LP_INITIAL_ARR.length; i++) {
           const LP = LPs[i];
           const LP_INITIAL = LP_INITIAL_ARR[i];
-          // TODO: fix this ASAP!! Extremely unsafe!!!
-          //       LP can set how much it will withdraw without any boundaries.
+          // Note: Extremely unsafe!!! LP can set LP.address and LP_INITIAL by itself
           await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
           await txs.setStorageUint256(hex4Bytes('LP'), LP.address);
 
@@ -373,8 +371,7 @@ describe.only('Agreement', () => {
         for (let i = 0; i < LP_INITIAL_ARR.length; i++) {
           const LP = LPs[i];
           const LP_INITIAL = LP_INITIAL_ARR[i];
-          // TODO: fix this ASAP!! Extremely unsafe!!!
-          //       LP can set how much it will withdraw without any boundaries.
+          // Note: Extremely unsafe!!! LP can set LP.address and LP_INITIAL by itself
           await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
           await txs.setStorageUint256(hex4Bytes('LP'), LP.address);
 
@@ -643,31 +640,31 @@ describe.only('Agreement', () => {
     );
   });
 
-  describe.only('Lifecycle Test', () => {
-    // businessCaseTest(
-    //   'Scenario 1:  One LP; LP deposits; GP balances; Profit Realized',
-    //   parseUnits('20', 18), // GP_INITIAL
-    //   [parseUnits('990', 18)], // LP_INITIAL_ARR
-    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('0', 18), // CAPITAL_LOSS
-    //   parseUnits('200', 18), // CAPITAL_GAINS
-    //   2, // MANAGEMENT_FEE_PERCENTAGE
-    //   9, // HURDLE
-    //   20, // PROFIT_PART
-    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    // );
-    // businessCaseTest(
-    //   'Scenario 1.5:  Multiple LPs; LPs deposit; GP balances; Profit Realized',
-    //   parseUnits('20', 18), // GP_INITIAL
-    //   [parseUnits('300', 18), parseUnits('900', 18)], // LP_INITIAL_ARR
-    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('0', 18), // CAPITAL_LOSS
-    //   parseUnits('200', 18), // CAPITAL_GAINS
-    //   2, // MANAGEMENT_FEE_PERCENTAGE
-    //   9, // HURDLE
-    //   20, // PROFIT_PART
-    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    // );
+  describe.skip('Lifecycle Test', () => {
+    businessCaseTest(
+      'Scenario 1:  One LP; LP deposits; GP balances; Profit Realized',
+      parseUnits('20', 18), // GP_INITIAL
+      [parseUnits('990', 18)], // LP_INITIAL_ARR
+      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+      parseUnits('0', 18), // CAPITAL_LOSS
+      parseUnits('200', 18), // CAPITAL_GAINS
+      2, // MANAGEMENT_FEE_PERCENTAGE
+      9, // HURDLE
+      20, // PROFIT_PART
+      false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    );
+    businessCaseTest(
+      'Scenario 1.5:  Multiple LPs; LPs deposit; GP balances; Profit Realized',
+      parseUnits('20', 18), // GP_INITIAL
+      [parseUnits('300', 18), parseUnits('900', 18)], // LP_INITIAL_ARR
+      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+      parseUnits('0', 18), // CAPITAL_LOSS
+      parseUnits('200', 18), // CAPITAL_GAINS
+      2, // MANAGEMENT_FEE_PERCENTAGE
+      9, // HURDLE
+      20, // PROFIT_PART
+      false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    );
     businessCaseTest(
       'Scenario 2:  GP fails to balance LP deposit',
       parseUnits('20', 18), // GP_INITIAL
@@ -680,29 +677,29 @@ describe.only('Agreement', () => {
       20, // PROFIT_PART
       true // GP_FAILS_TO_DO_GAP_DEPOSIT
     );
-    // businessCaseTest(
-    //   'Scenario 3:  Loss incurred, fully covered by GP',
-    //   parseUnits('20', 18), // GP_INITIAL
-    //   [parseUnits('990', 18)], // LP_INITIAL_ARR
-    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('10', 18), // CAPITAL_LOSS
-    //   parseUnits('0', 18), // CAPITAL_GAINS
-    //   2, // MANAGEMENT_FEE_PERCENTAGE
-    //   9, // HURDLE
-    //   20, // PROFIT_PART
-    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    // );
-    // businessCaseTest(
-    //   'Scenario 4:  Loss incurred, not fully covered by GP',
-    //   parseUnits('20', 18), // GP_INITIAL
-    //   [parseUnits('990', 18)], // LP_INITIAL_ARR
-    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('100', 18), // CAPITAL_LOSS
-    //   parseUnits('0', 18), // CAPITAL_GAINS
-    //   2, // MANAGEMENT_FEE_PERCENTAGE
-    //   9, // HURDLE
-    //   20, // PROFIT_PART
-    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    // );
+    businessCaseTest(
+      'Scenario 3:  Loss incurred, fully covered by GP',
+      parseUnits('20', 18), // GP_INITIAL
+      [parseUnits('990', 18)], // LP_INITIAL_ARR
+      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+      parseUnits('10', 18), // CAPITAL_LOSS
+      parseUnits('0', 18), // CAPITAL_GAINS
+      2, // MANAGEMENT_FEE_PERCENTAGE
+      9, // HURDLE
+      20, // PROFIT_PART
+      false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    );
+    businessCaseTest(
+      'Scenario 4:  Loss incurred, not fully covered by GP',
+      parseUnits('20', 18), // GP_INITIAL
+      [parseUnits('990', 18)], // LP_INITIAL_ARR
+      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+      parseUnits('100', 18), // CAPITAL_LOSS
+      parseUnits('0', 18), // CAPITAL_GAINS
+      2, // MANAGEMENT_FEE_PERCENTAGE
+      9, // HURDLE
+      20, // PROFIT_PART
+      false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    );
   });
 });

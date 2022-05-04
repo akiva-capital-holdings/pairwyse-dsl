@@ -159,7 +159,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
     {
       txId: 4,
       requiredTxs: [2],
-      signatories: LPs, // TODO: make available for everyone?
+      signatories: LPs,
       transaction: `(transferVar DAI GP GP_INITIAL)
         and (transferVar DAI LP LP_INITIAL)`,
       /**
@@ -228,14 +228,12 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
             loadLocal uint256 INITIAL_DEPOSIT - loadLocal uint256 MANAGEMENT_FEE))
           ifelse HAS_PROFIT NO_PROFIT
           end
-
           HAS_PROFIT {
             (balanceOf DAI TRANSACTIONS_CONT +
               loadLocal uint256 MANAGEMENT_FEE -
               loadLocal uint256 INITIAL_DEPOSIT
             ) setUint256 PROFIT
           }
-
           NO_PROFIT {
             (uint256 0) setUint256 PROFIT
           }
@@ -247,11 +245,9 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
         `(loadLocal uint256 PROFIT > loadLocal uint256 THRESHOLD)
           ifelse NONZERO_DELTA ZERO_DELTA
           end
-
           NONZERO_DELTA {
             (loadLocal uint256 PROFIT - loadLocal uint256 THRESHOLD) setUint256 DELTA
           }
-
           ZERO_DELTA {
             (uint256 0) setUint256 DELTA
           }`,
@@ -268,11 +264,9 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
             (loadLocal uint256 PROFIT > uint256 0)
             ifelse ZERO_LOSS NONZERO_LOSS
             end
-
             ZERO_LOSS {
               (uint256 0) setUint256 LOSS
             }
-
             NONZERO_LOSS {
               (loadLocal uint256 GP_INITIAL +
                 loadLocal uint256 LP_TOTAL +
@@ -286,11 +280,9 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
           (loadLocal uint256 LOSS > (loadLocal uint256 GP_INITIAL + loadLocal uint256 GP_REMAINING))
           ifelse WITHDRAW_ZERO WITHDRAW_NONZERO
           end
-
           WITHDRAW_ZERO {
             (uint256 0) setUint256 GP_PRINICIPAL
           }
-
           WITHDRAW_NONZERO {
             (loadLocal uint256 GP_INITIAL +
               loadLocal uint256 GP_REMAINING -
@@ -306,8 +298,6 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       signatories: LPs,
       transaction: 'transferVar DAI LP LP_PROFIT',
       conditions: [
-        // TODO: move this calculation (the next line) in a different Conditional Tx to not repeat
-        //       the same calculations for every LP
         '(loadLocal uint256 PROFIT - loadLocal uint256 CARRY) setUint256 ALL_LPs_PROFIT',
         `(loadLocal uint256 ALL_LPs_PROFIT *
           loadLocal uint256 LP_INITIAL /
@@ -332,11 +322,9 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
          )
          ifelse ZERO NONZERO
          end
-
          ZERO {
            (uint256 0) setUint256 UNCOVERED_NET_LOSSES
          }
-
          NONZERO {
            (loadLocal uint256 LOSS -
              loadLocal uint256 GP_INITIAL -
