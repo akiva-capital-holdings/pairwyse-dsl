@@ -160,10 +160,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       txId: 4,
       requiredTxs: [2],
       signatories: LPs, // TODO: make available for everyone?
-      transaction: 'bool true', // TODO: `
-      // (transferVar DAI GP GP_INITIAL)
-      // and
-      // (transferVar DAI LP LP_INITIAL)`,
+      transaction: `(transferVar DAI GP GP_INITIAL)
+        and (transferVar DAI LP LP_INITIAL)`,
       /**
        * Note: 9805 and 200 are 98.05 and 2.00 numbers respectively. The condition should be true
        * if LP / GP > 98 / 2. But due to integer division precision errors we add just a little

@@ -10,7 +10,7 @@ import { Parser } from '../../typechain/Parser';
 import { ConditionalTxs, Context__factory } from '../../typechain';
 import { TxObject } from '../types';
 
-describe('Agreement', () => {
+describe.only('Agreement', () => {
   let ContextCont: Context__factory;
   let parser: Parser;
   let agreement: Agreement;
@@ -668,42 +668,41 @@ describe('Agreement', () => {
     //   20, // PROFIT_PART
     //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
     // );
-    // TODO: fix
+    businessCaseTest(
+      'Scenario 2:  GP fails to balance LP deposit',
+      parseUnits('20', 18), // GP_INITIAL
+      [parseUnits('990', 18)], // LP_INITIAL_ARR
+      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+      parseUnits('0', 18), // CAPITAL_LOSS
+      parseUnits('200', 18), // CAPITAL_GAINS
+      2, // MANAGEMENT_FEE_PERCENTAGE
+      9, // HURDLE
+      20, // PROFIT_PART
+      true // GP_FAILS_TO_DO_GAP_DEPOSIT
+    );
     // businessCaseTest(
-    //   'Scenario 2:  GP fails to balance LP deposit',
+    //   'Scenario 3:  Loss incurred, fully covered by GP',
     //   parseUnits('20', 18), // GP_INITIAL
     //   [parseUnits('990', 18)], // LP_INITIAL_ARR
     //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('0', 18), // CAPITAL_LOSS
-    //   parseUnits('200', 18), // CAPITAL_GAINS
+    //   parseUnits('10', 18), // CAPITAL_LOSS
+    //   parseUnits('0', 18), // CAPITAL_GAINS
     //   2, // MANAGEMENT_FEE_PERCENTAGE
     //   9, // HURDLE
     //   20, // PROFIT_PART
-    //   true // GP_FAILS_TO_DO_GAP_DEPOSIT
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
     // );
-    businessCaseTest(
-      'Scenario 3:  Loss incurred, fully covered by GP',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL_ARR
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('10', 18), // CAPITAL_LOSS
-      parseUnits('0', 18), // CAPITAL_GAINS
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
-    businessCaseTest(
-      'Scenario 4:  Loss incurred, not fully covered by GP',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL_ARR
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('100', 18), // CAPITAL_LOSS
-      parseUnits('0', 18), // CAPITAL_GAINS
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 4:  Loss incurred, not fully covered by GP',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('990', 18)], // LP_INITIAL_ARR
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('100', 18), // CAPITAL_LOSS
+    //   parseUnits('0', 18), // CAPITAL_GAINS
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
   });
 });
