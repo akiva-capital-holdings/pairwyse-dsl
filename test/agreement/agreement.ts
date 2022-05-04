@@ -640,7 +640,7 @@ describe('Agreement', () => {
     );
   });
 
-  describe.skip('Lifecycle Test', () => {
+  describe('Lifecycle Test', () => {
     businessCaseTest(
       'Scenario 1:  One LP; LP deposits; GP balances; Profit Realized',
       parseUnits('20', 18), // GP_INITIAL
