@@ -10,7 +10,7 @@ import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { Storage } from '../dsl/helpers/Storage.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 contract ConditionalTxs is Storage {
     struct Tx {
