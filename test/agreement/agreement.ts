@@ -156,7 +156,7 @@ describe('Agreement', () => {
       `);
       }
       // Other tests have no sense if result is false
-      if(!result) return;
+      if (!result) return;
 
       // Step 2
       console.log('\n🏃 Agreement Lifecycle - Txn #2');
@@ -192,7 +192,6 @@ describe('Agreement', () => {
         await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH]);
 
         GP_REMAINING = BigNumber.from(2).mul(LP_TOTAL).div(98).sub(GP_INITIAL);
-        console.log({ GP_REMAINING: GP_REMAINING.toString() });
 
         await dai.connect(whale).transfer(GP.address, GP_REMAINING);
         await dai.connect(GP).approve(txsAddr, GP_REMAINING);
@@ -271,16 +270,17 @@ describe('Agreement', () => {
           );
           result = true;
         } catch {
-
-          await expect(agreement.connect(GP).execute(5))
-            .to.be.revertedWith('Agreement: tx condition is not satisfied');
+          await expect(agreement.connect(GP).execute(5)).to.be.revertedWith(
+            'Agreement: tx condition is not satisfied'
+          );
           console.log(`\x1b[33m
         Condition is not satisfied.
-        GP authorized to purchase the investment asset using up to 90% of total initiating funds\x1b[0m
+        GP authorized to purchase the investment asset using up to 90% of total \
+initiating funds\x1b[0m
           `);
         }
         // Other tests have no sense if result is false
-        if(!result) return;
+        if (!result) return;
 
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
         console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
@@ -672,91 +672,21 @@ describe('Agreement', () => {
   });
 
   describe('Lifecycle Test', () => {
-    // businessCaseTest(
-    //   'Scenario 1:  LP deposits; GP balances; Profit Realized',
-    //   parseUnits('20', 18), // GP_INITIAL
-    //   parseUnits('990', 18), // LP_INITIAL
-    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('0', 18), // CAPITAL_LOSS
-    //   parseUnits('200', 18), // CAPITAL_GAINS
-    //   2, // DEPOSIT_MIN_PERCENT
-    //   90, // PURCHASE_PERCENT
-    //   2, // MANAGEMENT_FEE_PERCENTAGE
-    //   9, // HURDLE
-    //   20, // PROFIT_PART
-    //   false, // GP_FAILS_TO_DO_GAP_DEPOSIT
-    // );
-
-    // businessCaseTest(
-    //   'Scenario 2:  GP fails to balance LP deposit',
-    //   parseUnits('20', 18), // GP_INITIAL
-    //   parseUnits('990', 18), // LP_INITIAL
-    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('0', 18), // CAPITAL_LOSS
-    //   parseUnits('200', 18), // CAPITAL_GAINS,
-    //   2, // DEPOSIT_MIN_PERCENT
-    //   90, // PURCHASE_PERCENT
-    //   2, // MANAGEMENT_FEE_PERCENTAGE
-    //   9, // HURDLE
-    //   20, // PROFIT_PART
-    //   true // GP_FAILS_TO_DO_GAP_DEPOSIT
-    // );
-    // businessCaseTest(
-    //   'Scenario 3:  Loss incurred, fully covered by GP',
-    //   parseUnits('20', 18), // GP_INITIAL
-    //   parseUnits('990', 18), // LP_INITIAL
-    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('10', 18), // CAPITAL_LOSS
-    //   parseUnits('0', 18), // CAPITAL_GAINS
-    //   2, // DEPOSIT_MIN_PERCENT
-    //   90, // PURCHASE_PERCENT
-    //   2, // MANAGEMENT_FEE_PERCENTAGE
-    //   9, // HURDLE
-    //   20, // PROFIT_PART
-    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    // );
-    // businessCaseTest(
-    //   'Scenario 4:  Loss incurred, not fully covered by GP',
-    //   parseUnits('20', 18), // GP_INITIAL
-    //   parseUnits('990', 18), // LP_INITIAL
-    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('100', 18), // CAPITAL_LOSS
-    //   parseUnits('0', 18), // CAPITAL_GAINS,
-    //   2, // DEPOSIT_MIN_PERCENT
-    //   90, // PURCHASE_PERCENT
-    //   2, // MANAGEMENT_FEE_PERCENTAGE
-    //   9, // HURDLE
-    //   20, // PROFIT_PART
-    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    // );
-
     businessCaseTest(
-      'Scenario 5: Using bigger values, PURCHASE_PERCENT less than 90',
-      parseUnits('20000', 18), // GP_INITIAL
-      parseUnits('990000', 18), // LP_INITIAL
-      parseUnits('1000000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200000', 18), // CAPITAL_GAINS,
-      2, // DEPOSIT_MIN_PERCENT
-      89, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
-
-    businessCaseTest(
-      'Scenario 1:  One LP; LP deposits; GP balances; Profit Realized',
+      'Scenario 1:  LP deposits; GP balances; Profit Realized',
       parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL_ARR
+      [parseUnits('990', 18)], // LP_INITIAL
       parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
       parseUnits('0', 18), // CAPITAL_LOSS
       parseUnits('200', 18), // CAPITAL_GAINS
+      2, // DEPOSIT_MIN_PERCENT
+      90, // PURCHASE_PERCENT
       2, // MANAGEMENT_FEE_PERCENTAGE
       9, // HURDLE
       20, // PROFIT_PART
       false // GP_FAILS_TO_DO_GAP_DEPOSIT
     );
+
     businessCaseTest(
       'Scenario 1.5:  Multiple LPs; LPs deposit; GP balances; Profit Realized',
       parseUnits('20', 18), // GP_INITIAL
@@ -773,49 +703,122 @@ describe('Agreement', () => {
     );
 
     businessCaseTest(
-      'Scenario 8:  HURDLE is 1 percent',
+      'Scenario 2:  GP fails to balance LP deposit',
       parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL_ARR
+      [parseUnits('990', 18)], // LP_INITIAL
       parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
       parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200', 18), // CAPITAL_GAINS
-      2, // DEPOSIT_MIN_PERCENT
-      89, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      1, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
-
-    businessCaseTest(
-      'Scenario 9:  MANAGEMENT_FEE_PERCENTAGE is 33%',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL_ARR
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200', 18), // CAPITAL_GAINS
-          2, // DEPOSIT_MIN_PERCENT
-      90, // PURCHASE_PERCENT
-      33, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
-
-    businessCaseTest(
-      'Scenario 10:  Carry Charge is 0%',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL_ARR
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200', 18), // CAPITAL_GAINS
+      parseUnits('200', 18), // CAPITAL_GAINS,
       2, // DEPOSIT_MIN_PERCENT
       90, // PURCHASE_PERCENT
       2, // MANAGEMENT_FEE_PERCENTAGE
       9, // HURDLE
-      0, // PROFIT_PART
+      20, // PROFIT_PART
+      true // GP_FAILS_TO_DO_GAP_DEPOSIT
+    );
+    businessCaseTest(
+      'Scenario 3:  Loss incurred, fully covered by GP',
+      parseUnits('20', 18), // GP_INITIAL
+      [parseUnits('990', 18)], // LP_INITIAL
+      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+      parseUnits('10', 18), // CAPITAL_LOSS
+      parseUnits('0', 18), // CAPITAL_GAINS
+      2, // DEPOSIT_MIN_PERCENT
+      90, // PURCHASE_PERCENT
+      2, // MANAGEMENT_FEE_PERCENTAGE
+      9, // HURDLE
+      20, // PROFIT_PART
       false // GP_FAILS_TO_DO_GAP_DEPOSIT
     );
+    businessCaseTest(
+      'Scenario 4:  Loss incurred, not fully covered by GP',
+      parseUnits('20', 18), // GP_INITIAL
+      [parseUnits('990', 18)], // LP_INITIAL
+      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+      parseUnits('100', 18), // CAPITAL_LOSS
+      parseUnits('0', 18), // CAPITAL_GAINS,
+      2, // DEPOSIT_MIN_PERCENT
+      90, // PURCHASE_PERCENT
+      2, // MANAGEMENT_FEE_PERCENTAGE
+      9, // HURDLE
+      20, // PROFIT_PART
+      false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    );
+
+    // businessCaseTest(
+    //   'Scenario 5: Using bigger values, PURCHASE_PERCENT less than 90',
+    //   parseUnits('20000', 18), // GP_INITIAL
+    //   [parseUnits('990000', 18)], // LP_INITIAL
+    //   parseUnits('1000000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200000', 18), // CAPITAL_GAINS,
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   89, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
+
+    // businessCaseTest(
+    //   'Scenario 1:  One LP; LP deposits; GP balances; Profit Realized',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('990', 18)], // LP_INITIAL_ARR
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200', 18), // CAPITAL_GAINS
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   90, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
+
+    // businessCaseTest(
+    //   'Scenario 8:  HURDLE is 1 percent',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('990', 18)], // LP_INITIAL_ARR
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200', 18), // CAPITAL_GAINS
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   89, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   1, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
+
+    // businessCaseTest(
+    //   'Scenario 9:  MANAGEMENT_FEE_PERCENTAGE is 33%',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('990', 18)], // LP_INITIAL_ARR
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200', 18), // CAPITAL_GAINS
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   90, // PURCHASE_PERCENT
+    //   33, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
+
+    // businessCaseTest(
+    //   'Scenario 10:  Carry Charge is 0%',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('990', 18)], // LP_INITIAL_ARR
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200', 18), // CAPITAL_GAINS
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   90, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   0, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
 
     // TODO: mixed logic related to Transaction NOT reverted for #4 and GP_FAILS_TO_DO_GAP_DEPOSIT and CAPITAL_GAINS
     // TODO: txId: 4. Make sure that big minimum values won't influence on total funds that get LP and GP
