@@ -9,7 +9,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 /**
  * @title Logical operator opcodes
@@ -53,7 +53,7 @@ library LogicalOpcodes {
         }
     }
 
-    function _getLast(IContext _ctx) public returns(StackValue) {
+    function _getLast(IContext _ctx) public returns (StackValue) {
         return _ctx.stack().pop();
     }
 

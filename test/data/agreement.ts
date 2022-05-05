@@ -145,14 +145,14 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
     conditions: [
       `loadLocal uint256 GP_INITIAL +
         loadLocal uint256 LP_INITIAL >= loadLocal uint256 INITIAL_FUNDS_TARGET`,
-      `(loadLocal uint256 DEPOSIT_MIN_PERCENT * loadLocal uint256 LP_INITIAL / uint256 98 - loadLocal uint256 GP_INITIAL
+      `(loadLocal uint256 DEPOSIT_MIN_PERCENT * loadLocal uint256 LP_INITIAL / loadLocal uint256 P1 - loadLocal uint256 GP_INITIAL
          ) setUint256 GP_REMAINING`,
       `(blockTimestamp >= loadLocal uint256 LOW_LIM)
          and
        (blockTimestamp <= loadLocal uint256 UP_LIM)
          and
        (balanceOf DAI TRANSACTIONS_CONT >=
-         ((loadLocal uint256 INITIAL_FUNDS_TARGET * uint256 98) / uint256 100)
+         ((loadLocal uint256 INITIAL_FUNDS_TARGET * loadLocal uint256 P1) / uint256 100)
        )`,
     ],
   },
@@ -170,9 +170,9 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
      * more to 98 (make it 98.05) to eliminate division errors.
      */
     conditions: [
-      `uint256 9805 * (loadLocal uint256 GP_REMAINING + loadLocal uint256 GP_INITIAL)
+      `((uint256 100 * loadLocal uint256 P1) + uint256 5) * (loadLocal uint256 GP_REMAINING + loadLocal uint256 GP_INITIAL)
          <
-       uint256 200 * loadLocal uint256 LP_INITIAL`,
+       (uint256 100 * loadLocal uint256 P2) * loadLocal uint256 LP_INITIAL`,
       'blockTimestamp > loadLocal uint256 UP_LIM',
       'blockTimestamp < loadLocal uint256 FUND_INVESTMENT_DATE',
     ],
@@ -187,8 +187,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
     conditions: [
       `(blockTimestamp >= loadLocal uint256 FUND_INVESTMENT_DATE)
          and
-       (uint256 10 * loadLocal uint256 PURCHASE_AMOUNT
-         <= uint256 9 * (balanceOf DAI TRANSACTIONS_CONT))`,
+       (uint256 100 * loadLocal uint256 PURCHASE_AMOUNT
+         <= loadLocal uint256 PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,
     ],
   },
   {

@@ -9,7 +9,7 @@ import { LogicalOpcodes } from './libs/opcodes/LogicalOpcodes.sol';
 import { SetOpcodes } from './libs/opcodes/SetOpcodes.sol';
 import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 // TODO: may be wise to split Context into:
 //      contract A (holds opCodeByName, selectorByOpcode, and asmSelectors)
