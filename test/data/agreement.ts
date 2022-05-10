@@ -127,7 +127,6 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
        )`,
       ],
     },
-    // Note: for now we're assuming that we have only one LP
     {
       txId: 2,
       requiredTxs: [1],
@@ -160,6 +159,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       txId: 4,
       requiredTxs: [2],
       signatories: LPs,
+      // todo: `transferVar DAI GP GP_INITIAL` into a separate branch
       transaction: `(transferVar DAI GP GP_INITIAL)
         and (transferVar DAI LP LP_INITIAL)`,
       /**

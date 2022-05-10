@@ -86,7 +86,7 @@ contract ConditionalTxs is Storage {
     //       the conditions are met before executing the transaction
     function execTx(
         uint256 _txId,
-        uint256 _msgValue, /*onlyOwner*/
+        uint256 _msgValue,
         address _signatory
     ) external {
         // console.log('execTx');
