@@ -19,6 +19,7 @@
     "no-await-in-loop": ["off"],
     "max-len": ["error", 100],
     "no-plusplus": ["off"],
-    "import/prefer-default-export": "off"
+    "import/prefer-default-export": "off",
+    "no-console": "off"
   }
 }

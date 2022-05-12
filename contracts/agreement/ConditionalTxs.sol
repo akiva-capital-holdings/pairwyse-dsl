@@ -17,13 +17,16 @@ contract ConditionalTxs is Storage {
         uint256[] requiredTxs;
         IContext transactionCtx;
         bool isExecuted;
-        address signatory;
         string transactionStr;
     }
 
     mapping(uint256 => Tx) public txs; // txId => Tx struct
     mapping(uint256 => IContext[]) public conditionCtxs; // txId => condition Context
     mapping(uint256 => string[]) public conditionStrs; // txId => DSL condition as string
+    mapping(uint256 => address[]) public signatories; // txId => signatories
+    mapping(uint256 => uint256) public signatoriesLen; // txId => signarories length
+    // txId => (signatory => was tx executed by signatory)
+    mapping(uint256 => mapping(address => bool)) isExecutedBySignatory;
 
     function conditionCtxsLen(uint256 _txId) external view returns (uint256) {
         return conditionCtxs[_txId].length;
@@ -36,9 +39,11 @@ contract ConditionalTxs is Storage {
     function addTxBlueprint(
         uint256 _txId,
         uint256[] memory _requiredTxs,
-        address _signatory
+        address[] memory _signatories
     ) external {
-        Tx memory txn = Tx(_requiredTxs, IContext(address(0)), false, _signatory, '');
+        Tx memory txn = Tx(_requiredTxs, IContext(address(0)), false, '');
+        signatories[_txId] = _signatories;
+        signatoriesLen[_txId] = _signatories.length;
         txs[_txId] = txn;
     }
 
@@ -77,21 +82,38 @@ contract ConditionalTxs is Storage {
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
+    // TODO: make available only for Agreement. So that Agreement is in charge for ensuring that all
+    //       the conditions are met before executing the transaction
     function execTx(
         uint256 _txId,
-        uint256 _msgValue /*onlyOwner*/
+        uint256 _msgValue,
+        address _signatory
     ) external {
         // console.log('execTx');
         Tx memory txn = txs[_txId];
+        // require(
+        //     checkConditions(_txId, _msgValue),
+        //     'ConditionalTxs: txn condition is not satisfied'
+        // );
         require(
-            checkConditions(_txId, _msgValue),
-            'ConditionalTxs: txn condition is not satisfied'
+            !isExecutedBySignatory[_txId][_signatory],
+            'ConditionalTxs: txn already was executed by this signatory'
         );
-        require(!txn.isExecuted, 'ConditionalTxs: txn already was executed');
 
         txn.transactionCtx.setMsgValue(_msgValue);
         Executor.execute(txn.transactionCtx);
-        txs[_txId].isExecuted = true;
+        isExecutedBySignatory[_txId][_signatory] = true;
+
+        // Check is tx was executed by all signatories
+        uint256 executionProgress;
+        address[] memory signatoriesOfTx = signatories[_txId];
+        for (uint256 i = 0; i < signatoriesLen[_txId]; i++) {
+            if (isExecutedBySignatory[_txId][signatoriesOfTx[i]]) executionProgress++;
+        }
+        // If all signatories have executed the transaction - mark the tx as executed
+        if (executionProgress == signatoriesLen[_txId]) {
+            txs[_txId].isExecuted = true;
+        }
     }
 
     function checkConditions(

@@ -15,7 +15,7 @@ contract Agreement {
     event NewTransaction(
         uint256 txId,
         uint256[] requiredTxs,
-        address signatory,
+        address[] signatories,
         string transaction,
         string[] conditionStrs
     );
@@ -34,33 +34,36 @@ contract Agreement {
     function update(
         uint256 _txId,
         uint256[] memory _requiredTxs,
-        address _signatory,
+        address[] memory _signatories,
         string memory _transactionStr,
         string[] memory _conditionStrs,
         Context _transactionCtx,
         Context[] memory _conditionCtxs
     ) external {
         // console.log('update');
-        txs.addTxBlueprint(_txId, _requiredTxs, _signatory);
+        txs.addTxBlueprint(_txId, _requiredTxs, _signatories);
         for (uint256 i = 0; i < _conditionCtxs.length; i++) {
             txs.addTxCondition(_txId, _conditionStrs[i], _conditionCtxs[i]);
         }
         txs.addTxTransaction(_txId, _transactionStr, _transactionCtx);
 
-        emit NewTransaction(_txId, _requiredTxs, _signatory, _transactionStr, _conditionStrs);
+        emit NewTransaction(_txId, _requiredTxs, _signatories, _transactionStr, _conditionStrs);
     }
 
     function execute(uint256 _txId) external payable {
         payable(txs).transfer(msg.value);
         require(verify(_txId), 'Agreement: bad tx signatory');
         require(validate(_txId, msg.value), 'Agreement: tx condition is not satisfied');
-        require(fulfil(_txId, msg.value), 'Agreement: tx fulfilment error');
+        require(fulfil(_txId, msg.value, msg.sender), 'Agreement: tx fulfilment error');
     }
 
     function verify(uint256 _txId) internal view returns (bool) {
-        // console.log('verify');
-        (, , address signatory, ) = txs.txs(_txId);
-        return signatory == msg.sender;
+        for (uint256 i = 0; i < txs.signatoriesLen(_txId); i++) {
+            if (txs.signatories(_txId, i) == msg.sender) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function validate(uint256 _txId, uint256 _msgValue) internal returns (bool) {
@@ -70,15 +73,19 @@ contract Agreement {
 
         uint256 _result;
         for (uint256 i = 0; i < _len; i++) {
-            _result += txs.conditionCtxs(_txId, i).stack().seeLast().getUint256();
+            _result += (txs.conditionCtxs(_txId, i).stack().seeLast().getUint256() > 0) ? 1 : 0;
         }
         return _result == _len;
     }
 
-    function fulfil(uint256 _txId, uint256 _msgValue) internal returns (bool) {
+    function fulfil(
+        uint256 _txId,
+        uint256 _msgValue,
+        address _signatory
+    ) internal returns (bool) {
         // console.log('fulfil');
-        (IContext transactionCtx, , , ) = txs.txs(_txId);
-        txs.execTx(_txId, _msgValue);
+        (IContext transactionCtx, , ) = txs.txs(_txId);
+        txs.execTx(_txId, _msgValue, _signatory);
         return transactionCtx.stack().seeLast().getUint256() == 0 ? false : true;
     }
 }
