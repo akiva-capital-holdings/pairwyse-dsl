@@ -11,7 +11,7 @@ export const aliceAndBobSteps = (
   {
     txId: 1,
     requiredTxs: [],
-    signatory: alice.address,
+    signatories: [alice.address],
     transaction: `msgValue == uint256 ${oneEth}`,
     conditions: ['bool true'],
   },
@@ -19,7 +19,7 @@ export const aliceAndBobSteps = (
   {
     txId: 2,
     requiredTxs: [1],
-    signatory: bob.address,
+    signatories: [bob.address],
     transaction: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
     conditions: ['bool true'],
   },
@@ -27,7 +27,7 @@ export const aliceAndBobSteps = (
   {
     txId: 3,
     requiredTxs: [2],
-    signatory: alice.address,
+    signatories: [alice.address],
     transaction: `
               (transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()})
           and (sendEth ALICE ${oneEth})
@@ -47,7 +47,7 @@ export const aliceBobAndCarl = (
   {
     txId: 1,
     requiredTxs: [],
-    signatory: alice.address,
+    signatories: [alice.address],
     transaction: `msgValue == uint256 ${oneEth}`,
     conditions: ['bool true'],
   },
@@ -55,7 +55,7 @@ export const aliceBobAndCarl = (
   {
     txId: 2,
     requiredTxs: [],
-    signatory: carl.address,
+    signatories: [carl.address],
     transaction: `transferFrom TOKEN_ADDR CARL TRANSACTIONS ${tenTokens.toString()}`,
     conditions: ['bool true'],
   },
@@ -63,7 +63,7 @@ export const aliceBobAndCarl = (
   {
     txId: 3,
     requiredTxs: [1],
-    signatory: bob.address,
+    signatories: [bob.address],
     transaction: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
     conditions: ['bool true'],
   },
@@ -71,7 +71,7 @@ export const aliceBobAndCarl = (
   {
     txId: 4,
     requiredTxs: [3],
-    signatory: alice.address,
+    signatories: [alice.address],
     transaction: `
               (transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()})
           and (sendEth ALICE ${oneEth})
@@ -84,7 +84,7 @@ export const aliceBobAndCarl = (
   {
     txId: 5,
     requiredTxs: [],
-    signatory: bob.address,
+    signatories: [bob.address],
     transaction: `
               transfer TOKEN_ADDR BOB ${tenTokens.toString()}
           and (setLocalBool LENDER_WITHDRAW_INSURERS true)
@@ -100,7 +100,7 @@ export const aliceBobAndCarl = (
   {
     txId: 6,
     requiredTxs: [],
-    signatory: carl.address,
+    signatories: [carl.address],
     transaction: `transfer TOKEN_ADDR CARL ${tenTokens.toString()}`,
     conditions: [
       `
@@ -111,14 +111,16 @@ export const aliceBobAndCarl = (
   },
 ];
 
-export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) => [
-  {
-    txId: 1,
-    requiredTxs: [],
-    signatory: GP.address,
-    transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_INITIAL',
-    conditions: [
-      `(blockTimestamp < loadLocal uint256 PLACEMENT_DATE)
+export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithAddress[]) => {
+  const LPs = LPsSigners.map((LP) => LP.address);
+  return [
+    {
+      txId: 1,
+      requiredTxs: [],
+      signatories: [GP.address],
+      transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_INITIAL',
+      conditions: [
+        `(blockTimestamp < loadLocal uint256 PLACEMENT_DATE)
        and (
          loadLocal uint256 GP_INITIAL >=
          loadLocal uint256 ((INITIAL_FUNDS_TARGET * loadLocal uint256 DEPOSIT_MIN_PERCENT) / uint256 100)
@@ -129,37 +131,36 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
   {
     txId: 2,
     requiredTxs: [1],
-    signatory: LP.address,
-    transaction: 'transferFromVar DAI LP TRANSACTIONS_CONT LP_INITIAL',
-    conditions: [
-      `(blockTimestamp >= loadLocal uint256 PLACEMENT_DATE)
-         and
-       (blockTimestamp < loadLocal uint256 CLOSING_DATE)`,
-    ],
+    signatories: LPs,
+    transaction: `(transferFromVar DAI LP TRANSACTIONS_CONT LP_INITIAL)
+          and
+        (loadLocal uint256 LP_TOTAL + loadLocal uint256 LP_INITIAL) setUint256 LP_TOTAL`,
+      conditions: [
+        'blockTimestamp >= loadLocal uint256 PLACEMENT_DATE',
+        'blockTimestamp < loadLocal uint256 CLOSING_DATE',
+      ],
   },
   {
     txId: 3,
     requiredTxs: [2],
-    signatory: GP.address,
-    transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAINING',
-    conditions: [
-      `loadLocal uint256 GP_INITIAL +
-        loadLocal uint256 LP_INITIAL >= loadLocal uint256 INITIAL_FUNDS_TARGET`,
-      `(loadLocal uint256 DEPOSIT_MIN_PERCENT * loadLocal uint256 LP_INITIAL / loadLocal uint256 P1 - loadLocal uint256 GP_INITIAL
+    signatories: [GP.address],
+      transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAINING',
+      conditions: [
+        `loadLocal uint256 GP_INITIAL +
+        loadLocal uint256 LP_TOTAL >= loadLocal uint256 INITIAL_FUNDS_TARGET`,
+        `(loadLocal uint256 DEPOSIT_MIN_PERCENT * loadLocal uint256 LP_TOTAL / loadLocal uint256 P1 - loadLocal uint256 GP_INITIAL
          ) setUint256 GP_REMAINING`,
-      `(blockTimestamp >= loadLocal uint256 LOW_LIM)
-         and
-       (blockTimestamp <= loadLocal uint256 UP_LIM)
-         and
-       (balanceOf DAI TRANSACTIONS_CONT >=
-         ((loadLocal uint256 INITIAL_FUNDS_TARGET * loadLocal uint256 P1) / uint256 100)
-       )`,
-    ],
+        'blockTimestamp >= loadLocal uint256 LOW_LIM',
+        'blockTimestamp <= loadLocal uint256 UP_LIM',
+        `(balanceOf DAI TRANSACTIONS_CONT) >=
+            ((loadLocal uint256 INITIAL_FUNDS_TARGET * loadLocal uint256 P1) / uint256 100)`,
+      ],
   },
   {
     txId: 4,
     requiredTxs: [2],
-    signatory: LP.address, // TODO: make available for everyone?
+    signatories: LPs,
+    // todo: `transferVar DAI GP GP_INITIAL` into a separate branch
     transaction: `
       (transferVar DAI GP GP_INITIAL)
       and
@@ -182,7 +183,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
     //       same amount of DAI
     txId: 5,
     requiredTxs: [3],
-    signatory: GP.address,
+    signatories: [GP.address],
     transaction: 'transferVar DAI GP PURCHASE_AMOUNT',
     conditions: [
       `(blockTimestamp >= loadLocal uint256 FUND_INVESTMENT_DATE)
@@ -198,7 +199,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
     //       same: there is more DAI on the contract that it were initially deposited by GP & LP
     txId: 6,
     requiredTxs: [],
-    signatory: GP.address, // TODO: make `anyone`
+    signatories: [GP.address], // TODO: make `anyone`
     // TODO: swap ETH for DAI
     transaction: 'transferFromVar DAI WHALE TRANSACTIONS_CONT SOME_DAI',
     conditions: [
@@ -208,22 +209,22 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
   {
     txId: 71,
     requiredTxs: [6],
-    signatory: GP.address,
+    signatories: [GP.address],
     transaction: 'transferVar DAI GP MANAGEMENT_FEE',
     conditions: [
-      '(loadLocal uint256 LP_INITIAL * loadLocal uint256 MANAGEMENT_PERCENT / uint256 100) setUint256 MANAGEMENT_FEE',
+      '(loadLocal uint256 LP_TOTAL * loadLocal uint256 MANAGEMENT_PERCENT / uint256 100) setUint256 MANAGEMENT_FEE',
       `(uint256 100 * loadLocal uint256 MANAGEMENT_FEE
-         <= loadLocal uint256 MANAGEMENT_PERCENT * loadLocal uint256 LP_INITIAL)`,
+         <= loadLocal uint256 MANAGEMENT_PERCENT * loadLocal uint256 LP_TOTAL)`,
     ],
   },
   {
     txId: 72,
     requiredTxs: [6],
-    signatory: GP.address,
+    signatories: [GP.address],
     transaction: 'transferVar DAI GP CARRY',
     conditions: [
       `(loadLocal uint256 GP_INITIAL +
-          loadLocal uint256 LP_INITIAL +
+          loadLocal uint256 LP_TOTAL +
           loadLocal uint256 GP_REMAINING
         ) setUint256 INITIAL_DEPOSIT`,
       `(balanceOf DAI TRANSACTIONS_CONT > (
@@ -242,7 +243,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
           (uint256 0) setUint256 PROFIT
         }
       `,
-      `(loadLocal uint256 LP_INITIAL *
+      `(loadLocal uint256 LP_TOTAL *
           loadLocal uint256 HURDLE /
           uint256 100
        ) setUint256 THRESHOLD`,
@@ -263,80 +264,86 @@ export const businessCaseSteps = (GP: SignerWithAddress, LP: SignerWithAddress) 
   {
     txId: 73,
     requiredTxs: [6],
-    signatory: GP.address,
+    signatories: [GP.address],
     transaction: 'transferVar DAI GP GP_PRINICIPAL',
     conditions: [
-      `
-          (loadLocal uint256 PROFIT > uint256 0)
-          ifelse ZERO_LOSS NONZERO_LOSS
-          end
-
-          ZERO_LOSS {
-            (uint256 0) setUint256 LOSS
-          }
-
-          NONZERO_LOSS {
-            (loadLocal uint256 GP_INITIAL +
-              loadLocal uint256 LP_INITIAL +
-              loadLocal uint256 GP_REMAINING -
-              (balanceOf DAI TRANSACTIONS_CONT) -
-              loadLocal uint256 MANAGEMENT_FEE
-            ) setUint256 LOSS
-          }
-      `,
-      `
+        `
+            (loadLocal uint256 PROFIT > uint256 0)
+            ifelse ZERO_LOSS NONZERO_LOSS
+            end
+            ZERO_LOSS {
+              (uint256 0) setUint256 LOSS
+            }
+            NONZERO_LOSS {
+              (loadLocal uint256 GP_INITIAL +
+                loadLocal uint256 LP_TOTAL +
+                loadLocal uint256 GP_REMAINING -
+                (balanceOf DAI TRANSACTIONS_CONT) -
+                loadLocal uint256 MANAGEMENT_FEE
+              ) setUint256 LOSS
+            }
+        `,
+        `
           (loadLocal uint256 LOSS > (loadLocal uint256 GP_INITIAL + loadLocal uint256 GP_REMAINING))
           ifelse WITHDRAW_ZERO WITHDRAW_NONZERO
           end
-
           WITHDRAW_ZERO {
             (uint256 0) setUint256 GP_PRINICIPAL
           }
-
           WITHDRAW_NONZERO {
             (loadLocal uint256 GP_INITIAL +
               loadLocal uint256 GP_REMAINING -
               loadLocal uint256 LOSS
             ) setUint256 GP_PRINICIPAL
           }
-      `,
-    ],
-  },
-  {
-    txId: 81,
-    requiredTxs: [6],
-    signatory: LP.address,
-    transaction: 'transferVar DAI LP LP_PROFIT',
-    conditions: ['(loadLocal uint256 PROFIT - loadLocal uint256 CARRY) setUint256 LP_PROFIT'],
-  },
-  {
-    txId: 82,
-    requiredTxs: [6],
-    signatory: LP.address,
-    transaction: 'transferVar DAI LP LP_PRINCIPAL',
-    conditions: [
-      `(
-         (loadLocal uint256 GP_INITIAL + loadLocal uint256 GP_REMAINING) >
-         loadLocal uint256 LOSS
-       )
-       ifelse ZERO NONZERO
-       end
-
-       ZERO {
-         (uint256 0) setUint256 UNCOVERED_NET_LOSSES
-       }
-
-       NONZERO {
-         (loadLocal uint256 LOSS -
-           loadLocal uint256 GP_INITIAL -
-           loadLocal uint256 GP_REMAINING
-         ) setUint256 UNCOVERED_NET_LOSSES
-       }
-      `,
-      `(loadLocal uint256 LP_INITIAL -
-         loadLocal uint256 MANAGEMENT_FEE -
-         loadLocal uint256 UNCOVERED_NET_LOSSES
-       ) setUint256 LP_PRINCIPAL`,
-    ],
-  },
-];
+        `,
+      ],
+    },
+    {
+      txId: 81,
+      requiredTxs: [6],
+      signatories: LPs,
+      transaction: 'transferVar DAI LP LP_PROFIT',
+      conditions: [
+        '(loadLocal uint256 PROFIT - loadLocal uint256 CARRY) setUint256 ALL_LPs_PROFIT',
+        `(loadLocal uint256 ALL_LPs_PROFIT *
+          loadLocal uint256 LP_INITIAL /
+          loadLocal uint256 LP_TOTAL
+         ) setUint256 LP_PROFIT`,
+      ],
+    },
+    {
+      txId: 82,
+      requiredTxs: [6],
+      signatories: LPs,
+      transaction: 'transferVar DAI LP LP_PRINCIPAL',
+      conditions: [
+        `(
+           loadLocal uint256 MANAGEMENT_FEE *
+           loadLocal uint256 LP_INITIAL /
+           loadLocal uint256 LP_TOTAL
+         ) setUint256 MANAGEMENT_FEE_LP`,
+        `(
+           (loadLocal uint256 GP_INITIAL + loadLocal uint256 GP_REMAINING) >
+           loadLocal uint256 LOSS
+         )
+         ifelse ZERO NONZERO
+         end
+         ZERO {
+           (uint256 0) setUint256 UNCOVERED_NET_LOSSES
+         }
+         NONZERO {
+           (loadLocal uint256 LOSS -
+             loadLocal uint256 GP_INITIAL -
+             loadLocal uint256 GP_REMAINING
+           ) setUint256 UNCOVERED_NET_LOSSES
+         }
+        `,
+        `(loadLocal uint256 LP_INITIAL -
+           loadLocal uint256 MANAGEMENT_FEE_LP -
+           loadLocal uint256 UNCOVERED_NET_LOSSES
+         ) setUint256 LP_PRINCIPAL`,
+      ],
+    },
+  ];
+};
