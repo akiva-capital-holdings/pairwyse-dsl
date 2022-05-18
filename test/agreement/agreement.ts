@@ -10,7 +10,7 @@ import { Parser } from '../../typechain/Parser';
 import { ConditionalTxs, Context__factory } from '../../typechain';
 import { TxObject } from '../types';
 
-describe('Agreement', () => {
+describe.only('Agreement', () => {
   let ContextCont: Context__factory;
   let parser: Parser;
   let agreement: Agreement;
@@ -90,6 +90,7 @@ describe('Agreement', () => {
     GP_FAILS_TO_DO_GAP_DEPOSIT: boolean
   ) => {
     it(name, async () => {
+      // ✅ Step 0 | Setup
       // Set variables
       LAST_BLOCK_TIMESTAMP = (
         await ethers.provider.getBlock(
@@ -112,7 +113,12 @@ describe('Agreement', () => {
       // Add tx objects to Agreement
       const LP_ARR = LPs.filter((_, i) => i < LP_INITIAL_ARR.length);
       console.log('\n\nUpdating Agreement Terms and Conditions...');
-      await addSteps(businessCaseSteps(GP, LP_ARR), ContextCont);
+
+      if (!process.env.AGREEMENT_ADDR) {
+        console.log('\n\nSkip adding steps to Agreement');
+        await addSteps(businessCaseSteps(GP, LP_ARR), ContextCont);
+      }
+
       console.log('\n\nAgreement Updated with new Terms & Conditions');
       console.log('\n\nTesting Agreement Execution...\n\n');
 
@@ -125,10 +131,10 @@ describe('Agreement', () => {
 
       NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
       NEXT_TWO_MONTH = LAST_BLOCK_TIMESTAMP + 2 * ONE_MONTH;
-      // let EXPECTED_CONTRACT_BAL = BigNumber.from('0');
+      let EXPECTED_CONTRACT_BAL_BN = BigNumber.from('0');
       let EXPECTED_CONTRACT_BAL = 0;
 
-      // Step 1
+      // ✅ Step 1
       console.log('\n🏃 Agreement Lifecycle - Txn #1');
       await dai.connect(whale).transfer(GP.address, GP_INITIAL);
       await dai.connect(GP).approve(txsAddr, GP_INITIAL);
@@ -142,30 +148,38 @@ describe('Agreement', () => {
       await txs.setStorageUint256(hex4Bytes('PLACEMENT_DATE'), NEXT_MONTH);
       await txs.setStorageUint256(hex4Bytes('MANAGEMENT_PERCENT'), MANAGEMENT_FEE_PERCENTAGE);
       await txs.setStorageUint256(hex4Bytes('DEPOSIT_MIN_PERCENT'), DEPOSIT_MIN_PERCENT);
-      let result = false;
-      try {
-        // EXPECTED_CONTRACT_BAL = EXPECTED_CONTRACT_BAL.add(GP_INITIAL);
-        EXPECTED_CONTRACT_BAL += GP_INITIAL.toNumber();
-        const txn1 = await agreement.connect(GP).execute(1);
-        const daiBal = await dai.balanceOf(txsAddr);
-        expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL);
-        console.log(`Cash Balance = ${formatEther(daiBal)} DAI`);
-        console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
-        console.log(`txn hash: \x1b[35m${txn1.hash}\x1b[0m`);
-        result = true;
-      } catch {
-        await expect(agreement.connect(GP).execute(1)).to.be.revertedWith(
-          'Agreement: tx condition is not satisfied'
-        );
-        console.log(`\x1b[33m
-      Condition is not satisfied.
-      GP must deposit a minimum ${DEPOSIT_MIN_PERCENT}% of the initial DAI funds target amount\x1b[0m
-      `);
-      }
-      // Other tests have no sense if result is false
-      if (!result) return;
+      // let result = false;
+      // try {
+      const txn1 = await agreement.connect(GP).execute(1);
 
-      // Step 2
+      EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.add(GP_INITIAL);
+      EXPECTED_CONTRACT_BAL += GP_INITIAL.toNumber();
+      let daiBal = await dai.balanceOf(txsAddr);
+      expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL_BN);
+
+      console.log({
+        realContractBal: daiBal.toString(),
+        calcBalBN: EXPECTED_CONTRACT_BAL_BN.toString(),
+        calcBalNumber: EXPECTED_CONTRACT_BAL,
+      });
+
+      console.log(`Cash Balance = ${formatEther(daiBal)} DAI`);
+      console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
+      console.log(`txn hash: \x1b[35m${txn1.hash}\x1b[0m`);
+      // result = true;
+      // } catch {
+      //   await expect(agreement.connect(GP).execute(1)).to.be.revertedWith(
+      //     'Agreement: tx condition is not satisfied'
+      //   );
+      //   console.log(`\x1b[33m
+      // Condition is not satisfied.
+      // GP must deposit a minimum ${DEPOSIT_MIN_PERCENT}% of the initial DAI funds target amount\x1b[0m
+      // `);
+      // }
+      // Other tests have no sense if result is false
+      // if (!result) return;
+
+      // ✅ Step 2
       console.log('\n🏃 Agreement Lifecycle - Txn #2');
       await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
       let LP_TOTAL = BigNumber.from(0);
@@ -180,11 +194,19 @@ describe('Agreement', () => {
         await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
         await txs.setStorageUint256(hex4Bytes('CLOSING_DATE'), NEXT_TWO_MONTH);
 
-        // EXPECTED_CONTRACT_BAL = EXPECTED_CONTRACT_BAL.add(LP_INITIAL);
-        EXPECTED_CONTRACT_BAL += LP_INITIAL.toNumber();
         const txn2 = await agreement.connect(LP).execute(2);
-        const daiBal = await dai.balanceOf(txsAddr);
-        expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL);
+
+        EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.add(LP_INITIAL);
+        EXPECTED_CONTRACT_BAL += LP_INITIAL.toNumber();
+        daiBal = await dai.balanceOf(txsAddr);
+        expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL_BN);
+
+        console.log({
+          realContractBal: daiBal.toString(),
+          calcBalBN: EXPECTED_CONTRACT_BAL_BN.toString(),
+          calcBalNumber: EXPECTED_CONTRACT_BAL,
+        });
+
         console.log(`Cash Balance = ${formatEther(daiBal)} DAI`);
         console.log(`signatory: \x1b[35m${LP.address}\x1b[0m`);
         console.log(`txn hash: \x1b[35m${txn2.hash}\x1b[0m`);
@@ -195,20 +217,25 @@ describe('Agreement', () => {
         expect(LP_TOTAL).to.equal(DSL_LP_TOTAL);
       }
 
-      let GP_REMAINING = BigNumber.from(0);
+      let GP_REMAINING_BN = BigNumber.from(0);
+      let GP_REMAINING = 0;
       if (!GP_FAILS_TO_DO_GAP_DEPOSIT) {
-        // Step 3
+        // ✅ Step 3
         console.log('\n🏃 Agreement Lifecycle - Txn #3');
 
         await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH]);
-        GP_REMAINING = BigNumber.from(DEPOSIT_MIN_PERCENT)
+        GP_REMAINING_BN = BigNumber.from(DEPOSIT_MIN_PERCENT)
           .mul(LP_TOTAL)
           .div(MAX_PERCENT)
           .sub(GP_INITIAL);
-        GP_REMAINING = GP_REMAINING.lt(0) ? BigNumber.from(0) : GP_REMAINING;
-        await dai.connect(whale).transfer(GP.address, GP_REMAINING);
-        await dai.connect(GP).approve(txsAddr, GP_REMAINING);
-        console.log(`GP Gap Deposit = ${formatEther(GP_REMAINING)} DAI`);
+        GP_REMAINING_BN = GP_REMAINING_BN.lt(0) ? BigNumber.from(0) : GP_REMAINING_BN;
+        GP_REMAINING =
+          (DEPOSIT_MIN_PERCENT * LP_TOTAL.toNumber()) / MAX_PERCENT - GP_INITIAL.toNumber();
+        GP_REMAINING = GP_REMAINING < 0 ? 0 : GP_REMAINING;
+
+        await dai.connect(whale).transfer(GP.address, GP_REMAINING_BN);
+        await dai.connect(GP).approve(txsAddr, GP_REMAINING_BN);
+        console.log(`GP Gap Deposit = ${formatEther(GP_REMAINING_BN)} DAI`);
         const GP_GAP_DEPOSIT_LOWER_TIME = NEXT_TWO_MONTH - ONE_DAY;
         const GP_GAP_DEPOSIT_UPPER_TIME = NEXT_TWO_MONTH + ONE_DAY;
 
@@ -222,18 +249,26 @@ describe('Agreement', () => {
           () => agreement.connect(GP).execute(3),
           dai,
           [GP],
-          [GP_REMAINING.mul(-1)]
+          [GP_REMAINING_BN.mul(-1)]
         );
-        // EXPECTED_CONTRACT_BAL = EXPECTED_CONTRACT_BAL.add(GP_REMAINING);
-        EXPECTED_CONTRACT_BAL += GP_REMAINING.toNumber();
-        const daiBal = await dai.balanceOf(txsAddr);
-        expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL);
+
+        EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.add(GP_REMAINING_BN);
+        EXPECTED_CONTRACT_BAL += GP_REMAINING;
+        daiBal = await dai.balanceOf(txsAddr);
+        expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL_BN);
+
+        console.log({
+          realContractBal: daiBal.toString(),
+          calcBalBN: EXPECTED_CONTRACT_BAL_BN.toString(),
+          calcBalNumber: EXPECTED_CONTRACT_BAL,
+        });
+
         console.log(`Cash Balance = ${formatEther(daiBal)} DAI`);
         console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
         console.log(`txn hash: \x1b[35m${txn3Hash}\x1b[0m`);
       }
 
-      // Step 4
+      // ✅ Step 4
       console.log('\n🏃 Agreement Lifecycle - Txn #4');
       await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH + 2 * ONE_DAY]);
       await txs.setStorageUint256(hex4Bytes('FUND_INVESTMENT_DATE'), NEXT_TWO_MONTH + 7 * ONE_DAY);
@@ -270,86 +305,92 @@ describe('Agreement', () => {
       }
 
       if (!GP_FAILS_TO_DO_GAP_DEPOSIT) {
-        // Step 5
+        // ✅ Step 5
         console.log('\n🏃 Agreement Lifecycle - Txn #5');
         let DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
-        console.log({
-          DAI_BAL_OF_TXS,
-          EXPECTED_CONTRACT_BAL,
-        });
-        // const PURCHASE_AMOUNT = DAI_BAL_OF_TXS.mul(PURCHASE_PERCENT).div(100);
+        const PURCHASE_AMOUNT_BN = DAI_BAL_OF_TXS.mul(PURCHASE_PERCENT).div(100);
         const PURCHASE_AMOUNT = (EXPECTED_CONTRACT_BAL * PURCHASE_PERCENT) / 100;
-        console.log(`GP ETH Asset Purchase = ${formatEther(PURCHASE_AMOUNT)} DAI`);
+        console.log(`GP ETH Asset Purchase = ${formatEther(PURCHASE_AMOUNT_BN)} DAI`);
         const FUND_INVESTMENT_DATE = NEXT_TWO_MONTH + 7 * ONE_DAY;
 
         await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH + 7 * ONE_DAY]);
         await txs.setStorageUint256(hex4Bytes('FUND_INVESTMENT_DATE'), FUND_INVESTMENT_DATE);
-        await txs.setStorageUint256(hex4Bytes('PURCHASE_AMOUNT'), PURCHASE_AMOUNT);
+        await txs.setStorageUint256(hex4Bytes('PURCHASE_AMOUNT'), PURCHASE_AMOUNT_BN);
         await txs.setStorageUint256(hex4Bytes('PURCHASE_PERCENT'), PURCHASE_PERCENT);
-        let txn5Hash;
-        result = false;
-        try {
-          txn5Hash = await changeTokenBalanceAndGetTxHash(
-            () => agreement.connect(GP).execute(5),
-            dai,
-            [GP],
-            [BigNumber.from(PURCHASE_AMOUNT)]
-          );
-          result = true;
-        } catch {
-          await expect(agreement.connect(GP).execute(5)).to.be.revertedWith(
-            'Agreement: tx condition is not satisfied'
-          );
-          console.log(`\x1b[33m
-        Condition is not satisfied.
-        GP authorized to purchase the investment asset using up to 90% of total \
-initiating funds\x1b[0m
-          `);
-        }
-        // EXPECTED_CONTRACT_BAL = EXPECTED_CONTRACT_BAL.sub(PURCHASE_AMOUNT);
-        let daiBal = await dai.balanceOf(txsAddr);
+        // let txn5Hash;
+        // result = false;
+        // try {
+        const txn5Hash = await changeTokenBalanceAndGetTxHash(
+          () => agreement.connect(GP).execute(5),
+          dai,
+          [GP],
+          [PURCHASE_AMOUNT_BN]
+        );
+        //           result = true;
+        //         } catch {
+        //           await expect(agreement.connect(GP).execute(5)).to.be.revertedWith(
+        //             'Agreement: tx condition is not satisfied'
+        //           );
+        //           console.log(`\x1b[33m
+        //         Condition is not satisfied.
+        //         GP authorized to purchase the investment asset using up to 90% of total \
+        // initiating funds\x1b[0m
+        //           `);
+        //         }
+        EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.sub(PURCHASE_AMOUNT_BN);
         EXPECTED_CONTRACT_BAL -= PURCHASE_AMOUNT;
-        console.log({ EXPECTED_CONTRACT_BAL });
-        expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL);
+        daiBal = await dai.balanceOf(txsAddr);
+        expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL_BN);
+
+        console.log({
+          realContractBal: daiBal.toString(),
+          calcBalBN: EXPECTED_CONTRACT_BAL_BN.toString(),
+          calcBalNumber: EXPECTED_CONTRACT_BAL,
+        });
 
         // Other tests have no sense if result is false
-        if (!result) return;
+        // if (!result) return;
 
         console.log(`Cash Balance = ${formatEther(daiBal)} DAI`);
         console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
         console.log(`txn hash: \x1b[35m${txn5Hash}\x1b[0m`);
 
-        // Step 6
+        // ✅ Step 6
         console.log('\n🏃 Agreement Lifecycle - Txn #6');
         LP_TOTAL = await txs.getStorageUint256(hex4Bytes('LP_TOTAL'));
         const WHALE = whale.address;
-        // const GP_PURCHASE_RETURN = PURCHASE_AMOUNT.sub(CAPITAL_LOSS).add(CAPITAL_GAINS);
+        const GP_PURCHASE_RETURN_BN = PURCHASE_AMOUNT_BN.sub(CAPITAL_LOSS).add(CAPITAL_GAINS);
         const GP_PURCHASE_RETURN =
           PURCHASE_AMOUNT - CAPITAL_LOSS.toNumber() + CAPITAL_GAINS.toNumber();
-        console.log({ GP_PURCHASE_RETURN: GP_PURCHASE_RETURN.toString() });
+        console.log({ GP_PURCHASE_RETURN_BN: GP_PURCHASE_RETURN_BN.toString() });
 
         await ethers.provider.send('evm_setNextBlockTimestamp', [FUND_INVESTMENT_DATE + ONE_YEAR]);
 
         await txs.setStorageUint256(hex4Bytes('WHALE'), WHALE);
-        await txs.setStorageUint256(hex4Bytes('GP_PURCHASE_RETURN'), GP_PURCHASE_RETURN);
-        await dai.connect(whale).approve(txsAddr, GP_PURCHASE_RETURN);
-        console.log(`Fund Investment Return = ${formatEther(GP_PURCHASE_RETURN)} DAI`);
+        await txs.setStorageUint256(hex4Bytes('GP_PURCHASE_RETURN'), GP_PURCHASE_RETURN_BN);
+        await dai.connect(whale).approve(txsAddr, GP_PURCHASE_RETURN_BN);
+        console.log(`Fund Investment Return = ${formatEther(GP_PURCHASE_RETURN_BN)} DAI`);
 
         const cashBalanceBefore = await dai.balanceOf(txsAddr);
         const txn6 = await agreement.connect(GP).execute(6);
         const cashBalanceAfter = await dai.balanceOf(txsAddr);
 
-        // EXPECTED_CONTRACT_BAL = EXPECTED_CONTRACT_BAL.add(GP_PURCHASE_RETURN);
+        EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.add(GP_PURCHASE_RETURN_BN);
         EXPECTED_CONTRACT_BAL += GP_PURCHASE_RETURN;
         daiBal = await dai.balanceOf(txsAddr);
-        console.log({ EXPECTED_CONTRACT_BAL });
-        expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL);
+        expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL_BN);
+
+        console.log({
+          realContractBal: daiBal.toString(),
+          calcBalBN: EXPECTED_CONTRACT_BAL_BN.toString(),
+          calcBalNumber: EXPECTED_CONTRACT_BAL,
+        });
 
         console.log({ CAPITAL_GAINS: CAPITAL_GAINS.toString() });
         console.log({ cashBalanceBefore: cashBalanceBefore.toString() });
         console.log({ cashBalanceAfter: cashBalanceAfter.toString() });
 
-        if (!cashBalanceAfter.eq(cashBalanceBefore.add(GP_PURCHASE_RETURN))) {
+        if (!cashBalanceAfter.eq(cashBalanceBefore.add(GP_PURCHASE_RETURN_BN))) {
           // console.log(`\x1b[33m
           // Calculation balances error. Check if CAPITAL GAINS affect for cash balance\x1b[0m
           //   `);
@@ -361,57 +402,63 @@ initiating funds\x1b[0m
         console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
         console.log(`txn hash: \x1b[35m${txn6.hash}\x1b[0m`);
 
-        // Step 7a
+        // ✅ Step 7a
         console.log('\n🏃 Agreement Lifecycle - Txn #71');
-        // const MANAGEMENT_FEE = LP_TOTAL.mul(MANAGEMENT_FEE_PERCENTAGE).div(100);
+        const MANAGEMENT_FEE_BN = LP_TOTAL.mul(MANAGEMENT_FEE_PERCENTAGE).div(100);
         const MANAGEMENT_FEE = (LP_TOTAL.toNumber() * MANAGEMENT_FEE_PERCENTAGE) / 100;
-        console.log(`GP Management Fee = ${formatEther(MANAGEMENT_FEE)} DAI`);
+        console.log(`GP Management Fee = ${formatEther(MANAGEMENT_FEE_BN)} DAI`);
 
         const txn71Hash = await changeTokenBalanceAndGetTxHash(
           () => agreement.connect(GP).execute(71),
           dai,
           [GP],
-          [BigNumber.from(MANAGEMENT_FEE)]
+          [MANAGEMENT_FEE_BN]
         );
 
+        EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.sub(MANAGEMENT_FEE_BN);
         EXPECTED_CONTRACT_BAL -= MANAGEMENT_FEE;
         daiBal = await dai.balanceOf(txsAddr);
-        console.log({ EXPECTED_CONTRACT_BAL });
-        expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL);
+        expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL_BN);
+
+        console.log({
+          realContractBal: daiBal.toString(),
+          calcBalBN: EXPECTED_CONTRACT_BAL_BN.toString(),
+          calcBalNumber: EXPECTED_CONTRACT_BAL,
+        });
 
         console.log(`Cash Balance = ${formatEther(daiBal)} DAI`);
         console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
         console.log(`txn hash: \x1b[35m${txn71Hash}\x1b[0m`);
 
-        // Step 7b
+        // ✅ Step 7b
         console.log('\n🏃 Agreement Lifecycle - Txn #72');
         DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
-        console.log({
-          EXPECTED_CONTRACT_BAL,
-          DAI_BAL_OF_TXS: DAI_BAL_OF_TXS.toString(),
-        });
-        // let PROFIT = BigNumber.from(EXPECTED_CONTRACT_BAL)
-        //   .add(MANAGEMENT_FEE)
-        //   .sub(GP_INITIAL)
-        //   .sub(LP_TOTAL)
-        //   .sub(GP_REMAINING);
+
+        let PROFIT_BN = BigNumber.from(EXPECTED_CONTRACT_BAL_BN)
+          .add(MANAGEMENT_FEE_BN)
+          .sub(GP_INITIAL)
+          .sub(LP_TOTAL)
+          .sub(GP_REMAINING);
+        PROFIT_BN = PROFIT_BN.gt(0) ? PROFIT_BN : BigNumber.from(0);
         let PROFIT =
           EXPECTED_CONTRACT_BAL +
           MANAGEMENT_FEE -
           GP_INITIAL.toNumber() -
           LP_TOTAL.toNumber() -
-          GP_REMAINING.toNumber();
-        // PROFIT = PROFIT.gt(0) ? PROFIT : BigNumber.from(0);
+          GP_REMAINING;
         PROFIT = PROFIT > 0 ? PROFIT : 0;
-        console.log(`Fund Profit = ${formatEther(PROFIT)} DAI`);
-        // const THRESHOLD = LP_TOTAL.mul(HURDLE).div(100);
+
+        console.log(`Fund Profit = ${formatEther(PROFIT_BN)} DAI`);
+        const THRESHOLD_BN = LP_TOTAL.mul(HURDLE).div(100);
         const THRESHOLD = (LP_TOTAL.toNumber() * HURDLE) / 100;
-        // const DELTA = PROFIT.gt(THRESHOLD) ? PROFIT.sub(THRESHOLD) : BigNumber.from(0);
+        const DELTA_BN = PROFIT_BN.gt(THRESHOLD_BN)
+          ? PROFIT_BN.sub(THRESHOLD_BN)
+          : BigNumber.from(0);
         const DELTA = PROFIT > THRESHOLD ? PROFIT - THRESHOLD : 0;
-        // const CARRY = DELTA.mul(PROFIT_PART).div(100);
+        const CARRY_BN = DELTA_BN.mul(PROFIT_PART).div(100);
         const CARRY = (DELTA * PROFIT_PART) / 100;
 
-        console.log(`GP Carry Charge = ${formatEther(CARRY)} DAI`);
+        console.log(`GP Carry Charge = ${formatEther(CARRY_BN)} DAI`);
 
         await txs.setStorageUint256(hex4Bytes('HURDLE'), HURDLE);
         await txs.setStorageUint256(hex4Bytes('PROFIT_PART'), PROFIT_PART);
@@ -420,63 +467,75 @@ initiating funds\x1b[0m
           () => agreement.connect(GP).execute(72),
           dai,
           [GP],
-          [BigNumber.from(CARRY)]
+          [CARRY_BN]
         );
 
+        EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.sub(CARRY_BN);
         EXPECTED_CONTRACT_BAL -= CARRY;
         daiBal = await dai.balanceOf(txsAddr);
-        console.log({ EXPECTED_CONTRACT_BAL });
-        expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL);
+        expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL_BN);
+
+        console.log({
+          realContractBal: daiBal.toString(),
+          calcBalBN: EXPECTED_CONTRACT_BAL_BN.toString(),
+          calcBalNumber: EXPECTED_CONTRACT_BAL,
+        });
 
         console.log(`Cash Balance = ${formatEther(daiBal)} DAI`);
         console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
         console.log(`txn hash: \x1b[35m${txn72Hash}\x1b[0m`);
 
-        // Step 7c
+        // ✅ Step 7c
         console.log('\n🏃 Agreement Lifecycle - Txn #73');
         DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
-        console.log({ DAI_BAL_OF_TXS: DAI_BAL_OF_TXS.toString(), EXPECTED_CONTRACT_BAL });
-        // const LOSS = PROFIT.gt(0)
-        //   ? BigNumber.from(0)
-        //   : GP_INITIAL.add(LP_TOTAL)
-        //       .add(GP_REMAINING)
-        //       .sub(EXPECTED_CONTRACT_BAL)
-        //       .sub(MANAGEMENT_FEE);
+        const LOSS_BN = PROFIT_BN.gt(0)
+          ? BigNumber.from(0)
+          : GP_INITIAL.add(LP_TOTAL)
+              .add(GP_REMAINING)
+              .sub(EXPECTED_CONTRACT_BAL)
+              .sub(MANAGEMENT_FEE_BN);
         const LOSS =
           PROFIT > 0
             ? 0
             : GP_INITIAL.toNumber() +
               LP_TOTAL.toNumber() +
-              GP_REMAINING.toNumber() -
+              GP_REMAINING -
               EXPECTED_CONTRACT_BAL -
               MANAGEMENT_FEE;
-        console.log(`Fund Total Loss = ${formatEther(LOSS)} DAI`);
-        // const GP_PRINICIPAL = LOSS.gt(GP_INITIAL.add(GP_REMAINING))
-        //   ? BigNumber.from(0)
-        //   : GP_INITIAL.add(GP_REMAINING).sub(LOSS);
+
+        console.log(`Fund Total Loss = ${formatEther(LOSS_BN)} DAI`);
+        const GP_PRINICIPAL_BN = LOSS_BN.gt(GP_INITIAL.add(GP_REMAINING))
+          ? BigNumber.from(0)
+          : GP_INITIAL.add(GP_REMAINING).sub(LOSS_BN);
         const GP_PRINICIPAL =
-          LOSS > GP_INITIAL.toNumber() + GP_REMAINING.toNumber()
+          LOSS > GP_INITIAL.toNumber() + GP_REMAINING
             ? 0
-            : GP_INITIAL.toNumber() + GP_REMAINING.toNumber() - LOSS;
-        console.log(`GP Principal = ${formatEther(GP_PRINICIPAL)} DAI`);
+            : GP_INITIAL.toNumber() + GP_REMAINING - LOSS;
+        console.log(`GP Principal = ${formatEther(GP_PRINICIPAL_BN)} DAI`);
 
         const txn73Hash = await changeTokenBalanceAndGetTxHash(
           () => agreement.connect(GP).execute(73),
           dai,
           [GP],
-          [BigNumber.from(GP_PRINICIPAL)]
+          [GP_PRINICIPAL_BN]
         );
 
+        EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.sub(GP_PRINICIPAL_BN);
         EXPECTED_CONTRACT_BAL -= GP_PRINICIPAL;
         daiBal = await dai.balanceOf(txsAddr);
-        console.log({ EXPECTED_CONTRACT_BAL });
-        expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL);
+        expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL_BN);
+
+        console.log({
+          realContractBal: daiBal.toString(),
+          calcBalBN: EXPECTED_CONTRACT_BAL_BN.toString(),
+          calcBalNumber: EXPECTED_CONTRACT_BAL,
+        });
 
         console.log(`Cash Balance = ${formatEther(daiBal)} DAI`);
         console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
         console.log(`txn hash: \x1b[35m${txn73Hash}\x1b[0m`);
 
-        // Step 8a
+        // ✅ Step 8a
         console.log('\n🏃 Agreement Lifecycle - Txn #81');
 
         for (let i = 0; i < LP_INITIAL_ARR.length; i++) {
@@ -486,36 +545,42 @@ initiating funds\x1b[0m
           await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
           await txs.setStorageUint256(hex4Bytes('LP'), LP.address);
 
-          // const ALL_LPS_PROFIT = PROFIT.gt(0) ? PROFIT.sub(CARRY) : BigNumber.from(0);
+          const ALL_LPS_PROFIT_BN = PROFIT_BN.gt(0) ? PROFIT_BN.sub(CARRY_BN) : BigNumber.from(0);
           const ALL_LPS_PROFIT = PROFIT > 0 ? PROFIT - CARRY : 0;
-          // const LP_PROFIT = ALL_LPS_PROFIT.mul(LP_INITIAL).div(LP_TOTAL);
+          const LP_PROFIT_BN = ALL_LPS_PROFIT_BN.mul(LP_INITIAL).div(LP_TOTAL);
           const LP_PROFIT = (ALL_LPS_PROFIT * LP_INITIAL.toNumber()) / LP_TOTAL.toNumber();
           console.log({
-            LP_PROFIT: LP_PROFIT.toString(),
-            ALL_LPS_PROFIT: ALL_LPS_PROFIT.toString(),
+            LP_PROFIT_BN: LP_PROFIT_BN.toString(),
+            ALL_LPS_PROFIT_BN: ALL_LPS_PROFIT_BN.toString(),
             LP_INITIAL: LP_INITIAL.toString(),
             LP_TOTAL: LP_TOTAL.toString(),
           });
-          console.log(`LP Investment Profit = ${formatEther(LP_PROFIT)} DAI`);
+          console.log(`LP Investment Profit = ${formatEther(LP_PROFIT_BN)} DAI`);
 
           const txn81Hash = await changeTokenBalanceAndGetTxHash(
             () => agreement.connect(LP).execute(81),
             dai,
             [LP],
-            [BigNumber.from(LP_PROFIT)]
+            [LP_PROFIT_BN]
           );
 
+          EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.sub(LP_PROFIT_BN);
           EXPECTED_CONTRACT_BAL -= LP_PROFIT;
           daiBal = await dai.balanceOf(txsAddr);
-          console.log({ EXPECTED_CONTRACT_BAL });
-          expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL);
+          expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL_BN);
+
+          console.log({
+            realContractBal: daiBal.toString(),
+            calcBalBN: EXPECTED_CONTRACT_BAL_BN.toString(),
+            calcBalNumber: EXPECTED_CONTRACT_BAL,
+          });
 
           console.log(`Cash Balance = ${formatEther(daiBal)} DAI`);
           console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
           console.log(`txn hash: \x1b[35m${txn81Hash}\x1b[0m`);
         }
 
-        // Step 8b
+        // ✅ Step 8b
         console.log('\n🏃 Agreement Lifecycle - Txn #82');
 
         for (let i = 0; i < LP_INITIAL_ARR.length; i++) {
@@ -525,31 +590,37 @@ initiating funds\x1b[0m
           await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
           await txs.setStorageUint256(hex4Bytes('LP'), LP.address);
 
-          // const MANAGEMENT_FEE_LP = MANAGEMENT_FEE.mul(LP_INITIAL).div(LP_TOTAL);
+          const MANAGEMENT_FEE_LP_BN = MANAGEMENT_FEE_BN.mul(LP_INITIAL).div(LP_TOTAL);
           const MANAGEMENT_FEE_LP = (MANAGEMENT_FEE * LP_INITIAL.toNumber()) / LP_TOTAL.toNumber();
-          // const UNCOVERED_NET_LOSSES = GP_INITIAL.sub(GP_REMAINING).gte(LOSS)
-          //   ? BigNumber.from(0)
-          //   : LOSS.sub(GP_INITIAL).sub(GP_REMAINING);
+          const UNCOVERED_NET_LOSSES_BN = GP_INITIAL.sub(GP_REMAINING).gte(LOSS_BN)
+            ? BigNumber.from(0)
+            : LOSS_BN.sub(GP_INITIAL).sub(GP_REMAINING);
           const UNCOVERED_NET_LOSSES =
-            GP_INITIAL.toNumber() - GP_REMAINING.toNumber() >= LOSS
+            GP_INITIAL.toNumber() - GP_REMAINING >= LOSS
               ? 0
-              : LOSS - GP_INITIAL.toNumber() - GP_REMAINING.toNumber();
-          console.log(`Uncovered Net Losses = ${formatEther(UNCOVERED_NET_LOSSES)} DAI`);
-          // const LP_PRINCIPAL = LP_INITIAL.sub(MANAGEMENT_FEE_LP).sub(UNCOVERED_NET_LOSSES);
+              : LOSS - GP_INITIAL.toNumber() - GP_REMAINING;
+          console.log(`Uncovered Net Losses = ${formatEther(UNCOVERED_NET_LOSSES_BN)} DAI`);
+          const LP_PRINCIPAL_BN = LP_INITIAL.sub(MANAGEMENT_FEE_LP_BN).sub(UNCOVERED_NET_LOSSES_BN);
           const LP_PRINCIPAL = LP_INITIAL.toNumber() - MANAGEMENT_FEE_LP - UNCOVERED_NET_LOSSES;
-          console.log(`LP Principal = ${formatEther(LP_PRINCIPAL)} DAI`);
+          console.log(`LP Principal = ${formatEther(LP_PRINCIPAL_BN)} DAI`);
 
           const txn82Hash = await changeTokenBalanceAndGetTxHash(
             () => agreement.connect(LP).execute(82),
             dai,
             [LP],
-            [BigNumber.from(LP_PRINCIPAL)]
+            [LP_PRINCIPAL_BN]
           );
 
+          EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.sub(LP_PRINCIPAL_BN);
           EXPECTED_CONTRACT_BAL -= LP_PRINCIPAL;
           daiBal = await dai.balanceOf(txsAddr);
-          console.log({ EXPECTED_CONTRACT_BAL });
-          expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL);
+          expect(daiBal).to.equal(EXPECTED_CONTRACT_BAL_BN);
+
+          console.log({
+            realContractBal: daiBal.toString(),
+            calcBalBN: EXPECTED_CONTRACT_BAL_BN.toString(),
+            calcBalNumber: EXPECTED_CONTRACT_BAL,
+          });
 
           console.log(`Cash Balance = ${formatEther(daiBal)} DAI`);
           console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
@@ -631,6 +702,8 @@ initiating funds\x1b[0m
         },
       })
     ).deploy(parser.address);
+
+    console.log({ agreementAddr: agreement.address });
 
     txsAddr = await agreement.txs();
     txs = await ethers.getContractAt('ConditionalTxs', txsAddr);
