@@ -9,6 +9,7 @@ import { Agreement } from '../../typechain/Agreement';
 import { Parser } from '../../typechain/Parser';
 import { ConditionalTxs, Context__factory } from '../../typechain';
 import { TxObject } from '../types';
+import agreementObj from '../data/agreement.json';
 
 describe('Agreement', () => {
   let ContextCont: Context__factory;
@@ -988,64 +989,10 @@ initiating funds\x1b[0m
     NEXT_TWO_MONTH = LAST_BLOCK_TIMESTAMP + 2 * ONE_MONTH;
 
     ContextCont = await ethers.getContractFactory('Context');
-
-    // Deploy libraries
-    const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    comparatorOpcodesLib = await (
-      await ethers.getContractFactory('ComparatorOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    logicalOpcodesLib = await (
-      await ethers.getContractFactory('LogicalOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    setOpcodesLib = await (
-      await ethers.getContractFactory('SetOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    otherOpcodesLib = await (
-      await ethers.getContractFactory('OtherOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
-    const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
-
-    // Deploy Parser
-    const ParserCont = await ethers.getContractFactory('Parser', {
-      libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
-    });
-    parser = await ParserCont.deploy();
   });
 
   beforeEach(async () => {
-    const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
-    // Deploy Agreement
-    agreement = await (
-      await ethers.getContractFactory('Agreement', {
-        libraries: {
-          ComparatorOpcodes: comparatorOpcodesLib.address,
-          LogicalOpcodes: logicalOpcodesLib.address,
-          SetOpcodes: setOpcodesLib.address,
-          OtherOpcodes: otherOpcodesLib.address,
-          Executor: executorLib.address,
-        },
-      })
-    ).deploy(parser.address);
-
-    console.log({ agreementAddr: agreement.address });
-
+    agreement = await ethers.getContractAt('Agreement', agreementObj.address);
     txsAddr = await agreement.txs();
     txs = await ethers.getContractAt('ConditionalTxs', txsAddr);
   });
@@ -1216,7 +1163,7 @@ initiating funds\x1b[0m
     );
   });
 
-  describe('Lifecycle Test', () => {
+describe('Lifecycle Test', () => {
     businessCaseTestDivisionErrors(
       'Scenario 0: Try to get math errors. LP deposits; GP balances; Profit Realized',
       BigNumber.from('23'), // GP_INITIAL
