@@ -13,7 +13,7 @@ import { TxObject } from '../types';
 const dotenv = require('dotenv');
 dotenv.config();
 
-describe.only('Agreement: Alice, Bob, Carl', () => {
+describe('Agreement: Alice, Bob, Carl', () => {
   let ContextCont: Context__factory;
   let agreement: Agreement;
   let alice: SignerWithAddress;
@@ -273,6 +273,6 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
     );
 
     // clean transaction history inside of the contracts
-    await txs.cleanTx([1, 2, 3, 4, 5, 6], [alice.address, bob.address])
+    await txs.cleanTx([1, 2, 3, 4, 5, 6], [alice.address, bob.address]);
   });
 });

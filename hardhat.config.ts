@@ -37,7 +37,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     localhost: {
-      timeout: 1e8,
+      timeout: 1e9,
     },
     ropsten: {
       url: process.env.ROPSTEN_URL || '',
@@ -52,7 +52,7 @@ const config: HardhatUserConfig = {
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
   mocha: {
-    timeout: 1e6,
+    timeout: 1e9,
   },
   contractSizer: {
     // alphaSort: true,
