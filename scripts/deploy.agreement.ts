@@ -65,11 +65,7 @@ async function deploy() {
     address: agreement.address,
   })
 
-  const agreementObj = { 'address': agreement.address };
-  fs.writeFile("./test/data/agreement.json", JSON.stringify(agreementObj, null, 2), (err: any) => {
-    if (err) {  console.error(err);  return; };
-      console.log("File has been updated");
-    });
+  console.log('Agreement address: ', agreement.address);
 }
 
 deploy()

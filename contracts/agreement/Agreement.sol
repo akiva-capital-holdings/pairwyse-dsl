@@ -88,4 +88,9 @@ contract Agreement {
         txs.execTx(_txId, _msgValue, _signatory);
         return transactionCtx.stack().seeLast().getUint256() == 0 ? false : true;
     }
+
+    // TODO: IMPORTANT, use this function only for tests! Remove it from production
+    function resetTXs() public {
+        txs = new ConditionalTxs();
+    }
 }
