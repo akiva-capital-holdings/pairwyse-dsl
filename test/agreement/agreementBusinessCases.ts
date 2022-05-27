@@ -13,7 +13,7 @@ import { TxObject } from '../types';
 const dotenv = require('dotenv');
 dotenv.config();
 
-describe('Agreement: business case', () => {
+describe.skip('Agreement: business case', () => {
   let ContextCont: Context__factory;
   let agreement: Agreement;
   let whale: SignerWithAddress;
@@ -491,35 +491,35 @@ initiating funds\x1b[0m
   });
 
   describe('Lifecycle Test', () => {
-    // businessCaseTest(
-    //   'Scenario 1:  LP deposits; GP balances; Profit Realized',
-    //   parseUnits('20', 18), // GP_INITIAL
-    //   [parseUnits('990', 18)], // LP_INITIAL
-    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('0', 18), // CAPITAL_LOSS
-    //   parseUnits('200', 18), // CAPITAL_GAINS
-    //   2, // DEPOSIT_MIN_PERCENT
-    //   90, // PURCHASE_PERCENT
-    //   2, // MANAGEMENT_FEE_PERCENTAGE
-    //   9, // HURDLE
-    //   20, // PROFIT_PART
-    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    // );
+    businessCaseTest(
+      'Scenario 1:  LP deposits; GP balances; Profit Realized',
+      parseUnits('20', 18), // GP_INITIAL
+      [parseUnits('990', 18)], // LP_INITIAL
+      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+      parseUnits('0', 18), // CAPITAL_LOSS
+      parseUnits('200', 18), // CAPITAL_GAINS
+      2, // DEPOSIT_MIN_PERCENT
+      90, // PURCHASE_PERCENT
+      2, // MANAGEMENT_FEE_PERCENTAGE
+      9, // HURDLE
+      20, // PROFIT_PART
+      false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    );
 
-    // businessCaseTest(
-    //   'Scenario 1.5:  Multiple LPs; LPs deposit; GP balances; Profit Realized',
-    //   parseUnits('20', 18), // GP_INITIAL
-    //   [parseUnits('300', 18), parseUnits('900', 18)], // LP_INITIAL_ARR
-    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-    //   parseUnits('0', 18), // CAPITAL_LOSS
-    //   parseUnits('200', 18), // CAPITAL_GAINS
-    //   2, // DEPOSIT_MIN_PERCENT
-    //   91, // PURCHASE_PERCENT
-    //   2, // MANAGEMENT_FEE_PERCENTAGE
-    //   9, // HURDLE
-    //   20, // PROFIT_PART
-    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    // );
+    businessCaseTest(
+      'Scenario 1.5:  Multiple LPs; LPs deposit; GP balances; Profit Realized',
+      parseUnits('20', 18), // GP_INITIAL
+      [parseUnits('300', 18), parseUnits('900', 18)], // LP_INITIAL_ARR
+      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+      parseUnits('0', 18), // CAPITAL_LOSS
+      parseUnits('200', 18), // CAPITAL_GAINS
+      2, // DEPOSIT_MIN_PERCENT
+      91, // PURCHASE_PERCENT
+      2, // MANAGEMENT_FEE_PERCENTAGE
+      9, // HURDLE
+      20, // PROFIT_PART
+      false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    );
 
     // businessCaseTest(
     //   'Scenario 2:  GP fails to balance LP deposit',

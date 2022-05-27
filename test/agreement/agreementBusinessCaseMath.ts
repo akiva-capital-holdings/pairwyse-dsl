@@ -12,7 +12,7 @@ import { TxObject } from '../types';
 const dotenv = require('dotenv');
 dotenv.config();
 
-describe.only('Agreement: business case test math errors', () => {
+describe.skip('Agreement: business case tests math', () => {
   let ContextCont: Context__factory;
   let agreement: Agreement;
   let whale: SignerWithAddress;
@@ -108,10 +108,8 @@ describe.only('Agreement: business case test math errors', () => {
       const LP_ARR = LPs.filter((_, i) => i < LP_INITIAL_ARR.length);
       console.log('\n\nUpdating Agreement Terms and Conditions...');
 
-      if (!process.env.AGREEMENT_ADDR) {
-        console.log('\n\nSkip adding steps to Agreement');
-        await addSteps(businessCaseSteps(GP, LP_ARR), ContextCont);
-      }
+      console.log('\n\nSkip adding steps to Agreement');
+      await addSteps(businessCaseSteps(GP, LP_ARR), ContextCont);
 
       console.log('\n\nAgreement Updated with new Terms & Conditions');
       console.log('\n\nTesting Agreement Execution...\n\n');
@@ -133,7 +131,6 @@ describe.only('Agreement: business case test math errors', () => {
       await dai.connect(whale).transfer(GP.address, GP_INITIAL);
       await dai.connect(GP).approve(txsAddr, GP_INITIAL);
       console.log(`GP Initial Deposit = ${formatEther(GP_INITIAL)} DAI`);
-      console.log(1)
       await txs.setStorageAddress(hex4Bytes('DAI'), dai.address);
       await txs.setStorageAddress(hex4Bytes('GP'), GP.address);
       await txs.setStorageAddress(hex4Bytes('TRANSACTIONS_CONT'), txsAddr);
@@ -142,10 +139,8 @@ describe.only('Agreement: business case test math errors', () => {
       await txs.setStorageUint256(hex4Bytes('PLACEMENT_DATE'), NEXT_MONTH);
       await txs.setStorageUint256(hex4Bytes('MANAGEMENT_PERCENT'), MANAGEMENT_FEE_PERCENTAGE);
       await txs.setStorageUint256(hex4Bytes('DEPOSIT_MIN_PERCENT'), DEPOSIT_MIN_PERCENT);
-      let tt = await agreement.txs();
-      console.log(tt)
+
       const txn1 = await agreement.connect(GP).execute(1);
-      console.log(1)
       EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.add(GP_INITIAL);
       EXPECTED_CONTRACT_BAL += GP_INITIAL.toNumber();
       let daiBal = await dai.balanceOf(txsAddr);

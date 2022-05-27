@@ -13,6 +13,9 @@ In tests might be some issues if the address was provided incorectly or if this 
 2. Update the `AGREEMENT_ADDR` variable by the address that was provided after deployment script execution
 Ex. `AGREEMENT_ADDR=0x8C08821f5f94b519c853486eB131667AA528A460`
 
+### Before pushing to repository
+All tests marked as agreement (example: `test/agreement/agreement<*>.ts`) must be skipped. Example: `describe.skip('Agreement: business case'...`
+
 ### Run tests
-Use `yarn test` if it needs to run tests that not include agreement contract testing.
-Use `yarn test --network localhost` if it needs to run tests that include agreement contract testing.Be sure that the local node is ran on the separate terminal window.
+Use `yarn test` if it needs to run tests that not include agreement contract testing. All tests marked as agreement must be skipped.
+Use `yarn test --network localhost` if it needs to run tests that include agreement contract testing. Be sure that the local node is ran on the separate terminal window. All tests marked as agreement must not be skipped. Example: `describe('Agreement: business case'...`

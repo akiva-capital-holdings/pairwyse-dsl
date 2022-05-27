@@ -13,7 +13,7 @@ import { TxObject } from '../types';
 const dotenv = require('dotenv');
 dotenv.config();
 
-describe('Agreement: Alice, Bob, Carl', () => {
+describe.skip('Agreement: Alice, Bob, Carl', () => {
   let ContextCont: Context__factory;
   let agreement: Agreement;
   let alice: SignerWithAddress;

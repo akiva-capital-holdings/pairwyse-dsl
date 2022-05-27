@@ -60,11 +60,6 @@ async function deploy() {
   const agreement = await AgreementContract.deploy(parser.address);;
   await agreement.deployed();
 
-  await hre.tenderly.persistArtifacts({
-    name: "Agreement",
-    address: agreement.address,
-  })
-
   console.log('Agreement address: ', agreement.address);
 }
 
