@@ -1,16 +1,16 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { formatEther, parseEther, parseUnits } from 'ethers/lib/utils';
-import { BigNumber, Contract } from 'ethers';
+import { formatEther, parseUnits } from 'ethers/lib/utils';
+import { BigNumber } from 'ethers';
 import { changeTokenBalanceAndGetTxHash, hex4Bytes } from '../utils/utils';
 import { businessCaseSteps } from '../data/agreement';
 import { Agreement } from '../../typechain/Agreement';
 import { ConditionalTxs, Context__factory } from '../../typechain';
 import { TxObject } from '../types';
 
-
 const dotenv = require('dotenv');
+
 dotenv.config();
 
 describe.skip('Agreement: business case', () => {
@@ -19,7 +19,6 @@ describe.skip('Agreement: business case', () => {
   let whale: SignerWithAddress;
   let GP: SignerWithAddress;
   let LPs: SignerWithAddress[];
-  let anybody: SignerWithAddress;
   let txsAddr: string;
   let txs: ConditionalTxs;
   let NEXT_MONTH: number;
@@ -106,7 +105,7 @@ describe.skip('Agreement: business case', () => {
       // Add tx objects to Agreement
       const LP_ARR = LPs.filter((_, i) => i < LP_INITIAL_ARR.length);
       console.log('\n\nUpdating Agreement Terms and Conditions...');
-      
+
       await addSteps(businessCaseSteps(GP, LP_ARR), ContextCont);
       console.log('\n\nAgreement Updated with new Terms & Conditions');
       console.log('\n\nTesting Agreement Execution...\n\n');
@@ -280,7 +279,7 @@ describe.skip('Agreement: business case', () => {
         GP authorized to purchase the investment asset using up to 90% of total \
 initiating funds\x1b[0m
           `);
-        };
+        }
         // Other tests have no sense if result is false
         if (!result) return;
 
@@ -440,23 +439,21 @@ initiating funds\x1b[0m
         expect(await dai.balanceOf(txsAddr)).to.equal(0);
 
         // --> clean transaction history inside of the contracts <--
-        let addresses: string[] = [];
-        let gp: string = GP.address;
+        const addresses: string[] = [];
+        const gp: string = GP.address;
         for (let i = 0; i < LP_INITIAL_ARR.length; i++) {
           const LP = LPs[i];
           addresses.push(LP.address);
         }
-        addresses.push(gp)
-        await txs.cleanTx(
-          [1, 2, 3, 4, 5, 6, 71, 72, 73, 81, 82],
-          addresses)
+        addresses.push(gp);
+        await txs.cleanTx([1, 2, 3, 4, 5, 6, 71, 72, 73, 81, 82], addresses);
         // --> end clean transaction history inside <--
       }
     });
   };
 
   before(async () => {
-    [whale, GP, anybody, ...LPs] = await ethers.getSigners();
+    [whale, GP, ...LPs] = await ethers.getSigners();
 
     LAST_BLOCK_TIMESTAMP = (
       await ethers.provider.getBlock(
@@ -472,8 +469,8 @@ initiating funds\x1b[0m
   });
 
   beforeEach(async () => {
-    let address = process.env.AGREEMENT_ADDR;
-    if(address) {
+    const address = process.env.AGREEMENT_ADDR;
+    if (address) {
       agreement = await ethers.getContractAt('Agreement', address);
     } else {
       console.log('The agreement address is undefined');
@@ -482,7 +479,6 @@ initiating funds\x1b[0m
 
     txsAddr = await agreement.txs();
     txs = await ethers.getContractAt('ConditionalTxs', txsAddr);
-    
   });
 
   afterEach(async () => {

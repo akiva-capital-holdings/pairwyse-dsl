@@ -1,8 +1,7 @@
 import '@nomiclabs/hardhat-ethers';
-import * as hre from "hardhat";
-const { ethers } = hre;
-const fs = require("fs");
+import * as hre from 'hardhat';
 
+const { ethers } = hre;
 
 async function deploy() {
   const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
@@ -10,36 +9,36 @@ async function deploy() {
   const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
 
   const comparatorOpcodesLib = await (
-      await ethers.getContractFactory('ComparatorOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
+    await ethers.getContractFactory('ComparatorOpcodes', {
+      libraries: {
+        OpcodeHelpers: opcodeHelpersLib.address,
+      },
+    })
+  ).deploy();
 
   const logicalOpcodesLib = await (
-      await ethers.getContractFactory('LogicalOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
+    await ethers.getContractFactory('LogicalOpcodes', {
+      libraries: {
+        OpcodeHelpers: opcodeHelpersLib.address,
+      },
+    })
+  ).deploy();
 
   const setOpcodesLib = await (
-      await ethers.getContractFactory('SetOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
+    await ethers.getContractFactory('SetOpcodes', {
+      libraries: {
+        OpcodeHelpers: opcodeHelpersLib.address,
+      },
+    })
+  ).deploy();
 
   const otherOpcodesLib = await (
-      await ethers.getContractFactory('OtherOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
+    await ethers.getContractFactory('OtherOpcodes', {
+      libraries: {
+        OpcodeHelpers: opcodeHelpersLib.address,
+      },
+    })
+  ).deploy();
 
   const ParserCont = await ethers.getContractFactory('Parser', {
     libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
@@ -47,20 +46,19 @@ async function deploy() {
   const parser = await ParserCont.deploy();
 
   const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
-  const AgreementContract = await ethers.getContractFactory(
-    'Agreement', {
-        libraries: {
-          ComparatorOpcodes: comparatorOpcodesLib.address,
-          LogicalOpcodes: logicalOpcodesLib.address,
-          SetOpcodes: setOpcodesLib.address,
-          OtherOpcodes: otherOpcodesLib.address,
-          Executor: executorLib.address,
-        },
-    });
-  const agreement = await AgreementContract.deploy(parser.address);;
+  const AgreementContract = await ethers.getContractFactory('Agreement', {
+    libraries: {
+      ComparatorOpcodes: comparatorOpcodesLib.address,
+      LogicalOpcodes: logicalOpcodesLib.address,
+      SetOpcodes: setOpcodesLib.address,
+      OtherOpcodes: otherOpcodesLib.address,
+      Executor: executorLib.address,
+    },
+  });
+  const agreement = await AgreementContract.deploy(parser.address);
   await agreement.deployed();
 
   console.log('Agreement address: ', agreement.address);
 }
 
-deploy()
+deploy();

@@ -1,8 +1,8 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { formatEther, parseEther, parseUnits } from 'ethers/lib/utils';
-import { BigNumber, Contract } from 'ethers';
+import { formatEther, parseUnits } from 'ethers/lib/utils';
+import { BigNumber } from 'ethers';
 import { changeTokenBalanceAndGetTxHash, hex4Bytes } from '../utils/utils';
 import { businessCaseSteps } from '../data/agreement';
 import { Agreement } from '../../typechain/Agreement';
@@ -10,6 +10,7 @@ import { ConditionalTxs, Context__factory } from '../../typechain';
 import { TxObject } from '../types';
 
 const dotenv = require('dotenv');
+
 dotenv.config();
 
 describe.skip('Agreement: business case tests math', () => {
@@ -18,7 +19,6 @@ describe.skip('Agreement: business case tests math', () => {
   let whale: SignerWithAddress;
   let GP: SignerWithAddress;
   let LPs: SignerWithAddress[];
-  let anybody: SignerWithAddress;
   let txsAddr: string;
   let txs: ConditionalTxs;
   let NEXT_MONTH: number;
@@ -55,7 +55,7 @@ describe.skip('Agreement: business case tests math', () => {
       console.log('\nTerm transaction');
       console.log(`\n\taddress: \x1b[35m${txCtx.address}\x1b[0m`);
       console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
-      console.log(step.txId)
+      console.log(step.txId);
       const { hash } = await agreement.update(
         step.txId,
         step.requiredTxs,
@@ -590,23 +590,21 @@ describe.skip('Agreement: business case tests math', () => {
         expect(await dai.balanceOf(txsAddr)).to.equal(0);
 
         // --> clean transaction history inside of the contracts <--
-        let addresses: string[] = [];
-        let gp: string = GP.address;
+        const addresses: string[] = [];
+        const gp: string = GP.address;
         for (let i = 0; i < LP_INITIAL_ARR.length; i++) {
           const LP = LPs[i];
           addresses.push(LP.address);
         }
-        addresses.push(gp)
-        await txs.cleanTx(
-          [1, 2, 3, 4, 5, 6, 71, 72, 73, 81, 82],
-          addresses)
+        addresses.push(gp);
+        await txs.cleanTx([1, 2, 3, 4, 5, 6, 71, 72, 73, 81, 82], addresses);
         // --> end clean transaction history inside <--
       }
     });
   };
 
   before(async () => {
-    [whale, GP, anybody, ...LPs] = await ethers.getSigners();
+    [whale, GP, ...LPs] = await ethers.getSigners();
 
     LAST_BLOCK_TIMESTAMP = (
       await ethers.provider.getBlock(
@@ -622,8 +620,8 @@ describe.skip('Agreement: business case tests math', () => {
   });
 
   beforeEach(async () => {
-    let address = process.env.AGREEMENT_ADDR;
-    if(address) {
+    const address = process.env.AGREEMENT_ADDR;
+    if (address) {
       agreement = await ethers.getContractAt('Agreement', address);
     } else {
       console.log('The agreement address is undefined');
@@ -632,7 +630,6 @@ describe.skip('Agreement: business case tests math', () => {
 
     txsAddr = await agreement.txs();
     txs = await ethers.getContractAt('ConditionalTxs', txsAddr);
-    
   });
 
   afterEach(async () => {

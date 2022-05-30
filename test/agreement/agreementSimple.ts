@@ -2,15 +2,14 @@ import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
-import { Contract } from 'ethers';
 import { hex4Bytes } from '../utils/utils';
 import { aliceAndBobSteps, aliceBobAndCarl } from '../data/agreement';
 import { Agreement } from '../../typechain/Agreement';
 import { ConditionalTxs, Context__factory } from '../../typechain';
 import { TxObject } from '../types';
 
-
 const dotenv = require('dotenv');
+
 dotenv.config();
 
 describe.skip('Agreement: Alice, Bob, Carl', () => {
@@ -27,7 +26,6 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
 
   const ONE_DAY = 60 * 60 * 24;
   const ONE_MONTH = ONE_DAY * 30;
-
 
   // Add tx objects to Agreement
   const addSteps = async (steps: TxObject[], Ctx: Context__factory) => {
@@ -68,7 +66,7 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
   };
 
   before(async () => {
-    [alice, bob, carl, anybody,] = await ethers.getSigners();
+    [alice, bob, carl, anybody] = await ethers.getSigners();
 
     LAST_BLOCK_TIMESTAMP = (
       await ethers.provider.getBlock(
@@ -83,8 +81,8 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
   });
 
   beforeEach(async () => {
-    let address = process.env.AGREEMENT_ADDR;
-    if(address) {
+    const address = process.env.AGREEMENT_ADDR;
+    if (address) {
       agreement = await ethers.getContractAt('Agreement', address);
     } else {
       // TODO: what should we do if the user did not set the AGREEMENT_ADDR?
@@ -92,7 +90,6 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
     }
     txsAddr = await agreement.txs();
     txs = await ethers.getContractAt('ConditionalTxs', txsAddr);
-    
   });
 
   afterEach(async () => {
@@ -142,8 +139,7 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
     );
 
     // clean transaction history inside of the contracts
-    await txs.cleanTx([1], signatories)
-    
+    await txs.cleanTx([1], signatories);
   });
 
   it('Alice (borrower) and Bob (lender)', async () => {
