@@ -148,4 +148,14 @@ contract ConditionalTxs is Storage {
         }
         return _res;
     }
+
+    // TODO: IMPORTANT, use this function only for tests! Remove it from production
+    function cleanTx(uint256[] memory _txIds, address[] memory _signatories) public {
+        for (uint256 i = 0; i < _txIds.length; i++) {
+            txs[_txIds[i]].isExecuted = false;
+            for (uint256 j = 0; j < _signatories.length; j++) {
+                isExecutedBySignatory[_txIds[i]][_signatories[j]] = false;
+            }
+        }
+    }
 }
