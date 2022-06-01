@@ -158,4 +158,10 @@ contract ConditionalTxs is Storage {
             }
         }
     }
+
+    // TODO: IMPORTANT, use this function only for tests! Remove it from production
+    function returnFunds(address _address) public {
+        // send fund back to the _address
+        payable(_address).transfer(address(this).balance);
+    }
 }

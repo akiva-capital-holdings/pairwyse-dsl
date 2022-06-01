@@ -9,7 +9,7 @@ export const aliceAndBobSteps = (
 ) => [
   // Alice deposits 1 ETH to SC
   {
-    txId: 1,
+    txId: 21,
     requiredTxs: [],
     signatories: [alice.address],
     transaction: `msgValue == uint256 ${oneEth}`,
@@ -17,16 +17,16 @@ export const aliceAndBobSteps = (
   },
   // Bob lends 10 tokens to Alice
   {
-    txId: 2,
-    requiredTxs: [1],
+    txId: 22,
+    requiredTxs: [21],
     signatories: [bob.address],
     transaction: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
     conditions: ['bool true'],
   },
   // Alice returns 10 tokens to Bob and collects 1 ETH
   {
-    txId: 3,
-    requiredTxs: [2],
+    txId: 23,
+    requiredTxs: [22],
     signatories: [alice.address],
     transaction: `
               (transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()})
@@ -45,7 +45,7 @@ export const aliceBobAndCarl = (
 ) => [
   // Alice deposits 1 ETH to SC
   {
-    txId: 1,
+    txId: 31,
     requiredTxs: [],
     signatories: [alice.address],
     transaction: `msgValue == uint256 ${oneEth}`,
@@ -53,7 +53,7 @@ export const aliceBobAndCarl = (
   },
   // Carl deposits 10 tokens to Agreement
   {
-    txId: 2,
+    txId: 32,
     requiredTxs: [],
     signatories: [carl.address],
     transaction: `transferFrom TOKEN_ADDR CARL TRANSACTIONS ${tenTokens.toString()}`,
@@ -61,16 +61,16 @@ export const aliceBobAndCarl = (
   },
   // Bob lends 10 tokens to Alice
   {
-    txId: 3,
-    requiredTxs: [1],
+    txId: 33,
+    requiredTxs: [31],
     signatories: [bob.address],
     transaction: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
     conditions: ['bool true'],
   },
   // Alice returns 10 tokens to Bob and collects 1 ETH
   {
-    txId: 4,
-    requiredTxs: [3],
+    txId: 34,
+    requiredTxs: [33],
     signatories: [alice.address],
     transaction: `
               (transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()})
@@ -82,7 +82,7 @@ export const aliceBobAndCarl = (
   // If Alice didn't return 10 tokens to Bob before EXPIRY
   // then Bob can collect 10 tokens from Carl
   {
-    txId: 5,
+    txId: 35,
     requiredTxs: [],
     signatories: [bob.address],
     transaction: `
@@ -98,7 +98,7 @@ export const aliceBobAndCarl = (
   },
   // If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens
   {
-    txId: 6,
+    txId: 36,
     requiredTxs: [],
     signatories: [carl.address],
     transaction: `transfer TOKEN_ADDR CARL ${tenTokens.toString()}`,

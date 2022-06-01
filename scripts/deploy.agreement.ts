@@ -1,7 +1,49 @@
 import '@nomiclabs/hardhat-ethers';
 import * as hre from 'hardhat';
-
 const { ethers } = hre;
+// TODO: would it be better to store types bot in the test directory?
+import { TxObject } from '../test/types';
+import { aliceAndBobSteps, aliceBobAndCarl } from './data/agreement';
+import { Context__factory } from '../typechain';
+import { parseEther } from 'ethers/lib/utils';
+
+
+const addSteps = async (steps: TxObject[], Ctx: Context__factory, agreementAddress: string) => {
+    let txCtx;
+    const agreement = await ethers.getContractAt('Agreement', agreementAddress);
+    for await (const step of steps) {
+      console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
+      txCtx = await Ctx.deploy();
+      const cdCtxsAddrs = [];
+
+      console.log('\nTerm Conditions');
+
+      for (let j = 0; j < step.conditions.length; j++) {
+        const cond = await Ctx.deploy();
+        cdCtxsAddrs.push(cond.address);
+        await agreement.parse(step.conditions[j], cond.address);
+        console.log(
+          `\n\taddress: \x1b[35m${cond.address}\x1b[0m\n\tcondition ${j + 1}:\n\t\x1b[33m${
+            step.conditions[j]
+          }\x1b[0m`
+        );
+      }
+      await agreement.parse(step.transaction, txCtx.address);
+      console.log('\nTerm transaction');
+      console.log(`\n\taddress: \x1b[35m${txCtx.address}\x1b[0m`);
+      console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
+      const { hash } = await agreement.update(
+        step.txId,
+        step.requiredTxs,
+        step.signatories,
+        step.transaction,
+        step.conditions,
+        txCtx.address,
+        cdCtxsAddrs
+      );
+      console.log(`\nAgreement update transaction hash: \n\t\x1b[35m${hash}\x1b[0m`);
+    }
+  };
 
 async function deploy() {
   const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
@@ -44,7 +86,6 @@ async function deploy() {
     libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
   });
   const parser = await ParserCont.deploy();
-
   const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
   const AgreementContract = await ethers.getContractFactory('Agreement', {
     libraries: {
@@ -57,6 +98,22 @@ async function deploy() {
   });
   const agreement = await AgreementContract.deploy(parser.address);
   await agreement.deployed();
+
+  let ContextCont = await ethers.getContractFactory('Context');
+  let alice, bob, carl, anybody;
+  [alice, bob, carl, anybody,] = await ethers.getSigners();
+
+  const oneEthBN = parseEther('1');
+  const tenTokens = parseEther('10');
+
+  const txId = 1;
+  const requiredTxs: number[] = [];
+  const signatories = [alice.address];
+  const conditions = ['blockTimestamp > loadLocal uint256 LOCK_TIME'];
+  const transaction = 'sendEth RECEIVER 1000000000000000000';
+  await addSteps([{ txId, requiredTxs, signatories, conditions, transaction }], ContextCont, agreement.address);
+  await addSteps(aliceAndBobSteps(alice, bob, oneEthBN, tenTokens), ContextCont, agreement.address);
+  await addSteps(aliceBobAndCarl(alice, bob, carl, oneEthBN, tenTokens), ContextCont, agreement.address);
 
   console.log('Agreement address: ', agreement.address);
 }

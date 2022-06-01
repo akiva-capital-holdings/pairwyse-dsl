@@ -4,7 +4,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { formatEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
 import { changeTokenBalanceAndGetTxHash, hex4Bytes } from '../utils/utils';
-import { businessCaseSteps } from '../data/agreement';
+import { businessCaseSteps } from '../../scripts/data/agreement';
 import { Agreement } from '../../typechain/Agreement';
 import { ConditionalTxs, Context__factory } from '../../typechain';
 import { TxObject } from '../types';
@@ -483,7 +483,7 @@ initiating funds\x1b[0m
 
   afterEach(async () => {
     // reset the ConditionalTxs contract after each test to use the same agreement again
-    await agreement.resetTXs();
+    // await agreement.resetTXs();
   });
 
   describe('Lifecycle Test', () => {
