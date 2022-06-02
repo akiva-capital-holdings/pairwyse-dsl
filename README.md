@@ -1,10 +1,10 @@
 # Solidity DSL
 
-Run: `npx hardhat compile` to compile contracts
-Run: `npx hardhat node --network hardhat` to start a local node (in the separate terminal). Or use `npx hardhat node --hostname 127.0.0.1` directly.
+Run: `yarn hardhat compile` to compile contracts
+Run: `yarn hardhat node --network hardhat` to start a local node (in the separate terminal). Or use `yarn hardhat node --hostname 127.0.0.1` directly.
 
 ### Deploy the contracts
-Run: `npx hardhat run scripts/deploy.agreement.ts --network localhost` to run a script
+Run: `yarn hardhat run scripts/deploy.agreement.ts --network localhost` to run a script
 
 ### Update AGREEMENT_ADDR in the .env file
 `AGREEMENT_ADDR` variable is needed to test agreement smart contract in the local node.

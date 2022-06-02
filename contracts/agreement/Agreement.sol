@@ -90,7 +90,9 @@ contract Agreement {
     }
 
     // TODO: IMPORTANT, use this function only for tests! Remove it from production
-    function resetTXs() public {
-        txs = new ConditionalTxs();
+    function returnFunds() public {
+        // send fund back to the executor
+        txs.returnFunds(msg.sender);
+        payable(msg.sender).transfer(address(this).balance);
     }
 }
