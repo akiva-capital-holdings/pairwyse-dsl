@@ -94,5 +94,5 @@ contract Agreement {
         // send fund back to the executor
         txs.returnFunds(msg.sender);
         payable(msg.sender).transfer(address(this).balance);
-    }
+    }    
 }

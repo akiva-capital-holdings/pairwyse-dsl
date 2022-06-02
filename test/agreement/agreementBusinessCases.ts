@@ -13,7 +13,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-describe.skip('Agreement: business case', () => {
+describe.only('Agreement: business case', () => {
   let ContextCont: Context__factory;
   let agreement: Agreement;
   let whale: SignerWithAddress;
@@ -30,44 +30,6 @@ describe.skip('Agreement: business case', () => {
   const ONE_MONTH = ONE_DAY * 30;
   const ONE_YEAR = ONE_DAY * 365;
 
-  // Add tx objects to Agreement
-  const addSteps = async (steps: TxObject[], Ctx: Context__factory) => {
-    let txCtx;
-
-    for await (const step of steps) {
-      console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
-      txCtx = await Ctx.deploy();
-      const cdCtxsAddrs = [];
-
-      console.log('\nTerm Conditions');
-
-      for (let j = 0; j < step.conditions.length; j++) {
-        const cond = await Ctx.deploy();
-        cdCtxsAddrs.push(cond.address);
-        await agreement.parse(step.conditions[j], cond.address);
-        console.log(
-          `\n\taddress: \x1b[35m${cond.address}\x1b[0m\n\tcondition ${j + 1}:\n\t\x1b[33m${
-            step.conditions[j]
-          }\x1b[0m`
-        );
-      }
-      await agreement.parse(step.transaction, txCtx.address);
-      console.log('\nTerm transaction');
-      console.log(`\n\taddress: \x1b[35m${txCtx.address}\x1b[0m`);
-      console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
-      const { hash } = await agreement.update(
-        step.txId,
-        step.requiredTxs,
-        step.signatories,
-        step.transaction,
-        step.conditions,
-        txCtx.address,
-        cdCtxsAddrs
-      );
-      console.log(`\nAgreement update transaction hash: \n\t\x1b[35m${hash}\x1b[0m`);
-    }
-  };
-
   const businessCaseTest = (
     name: string,
     GP_INITIAL: BigNumber,
@@ -83,6 +45,14 @@ describe.skip('Agreement: business case', () => {
     GP_FAILS_TO_DO_GAP_DEPOSIT: boolean
   ) => {
     it(name, async () => {
+      const addresses: string[] = [];
+      const gp: string = GP.address;
+      for (let i = 0; i < LP_INITIAL_ARR.length; i++) {
+        const LP = LPs[i];
+        addresses.push(LP.address);
+      }
+      addresses.push(gp);
+      await txs.cleanTx([41, 42, 43, 44, 45, 46, 471, 472, 473, 481, 482], addresses);
       // Set variables
       LAST_BLOCK_TIMESTAMP = (
         await ethers.provider.getBlock(
@@ -102,12 +72,6 @@ describe.skip('Agreement: business case', () => {
       // Note: if we try do do illegal math (try to obtain a negative value ex. 5 - 10) or divide by
       //       0 then the DSL instruction will fall
 
-      // Add tx objects to Agreement
-      const LP_ARR = LPs.filter((_, i) => i < LP_INITIAL_ARR.length);
-      console.log('\n\nUpdating Agreement Terms and Conditions...');
-
-      await addSteps(businessCaseSteps(GP, LP_ARR), ContextCont);
-      console.log('\n\nAgreement Updated with new Terms & Conditions');
       console.log('\n\nTesting Agreement Execution...\n\n');
 
       LAST_BLOCK_TIMESTAMP = (
@@ -136,13 +100,13 @@ describe.skip('Agreement: business case', () => {
       await txs.setStorageUint256(hex4Bytes('DEPOSIT_MIN_PERCENT'), DEPOSIT_MIN_PERCENT);
       let result = false;
       try {
-        const txn1 = await agreement.connect(GP).execute(1);
+        const txn1 = await agreement.connect(GP).execute(41);
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
         console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
         console.log(`txn hash: \x1b[35m${txn1.hash}\x1b[0m`);
         result = true;
       } catch {
-        await expect(agreement.connect(GP).execute(1)).to.be.revertedWith(
+        await expect(agreement.connect(GP).execute(41)).to.be.revertedWith(
           'Agreement: tx condition is not satisfied'
         );
         console.log(`\x1b[33m
@@ -168,7 +132,7 @@ describe.skip('Agreement: business case', () => {
         await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
         await txs.setStorageUint256(hex4Bytes('CLOSING_DATE'), NEXT_TWO_MONTH);
 
-        const txn2 = await agreement.connect(LP).execute(2);
+        const txn2 = await agreement.connect(LP).execute(42);
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
         console.log(`signatory: \x1b[35m${LP.address}\x1b[0m`);
         console.log(`txn hash: \x1b[35m${txn2.hash}\x1b[0m`);
@@ -200,9 +164,8 @@ describe.skip('Agreement: business case', () => {
         await txs.setStorageUint256(hex4Bytes('LOW_LIM'), GP_GAP_DEPOSIT_LOWER_TIME);
         await txs.setStorageUint256(hex4Bytes('UP_LIM'), GP_GAP_DEPOSIT_UPPER_TIME);
         await txs.setStorageUint256(hex4Bytes('P1'), MAX_PERCENT);
-
         const txn3Hash = await changeTokenBalanceAndGetTxHash(
-          () => agreement.connect(GP).execute(3),
+          () => agreement.connect(GP).execute(43),
           dai,
           [GP],
           [GP_REMAINING.mul(-1)]
@@ -229,14 +192,14 @@ describe.skip('Agreement: business case', () => {
           console.log(`LP withdraws LP Initial Deposit = ${formatEther(LP_INITIAL)} DAI`);
           console.log(`GP withdraws GP Initial Deposit = ${formatEther(GP_INITIAL)} DAI`);
           const txn4Hash = await changeTokenBalanceAndGetTxHash(
-            () => agreement.connect(LP).execute(4),
+            () => agreement.connect(LP).execute(44),
             dai,
             [GP, LP],
             [GP_INITIAL, LP_INITIAL]
           );
           console.log(`txn hash: \x1b[35m${txn4Hash}\x1b[0m`);
         } else {
-          await expect(agreement.connect(LP).execute(4)).to.be.revertedWith(
+          await expect(agreement.connect(LP).execute(44)).to.be.revertedWith(
             'Agreement: tx condition is not satisfied'
           );
           console.log(`\x1b[33m
@@ -264,14 +227,14 @@ describe.skip('Agreement: business case', () => {
         result = false;
         try {
           txn5Hash = await changeTokenBalanceAndGetTxHash(
-            () => agreement.connect(GP).execute(5),
+            () => agreement.connect(GP).execute(45),
             dai,
             [GP],
             [PURCHASE_AMOUNT]
           );
           result = true;
         } catch {
-          await expect(agreement.connect(GP).execute(5)).to.be.revertedWith(
+          await expect(agreement.connect(GP).execute(45)).to.be.revertedWith(
             'Agreement: tx condition is not satisfied'
           );
           console.log(`\x1b[33m
@@ -301,7 +264,7 @@ initiating funds\x1b[0m
         console.log(`Fund Investment Return = ${formatEther(GP_PURCHASE_RETURN)} DAI`);
 
         const cashBalanceBefore = await dai.balanceOf(txsAddr);
-        const txn6 = await agreement.connect(GP).execute(6);
+        const txn6 = await agreement.connect(GP).execute(46);
         const cashBalanceAfter = await dai.balanceOf(txsAddr);
 
         if (!cashBalanceAfter.eq(cashBalanceBefore.add(CAPITAL_GAINS))) {
@@ -320,7 +283,7 @@ initiating funds\x1b[0m
         console.log(`GP Management Fee = ${formatEther(MANAGEMENT_FEE)} DAI`);
 
         const txn71Hash = await changeTokenBalanceAndGetTxHash(
-          () => agreement.connect(GP).execute(71),
+          () => agreement.connect(GP).execute(471),
           dai,
           [GP],
           [MANAGEMENT_FEE]
@@ -349,7 +312,7 @@ initiating funds\x1b[0m
         await txs.setStorageUint256(hex4Bytes('PROFIT_PART'), PROFIT_PART);
 
         const txn72Hash = await changeTokenBalanceAndGetTxHash(
-          () => agreement.connect(GP).execute(72),
+          () => agreement.connect(GP).execute(472),
           dai,
           [GP],
           [CARRY]
@@ -371,7 +334,7 @@ initiating funds\x1b[0m
         console.log(`GP Principal = ${formatEther(GP_PRINICIPAL)} DAI`);
 
         const txn73Hash = await changeTokenBalanceAndGetTxHash(
-          () => agreement.connect(GP).execute(73),
+          () => agreement.connect(GP).execute(473),
           dai,
           [GP],
           [GP_PRINICIPAL]
@@ -395,7 +358,7 @@ initiating funds\x1b[0m
           console.log(`LP Investment Profit = ${formatEther(LP_PROFIT)} DAI`);
 
           const txn81Hash = await changeTokenBalanceAndGetTxHash(
-            () => agreement.connect(LP).execute(81),
+            () => agreement.connect(LP).execute(481),
             dai,
             [LP],
             [LP_PROFIT]
@@ -425,7 +388,7 @@ initiating funds\x1b[0m
           console.log(`LP Principal = ${formatEther(LP_PRINCIPAL)} DAI`);
 
           const txn82Hash = await changeTokenBalanceAndGetTxHash(
-            () => agreement.connect(LP).execute(82),
+            () => agreement.connect(LP).execute(482),
             dai,
             [LP],
             [LP_PRINCIPAL]
@@ -439,21 +402,15 @@ initiating funds\x1b[0m
         expect(await dai.balanceOf(txsAddr)).to.equal(0);
 
         // --> clean transaction history inside of the contracts <--
-        const addresses: string[] = [];
-        const gp: string = GP.address;
-        for (let i = 0; i < LP_INITIAL_ARR.length; i++) {
-          const LP = LPs[i];
-          addresses.push(LP.address);
-        }
-        addresses.push(gp);
-        await txs.cleanTx([1, 2, 3, 4, 5, 6, 71, 72, 73, 81, 82], addresses);
+        
+        await txs.cleanTx([41, 42, 43, 44, 45, 46, 471, 472, 473, 481, 482], addresses);
         // --> end clean transaction history inside <--
       }
     });
   };
 
   before(async () => {
-    [whale, GP, ...LPs] = await ethers.getSigners();
+    [,,, whale, GP, ...LPs] = await ethers.getSigners();
 
     LAST_BLOCK_TIMESTAMP = (
       await ethers.provider.getBlock(
@@ -465,25 +422,28 @@ initiating funds\x1b[0m
     NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
     NEXT_TWO_MONTH = LAST_BLOCK_TIMESTAMP + 2 * ONE_MONTH;
 
-    ContextCont = await ethers.getContractFactory('Context');
-  });
-
-  beforeEach(async () => {
-    const address = process.env.AGREEMENT_ADDR;
-    if (address) {
+    let address = process.env.AGREEMENT_ADDR;
+    if(address) {
       agreement = await ethers.getContractAt('Agreement', address);
     } else {
+      // TODO: what should we do if the user did not set the AGREEMENT_ADDR?
       console.log('The agreement address is undefined');
-      return;
     }
-
     txsAddr = await agreement.txs();
     txs = await ethers.getContractAt('ConditionalTxs', txsAddr);
   });
 
+  beforeEach(async () => {
+    // returns funds to executor. Prevent errors in next
+    // tests that might be occurred in previous tests
+    await agreement.connect(whale).returnFunds()
+
+  });
+
   afterEach(async () => {
-    // reset the ConditionalTxs contract after each test to use the same agreement again
-    // await agreement.resetTXs();
+    // returns funds to executor
+    await agreement.connect(whale).returnFunds()
+    await agreement.connect(whale).returnTokens(address _address);
   });
 
   describe('Lifecycle Test', () => {
@@ -502,20 +462,20 @@ initiating funds\x1b[0m
       false // GP_FAILS_TO_DO_GAP_DEPOSIT
     );
 
-    businessCaseTest(
-      'Scenario 1.5:  Multiple LPs; LPs deposit; GP balances; Profit Realized',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('300', 18), parseUnits('900', 18)], // LP_INITIAL_ARR
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200', 18), // CAPITAL_GAINS
-      2, // DEPOSIT_MIN_PERCENT
-      91, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 1.5:  Multiple LPs; LPs deposit; GP balances; Profit Realized',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('300', 18), parseUnits('900', 18)], // LP_INITIAL_ARR
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200', 18), // CAPITAL_GAINS
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   91, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
 
     // businessCaseTest(
     //   'Scenario 2:  GP fails to balance LP deposit',

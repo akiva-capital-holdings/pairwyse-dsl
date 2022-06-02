@@ -10,6 +10,8 @@ import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { Storage } from '../dsl/helpers/Storage.sol';
 
+// TODO: use this import only for testing
+import { IERC20 } from '../dsl/interfaces/IERC20.sol';
 // import 'hardhat/console.sol';
 
 contract ConditionalTxs is Storage {
@@ -163,5 +165,12 @@ contract ConditionalTxs is Storage {
     function returnFunds(address _address) public {
         // send fund back to the _address
         payable(_address).transfer(address(this).balance);
+    }
+
+    // TODO: IMPORTANT, use this function only for tests! Remove it from production
+    function returnTokens(address _address) public {
+        // send fund back to the _address
+        uint256 amount = IERC20(_address).balanceOf(address(this));
+        IERC20(_address).transfer(msg.sender, amount);
     }
 }
