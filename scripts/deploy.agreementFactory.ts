@@ -48,7 +48,7 @@ async function deploy() {
       },
     })
   ).deploy();
-  console.log('AgreementFactory address: ', factory.address);
+  console.log('AgreementFactory address:', factory.address);
 }
 
 deploy();
