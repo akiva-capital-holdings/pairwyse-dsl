@@ -20,8 +20,8 @@ contract Agreement {
         string[] conditionStrs
     );
 
-    constructor(IParser _parser) {
-        parser = _parser;
+    constructor(address _parser) {
+        parser = IParser(_parser);
         txs = new ConditionalTxs();
     }
 

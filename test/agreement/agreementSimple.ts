@@ -4,14 +4,13 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
 import { hex4Bytes } from '../utils/utils';
 import { Agreement } from '../../typechain/Agreement';
-import { ConditionalTxs, Context__factory } from '../../typechain';
+import { ConditionalTxs } from '../../typechain';
 
 const dotenv = require('dotenv');
 
 dotenv.config();
 
 describe.skip('Agreement: Alice, Bob, Carl', () => {
-  let ContextCont: Context__factory;
   let agreement: Agreement;
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
@@ -39,8 +38,8 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
 
     NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
 
-    let address = process.env.AGREEMENT_ADDR;
-    if(address) {
+    const address = process.env.AGREEMENT_ADDR;
+    if (address) {
       agreement = await ethers.getContractAt('Agreement', address);
     } else {
       // TODO: what should we do if the user did not set the AGREEMENT_ADDR?
@@ -48,18 +47,17 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
     }
     txsAddr = await agreement.txs();
     txs = await ethers.getContractAt('ConditionalTxs', txsAddr);
-
   });
 
   beforeEach(async () => {
     // returns funds to executor. Prevent errors in next
     // tests that might be occurred in previous tests
-    await agreement.connect(anybody).returnFunds()
+    await agreement.connect(anybody).returnFunds();
   });
 
   afterEach(async () => {
     // returns funds to executor
-    await agreement.connect(anybody).returnFunds()
+    await agreement.connect(anybody).returnFunds();
   });
 
   it('one condition', async () => {
@@ -71,7 +69,7 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
 
     // Top up contract
     await anybody.sendTransaction({ to: txsAddr, value: oneEthBN });
- 
+
     // Bad signatory
     await expect(agreement.connect(anybody).execute(txId)).to.be.revertedWith(
       'Agreement: bad tx signatory'
@@ -92,7 +90,7 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
     );
 
     // clean transaction history inside of the contracts
-    await txs.cleanTx([1], [alice.address])
+    await txs.cleanTx([1], [alice.address]);
   });
 
   it('Alice (borrower) and Bob (lender)', async () => {
@@ -156,7 +154,7 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
     await txs.setStorageUint256(hex4Bytes('EXPIRY'), NEXT_MONTH);
     await txs.setStorageAddress(hex4Bytes('BOB'), bob.address);
     await txs.setStorageAddress(hex4Bytes('CARL'), carl.address);
-    await txs.setStorageAddress(hex4Bytes('TRANSACTIONS'), txsAddr);   
+    await txs.setStorageAddress(hex4Bytes('TRANSACTIONS'), txsAddr);
 
     // Alice deposits 1 ETH to SC
     console.log('Alice deposits 1 ETH to SC');
