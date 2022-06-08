@@ -59,4 +59,13 @@ describe.only('AgreementFactory', () => {
     const eventAddr = events[0].args.agreement;
     expect(returnedAddr).to.equal(eventAddr);
   });
+
+  it('deployed length', async () => {
+    await factory.deployAgreement(ethers.constants.AddressZero);
+    expect(await factory.getDeployedLen()).to.equal(1);
+    await factory.deployAgreement(ethers.constants.AddressZero);
+    expect(await factory.getDeployedLen()).to.equal(2);
+    await factory.deployAgreement(ethers.constants.AddressZero);
+    expect(await factory.getDeployedLen()).to.equal(3);
+  });
 });

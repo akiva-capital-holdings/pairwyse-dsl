@@ -13,4 +13,8 @@ contract AgreementFactory {
         deployed.push(_agreementAddr);
         emit NewAgreement(_agreementAddr);
     }
+
+    function getDeployedLen() external view returns (uint256) {
+        return deployed.length;
+    }
 }
