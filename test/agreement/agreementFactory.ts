@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { AgreementFactory as AgreementFactoryType } from '../../typechain';
 
-describe.only('AgreementFactory', () => {
+describe('AgreementFactory', () => {
   let factory: AgreementFactoryType;
 
   beforeEach(async () => {
