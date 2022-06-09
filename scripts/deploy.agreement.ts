@@ -112,6 +112,7 @@ async function deploy() {
   const conditions = ['blockTimestamp > loadLocal uint256 LOCK_TIME'];
   const transaction = 'sendEth RECEIVER 1000000000000000000';
   // ---> steps for Alice, Bob and Carl <---
+
   await addSteps(
     [{ txId, requiredTxs, signatories, conditions, transaction }],
     ContextCont,
@@ -130,7 +131,7 @@ async function deploy() {
 
   // ---> steps for businessCases with one LP <---
   await addSteps(businessCaseSteps(GP, [LPs[0]], 4), ContextCont, agreement.address);
-  await addSteps(businessCaseSteps(GP, [LPs[0]], 5), ContextCont, agreement.address);
+  // await addSteps(businessCaseSteps(GP, [LPs[0]], 5), ContextCont, agreement.address);
 
   /*
     TODO: pay attention, that the agreement.ts and agreementBusinessCase.ts has
@@ -139,7 +140,7 @@ async function deploy() {
     to check multiple LPs
   */
   // ---> steps for businessCases with multiple LPs <---
-  // await addSteps(businessCaseSteps(GP, [LPs[0], LPs[1]], 4), ContextCont, agreement.address);
+  await addSteps(businessCaseSteps(GP, [LPs[0], LPs[1]], 4), ContextCont, agreement.address);
   // await addSteps(businessCaseSteps(GP, [LPs[0], LPs[1]], 5), ContextCont, agreement.address);
 
   console.log('Agreement address: ', agreement.address);

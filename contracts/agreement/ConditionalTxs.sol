@@ -151,6 +151,7 @@ contract ConditionalTxs is Storage {
         return _res;
     }
 
+    // ------> TESTING BLOCK: Use functions bellow only for testing! <-----
     // TODO: IMPORTANT, use this function only for tests! Remove it from production
     function cleanTx(uint256[] memory _txIds, address[] memory _signatories) public {
         for (uint256 i = 0; i < _txIds.length; i++) {
@@ -168,9 +169,10 @@ contract ConditionalTxs is Storage {
     }
 
     // TODO: IMPORTANT, use this function only for tests! Remove it from production
-    function returnTokens(address _address) public {
-        // send fund back to the _address
-        uint256 amount = IERC20(_address).balanceOf(address(this));
-        IERC20(_address).transfer(msg.sender, amount);
+    function returnTokens(address _token) public {
+        // send tokens back to the sender
+        uint256 amount = IERC20(_token).balanceOf(address(this));
+        IERC20(_token).transfer(msg.sender, amount);
     }
+    // ------> TESTING BLOCK ENDS: Use functions above only for testing! <-----
 }

@@ -6,6 +6,8 @@ import { IContext } from '../dsl/interfaces/IContext.sol';
 import { Context } from '../dsl/Context.sol';
 import { ConditionalTxs } from './ConditionalTxs.sol';
 
+// TODO: use this import only for testing
+import { IERC20 } from '../dsl/interfaces/IERC20.sol';
 // import 'hardhat/console.sol';
 
 contract Agreement {
@@ -89,10 +91,20 @@ contract Agreement {
         return transactionCtx.stack().seeLast().getUint256() == 0 ? false : true;
     }
 
-    // TODO: IMPORTANT, use this function only for tests! Remove it from production
+    // ------> TESTING BLOCK: Use functions bellow only for testing! <-----
+    // TODO: Remove it from production
     function returnFunds() public {
         // send fund back to the executor
         txs.returnFunds(msg.sender);
         payable(msg.sender).transfer(address(this).balance);
-    }    
+    }
+
+    // TODO: Remove it from production
+    function returnTokens(address _token) public {
+        // send tokens back to the sender
+        txs.returnTokens(_token);
+        uint256 amount = IERC20(_token).balanceOf(address(this));
+        IERC20(_token).transfer(msg.sender, amount);
+    }
+    // ------> TESTING BLOCK ENDS: Use functions above only for testing! <-----
 }
