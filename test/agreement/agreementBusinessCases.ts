@@ -13,7 +13,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-describe('Agreement: business case', () => {
+describe.skip('Agreement: business case', () => {
   let ContextCont: Context__factory;
   let agreement: Agreement;
   let whale: SignerWithAddress;
