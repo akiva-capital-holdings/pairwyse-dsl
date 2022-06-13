@@ -140,6 +140,37 @@ describe('Other opcodes', () => {
       );
     });
 
+    // Block TIME doesn't work because Hardhat doesn't return timestamp
+    it('TIME', async () => {
+      // TIME is an alias for blockTimestamp
+      const ctxStackAddress = await ctx.stack();
+      StackCont.attach(ctxStackAddress);
+
+      // 0x30 is TIME
+      await ctx.setProgram('0x30');
+
+      await app.opBlockTimestamp(ctxAddr);
+
+      // stack size is 1
+      expect(await stack.length()).to.equal(1);
+
+      // get result
+      const svResultAddress = await stack.stack(0);
+      const svResult = StackValue.attach(svResultAddress);
+
+      const lastBlockTimestamp = (
+        await ethers.provider.getBlock(
+          // eslint-disable-next-line no-underscore-dangle
+          ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
+        )
+      ).timestamp;
+
+      expect((await svResult.getUint256()).toNumber()).to.be.approximately(
+        lastBlockTimestamp,
+        1000
+      );
+    });
+
     it('blockChainId', async () => {
       const ctxStackAddress = await ctx.stack();
       StackCont.attach(ctxStackAddress);

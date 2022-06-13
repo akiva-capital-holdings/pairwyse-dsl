@@ -313,6 +313,15 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
 
+        // An alias for blockTimestamp
+        addOpcode(
+            'TIME',
+            0x30,
+            OtherOpcodes.opBlockTimestamp.selector,
+            0x0,
+            OpcodeLibNames.OtherOpcodes
+        );
+
         // Complex Opcodes with sub Opcodes (branches)
         string memory name = 'loadLocal';
         addOpcode(
