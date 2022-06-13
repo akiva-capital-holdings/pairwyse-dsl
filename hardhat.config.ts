@@ -8,7 +8,6 @@ import 'hardhat-gas-reporter';
 import 'solidity-coverage';
 import 'hardhat-contract-sizer';
 
-
 dotenv.config();
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -35,8 +34,12 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
+    hardhat: {
+      chainId: 1337,
+    },
     localhost: {
       timeout: 1e9,
+      url: 'http://127.0.0.1:7545',
     },
     ropsten: {
       url: process.env.ROPSTEN_URL || '',
