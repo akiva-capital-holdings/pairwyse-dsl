@@ -8,7 +8,8 @@ import { ConditionalTxs } from './ConditionalTxs.sol';
 
 // TODO: use this import only for testing
 import { IERC20 } from '../dsl/interfaces/IERC20.sol';
-// import 'hardhat/console.sol';
+
+//  import 'hardhat/console.sol';
 
 contract Agreement {
     IParser public parser;
