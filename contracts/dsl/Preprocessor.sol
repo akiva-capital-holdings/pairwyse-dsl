@@ -5,7 +5,7 @@ import { IContext } from './interfaces/IContext.sol';
 import { Stack, StackValue } from './helpers/Stack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract Preprocessor {
     using StringUtils for string;
@@ -103,7 +103,6 @@ contract Preprocessor {
         return result;
     }
 
-
     function infixToPostfix(
         IContext _ctx,
         string[] memory _code,
@@ -115,12 +114,17 @@ contract Preprocessor {
         uint256 loadRemoteVarCount = 3;
         string memory chunk;
         string memory res;
+
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
-            // checks and updates if the chunk can use uint256 directly
+            // returns true if the chunk can use uint256 directly
             directUseUint256 = _isDirectUseUint256(directUseUint256, chunk);
             // checks and updates if the chunk can use uint256 or it's loadRemote opcode
-            (loadRemoteFlag, loadRemoteVarCount) = _updateRemoteParams(loadRemoteFlag, loadRemoteVarCount, chunk);
+            (loadRemoteFlag, loadRemoteVarCount) = _updateRemoteParams(
+                loadRemoteFlag,
+                loadRemoteVarCount,
+                chunk
+            );
 
             if (isOperator(_ctx, chunk)) {
                 // console.log("%s is an operator", chunk);
@@ -143,7 +147,7 @@ contract Preprocessor {
             } else if (_mayBeNumber(chunk)) {
                 if (!directUseUint256) {
                     if (result.length > 0) {
-                        res = result[result.length-1];
+                        res = result[result.length - 1];
                         // push additional 'uint256' if was not set before in results and
                         // if it is not a 'loadRemote' execution
                         if (!(res.equal('uint256')) && loadRemoteFlag == false) {
@@ -153,7 +157,7 @@ contract Preprocessor {
                         result.push('uint256');
                     }
                 } else {
-                    directUseUint256 = false;  
+                    directUseUint256 = false;
                 }
                 result.push(chunk);
             } else {
@@ -221,14 +225,12 @@ contract Preprocessor {
      * @param _p is a current program string
      * @return new index and isCommeted parameters
      */
-    function _getEndCommentSymbol(uint256 _ssl, uint256 _i, string memory _p, string memory char) 
-        internal
-        pure
-        returns (
-            uint256,
-            bool
-        )
-    {
+    function _getEndCommentSymbol(
+        uint256 _ssl,
+        uint256 _i,
+        string memory _p,
+        string memory char
+    ) internal pure returns (uint256, bool) {
         if (_ssl == 1 && char.equal('\n')) {
             return (_i + 1, false);
         } else if (_ssl == 2 && char.equal('*') && _canGetSymbol(_i + 1, _p)) {
@@ -261,7 +263,7 @@ contract Preprocessor {
      */
     function _mayBeNumber(string memory _value) internal pure returns (bool isNumber) {
         bytes1 _firstByte = bytes(_value)[0];
-        if(uint8(_firstByte) >= 48 && uint8(_firstByte) <= 57) {
+        if (uint8(_firstByte) >= 48 && uint8(_firstByte) <= 57) {
             isNumber = true;
         }
     }
@@ -275,16 +277,18 @@ contract Preprocessor {
      * @param _chunk is a current chunk from the outer function
      * @return _isDirect is true if a chunk is matched one from the opcode list, otherwise is false
      */
-    function _isDirectUseUint256(
-        bool _directUseUint256,
-        string memory _chunk
-    ) internal pure returns (bool _isDirect){
+    function _isDirectUseUint256(bool _directUseUint256, string memory _chunk)
+        internal
+        pure
+        returns (bool _isDirect)
+    {
         _isDirect = _directUseUint256;
-        if(
+        if (
             _chunk.equal('transferFrom') ||
             _chunk.equal('setLocalUint256') ||
             _chunk.equal('sendEth') ||
-            _chunk.equal('transfer')) {
+            _chunk.equal('transfer')
+        ) {
             _isDirect = true;
         }
     }
@@ -303,7 +307,7 @@ contract Preprocessor {
         bool _loadRemoteFlag,
         uint256 _loadRemoteVarCount,
         string memory _chunk
-    ) internal pure returns (bool _flag, uint256 _count){
+    ) internal pure returns (bool _flag, uint256 _count) {
         _count = 3;
         _flag = _loadRemoteFlag;
 

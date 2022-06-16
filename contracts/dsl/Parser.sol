@@ -9,7 +9,7 @@ import { ByteUtils } from './libs/ByteUtils.sol';
 import { Storage } from './helpers/Storage.sol';
 import { Preprocessor } from './Preprocessor.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 contract Parser is IParser, Storage {
     using StringUtils for string;
