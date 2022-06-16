@@ -10,6 +10,8 @@ import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { Storage } from '../dsl/helpers/Storage.sol';
 
+// TODO: use this import only for testing
+import { IERC20 } from '../dsl/interfaces/IERC20.sol';
 // import 'hardhat/console.sol';
 
 contract ConditionalTxs is Storage {
@@ -149,6 +151,7 @@ contract ConditionalTxs is Storage {
         return _res;
     }
 
+    // ------> TESTING BLOCK: Use functions bellow only for testing! <-----
     // TODO: IMPORTANT, use this function only for tests! Remove it from production
     function cleanTx(uint256[] memory _txIds, address[] memory _signatories) public {
         for (uint256 i = 0; i < _txIds.length; i++) {
@@ -164,4 +167,12 @@ contract ConditionalTxs is Storage {
         // send fund back to the _address
         payable(_address).transfer(address(this).balance);
     }
+
+    // TODO: IMPORTANT, use this function only for tests! Remove it from production
+    function returnTokens(address _token) public {
+        // send tokens back to the sender
+        uint256 amount = IERC20(_token).balanceOf(address(this));
+        IERC20(_token).transfer(msg.sender, amount);
+    }
+    // ------> TESTING BLOCK ENDS: Use functions above only for testing! <-----
 }

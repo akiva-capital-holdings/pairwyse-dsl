@@ -111,11 +111,12 @@ export const aliceBobAndCarl = (
   },
 ];
 
-export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithAddress[]) => {
+export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithAddress[], index: number) => {
   const LPs = LPsSigners.map((LP) => LP.address);
+  const base = "" + index;
   return [
     {
-      txId: 1,
+      txId: Number(base + 1),
       requiredTxs: [],
       signatories: [GP.address],
       transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_INITIAL',
@@ -129,8 +130,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
     },
     // Note: for now we're assuming that we have only one LP
     {
-      txId: 2,
-      requiredTxs: [1],
+      txId: Number(base + 2),
+      requiredTxs: [Number(base + 1)],
       signatories: LPs,
       transaction: `(transferFromVar DAI LP TRANSACTIONS_CONT LP_INITIAL)
           and
@@ -141,8 +142,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       ],
     },
     {
-      txId: 3,
-      requiredTxs: [2],
+      txId: Number(base + 3),
+      requiredTxs: [Number(base + 2)],
       signatories: [GP.address],
       transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAINING',
       conditions: [
@@ -170,8 +171,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       ],
     },
     {
-      txId: 4,
-      requiredTxs: [2],
+      txId: Number(base + 4),
+      requiredTxs: [Number(base + 2)],
       signatories: LPs,
       // todo: `transferVar DAI GP GP_INITIAL` into a separate branch
       transaction: `
@@ -194,8 +195,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
     {
       // Note: here we don't return ETH to the contract but just withdraw DAI and then return the
       //       same amount of DAI
-      txId: 5,
-      requiredTxs: [3],
+      txId: Number(base + 5),
+      requiredTxs: [Number(base + 3)],
       signatories: [GP.address],
       transaction: 'transferVar DAI GP PURCHASE_AMOUNT',
       conditions: [
@@ -210,7 +211,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       //       transferring some additional DAI to the contract is equal to swapping ETH that
       //       should be on the contract to DAI. So at the end of the day the result is still the
       //       same: there is more DAI on the contract that it were initially deposited by GP & LP
-      txId: 6,
+      txId: Number(base + 6),
       requiredTxs: [],
       signatories: [GP.address], // TODO: make `anyone`
       // TODO: swap ETH for DAI
@@ -220,8 +221,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       ],
     },
     {
-      txId: 71,
-      requiredTxs: [6],
+      txId: Number(base + 71),
+      requiredTxs: [Number(base + 6)],
       signatories: [GP.address],
       transaction: 'transferVar DAI GP MANAGEMENT_FEE',
       conditions: [
@@ -231,8 +232,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       ],
     },
     {
-      txId: 72,
-      requiredTxs: [6],
+      txId: Number(base + 72),
+      requiredTxs: [Number(base + 6)],
       signatories: [GP.address],
       transaction: 'transferVar DAI GP CARRY',
       conditions: [
@@ -275,8 +276,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       ],
     },
     {
-      txId: 73,
-      requiredTxs: [6],
+      txId: Number(base + 73),
+      requiredTxs: [Number(base + 6)],
       signatories: [GP.address],
       transaction: 'transferVar DAI GP GP_PRINICIPAL',
       conditions: [
@@ -313,8 +314,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       ],
     },
     {
-      txId: 81,
-      requiredTxs: [6],
+      txId: Number(base + 81),
+      requiredTxs: [Number(base + 6)],
       signatories: LPs,
       transaction: 'transferVar DAI LP LP_PROFIT',
       conditions: [
@@ -326,8 +327,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       ],
     },
     {
-      txId: 82,
-      requiredTxs: [6],
+      txId: Number(base + 82),
+      requiredTxs: [Number(base + 6)],
       signatories: LPs,
       transaction: 'transferVar DAI LP LP_PRINCIPAL',
       conditions: [
