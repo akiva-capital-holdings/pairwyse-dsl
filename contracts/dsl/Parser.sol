@@ -9,7 +9,7 @@ import { ByteUtils } from './libs/ByteUtils.sol';
 import { Storage } from './helpers/Storage.sol';
 import { Preprocessor } from './Preprocessor.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 contract Parser is IParser, Storage {
     using StringUtils for string;
@@ -153,12 +153,10 @@ contract Parser is IParser, Storage {
     function parseOpcodeWithParams(IContext _ctx) internal {
         string storage cmd = nextCmd();
         bytes1 opcode = _ctx.opCodeByName(cmd);
-
         require(
             opcode != 0x0 || isLabel(cmd),
             string(abi.encodePacked('Parser: "', cmd, '" command is unknown'))
         );
-
         if (isLabel(cmd)) {
             uint256 _branchLocation = program.length;
             bytes memory programBefore = program.slice(0, labelPos[cmd]);
@@ -169,7 +167,7 @@ contract Parser is IParser, Storage {
 
             bytes4 _selector = _ctx.asmSelectors(cmd);
             if (_selector != 0x0) {
-                (bool success, ) = address(this).delegatecall(
+                (bool success,)= address(this).delegatecall(
                     abi.encodeWithSelector(_selector, _ctx)
                 );
                 require(success, 'Parser: delegatecall to asmSelector failed');

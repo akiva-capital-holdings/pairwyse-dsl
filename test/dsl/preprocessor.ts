@@ -54,7 +54,7 @@ describe('Preprocessor', () => {
     const tests: Testcase[] = [
       {
         name: 'simple math',
-        expr: 'uint256 1 + uint256 2',
+        expr: '1 + 2',
         expected: ['uint256', '1', 'uint256', '2', '+'],
       },
       {
@@ -94,7 +94,7 @@ describe('Preprocessor', () => {
       },
       {
         name: 'parenthesis',
-        expr: '(((uint256 1 or uint256 5) or uint256 7) and uint256 0)',
+        expr: '(((1 or 5) or 7) and 0)',
         expected: [
           'uint256',
           '1',
@@ -137,7 +137,7 @@ describe('Preprocessor', () => {
     });
 
     it('parenthesis', async () => {
-      const input = '(((uint256 1 or uint256 5) or uint256 7) and uint256 0)';
+      const input = '(((1 or 5) or 7) and 0)';
       const res = await app.callStatic.split(input);
       expect(res).to.eql(jsTransform(input));
     });
@@ -177,7 +177,7 @@ describe('Preprocessor', () => {
     it('parenthesis', async () => {
       const cmds = await app.callStatic.transform(
         ctxAddr,
-        '(((uint256 1 or uint256 5) or uint256 7) and uint256 1)'
+        '(((1 or 5) or 7) and 1)'
       );
       const expected = [
         'uint256',
@@ -199,7 +199,7 @@ describe('Preprocessor', () => {
       it('first', async () => {
         const cmds = await app.callStatic.transform(
           ctxAddr,
-          'uint256 1 or uint256 0 or uint256 1 and uint256 0'
+          '1 or 0 or 1 and 0'
         );
         const expected = [
           'uint256',
@@ -221,7 +221,7 @@ describe('Preprocessor', () => {
       it('second', async () => {
         const cmds = await app.callStatic.transform(
           ctxAddr,
-          '((uint256 1 or uint256 0) or uint256 1) and uint256 0'
+          '((1 or 0) or 1) and 0'
         );
         const expected = [
           'uint256',
@@ -243,7 +243,7 @@ describe('Preprocessor', () => {
       it('third', async () => {
         const cmds = await app.callStatic.transform(
           ctxAddr,
-          '(uint256 1 or uint256 0) or (uint256 1 and uint256 0)'
+          '(1 or 0) or (1 and 0)'
         );
         const expected = [
           'uint256',
@@ -308,12 +308,12 @@ describe('Preprocessor', () => {
         bool true
         if action
 
-        uint256 ${FOUR}
+        ${FOUR}
         end
 
         action {
-          uint256 ${ONE}
-          uint256 ${TWO}
+          ${ONE}
+          ${TWO}
         }
         `;
 
@@ -346,16 +346,16 @@ describe('Preprocessor', () => {
         bool true
         ifelse good bad
 
-        uint256 ${FOUR}
+        ${FOUR}
         end
 
         good {
-          uint256 ${ONE}
-          uint256 ${TWO}
+          ${ONE}
+          ${TWO}
         }
         
         bad {
-          uint256 ${THREE}
+          ${THREE}
         }
         `;
 
@@ -539,7 +539,7 @@ describe('Preprocessor', () => {
       it('a multi comment that located next to the command line', async () => {
         // contains a single comment inside
         const input = `
-          uint256 2 * uint256 5
+          2 * 5
           /*
           //bool true
           smt
@@ -552,7 +552,7 @@ describe('Preprocessor', () => {
 
       it('comments located before and below the command', async () => {
         const input = `
-          uint256 2 * uint256 5
+          2 * 5
           /*
           //123
           smt
@@ -581,7 +581,7 @@ describe('Preprocessor', () => {
       it('different comments located between two lines of commands', async () => {
         const input = `
           // wow test
-          uint256 2 * uint256 5
+          2 * 5
           /*
           //123
           smt
@@ -596,7 +596,7 @@ describe('Preprocessor', () => {
 
       it('comment contains the command (w/o spaces) ', async () => {
         const input = `
-          /*uint256 2 * uint256 5*/
+          /*2 * 5*/
         `;
         const cleanString = await app.callStatic.cleanString(input);
         const cmds = await app.callStatic.transform(ctxAddr, cleanString);
@@ -666,11 +666,11 @@ describe('Preprocessor', () => {
            */
           bool false
           //
-          uint256 2 * uint256 5 //
+          2 * 5 //
           //
           bool true/* abc test
           */
-          uint256 11111//commenthere/**/
+          11111//commenthere/**/
           /*bool true */ bool false//comment here
           `;
         const cleanString = await app.callStatic.cleanString(input);
@@ -691,6 +691,32 @@ describe('Preprocessor', () => {
           '*',
         ]);
       });
+    });
+  });
+
+  describe('Using integers without uint256 opCode', () => {
+    it('Bool algebra', async () => {
+      const cmds = await app.callStatic.transform(ctxAddr, '1 or 245');
+      const expected = [
+        'uint256',
+        '1',
+        'uint256',
+        '245',
+        'or'
+      ];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('Should return a text with uint256 opCode', async () => {
+      const cmds = await app.callStatic.transform(ctxAddr, '1 and 2-test');
+      const expected = [
+        'uint256',
+        '1',
+        'uint256',
+        '2-test',
+        'and'
+      ];
+      expect(cmds).to.eql(expected);
     });
   });
 });

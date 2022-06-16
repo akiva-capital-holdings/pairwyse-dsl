@@ -93,6 +93,9 @@ describe('DSL: math', () => {
 
   describe('division case', () => {
     it('division by zero error', async () => {
+      await app.parse('5 / 0');
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+
       await app.parse('uint256 5 / uint256 0');
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
 
@@ -103,6 +106,9 @@ describe('DSL: math', () => {
     });
 
     it('division zero by zero error', async () => {
+      await app.parse('0 / 0');
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+
       await app.parse('uint256 0 / uint256 0');
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
 
@@ -113,6 +119,9 @@ describe('DSL: math', () => {
     });
 
     it('should divide zero by number', async () => {
+      await app.parse('0 / 1');
+      await app.execute();
+
       await app.parse('uint256 0 / uint256 1');
       await app.execute();
 
@@ -135,6 +144,9 @@ describe('DSL: math', () => {
     });
 
     it('returns error if the first number is 0', async () => {
+      await app.parse('0 - 1');
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+
       await app.parse('uint256 0 - uint256 1');
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
 
@@ -145,6 +157,9 @@ describe('DSL: math', () => {
     });
 
     it('no errors if both numbers are 0', async () => {
+      await app.parse('0 - 0');
+      await app.execute();
+
       await app.parse('uint256 0 - uint256 0');
       await app.execute();
 
@@ -159,26 +174,41 @@ describe('DSL: math', () => {
     let preMax256 = '115792089237316195423570985008687907853269984665640564039457584007913129639934';
 
     it('can not be added a maximum uint256 value to a simple one', async () => {
+      await app.parse(`${max256} + 1`);
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+
       await app.parse(`uint256 ${max256} + uint256 1`);
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
     });
 
     it('can not to be added a simple uint256 value to a maximum one', async () => {
+      await app.parse(`1 + ${max256}`);
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+
       await app.parse(`uint256 1 + uint256 ${max256}`);
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
     });
 
     it('can not to be added a maximum uint256 value to the maximum one', async () => {
+      await app.parse(`${max256} + ${max256}`);
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+
       await app.parse(`uint256 ${max256} + uint256 ${max256}`);
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
     });
 
     it('can be added a pre maximum uint256 value to the simple one', async () => {
+      await app.parse(`${preMax256} + 1`);
+      await app.execute();
+
       await app.parse(`uint256 ${preMax256} + uint256 1`);
       await app.execute();
     });
 
     it('can be added a simple uint256 value to pre maximum one', async () => {
+      await app.parse(`1 + ${preMax256}`);
+      await app.execute();
+
       await app.parse(`uint256 1 + uint256 ${preMax256}`);
       await app.execute();
     });
@@ -186,11 +216,17 @@ describe('DSL: math', () => {
     it(
       'reverts if add a pre maximum uint256 value to the simple one that is bigger then uint256',
       async () => {
+      await app.parse(`${preMax256} + 2`);
+      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+
       await app.parse(`uint256 ${preMax256} + uint256 2`);
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
     });
 
     it('no errors if both numbers are 0', async () => {
+      await app.parse('0 + 0');
+      await app.execute();
+
       await app.parse('uint256 0 + uint256 0');
       await app.execute();
 

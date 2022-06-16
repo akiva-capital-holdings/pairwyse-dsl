@@ -88,172 +88,172 @@ describe('DSL: basic', () => {
     appAddrHex = app.address.slice(2);
   });
 
-  it('uint256 0 + uint256 0', async () => {
-    await app.parse('uint256 0 + uint256 0');
+  it('0 + 0', async () => {
+    await app.parse('0 + 0');
     await app.execute();
     await checkStackTailv2(StackValue, stack, [0]);
   });
 
-  it('uint256 0 - uint256 0', async () => {
-    await app.parse('uint256 0 - uint256 0');
+  it('0 - 0', async () => {
+    await app.parse('0 - 0');
     await app.execute();
     await checkStackTailv2(StackValue, stack, [0]);
   });
 
-  it('uint256 0 + uint256 1', async () => {
-    await app.parse('uint256 0 + uint256 1');
+  it('0 + 1', async () => {
+    await app.parse('0 + 1');
     await app.execute();
     await checkStackTailv2(StackValue, stack, [1]);
   });
 
-  it('uint256 1 - uint256 0', async () => {
-    await app.parse('uint256 1 - uint256 0');
+  it('1 - 0', async () => {
+    await app.parse('1 - 0');
     await app.execute();
     await checkStackTailv2(StackValue, stack, [1]);
   });
 
-  it('uint256 2 + uint256 3', async () => {
-    await app.parse('uint256 2 + uint256 3');
+  it('2 + 3', async () => {
+    await app.parse('2 + 3');
     await app.execute();
     await checkStackTailv2(StackValue, stack, [5]);
   });
 
-  it('uint256 7 - uint256 3', async () => {
-    await app.parse('uint256 7 - uint256 3');
+  it('7 - 3', async () => {
+    await app.parse('7 - 3');
     await app.execute();
     await checkStackTailv2(StackValue, stack, [4]);
   });
 
-  it('uint256 2 * uint256 3', async () => {
-    await app.parse('uint256 2 * uint256 3');
+  it('2 * 3', async () => {
+    await app.parse('2 * 3');
     await app.execute();
     await checkStackTailv2(StackValue, stack, [6]);
   });
 
-  it('uint256 2 / uint256 3', async () => {
-    await app.parse('uint256 2 / uint256 3');
+  it('2 / 3', async () => {
+    await app.parse('2 / 3');
     await app.execute();
     await checkStackTailv2(StackValue, stack, [0]);
   });
 
-  it('uint256 20 / uint256 3', async () => {
-    await app.parse('uint256 20 / uint256 3');
+  it('20 / 3', async () => {
+    await app.parse('20 / 3');
     await app.execute();
     await checkStackTailv2(StackValue, stack, [6]);
   });
 
-  it('uint256 21 / uint256 3', async () => {
-    await app.parse('uint256 21 / uint256 3');
+  it('21 / 3', async () => {
+    await app.parse('21 / 3');
     await app.execute();
     await checkStackTailv2(StackValue, stack, [7]);
   });
 
-  it('uint256 1122334433', async () => {
-    await app.parse('uint256 1122334433');
+  it('1122334433', async () => {
+    await app.parse('1122334433');
     await app.execute();
     await checkStack(StackValue, stack, 1, 1122334433);
   });
 
-  it('uint256 2 uint256 3 -> 2 3', async () => {
-    await app.parse('uint256 2 uint256 3');
+  it('2 3 -> 2 3', async () => {
+    await app.parse('2 3');
     await app.execute();
     await checkStackTail(StackValue, stack, 2, [2, 3]);
   });
 
   it('5 == 5', async () => {
-    await app.parse('uint256 5 == uint256 5');
+    await app.parse('5 == 5');
     await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it('5 != 6', async () => {
-    await app.parse('uint256 5 != uint256 6');
+    await app.parse('5 != 6');
     await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it('5 < 6', async () => {
-    await app.parse('uint256 5 < uint256 6');
+    await app.parse('5 < 6');
     await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it('5 < 5 = false', async () => {
-    await app.parse('uint256 5 < uint256 5');
+    await app.parse('5 < 5');
     await app.execute();
     await checkStack(StackValue, stack, 1, 0);
   });
 
   it('6 > 5', async () => {
-    await app.parse('uint256 6 > uint256 5');
+    await app.parse('6 > 5');
     await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it('5 > 5 = false', async () => {
-    await app.parse('uint256 5 > uint256 5');
+    await app.parse('5 > 5');
     await app.execute();
     await checkStack(StackValue, stack, 1, 0);
   });
 
   it('5 <= 5', async () => {
-    await app.parse('uint256 5 <= uint256 5');
+    await app.parse('5 <= 5');
     await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it('5 <= 6', async () => {
-    await app.parse('uint256 5 <= uint256 6');
+    await app.parse('5 <= 6');
     await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it('5 >= 5', async () => {
-    await app.parse('uint256 5 >= uint256 5');
+    await app.parse('5 >= 5');
     await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it('6 >= 5', async () => {
-    await app.parse('uint256 6 >= uint256 5');
+    await app.parse('6 >= 5');
     await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
 
   it('5 6 swap -> 6 5', async () => {
-    await app.parse('uint256 5 swap uint256 6');
+    await app.parse('5 swap 6');
     await app.execute();
     await checkStackTail(StackValue, stack, 2, [6, 5]);
   });
 
   describe('Logical AND', async () => {
     it('1 && 0 = false', async () => {
-      await app.parse('uint256 1 and uint256 0');
+      await app.parse('1 and 0');
       await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
     it('1 && 1 = true', async () => {
-      await app.parse('uint256 1 and uint256 1');
+      await app.parse('1 and 1');
       await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it('0 && 1 = false', async () => {
-      await app.parse('uint256 0 and uint256 1');
+      await app.parse('0 and 1');
       await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
     it('0 && 0 = false', async () => {
-      await app.parse('uint256 0 and uint256 0');
+      await app.parse('0 and 0');
       await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
     it('3 && 3 = false', async () => {
-      await app.parse('uint256 3 and uint256 3');
+      await app.parse('3 and 3');
       await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it('(((1 && 5) && 7) && 0) = 0', async () => {
-      await app.parse('uint256 1 and uint256 5 and uint256 7 and uint256 0');
+      await app.parse('1 and 5 and 7 and 0');
       await app.execute();
 
       await checkStack(StackValue, stack, 1, 0);
@@ -262,32 +262,32 @@ describe('DSL: basic', () => {
 
   describe('Logical OR', async () => {
     it('1 || 0 = true', async () => {
-      await app.parse('uint256 1 or uint256 0');
+      await app.parse('1 or 0');
       await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it('1 || 1 = true', async () => {
-      await app.parse('uint256 1 or uint256 1');
+      await app.parse('1 or 1');
       await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it('0 || 5 = true', async () => {
-      await app.parse('uint256 0 or uint256 5');
+      await app.parse('0 or 5');
       await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it('0 || 0 = false', async () => {
-      await app.parse('uint256 0 or uint256 0');
+      await app.parse('0 or 0');
       await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
     it('3 || 3 = false', async () => {
-      await app.parse('uint256 3 or uint256 3');
+      await app.parse('3 or 3');
       await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it('0 || 0 || 3', async () => {
-      await app.parse('uint256 0 or uint256 0 or uint256 3');
+      await app.parse('0 or 0 or 3');
       await app.execute();
 
       await checkStack(StackValue, stack, 1, 1);
@@ -296,37 +296,37 @@ describe('DSL: basic', () => {
 
   describe('Logical XOR', async () => {
     it('0 xor 0 = false', async () => {
-      await app.parse('uint256 0 xor uint256 0');
+      await app.parse('0 xor 0');
       await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
     it('1 xor 0 = true', async () => {
-      await app.parse('uint256 1 xor uint256 0');
+      await app.parse('1 xor 0');
       await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it('0 xor 1 = true', async () => {
-      await app.parse('uint256 0 xor uint256 1');
+      await app.parse('0 xor 1');
       await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it('1 xor 1 = false', async () => {
-      await app.parse('uint256 1 xor uint256 1');
+      await app.parse('1 xor 1');
       await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
     it('5 xor 0 = true', async () => {
-      await app.parse('uint256 5 xor uint256 0');
+      await app.parse('5 xor 0');
       await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it('0 xor 5 = true', async () => {
-      await app.parse('uint256 0 xor uint256 5');
+      await app.parse('0 xor 5');
       await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it('5 xor 6 = false', async () => {
-      await app.parse('uint256 5 xor uint256 6');
+      await app.parse('5 xor 6');
       await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
@@ -334,29 +334,29 @@ describe('DSL: basic', () => {
 
   describe('Logical NOT', async () => {
     it('NOT 0 = 1', async () => {
-      await app.parse('! uint256 0');
+      await app.parse('! 0');
       await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
     it('NOT 1 = 0', async () => {
-      await app.parse('! uint256 1');
+      await app.parse('! 1');
       await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
     it('NOT 3 = 0', async () => {
-      await app.parse('! uint256 3');
+      await app.parse('! 3');
       await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
 
     it('NOT NOT 3 = 1', async () => {
-      await app.parse('! (! uint256 3)');
+      await app.parse('! (! 3)');
       await app.execute();
       await checkStack(StackValue, stack, 1, 1);
     });
 
     it('NOT NOT NOT 3 = 0', async () => {
-      await app.parse('! (! (! uint256 3))');
+      await app.parse('! (! (! 3))');
       await app.execute();
       await checkStack(StackValue, stack, 1, 0);
     });
@@ -412,12 +412,12 @@ describe('DSL: basic', () => {
   });
 
   it('setUint256', async () => {
-    await app.parse('(uint256 4 + uint256 17) setUint256 VAR');
+    await app.parse('(4 + 17) setUint256 VAR');
     await app.execute();
     expect(await app.getStorageUint256(hex4Bytes('VAR'))).to.equal(21);
 
     await app.setStorageUint256(hex4Bytes('X'), 10);
-    await app.parse('(loadLocal uint256 X + uint256 15) setUint256 VAR');
+    await app.parse('(loadLocal uint256 X + 15) setUint256 VAR');
     await app.execute();
     expect(await app.getStorageUint256(hex4Bytes('VAR'))).to.equal(25);
   });
@@ -891,11 +891,11 @@ describe('DSL: basic', () => {
         ifelse AA BB
 
         branch AA {
-           (uint256 5) setUint256 A
+           5 setUint256 A
         }
 
         branch BB {
-          (uint256 7) setUint256 A
+          7 setUint256 A
         }
       `);
       await app.execute();
@@ -911,23 +911,23 @@ describe('DSL: basic', () => {
 
       await app.parse(`
     
-      uint256 ${ONE}
+      ${ONE}
     
       bool true
       bool true
       bool false
       if C
       ifelse D E
-      uint256 ${TWO}
+        ${TWO}
       end
       C {
-        uint256 ${FIVE}
+        ${FIVE}
       }
       D {
-        uint256 ${SIX}
+        ${SIX}
       }
       E {
-        uint256 ${SEVEN}
+        ${SEVEN}
       }
     `);
       await app.execute();

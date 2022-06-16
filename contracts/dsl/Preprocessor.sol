@@ -5,7 +5,7 @@ import { IContext } from './interfaces/IContext.sol';
 import { Stack, StackValue } from './helpers/Stack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract Preprocessor {
     using StringUtils for string;
@@ -103,17 +103,54 @@ contract Preprocessor {
         return result;
     }
 
+    function isDirectUseUint256(string memory _chunk) returns (bool _isDirectUseUint256){
+        if(
+            chunk.equal('transferFrom') ||
+            chunk.equal('setLocalUint256') ||
+            chunk.equal('sendEth') ||
+            chunk.equal('transfer')) {
+            _isDirectUseUint256 = true;
+        }
+    }
+
+    function updateRemoteParams(string memory _chunk, uint256 _loadRemoteVarCount) returns (bool _isDirectUseUint256){
+        if(
+            chunk.equal('transferFrom') ||
+            chunk.equal('setLocalUint256') ||
+            chunk.equal('sendEth') ||
+            chunk.equal('transfer')) {
+            _isDirectUseUint256 = true;
+        }
+    }
+
     function infixToPostfix(
         IContext _ctx,
         string[] memory _code,
         Stack _stack
     ) public returns (string[] memory) {
         delete result;
+        bool loadRemoteFlag;
+        bool directUseUint256;
+        uint256 loadRemoteVarCount = 3;
         string memory chunk;
-        // console.log("\n\n", chunk);
-
+        
+        string memory res;
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
+            directUseUint256 = isDirectUseUint256(chunk);
+            }
+
+            if(chunk.equal('loadRemote')) {
+                loadRemoteFlag = true;
+            }
+
+            if(loadRemoteFlag && loadRemoteVarCount > 0) {
+                loadRemoteVarCount -= 1;
+            } else {
+                loadRemoteVarCount = 3;
+            }
+
+
             if (isOperator(_ctx, chunk)) {
                 // console.log("%s is an operator", chunk);
                 while (
@@ -132,9 +169,24 @@ contract Preprocessor {
                     result.push(_stack.pop().getString());
                 }
                 _stack.pop(); // remove '(' that is left
+            } else if (mayBeNumber(chunk)) {
+                if(!directUseUint256){
+                    if(result.length > 0) {
+                        res = result[result.length-1];
+                        if(loadRemoteFlag == true && loadRemoteVarCount == 0) {
+                            result.push('uint256');
+                            loadRemoteFlag = false;
+                        } else if (!(res.equal('uint256')) && loadRemoteFlag == false) {
+                            result.push('uint256');
+                        }
+                    } else {
+                        result.push('uint256');
+                    }
+                } else {
+                    directUseUint256 = false;  
+                }
+                result.push(chunk);
             } else {
-                // operand found
-                // console.log("result push: %s", chunk);
                 result.push(chunk);
             }
         }
@@ -143,7 +195,6 @@ contract Preprocessor {
             // console.log("result push: %s", _stack.seeLast().getString());
             result.push(_stack.pop().getString());
         }
-
         return result;
     }
 
@@ -229,6 +280,13 @@ contract Preprocessor {
             return true;
         } catch Error(string memory) {
             return false;
+        }
+    }
+
+    function mayBeNumber(string memory _value) public pure returns (bool isNumber) {
+        bytes1 _firstByte = bytes(_value)[0];
+        if(uint8(_firstByte) >= 48 && uint8(_firstByte) <= 57) {
+            isNumber = true;
         }
     }
 }

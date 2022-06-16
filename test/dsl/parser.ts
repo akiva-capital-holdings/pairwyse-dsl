@@ -60,6 +60,25 @@ describe('Parser', () => {
       );
     });
 
+    it('error: if adding number with a string', async () => {
+      await expect(app.parse(ctxAddr, '0 + a')).to.be.revertedWith('Parser: "a" command is unknown');
+      await expect(app.parse(ctxAddr, 'dd + 1')).to.be.revertedWith('Parser: "dd" command is unknown');
+    });
+
+    it('error: if adding number with a number that contains string', async () => {
+      await expect(app.parse(ctxAddr, '10d + 1')).to.be.revertedWith('Parser: delegatecall to asmSelector failed');
+    });
+
+    it('error: if adding number with a number that can be hex', async () => {
+      await expect(app.parse(ctxAddr, '1 + 0x1')).to.be.revertedWith('Parser: delegatecall to asmSelector failed');
+    });
+
+    it('error: if adding uint256 with string value with a number', async () => {
+      await expect(
+        app.parse(ctxAddr, 'uint256 a + 1000')
+      ).to.be.revertedWith('Parser: delegatecall to asmSelector failed');
+    });
+
     it('uint256 1122334433', async () => {
       await app.parse(ctxAddr, 'uint256 1122334433');
       const expected = '0x1a0000000000000000000000000000000000000000000000000000000042e576e1';
