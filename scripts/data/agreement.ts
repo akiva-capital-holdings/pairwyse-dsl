@@ -111,9 +111,13 @@ export const aliceBobAndCarl = (
   },
 ];
 
-export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithAddress[], index: number) => {
+export const businessCaseSteps = (
+  GP: SignerWithAddress,
+  LPsSigners: SignerWithAddress[],
+  index: number
+) => {
   const LPs = LPsSigners.map((LP) => LP.address);
-  const base = "" + index;
+  const base = '' + index;
   return [
     {
       txId: Number(base + 1),

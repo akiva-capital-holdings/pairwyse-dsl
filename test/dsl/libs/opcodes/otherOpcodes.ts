@@ -481,5 +481,5 @@ describe('Other opcodes', () => {
     expect(settedValue).to.be.equal(testValue);
 
     await checkStackTailv2(StackValue, stack, [1]);
-  })
+  });
 });

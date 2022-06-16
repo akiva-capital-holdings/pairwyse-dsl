@@ -171,7 +171,8 @@ describe('DSL: math', () => {
   });
 
   describe('overflow case', () => {
-    let preMax256 = '115792089237316195423570985008687907853269984665640564039457584007913129639934';
+    let preMax256 =
+      '115792089237316195423570985008687907853269984665640564039457584007913129639934';
 
     it('can not be added a maximum uint256 value to a simple one', async () => {
       await app.parse(`${max256} + 1`);
@@ -213,9 +214,7 @@ describe('DSL: math', () => {
       await app.execute();
     });
 
-    it(
-      'reverts if add a pre maximum uint256 value to the simple one that is bigger then uint256',
-      async () => {
+    it('reverts if add a pre maximum uint256 value to the simple one that is bigger then uint256', async () => {
       await app.parse(`${preMax256} + 2`);
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
 

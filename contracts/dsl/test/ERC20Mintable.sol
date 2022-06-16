@@ -42,7 +42,7 @@ contract ERC20 {
     /**
      * @dev Returns the name of the token.
      */
-    function name() public view virtual  returns (string memory) {
+    function name() public view virtual returns (string memory) {
         return _name;
     }
 
@@ -50,7 +50,7 @@ contract ERC20 {
      * @dev Returns the symbol of the token, usually a shorter version of the
      * name.
      */
-    function symbol() public view virtual  returns (string memory) {
+    function symbol() public view virtual returns (string memory) {
         return _symbol;
     }
 
@@ -67,21 +67,21 @@ contract ERC20 {
      * no way affects any of the arithmetic of the contract, including
      * {IERC20-balanceOf} and {IERC20-transfer}.
      */
-    function decimals() public view virtual  returns (uint8) {
+    function decimals() public view virtual returns (uint8) {
         return 18;
     }
 
     /**
      * @dev See {IERC20-totalSupply}.
      */
-    function totalSupply() public view virtual  returns (uint256) {
+    function totalSupply() public view virtual returns (uint256) {
         return _totalSupply;
     }
 
     /**
      * @dev See {IERC20-balanceOf}.
      */
-    function balanceOf(address account) public view virtual  returns (uint256) {
+    function balanceOf(address account) public view virtual returns (uint256) {
         return _balances[account];
     }
 
@@ -93,7 +93,7 @@ contract ERC20 {
      * - `to` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(address to, uint256 amount) public virtual  returns (bool) {
+    function transfer(address to, uint256 amount) public virtual returns (bool) {
         address owner = msg.sender;
         _transfer(owner, to, amount);
         return true;
@@ -102,7 +102,7 @@ contract ERC20 {
     /**
      * @dev See {IERC20-allowance}.
      */
-    function allowance(address owner, address spender) public view virtual  returns (uint256) {
+    function allowance(address owner, address spender) public view virtual returns (uint256) {
         return _allowances[owner][spender];
     }
 
@@ -116,7 +116,7 @@ contract ERC20 {
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(address spender, uint256 amount) public virtual  returns (bool) {
+    function approve(address spender, uint256 amount) public virtual returns (bool) {
         address owner = msg.sender;
         _approve(owner, spender, amount);
         return true;
@@ -142,7 +142,7 @@ contract ERC20 {
         address from,
         address to,
         uint256 amount
-    ) public virtual  returns (bool) {
+    ) public virtual returns (bool) {
         address spender = msg.sender;
         _spendAllowance(from, spender, amount);
         _transfer(from, to, amount);
@@ -181,7 +181,11 @@ contract ERC20 {
      * - `spender` must have allowance for the caller of at least
      * `subtractedValue`.
      */
-    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
+    function decreaseAllowance(address spender, uint256 subtractedValue)
+        public
+        virtual
+        returns (bool)
+    {
         address owner = msg.sender;
         uint256 currentAllowance = _allowances[owner][spender];
         require(currentAllowance >= subtractedValue, 'ERC20: decreased allowance below zero');
@@ -366,13 +370,9 @@ contract ERC20 {
 }
 
 contract ERC20Mintable is ERC20 {
-
-    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {
-
-    } 
+    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
 
     function mint(address _to, uint256 _amount) external {
         _mint(_to, _amount);
     }
-
 }

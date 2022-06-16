@@ -83,7 +83,7 @@ contract Stack {
     }
 
     function _seeLast() internal view returns (StackValue) {
-        require(_length() > 0, "Stack: stack is empty");
+        require(_length() > 0, 'Stack: stack is empty');
         return stack[_length() - 1];
     }
 }

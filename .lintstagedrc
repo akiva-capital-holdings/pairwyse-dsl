@@ -1,0 +1,5 @@
+{
+  "**/*.{ts,sol}": [
+    "yarn prettier"
+  ]
+}

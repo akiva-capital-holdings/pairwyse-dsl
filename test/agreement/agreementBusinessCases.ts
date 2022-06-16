@@ -382,10 +382,10 @@ initiating funds\x1b[0m
   };
 
   before(async () => {
-    [,,, whale, GP, ...LPs] = await ethers.getSigners();
+    [, , , whale, GP, ...LPs] = await ethers.getSigners();
 
     let address = process.env.AGREEMENT_ADDR;
-    if(address) {
+    if (address) {
       agreement = await ethers.getContractAt('Agreement', address);
     } else {
       // TODO: what should we do if the user did not set the AGREEMENT_ADDR?
@@ -393,7 +393,6 @@ initiating funds\x1b[0m
     }
     txsAddr = await agreement.txs();
     txs = await ethers.getContractAt('ConditionalTxs', txsAddr);
-
   });
 
   beforeEach(async () => {
@@ -409,28 +408,28 @@ initiating funds\x1b[0m
 
     // returns funds to executor. Prevent errors in next
     // tests that might be occurred in previous tests
-    await agreement.connect(whale).returnFunds()
+    await agreement.connect(whale).returnFunds();
     await txs.setStorageUint256(hex4Bytes('LP_TOTAL'), 0);
     await txs.setStorageUint256(hex4Bytes('GP_REMAINING'), 0);
     await txs.setStorageUint256(hex4Bytes('TWO_PERCENT'), 0);
     dai = await (await ethers.getContractFactory('Token'))
-        .connect(whale)
-        .deploy(parseUnits('100000000', 18));
+      .connect(whale)
+      .deploy(parseUnits('100000000', 18));
   });
 
   afterEach(async () => {
     // returns funds to executor
-    await agreement.connect(whale).returnFunds()
-    await agreement.connect(whale).returnTokens(dai.address)
+    await agreement.connect(whale).returnFunds();
+    await agreement.connect(whale).returnTokens(dai.address);
   });
 
   async function cleanParam() {
     const addresses: string[] = [whale.address, GP.address];
-      for (let i = 0; i < LPs.length; i++) {
-        const LP = LPs[i];
-        addresses.push(LP.address);
-      }
-      await txs.cleanTx([41, 42, 43, 44, 45, 46, 471, 472, 473, 481, 482], addresses);
+    for (let i = 0; i < LPs.length; i++) {
+      const LP = LPs[i];
+      addresses.push(LP.address);
+    }
+    await txs.cleanTx([41, 42, 43, 44, 45, 46, 471, 472, 473, 481, 482], addresses);
   }
 
   describe.skip('Lifecycle Test Multiple LPs', () => {
@@ -480,7 +479,7 @@ initiating funds\x1b[0m
       20, // PROFIT_PART
       true // GP_FAILS_TO_DO_GAP_DEPOSIT
     );
-    
+
     businessCaseTest(
       'Scenario 3:  Loss incurred, fully covered by GP',
       parseUnits('20', 18), // GP_INITIAL

@@ -22,18 +22,20 @@ describe('byteUtils', () => {
     expect(await app.slice(data, 0, 1)).to.equal('0xb9');
     expect(await app.slice(data, 5, 10)).to.equal('0x0000000000');
     expect(await app.slice(data, 2, 16)).to.equal('0xdd92000000000000000000000000');
-    expect(await app.slice(data, 2, 32)).to.equal('0xdd9200000000000000000000000000000000000000000000000000000000');
+    expect(await app.slice(data, 2, 32)).to.equal(
+      '0xdd9200000000000000000000000000000000000000000000000000000000'
+    );
   });
 
   it('returns error if start index is greater than the end index', async () => {
-    let msg = 'ByteUtils: \'end\' index must be greater than \'start\'';
+    let msg = "ByteUtils: 'end' index must be greater than 'start'";
     expect(app.slice(data, 5, 1)).to.be.revertedWith(msg);
     expect(app.slice(data, 0, 0)).to.be.revertedWith(msg);
     expect(app.slice(data, 32, 32)).to.be.revertedWith(msg);
   });
 
   it('returns error if end index greater than array length', async () => {
-    let msg = 'ByteUtils: \'end\' is greater than the length of the array';
+    let msg = "ByteUtils: 'end' is greater than the length of the array";
     expect(app.slice(data, 4, 33)).to.be.revertedWith(msg);
     expect(app.slice(data, 23, 67)).to.be.revertedWith(msg);
     expect(app.slice(data, 0, 35)).to.be.revertedWith(msg);

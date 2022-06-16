@@ -58,7 +58,6 @@ describe('Logical opcodes', () => {
     await stack.clear();
   });
 
-
   it('opIfelse', async () => {
     const testBranchTrue = '0001';
     const testBranchFalse = '0002';

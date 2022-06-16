@@ -6,10 +6,7 @@ import { OtherOpcodes } from '../../libs/opcodes/OtherOpcodes.sol';
 import { Storage } from '../../helpers/Storage.sol';
 
 contract OtherOpcodesMock is Storage {
-
-    receive() payable external {
-
-    }
+    receive() external payable {}
 
     function opLoadLocalAny(IContext _ctx) public {
         OtherOpcodes.opLoadLocalAny(_ctx);

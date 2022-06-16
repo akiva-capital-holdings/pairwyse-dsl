@@ -73,7 +73,7 @@ describe('Stack', () => {
     await stack.pop();
     expect(await stack.length()).to.equal(0);
     expect(stack.seeLast()).to.be.revertedWith('Stack: stack is empty');
-   });
+  });
 
   it('stack in not empty if pushed a zero value', async () => {
     const svUint256 = await StackValueCont.deploy();
@@ -82,7 +82,7 @@ describe('Stack', () => {
     expect(await stack.length()).to.equal(1);
     expect(await svUint256.getUint256()).to.equal(0);
     await stack.clear();
-   });
+  });
 
   it('stack in not empty if pushed an empty string', async () => {
     expect(await stack.length()).to.equal(0);
@@ -92,7 +92,7 @@ describe('Stack', () => {
     expect(await stack.length()).to.equal(1);
     expect(await svString.getString()).to.equal('');
     await stack.clear();
-   });
+  });
 
   it('stack in not empty if pushed an empty address', async () => {
     const zeroAddress = '0x0000000000000000000000000000000000000000';
@@ -102,5 +102,5 @@ describe('Stack', () => {
     expect(await stack.length()).to.equal(1);
     expect(await svAddress.getAddress()).to.equal(zeroAddress);
     await stack.clear();
-   });
+  });
 });

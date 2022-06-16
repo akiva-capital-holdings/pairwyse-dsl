@@ -175,10 +175,7 @@ describe('Preprocessor', () => {
 
   describe('Execute high-level DSL', () => {
     it('parenthesis', async () => {
-      const cmds = await app.callStatic.transform(
-        ctxAddr,
-        '(((1 or 5) or 7) and 1)'
-      );
+      const cmds = await app.callStatic.transform(ctxAddr, '(((1 or 5) or 7) and 1)');
       const expected = [
         'uint256',
         '1',
@@ -197,10 +194,7 @@ describe('Preprocessor', () => {
 
     describe('parenthesis matter', () => {
       it('first', async () => {
-        const cmds = await app.callStatic.transform(
-          ctxAddr,
-          '1 or 0 or 1 and 0'
-        );
+        const cmds = await app.callStatic.transform(ctxAddr, '1 or 0 or 1 and 0');
         const expected = [
           'uint256',
           '1',
@@ -219,10 +213,7 @@ describe('Preprocessor', () => {
       });
 
       it('second', async () => {
-        const cmds = await app.callStatic.transform(
-          ctxAddr,
-          '((1 or 0) or 1) and 0'
-        );
+        const cmds = await app.callStatic.transform(ctxAddr, '((1 or 0) or 1) and 0');
         const expected = [
           'uint256',
           '1',
@@ -241,10 +232,7 @@ describe('Preprocessor', () => {
       });
 
       it('third', async () => {
-        const cmds = await app.callStatic.transform(
-          ctxAddr,
-          '(1 or 0) or (1 and 0)'
-        );
+        const cmds = await app.callStatic.transform(ctxAddr, '(1 or 0) or (1 and 0)');
         const expected = [
           'uint256',
           '1',
@@ -697,25 +685,13 @@ describe('Preprocessor', () => {
   describe('Using integers without uint256 opCode', () => {
     it('Bool algebra', async () => {
       const cmds = await app.callStatic.transform(ctxAddr, '1 or 245');
-      const expected = [
-        'uint256',
-        '1',
-        'uint256',
-        '245',
-        'or'
-      ];
+      const expected = ['uint256', '1', 'uint256', '245', 'or'];
       expect(cmds).to.eql(expected);
     });
 
     it('Should return a text with uint256 opCode', async () => {
       const cmds = await app.callStatic.transform(ctxAddr, '1 and 2-test');
-      const expected = [
-        'uint256',
-        '1',
-        'uint256',
-        '2-test',
-        'and'
-      ];
+      const expected = ['uint256', '1', 'uint256', '2-test', 'and'];
       expect(cmds).to.eql(expected);
     });
   });
