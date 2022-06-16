@@ -104,14 +104,6 @@ describe.skip('Agreement: business case tests math', () => {
       // Note: if we try do do illegal math (try to obtain a negative value ex. 5 - 10) or divide by
       //       0 then the DSL instruction will fall
 
-      // Add tx objects to Agreement
-      const LP_ARR = LPs.filter((_, i) => i < LP_INITIAL_ARR.length);
-      console.log('\n\nUpdating Agreement Terms and Conditions...');
-
-      console.log('\n\nSkip adding steps to Agreement');
-      await addSteps(businessCaseSteps(GP, LP_ARR), ContextCont);
-
-      console.log('\n\nAgreement Updated with new Terms & Conditions');
       console.log('\n\nTesting Agreement Execution...\n\n');
 
       LAST_BLOCK_TIMESTAMP = (

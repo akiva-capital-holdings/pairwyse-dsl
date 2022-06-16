@@ -91,7 +91,7 @@ export const aliceBobAndCarl = (
         `,
     conditions: [
       `
-              blockTimestamp > loadLocal uint256 EXPIRY
+              TIME > loadLocal uint256 EXPIRY
           and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
         `,
     ],
@@ -104,23 +104,24 @@ export const aliceBobAndCarl = (
     transaction: `transfer TOKEN_ADDR CARL ${tenTokens.toString()}`,
     conditions: [
       `
-              blockTimestamp > loadLocal uint256 EXPIRY
+              TIME > loadLocal uint256 EXPIRY
           and (loadLocal bool LENDER_WITHDRAW_INSURERS == bool false)
         `,
     ],
   },
 ];
 
-export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithAddress[]) => {
+export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithAddress[], index: number) => {
   const LPs = LPsSigners.map((LP) => LP.address);
+  const base = "" + index;
   return [
     {
-      txId: 1,
+      txId: Number(base + 1),
       requiredTxs: [],
       signatories: [GP.address],
       transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_INITIAL',
       conditions: [
-        `(blockTimestamp < loadLocal uint256 PLACEMENT_DATE)
+        `(TIME < loadLocal uint256 PLACEMENT_DATE)
        and (
          loadLocal uint256 GP_INITIAL >=
          loadLocal uint256 ((INITIAL_FUNDS_TARGET * loadLocal uint256 DEPOSIT_MIN_PERCENT) / 100)
@@ -129,20 +130,20 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
     },
     // Note: for now we're assuming that we have only one LP
     {
-      txId: 2,
-      requiredTxs: [1],
+      txId: Number(base + 2),
+      requiredTxs: [Number(base + 1)],
       signatories: LPs,
       transaction: `(transferFromVar DAI LP TRANSACTIONS_CONT LP_INITIAL)
           and
         (loadLocal uint256 LP_TOTAL + loadLocal uint256 LP_INITIAL) setUint256 LP_TOTAL`,
       conditions: [
-        'blockTimestamp >= loadLocal uint256 PLACEMENT_DATE',
-        'blockTimestamp < loadLocal uint256 CLOSING_DATE',
+        'TIME >= loadLocal uint256 PLACEMENT_DATE',
+        'TIME < loadLocal uint256 CLOSING_DATE',
       ],
     },
     {
-      txId: 3,
-      requiredTxs: [2],
+      txId: Number(base + 3),
+      requiredTxs: [Number(base + 2)],
       signatories: [GP.address],
       transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAINING',
       conditions: [
@@ -163,15 +164,15 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
         NEG {
           0 setUint256 GP_REMAINING
         }`,
-        'blockTimestamp >= loadLocal uint256 LOW_LIM',
-        'blockTimestamp <= loadLocal uint256 UP_LIM',
+        'TIME >= loadLocal uint256 LOW_LIM',
+        'TIME <= loadLocal uint256 UP_LIM',
         `(balanceOf DAI TRANSACTIONS_CONT) >=
             ((loadLocal uint256 INITIAL_FUNDS_TARGET * loadLocal uint256 P1) / 100)`,
       ],
     },
     {
-      txId: 4,
-      requiredTxs: [2],
+      txId: Number(base + 4),
+      requiredTxs: [Number(base + 2)],
       signatories: LPs,
       // todo: `transferVar DAI GP GP_INITIAL` into a separate branch
       transaction: `
@@ -187,19 +188,19 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
         `((100 * loadLocal uint256 P1) + 5) * (loadLocal uint256 GP_REMAINING + loadLocal uint256 GP_INITIAL)
            <
          (100 * loadLocal uint256 P2) * loadLocal uint256 LP_INITIAL`,
-        'blockTimestamp > loadLocal uint256 UP_LIM',
-        'blockTimestamp < loadLocal uint256 FUND_INVESTMENT_DATE',
+        'TIME > loadLocal uint256 UP_LIM',
+        'TIME < loadLocal uint256 FUND_INVESTMENT_DATE',
       ],
     },
     {
       // Note: here we don't return ETH to the contract but just withdraw DAI and then return the
       //       same amount of DAI
-      txId: 5,
-      requiredTxs: [3],
+      txId: Number(base + 5),
+      requiredTxs: [Number(base + 3)],
       signatories: [GP.address],
       transaction: 'transferVar DAI GP PURCHASE_AMOUNT',
       conditions: [
-        `(blockTimestamp >= loadLocal uint256 FUND_INVESTMENT_DATE)
+        `(TIME >= loadLocal uint256 FUND_INVESTMENT_DATE)
            and
          (100 * loadLocal uint256 PURCHASE_AMOUNT
            <= loadLocal uint256 PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,
@@ -210,18 +211,16 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       //       transferring some additional DAI to the contract is equal to swapping ETH that
       //       should be on the contract to DAI. So at the end of the day the result is still the
       //       same: there is more DAI on the contract that it were initially deposited by GP & LP
-      txId: 6,
+      txId: Number(base + 6),
       requiredTxs: [],
       signatories: [GP.address], // TODO: make `anyone`
       // TODO: swap ETH for DAI
       transaction: 'transferFromVar DAI WHALE TRANSACTIONS_CONT GP_PURCHASE_RETURN',
-      conditions: [
-        'blockTimestamp >= loadLocal uint256 FUND_INVESTMENT_DATE + loadLocal uint256 ONE_YEAR',
-      ],
+      conditions: ['TIME >= loadLocal uint256 FUND_INVESTMENT_DATE + loadLocal uint256 ONE_YEAR'],
     },
     {
-      txId: 71,
-      requiredTxs: [6],
+      txId: Number(base + 71),
+      requiredTxs: [Number(base + 6)],
       signatories: [GP.address],
       transaction: 'transferVar DAI GP MANAGEMENT_FEE',
       conditions: [
@@ -231,8 +230,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       ],
     },
     {
-      txId: 72,
-      requiredTxs: [6],
+      txId: Number(base + 72),
+      requiredTxs: [Number(base + 6)],
       signatories: [GP.address],
       transaction: 'transferVar DAI GP CARRY',
       conditions: [
@@ -272,8 +271,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       ],
     },
     {
-      txId: 73,
-      requiredTxs: [6],
+      txId: Number(base + 73),
+      requiredTxs: [Number(base + 6)],
       signatories: [GP.address],
       transaction: 'transferVar DAI GP GP_PRINICIPAL',
       conditions: [
@@ -310,8 +309,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       ],
     },
     {
-      txId: 81,
-      requiredTxs: [6],
+      txId: Number(base + 81),
+      requiredTxs: [Number(base + 6)],
       signatories: LPs,
       transaction: 'transferVar DAI LP LP_PROFIT',
       conditions: [
@@ -323,8 +322,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       ],
     },
     {
-      txId: 82,
-      requiredTxs: [6],
+      txId: Number(base + 82),
+      requiredTxs: [Number(base + 6)],
       signatories: LPs,
       transaction: 'transferVar DAI LP LP_PRINCIPAL',
       conditions: [

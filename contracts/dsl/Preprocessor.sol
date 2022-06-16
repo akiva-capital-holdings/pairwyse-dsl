@@ -117,6 +117,7 @@ contract Preprocessor {
 
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
+
             // returns true if the chunk can use uint256 directly
             directUseUint256 = _isDirectUseUint256(directUseUint256, chunk);
             // checks and updates if the chunk can use uint256 or it's loadRemote opcode
@@ -125,6 +126,11 @@ contract Preprocessor {
                 loadRemoteVarCount,
                 chunk
             );
+
+            // Replace alises with base commands
+            if (_isAlias(_ctx, chunk)) {
+                chunk = _ctx.aliases(chunk);
+            }
 
             if (isOperator(_ctx, chunk)) {
                 // console.log("%s is an operator", chunk);
@@ -184,6 +190,13 @@ contract Preprocessor {
             if (op.equal(_ctx.operators(i))) return true;
         }
         return false;
+    }
+
+    /**
+     * @dev Checks if a string is an alias to a command from DSL
+     */
+    function _isAlias(IContext _ctx, string memory _cmd) internal view returns (bool) {
+        return !_ctx.aliases(_cmd).equal('');
     }
 
     /**

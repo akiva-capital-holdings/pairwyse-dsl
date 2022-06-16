@@ -40,6 +40,9 @@ contract Context is IContext {
     // baseOpName -> branchName -> branchCode
     mapping(string => mapping(string => bytes1)) public branchCodes;
 
+    // alias -> base command
+    mapping(string => string) public aliases;
+
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), 'Context: address is zero');
         _;
@@ -208,7 +211,7 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         addOpcode(
-            'blockTimestamp',
+            'TIME',
             0x16,
             OtherOpcodes.opBlockTimestamp.selector,
             0x0,
@@ -339,6 +342,9 @@ contract Context is IContext {
         addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadRemoteBool.selector);
         addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
         addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadRemoteBytes32.selector);
+
+        // Aliases
+        _addAlias('TIME', 'blockTimestamp');
     }
 
     function operatorsLen() external view returns (uint256) {
@@ -411,6 +417,13 @@ contract Context is IContext {
     function addOperator(string memory _op, uint256 _priority) internal {
         opsPriors[_op] = _priority;
         operators.push(_op);
+    }
+
+    /**
+     * @dev Adds an alias to the already existing DSL command
+     */
+    function _addAlias(string memory _baseCmd, string memory _alias) internal {
+        aliases[_alias] = _baseCmd;
     }
 
     function setProgram(bytes memory _data) public {

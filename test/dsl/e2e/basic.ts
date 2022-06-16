@@ -387,6 +387,14 @@ describe('DSL: basic', () => {
     await checkStack(StackValue, stack, 1, block.timestamp);
   });
 
+  it('TIME', async () => {
+    // TIME is an alias for blockTimestamp
+    await app.parse('TIME');
+    await app.execute();
+    const block = await ethers.provider.getBlock('latest');
+    await checkStack(StackValue, stack, 1, block.timestamp);
+  });
+
   it('blockChainId', async () => {
     await app.parse('blockChainId');
     const tx = await app.execute();
@@ -953,6 +961,13 @@ describe('DSL: basic', () => {
 
   it('block number < block timestamp', async () => {
     await app.parse('blockNumber < blockTimestamp');
+    await app.execute();
+    await checkStack(StackValue, stack, 1, 1);
+  });
+
+  it('block number < TIME', async () => {
+    // TIME is an alias for blockTimestamp
+    await app.parse('blockNumber < TIME');
     await app.execute();
     await checkStack(StackValue, stack, 1, 1);
   });
