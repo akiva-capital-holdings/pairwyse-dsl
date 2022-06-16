@@ -218,15 +218,15 @@ describe('End-to-end', () => {
       bool true
       ifelse good bad
 
-      uint256 ${FOUR}
+      ${FOUR}
 
       branch good {
-        uint256 ${ONE}
-        uint256 ${TWO}
+        ${ONE}
+        ${TWO}
       }
 
       branch bad {
-        uint256 ${THREE}
+        ${THREE}
       }
       `;
     const code = await preprocessor.callStatic.transform(ctxAddr, input);

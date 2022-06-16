@@ -109,11 +109,24 @@ contract Preprocessor {
         Stack _stack
     ) public returns (string[] memory) {
         delete result;
+        bool loadRemoteFlag;
+        bool directUseUint256;
+        uint256 loadRemoteVarCount = 3;
         string memory chunk;
-        // console.log("\n\n", chunk);
+        string memory res;
 
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
+
+            // returns true if the chunk can use uint256 directly
+            directUseUint256 = _isDirectUseUint256(directUseUint256, chunk);
+            // checks and updates if the chunk can use uint256 or it's loadRemote opcode
+            (loadRemoteFlag, loadRemoteVarCount) = _updateRemoteParams(
+                loadRemoteFlag,
+                loadRemoteVarCount,
+                chunk
+            );
+
             // Replace alises with base commands
             if (_isAlias(_ctx, chunk)) {
                 chunk = _ctx.aliases(chunk);
@@ -137,9 +150,23 @@ contract Preprocessor {
                     result.push(_stack.pop().getString());
                 }
                 _stack.pop(); // remove '(' that is left
+            } else if (_mayBeNumber(chunk)) {
+                if (!directUseUint256) {
+                    if (result.length > 0) {
+                        res = result[result.length - 1];
+                        // push additional 'uint256' if was not set before in results and
+                        // if it is not a 'loadRemote' execution
+                        if (!(res.equal('uint256')) && loadRemoteFlag == false) {
+                            result.push('uint256');
+                        }
+                    } else {
+                        result.push('uint256');
+                    }
+                } else {
+                    directUseUint256 = false;
+                }
+                result.push(chunk);
             } else {
-                // operand found
-                // console.log("result push: %s", chunk);
                 result.push(chunk);
             }
         }
@@ -240,5 +267,70 @@ contract Preprocessor {
         } catch Error(string memory) {
             return false;
         }
+    }
+
+    /**
+     * @dev If the string starts with a number, so we assume that it's a number.
+     * @param _value is a current chunk
+     * @return isNumber that is true if the string starts with a number, otherwise is false
+     */
+    function _mayBeNumber(string memory _value) internal pure returns (bool isNumber) {
+        bytes1 _firstByte = bytes(_value)[0];
+        if (uint8(_firstByte) >= 48 && uint8(_firstByte) <= 57) {
+            isNumber = true;
+        }
+    }
+
+    /**
+     * @dev This function is used to check if 'transferFrom', 'setLocalUint256',
+     * 'sendEth' and 'transfer' functions(opcodes) won't use 'uint256' opcode during code
+     * execution directly. So it needs to be sure that executed code won't mess up
+     * parameters for the simple number and a number that be used for these functions.
+     * @param _directUseUint256 set by default from the outer function. Allows to keep current state of a contract
+     * @param _chunk is a current chunk from the outer function
+     * @return _isDirect is true if a chunk is matched one from the opcode list, otherwise is false
+     */
+    function _isDirectUseUint256(bool _directUseUint256, string memory _chunk)
+        internal
+        pure
+        returns (bool _isDirect)
+    {
+        _isDirect = _directUseUint256;
+        if (
+            _chunk.equal('transferFrom') ||
+            _chunk.equal('setLocalUint256') ||
+            _chunk.equal('sendEth') ||
+            _chunk.equal('transfer')
+        ) {
+            _isDirect = true;
+        }
+    }
+
+    /**
+     * @dev As a 'loadRemote' opcode has 4 parameters and two of them are
+     * numbers it is important to be sure that executed code under 'loadRemote'
+     * won't mess parameters with the simple uint256 numbers.
+     * @param _loadRemoteFlag is used to check if it was started the set of parameters for 'loadRemote' opcode
+     * @param _loadRemoteVarCount is used to check if it was finished the set of parameters for 'loadRemote' opcode
+     * @param _chunk is a current chunk from the outer function
+     * @return _flag is an updated or current value of _loadRemoteFlag
+     * @return _count is an updated or current value of _loadRemoteVarCount
+     */
+    function _updateRemoteParams(
+        bool _loadRemoteFlag,
+        uint256 _loadRemoteVarCount,
+        string memory _chunk
+    ) internal pure returns (bool _flag, uint256 _count) {
+        _count = 3;
+        _flag = _loadRemoteFlag;
+
+        if (_chunk.equal('loadRemote')) {
+            _flag = true;
+        }
+
+        if (_flag && _loadRemoteVarCount > 0) {
+            _count = _loadRemoteVarCount - 1;
+        }
+        return (_flag, _count);
     }
 }

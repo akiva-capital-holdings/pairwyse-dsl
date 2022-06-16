@@ -1,7 +1,7 @@
 # Solidity DSL
 
 Run: `yarn hardhat compile` to compile contracts
-Run: `yarn hardhat node --network hardhat` to start a local node (in the separate terminal). Or use `yarn hardhat node --hostname 127.0.0.1` directly.
+Run: `yarn hardhat node --network hardhat` to start a local node (in the separate terminal). Or use `yarn hardhat node --hostname 127.0.0.1 --port 7545` directly.
 
 ### Deploy the contracts
 Run: `yarn hardhat run scripts/deploy.agreement.ts --network localhost` to run a script
