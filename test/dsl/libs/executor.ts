@@ -288,6 +288,21 @@ describe('Executor', () => {
       await checkStack(StackValue, stack, 1, 1);
     });
 
+    it('blockNumber < TIME', async () => {
+      /**
+       * TIME is an alias for blockTimestamp
+       * Program is:
+       * `
+       *  blockNumber
+       *  TIME
+       *  <
+       * `
+       */
+      await ctx.setProgram('0x151603');
+      await app.execute(ctxAddr);
+      await checkStack(StackValue, stack, 1, 1);
+    });
+
     describe('Load local', () => {
       describe('opLoadLocalUint256', () => {
         it('17 > 15', async () => {
