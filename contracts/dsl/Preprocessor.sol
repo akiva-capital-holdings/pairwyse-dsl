@@ -114,6 +114,11 @@ contract Preprocessor {
 
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
+            // Replace alises with base commands
+            if (_isAlias(_ctx, chunk)) {
+                chunk = _ctx.aliases(chunk);
+            }
+
             if (isOperator(_ctx, chunk)) {
                 // console.log("%s is an operator", chunk);
                 while (
@@ -161,6 +166,13 @@ contract Preprocessor {
     }
 
     /**
+     * @dev Checks if a string is an alias to a command from DSL
+     */
+    function _isAlias(IContext _ctx, string memory _cmd) internal view returns (bool) {
+        return !_ctx.aliases(_cmd).equal('');
+    }
+
+    /**
      * @dev Checks if a symbol is a comment, then increases _index to the next
      * no-comment symbol avoiding an additional iteration
      * @param _index is a current index of a char that might be changed
@@ -199,14 +211,12 @@ contract Preprocessor {
      * @param _p is a current program string
      * @return new index and isCommeted parameters
      */
-    function _getEndCommentSymbol(uint256 _ssl, uint256 _i, string memory _p, string memory char) 
-        internal
-        pure
-        returns (
-            uint256,
-            bool
-        )
-    {
+    function _getEndCommentSymbol(
+        uint256 _ssl,
+        uint256 _i,
+        string memory _p,
+        string memory char
+    ) internal pure returns (uint256, bool) {
         if (_ssl == 1 && char.equal('\n')) {
             return (_i + 1, false);
         } else if (_ssl == 2 && char.equal('*') && _canGetSymbol(_i + 1, _p)) {

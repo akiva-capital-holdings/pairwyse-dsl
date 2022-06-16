@@ -91,7 +91,7 @@ export const aliceBobAndCarl = (
         `,
     conditions: [
       `
-              blockTimestamp > loadLocal uint256 EXPIRY
+              TIME > loadLocal uint256 EXPIRY
           and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
         `,
     ],
@@ -104,7 +104,7 @@ export const aliceBobAndCarl = (
     transaction: `transfer TOKEN_ADDR CARL ${tenTokens.toString()}`,
     conditions: [
       `
-              blockTimestamp > loadLocal uint256 EXPIRY
+              TIME > loadLocal uint256 EXPIRY
           and (loadLocal bool LENDER_WITHDRAW_INSURERS == bool false)
         `,
     ],
@@ -120,7 +120,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       signatories: [GP.address],
       transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_INITIAL',
       conditions: [
-        `(blockTimestamp < loadLocal uint256 PLACEMENT_DATE)
+        `(TIME < loadLocal uint256 PLACEMENT_DATE)
        and (
          loadLocal uint256 GP_INITIAL >=
          loadLocal uint256 ((INITIAL_FUNDS_TARGET * loadLocal uint256 DEPOSIT_MIN_PERCENT) / uint256 100)
@@ -136,8 +136,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
           and
         (loadLocal uint256 LP_TOTAL + loadLocal uint256 LP_INITIAL) setUint256 LP_TOTAL`,
       conditions: [
-        'blockTimestamp >= loadLocal uint256 PLACEMENT_DATE',
-        'blockTimestamp < loadLocal uint256 CLOSING_DATE',
+        'TIME >= loadLocal uint256 PLACEMENT_DATE',
+        'TIME < loadLocal uint256 CLOSING_DATE',
       ],
     },
     {
@@ -163,8 +163,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
         NEG {
           (uint256 0) setUint256 GP_REMAINING
         }`,
-        'blockTimestamp >= loadLocal uint256 LOW_LIM',
-        'blockTimestamp <= loadLocal uint256 UP_LIM',
+        'TIME >= loadLocal uint256 LOW_LIM',
+        'TIME <= loadLocal uint256 UP_LIM',
         `(balanceOf DAI TRANSACTIONS_CONT) >=
             ((loadLocal uint256 INITIAL_FUNDS_TARGET * loadLocal uint256 P1) / uint256 100)`,
       ],
@@ -187,8 +187,8 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
         `((uint256 100 * loadLocal uint256 P1) + uint256 5) * (loadLocal uint256 GP_REMAINING + loadLocal uint256 GP_INITIAL)
            <
          (uint256 100 * loadLocal uint256 P2) * loadLocal uint256 LP_INITIAL`,
-        'blockTimestamp > loadLocal uint256 UP_LIM',
-        'blockTimestamp < loadLocal uint256 FUND_INVESTMENT_DATE',
+        'TIME > loadLocal uint256 UP_LIM',
+        'TIME < loadLocal uint256 FUND_INVESTMENT_DATE',
       ],
     },
     {
@@ -199,7 +199,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       signatories: [GP.address],
       transaction: 'transferVar DAI GP PURCHASE_AMOUNT',
       conditions: [
-        `(blockTimestamp >= loadLocal uint256 FUND_INVESTMENT_DATE)
+        `(TIME >= loadLocal uint256 FUND_INVESTMENT_DATE)
            and
          (uint256 100 * loadLocal uint256 PURCHASE_AMOUNT
            <= loadLocal uint256 PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,
@@ -215,9 +215,7 @@ export const businessCaseSteps = (GP: SignerWithAddress, LPsSigners: SignerWithA
       signatories: [GP.address], // TODO: make `anyone`
       // TODO: swap ETH for DAI
       transaction: 'transferFromVar DAI WHALE TRANSACTIONS_CONT GP_PURCHASE_RETURN',
-      conditions: [
-        'blockTimestamp >= loadLocal uint256 FUND_INVESTMENT_DATE + loadLocal uint256 ONE_YEAR',
-      ],
+      conditions: ['TIME >= loadLocal uint256 FUND_INVESTMENT_DATE + loadLocal uint256 ONE_YEAR'],
     },
     {
       txId: 71,

@@ -56,6 +56,8 @@ interface IContext {
         view
         returns (bytes1 _branchCode);
 
+    function aliases(string memory _alias) external view returns (string memory _baseCmd);
+
     // Functions
 
     function initOpcodes() external;
