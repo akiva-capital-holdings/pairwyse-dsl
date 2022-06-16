@@ -7,13 +7,15 @@
     "lint": "yarn lint:ts && yarn lint:sol",
     "lint:ts": "npx eslint test/** --fix",
     "lint:sol": "npx solhint contracts/**/*.sol",
+    "prettier": "yarn prettier:ts && yarn prettier:sol",
     "prettier:sol": "npx prettier --write 'contracts/**/*.sol'",
     "prettier:ts": "npx prettier --write '**/*.ts'",
     "typechain": "npx hardhat typechain",
     "build": "yarn hardhat compile",
     "test": "yarn hardhat test",
     "size": "yarn hardhat size-contracts",
-    "coverage": "yarn hardhat coverage"
+    "coverage": "yarn hardhat coverage",
+    "prepare": "husky install"
   },
   "dependencies": {
     "hardhat": "^2.6.8",
@@ -45,6 +47,7 @@
     "ethereum-waffle": "^3.0.0",
     "ethers": "^5.0.0",
     "hardhat-gas-reporter": "^1.0.7",
+    "husky": "^8.0.1",
     "prettier": "^2.5.0",
     "prettier-plugin-solidity": "^1.0.0-beta.19",
     "solhint": "^3.3.6",
