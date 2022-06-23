@@ -1005,4 +1005,46 @@ describe('DSL: basic', () => {
     it('((F & T) | F) == F', async () => testCase(NEXT_MONTH, NEXT_MONTH, ITS_RISKY, 0));
     it('((F & F) | F) == F', async () => testCase(NEXT_MONTH, PREV_MONTH, ITS_RISKY, 0));
   });
+
+  it('func SUM_OF_NUMBERS (get uint256 variable from storage) ', async () => {
+    const input = `
+      func SUM_OF_NUMBERS
+
+      SUM_OF_NUMBERS {
+        (1 + 2 + 3 + 4 + 5) setUint256 SUM
+      }
+      `;
+    await app.parse(input);
+    await app.execute();
+    await checkStack(StackValue, stack, 1, 1);
+    expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(15);
+  });
+
+  it('func SUM_OF_NUMBERS + if action', async () => {
+    const input = `
+      func SUM_OF_NUMBERS
+
+      SUM_OF_NUMBERS {
+        (1 + 2 + 3 + 4 + 5) setUint256 SUM
+      }
+      `;
+    await app.parse(input);
+    await app.execute();
+    expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(15);
+
+    const input1 = `
+      loadLocal uint256 SUM < 10
+      if action
+        (100 - loadLocal uint256 SUM) setUint256 RESULT
+      end
+      action {
+        (1 + loadLocal uint256 SUM) setUint256 SUM
+      }
+      `;
+    await app.parse(input1);
+    await app.execute();
+
+    expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(16);
+    expect(await app.getStorageUint256(hex4Bytes('RESULT'))).to.equal(84);
+  });
 });

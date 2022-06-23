@@ -179,6 +179,13 @@ contract Context is IContext {
 
         // Branching
         addOpcode(
+            'func',
+            0x30,
+            LogicalOpcodes.opFunc.selector,
+            IParser.asmFunc.selector,
+            OpcodeLibNames.LogicalOpcodes
+        );
+        addOpcode(
             'ifelse',
             0x23,
             LogicalOpcodes.opIfelse.selector,

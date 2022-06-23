@@ -278,4 +278,97 @@ describe('End-to-end', () => {
       '24'; // bad: end
     expect(await ctx.program()).to.equal(expectedProgram);
   });
+
+  it('func without parameters', async () => {
+    const ONE = new Array(64).join('0') + 1;
+    const TWO = new Array(64).join('0') + 2;
+    const THREE = new Array(64).join('0') + 3;
+    const FOUR = new Array(64).join('0') + 4;
+    const FIVE = new Array(64).join('0') + 5;
+
+    // to Preprocessor (input)
+    const input = `
+      func SUM_OF_NUMBERS
+
+      SUM_OF_NUMBERS {
+        (1 + 2 + 3 + 4 + 5) setUint256 SUM
+      }
+      `;
+    const code = await preprocessor.callStatic.transform(ctxAddr, input);
+    const expectedCode = [
+      'func',
+      'SUM_OF_NUMBERS',
+      'SUM_OF_NUMBERS',
+      'uint256',
+      '1',
+      'uint256',
+      '2',
+      '+',
+      'uint256',
+      '3',
+      '+',
+      'uint256',
+      '4',
+      '+',
+      'uint256',
+      '5',
+      '+',
+      'setUint256',
+      'SUM',
+      'end',
+    ];
+    expect(code).to.eql(expectedCode);
+
+    // to Parser
+    await app.parseCode(code);
+
+    // // to Executor
+    const expectedProgram =
+      '0x' +
+      '30' + // func
+      '0003' + // position of the body for function TEST_NAME
+      '1a' + // body: uint256
+      `${ONE}` + // body: ONE
+      '1a' + // body: uint256
+      `${TWO}` + // body: TWO
+      '26' +
+      '1a' + // body: uint256
+      `${THREE}` + // body: THREE
+      '26' +
+      '1a' + // body: uint256
+      `${FOUR}` + // body: FOUR
+      '26' +
+      '1a' + // body: uint256
+      `${FIVE}` + // body: FIVE
+      '26' +
+      '2e' + // setUint256,
+      '2df384fb' +
+      '24'; // body: end
+    expect(await ctx.program()).to.equal(expectedProgram);
+  });
+
+  it('func without parameters simple code', async () => {
+    // TODO: parseCode returns error if execute this test and uncomment
+    // 13 line in ByteUtils contract
+
+    const ONE = new Array(64).join('0') + 1;
+    const TWO = new Array(64).join('0') + 2;
+
+    const input = `
+      (1 + 2) setUint256 SUM1
+      `;
+    const code = await preprocessor.callStatic.transform(ctxAddr, input);
+    await app.parseCode(code);
+
+    const expectedProgram =
+      '0x' +
+      '1a' + // body: uint256
+      `${ONE}` + // body: ONE
+      '1a' + // body: uint256
+      `${TWO}` + // body: TWO
+      '26' +
+      '2e' + // setUint256
+      '7a83eb71'; // SUM1
+    expect(await ctx.program()).to.equal(expectedProgram);
+  });
 });

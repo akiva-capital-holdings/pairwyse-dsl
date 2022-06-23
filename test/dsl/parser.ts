@@ -207,5 +207,32 @@ describe('Parser', () => {
         '24'; // bad: end
       expect(await ctx.program()).to.equal(expected);
     });
+
+    it('function without parameters', async () => {
+      const ONE = new Array(64).join('0') + 1;
+      const TWO = new Array(64).join('0') + 2;
+
+      await app.parseCodeExt(ctxAddr, [
+        'func',
+        'TEST_NAME',
+        'TEST_NAME',
+        'uint256',
+        ONE,
+        'uint256',
+        TWO,
+        'end',
+      ]);
+
+      const expected =
+        '0x' +
+        '30' + // func
+        '0003' + // position of the body for function TEST_NAME
+        '1a' + // body: uint256
+        `${ONE}` + // body: ONE
+        '1a' + // body: uint256
+        `${TWO}` + // body: TWO
+        '24'; // body: end
+      expect(await ctx.program()).to.equal(expected);
+    });
   });
 });

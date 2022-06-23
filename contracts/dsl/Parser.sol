@@ -118,13 +118,18 @@ contract Parser is IParser, Storage {
 
         labelPos[_false] = program.length; // `negative` branch position
         program = bytes.concat(program, bytes2(0)); // placeholder for `negative` branch offset
-
-        // console.logBytes(program);
     }
 
     function asmIf() public {
         labelPos[nextCmd()] = program.length; // `true` branch position
         program = bytes.concat(program, bytes2(0)); // placeholder for `true` branch offset
+    }
+
+    function asmFunc() public {
+        // TODO: should we use the same function as asmIf?
+        // TODO: this function might be changeable for function that has parameters
+        labelPos[nextCmd()] = program.length; // a function position
+        program = bytes.concat(program, bytes2(0));
     }
 
     /**
@@ -146,7 +151,6 @@ contract Parser is IParser, Storage {
             parseOpcodeWithParams(_ctx);
         }
 
-        // console.logBytes(program);
         _ctx.setProgram(program);
     }
 
