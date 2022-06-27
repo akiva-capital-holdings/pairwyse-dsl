@@ -289,6 +289,7 @@ describe('End-to-end', () => {
     // to Preprocessor (input)
     const input = `
       func SUM_OF_NUMBERS
+      end
 
       SUM_OF_NUMBERS {
         (1 + 2 + 3 + 4 + 5) setUint256 SUM
@@ -298,6 +299,7 @@ describe('End-to-end', () => {
     const expectedCode = [
       'func',
       'SUM_OF_NUMBERS',
+      'end',
       'SUM_OF_NUMBERS',
       'uint256',
       '1',
@@ -326,7 +328,8 @@ describe('End-to-end', () => {
     const expectedProgram =
       '0x' +
       '30' + // func
-      '0003' + // position of the body for function TEST_NAME
+      '0004' + // position of the body for function SUM_OF_NUMBERS
+      '24' + // end of main part
       '1a' + // body: uint256
       `${ONE}` + // body: ONE
       '1a' + // body: uint256

@@ -9,8 +9,7 @@ library ByteUtils {
         uint256 _start,
         uint256 _end
     ) public pure returns (bytes memory) {
-        // TODO: check weird behavior for small if-else statements + func + if
-        // require(_start < _end, "ByteUtils: 'end' index must be greater than 'start'");
+        require(_start < _end, "ByteUtils: 'end' index must be greater than 'start'");
         require(_end <= _data.length, "ByteUtils: 'end' is greater than the length of the array");
         return _data[_start:_end];
     }
