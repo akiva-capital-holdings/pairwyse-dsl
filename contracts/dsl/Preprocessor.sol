@@ -193,10 +193,16 @@ contract Preprocessor {
                     paramsCount = _parseInt(chunk);
                     string[] memory chunks = new string[](paramsCount * 2);
                     // add parameters to the chunks without vice versa way
+                    // an index where the first variable stored will be updated by new code
+                    uint256 indexFirst = result.length - paramsCount * 2;
                     for (uint256 j = 0; j < paramsCount * 2; j++) {
                         // make shift for result's values
                         // to be sure that variables get proper index name
-                        chunks[j] = result[result.length - paramsCount * 2 + j];
+                        chunks[j] = result[indexFirst + j];
+                    }
+
+                    for (uint256 j = 0; j < paramsCount * 2; j++) {
+                        result.pop();
                     }
 
                     for (uint256 j = 0; j < chunks.length; j += 2) {
@@ -208,18 +214,17 @@ contract Preprocessor {
                         );
                     }
 
-                    result.push('func');
-                    result.push(name);
-                    result.push('end');
-                    for (uint256 j = 1; j <= paramsCount; j++) {
-                        FuncParameter memory fp = parameters[j];
-                        // result.push(fp._type); // should be used in the future for other types
+                    for (uint256 j = 0; j < paramsCount; j++) {
+                        FuncParameter memory fp = parameters[j + 1];
+                        result.push(fp._type); // should be used in the future for other types
                         result.push(fp.value);
                         result.push('setUint256');
                         result.push(fp.nameOfVariable);
-                        console.log(fp.value);
-                        console.log(fp.nameOfVariable);
                     }
+
+                    result.push('func');
+                    result.push(name);
+                    result.push('end');
                 }
             } else {
                 // console.log('--',chunk);
