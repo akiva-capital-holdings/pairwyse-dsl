@@ -1005,4 +1005,20 @@ describe('DSL: basic', () => {
     it('((F & T) | F) == F', async () => testCase(NEXT_MONTH, NEXT_MONTH, ITS_RISKY, 0));
     it('((F & F) | F) == F', async () => testCase(NEXT_MONTH, PREV_MONTH, ITS_RISKY, 0));
   });
+
+  it.only('func SUM_OF_NUMBERS (get uint256 variable from storage) ', async () => {
+    const input = `
+      6 8
+      func SUM_OF_NUMBERS 2
+      end
+
+      SUM_OF_NUMBERS {
+        (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+      }
+      `;
+    await app.parse(input);
+    await app.execute();
+    // await checkStack(StackValue, stack, 1, 1);
+    expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(14);
+  });
 });

@@ -278,4 +278,45 @@ describe('End-to-end', () => {
       '24'; // bad: end
     expect(await ctx.program()).to.equal(expectedProgram);
   });
+
+  it.only('func SUM_OF_NUMBERS (get uint256 variable from storage) ', async () => {
+    const input = `
+      6 8
+      func SUM_OF_NUMBERS 2
+      end
+
+      SUM_OF_NUMBERS {
+        (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+      }
+      `;
+
+    const code = await preprocessor.callStatic.transform(ctxAddr, input);
+    const expectedCode = [
+      'uint256',
+      '6',
+      'uint256',
+      '8',
+      'func',
+      'SUM_OF_NUMBERS',
+      'end',
+      '6',
+      'setUint256',
+      'SUM_OF_NUMBERS_1',
+      '8',
+      'setUint256',
+      'SUM_OF_NUMBERS_2',
+      'SUM_OF_NUMBERS',
+      'loadLocal',
+      'uint256',
+      'SUM_OF_NUMBERS_1',
+      'loadLocal',
+      'uint256',
+      'SUM_OF_NUMBERS_2',
+      '+',
+      'setUint256',
+      'SUM',
+      'end',
+    ];
+    expect(code).to.eql(expectedCode);
+  });
 });

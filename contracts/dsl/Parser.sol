@@ -127,6 +127,11 @@ contract Parser is IParser, Storage {
         program = bytes.concat(program, bytes2(0)); // placeholder for `true` branch offset
     }
 
+    function asmFunc() public {
+        labelPos[nextCmd()] = program.length; // `true` branch position
+        program = bytes.concat(program, bytes2(0)); // placeholder for `true` branch offset
+    }
+
     /**
      * Internal functions
      */

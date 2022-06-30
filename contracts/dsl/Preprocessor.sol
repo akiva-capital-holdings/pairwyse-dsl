@@ -5,11 +5,16 @@ import { IContext } from './interfaces/IContext.sol';
 import { Stack, StackValue } from './helpers/Stack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 
-// import "hardhat/console.sol";
+import 'hardhat/console.sol';
 
 contract Preprocessor {
     using StringUtils for string;
-
+    struct FuncParameter {
+        string _type;
+        string nameOfVariable;
+        string value;
+    }
+    mapping(uint256 => FuncParameter) parameters;
     string[] internal result;
 
     function transform(IContext _ctx, string memory _program) external returns (string[] memory) {
@@ -109,9 +114,14 @@ contract Preprocessor {
         Stack _stack
     ) public returns (string[] memory) {
         delete result;
+        bool isFunc;
+        bool isName;
+        string memory name;
+
         bool loadRemoteFlag;
         bool directUseUint256;
         uint256 loadRemoteVarCount = 3;
+        uint256 paramsCount;
         string memory chunk;
         string memory res;
 
@@ -150,7 +160,7 @@ contract Preprocessor {
                     result.push(_stack.pop().getString());
                 }
                 _stack.pop(); // remove '(' that is left
-            } else if (_mayBeNumber(chunk)) {
+            } else if (_mayBeNumber(chunk) && !isFunc) {
                 if (!directUseUint256) {
                     if (result.length > 0) {
                         res = result[result.length - 1];
@@ -166,17 +176,113 @@ contract Preprocessor {
                     directUseUint256 = false;
                 }
                 result.push(chunk);
+            } else if (chunk.equal('func')) {
+                isFunc = true;
+                paramsCount = 0;
+            } else if (isFunc) {
+                if (!isName) {
+                    if (chunk.equal('end')) {
+                        isFunc = false;
+                        // result.push(chunk);
+                    } else {
+                        isName = true;
+                        name = chunk;
+                    }
+                } else {
+                    isName = false;
+                    paramsCount = _parseInt(chunk);
+                    string[] memory chunks = new string[](paramsCount * 2);
+                    // add parameters to the chunks without vice versa way
+                    for (uint256 j = 0; j < paramsCount * 2; j++) {
+                        // make shift for result's values
+                        // to be sure that variables get proper index name
+                        chunks[j] = result[result.length - paramsCount * 2 + j];
+                    }
+
+                    for (uint256 j = 0; j < chunks.length; j += 2) {
+                        FuncParameter storage fp = parameters[j / 2 + 1];
+                        fp._type = chunks[j];
+                        fp.value = chunks[j + 1];
+                        fp.nameOfVariable = string(
+                            abi.encodePacked(name, '_', _toString(j / 2 + 1))
+                        );
+                    }
+
+                    result.push('func');
+                    result.push(name);
+                    result.push('end');
+                    for (uint256 j = 1; j <= paramsCount; j++) {
+                        FuncParameter memory fp = parameters[j];
+                        // result.push(fp._type); // should be used in the future for other types
+                        result.push(fp.value);
+                        result.push('setUint256');
+                        result.push(fp.nameOfVariable);
+                        console.log(fp.value);
+                        console.log(fp.nameOfVariable);
+                    }
+                }
             } else {
+                // console.log('--',chunk);
                 result.push(chunk);
             }
         }
 
         while (_stack.length() > 0) {
-            // console.log("result push: %s", _stack.seeLast().getString());
+            console.log('result push: %s', _stack.seeLast().getString());
             result.push(_stack.pop().getString());
         }
 
         return result;
+    }
+
+    /**
+     * @dev Converts a `uint256` to its ASCII `string` decimal representation.
+     */
+    function _toString(uint256 value) internal pure returns (string memory) {
+        // Inspired by OraclizeAPI's implementation - MIT licence
+        // https://github.com/oraclize/ethereum-api/blob/b42146b063c7d6ee1358846c198246239e9360e8/oraclizeAPI_0.4.25.sol
+
+        if (value == 0) {
+            return '0';
+        }
+        uint256 temp = value;
+        uint256 digits;
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
+        }
+        bytes memory buffer = new bytes(digits);
+        while (value != 0) {
+            digits -= 1;
+            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
+            value /= 10;
+        }
+        return string(buffer);
+    }
+
+    /**
+     * Parse Int
+     *
+     * Converts an ASCII string value into an uint as long as the string
+     * its self is a valid unsigned integer
+     *
+     * @param _value The ASCII string to be converted to an unsigned integer
+     * @return _ret The unsigned value of the ASCII string
+     */
+    function _parseInt(string memory _value) internal pure returns (uint256 _ret) {
+        bytes memory _bytesValue = bytes(_value);
+        uint256 j = 1;
+        uint256 i = _bytesValue.length - 1;
+        while (i >= 0) {
+            assert(uint8(_bytesValue[i]) >= 48 && uint8(_bytesValue[i]) <= 57);
+            _ret += (uint8(_bytesValue[i]) - 48) * j;
+            j *= 10;
+            if (i > 0) {
+                i--;
+            } else {
+                break;
+            }
+        }
     }
 
     function pushStringToStack(Stack stack_, string memory value) internal {
