@@ -4,17 +4,17 @@ pragma solidity ^0.8.0;
 import { Agreement } from './Agreement.sol';
 
 contract AgreementFactory {
-    address[] public deployed;
+    address[] public deployedAgreements;
     event NewAgreement(address agreement);
 
     function deployAgreement(address _parser) external returns (address _agreementAddr) {
         Agreement _agreement = new Agreement(_parser);
         _agreementAddr = address(_agreement);
-        deployed.push(_agreementAddr);
+        deployedAgreements.push(_agreementAddr);
         emit NewAgreement(_agreementAddr);
     }
 
-    function getDeployedLen() external view returns (uint256) {
-        return deployed.length;
+    function getDeployedAgreementsLen() external view returns (uint256) {
+        return deployedAgreements.length;
     }
 }
