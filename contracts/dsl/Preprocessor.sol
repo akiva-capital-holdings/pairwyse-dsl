@@ -183,8 +183,8 @@ contract Preprocessor {
                 // `Functions block`
                 if (!isName) {
                     // if was not set the name for a function
-                    if (chunk.equal('end')) {
-                        // ex. `func NAME <number_of_params> end`
+                    if (chunk.equal('endf')) {
+                        // ex. `func NAME <number_of_params> endf`
                         isFunc = false; // finish `Functions block` process
                     } else {
                         // set the name of function
@@ -193,13 +193,12 @@ contract Preprocessor {
                     }
                 } else {
                     // if it was set the name for a function
-                    if (chunk.equal('end')) {
+                    if (chunk.equal('endf')) {
                         // uses for function without parameters
                         isName = false;
                         isFunc = false;
                         result.push('func');
                         result.push(name);
-                        result.push(chunk);
                     } else {
                         // uses for function with parameters
                         isName = false;
@@ -213,7 +212,7 @@ contract Preprocessor {
         }
 
         while (_stack.length() > 0) {
-            console.log('result push: %s', _stack.seeLast().getString());
+            // console.log('result push: %s', _stack.seeLast().getString());
             result.push(_stack.pop().getString());
         }
 
@@ -233,21 +232,24 @@ contract Preprocessor {
         the index that shows, where it was the first parameter was stored before
         the 'func', was occurred.
         */
-
+        require(_paramsCount > 0, 'Preprocessor: amount of parameters can not be 0');
         string[] memory chunks = new string[](_paramsCount * 2);
+
+        require(
+            result.length >= _paramsCount * 2,
+            'Preprocessor: invalid parameters for the function'
+        );
         uint256 indexFirst = result.length - _paramsCount * 2;
 
         // store paramerets that were already pushed to results
         for (uint256 j = 0; j < _paramsCount * 2; j++) {
             chunks[j] = result[indexFirst + j];
         }
-
         // all needed parameters are stored already in chunks list
         // clear useless variables from the DSL code string
         for (uint256 j = 0; j < _paramsCount * 2; j++) {
             result.pop();
         }
-
         // save parameters in mapping checking/using valid type for each value
         for (uint256 j = 0; j < chunks.length; j += 2) {
             FuncParameter storage fp = parameters[j / 2 + 1];
@@ -255,7 +257,6 @@ contract Preprocessor {
             fp.value = chunks[j + 1];
             fp.nameOfVariable = string(abi.encodePacked(_nameOfFunc, '_', _toString(j / 2 + 1)));
         }
-
         // push parameters to result list depend on their type for each value
         for (uint256 j = 0; j < _paramsCount; j++) {
             FuncParameter memory fp = parameters[j + 1];
@@ -271,7 +272,6 @@ contract Preprocessor {
         // TODO: it needs to simplify
         result.push('func');
         result.push(_nameOfFunc);
-        result.push('end');
     }
 
     function pushStringToStack(Stack stack_, string memory value) internal {
@@ -326,7 +326,10 @@ contract Preprocessor {
         uint256 j = 1;
         uint256 i = _bytesValue.length - 1;
         while (i >= 0) {
-            assert(uint8(_bytesValue[i]) >= 48 && uint8(_bytesValue[i]) <= 57);
+            require(
+                uint8(_bytesValue[i]) >= 48 && uint8(_bytesValue[i]) <= 57,
+                'Preprocessor: the parameter value can not be transformed to the integer value'
+            );
             _ret += (uint8(_bytesValue[i]) - 48) * j;
             j *= 10;
             if (i > 0) {

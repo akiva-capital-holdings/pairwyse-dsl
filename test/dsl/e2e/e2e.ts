@@ -279,115 +279,122 @@ describe('End-to-end', () => {
     expect(await ctx.program()).to.equal(expectedProgram);
   });
 
-  it('func SUM_OF_NUMBERS (get uint256 variables from storage) ', async () => {
-    const input = `
-      6 8
-      func SUM_OF_NUMBERS 2
-      end
+  describe.only('functions', async () => {
+    it('func SUM_OF_NUMBERS (get uint256 variables from storage) ', async () => {
+      const input = `
+        6 8
+        func SUM_OF_NUMBERS 2 endf
+        end
 
-      SUM_OF_NUMBERS {
-        (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
-      }
-      `;
+        SUM_OF_NUMBERS {
+          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+        }
+        `;
 
-    const code = await preprocessor.callStatic.transform(ctxAddr, input);
-    const expectedCode = [
-      'uint256',
-      '6',
-      'setUint256',
-      'SUM_OF_NUMBERS_1',
-      'uint256',
-      '8',
-      'setUint256',
-      'SUM_OF_NUMBERS_2',
-      'func',
-      'SUM_OF_NUMBERS',
-      'end',
-      'SUM_OF_NUMBERS',
-      'loadLocal',
-      'uint256',
-      'SUM_OF_NUMBERS_1',
-      'loadLocal',
-      'uint256',
-      'SUM_OF_NUMBERS_2',
-      '+',
-      'setUint256',
-      'SUM',
-      'end',
-    ];
-    expect(code).to.eql(expectedCode);
-  });
+      const code = await preprocessor.callStatic.transform(ctxAddr, input);
+      const expectedCode = [
+        'uint256',
+        '6',
+        'setUint256',
+        'SUM_OF_NUMBERS_1',
+        'uint256',
+        '8',
+        'setUint256',
+        'SUM_OF_NUMBERS_2',
+        'func',
+        'SUM_OF_NUMBERS',
+        'end',
+        'SUM_OF_NUMBERS',
+        'loadLocal',
+        'uint256',
+        'SUM_OF_NUMBERS_1',
+        'loadLocal',
+        'uint256',
+        'SUM_OF_NUMBERS_2',
+        '+',
+        'setUint256',
+        'SUM',
+        'end',
+      ];
+      expect(code).to.eql(expectedCode);
 
-  it.only('func SUM_OF_NUMBERS without parameters', async () => {
-    const input = `
-      func SUM_OF_NUMBERS
-      end
+      // to Parser
+      await app.parseCode(code);
+      const first = new Array(64).join('0') + 6;
+      const second = new Array(64).join('0') + 8;
+      // to Executor
+      const expectedProgram =
+        '0x' +
+        '1a' + // uint256
+        `${first}` + // 6
+        '2e' + // setUint256
+        'c56b21ed' + // SUM_OF_NUMBERS_1
+        '1a' + // uint256
+        `${second}` + // 8
+        '2e' + // setUint256
+        '66fb6745' + // SUM_OF_NUMBERS_2
+        '30' + // func
+        '0050' + // position of the SUM_OF_NUMBERS name
+        '24' + // end
+        '1b' + // loadLocal
+        '01' + // uint256
+        'c56b21ed' + // SUM_OF_NUMBERS_1
+        '1b' + // loadLocal
+        '01' + // uint256
+        '66fb6745' + // SUM_OF_NUMBERS_2
+        '26' + // +
+        '2e' + // setUint256
+        '2df384fb' + // SUM
+        '24'; // end
+      expect(await ctx.program()).to.equal(expectedProgram);
+    });
 
-      SUM_OF_NUMBERS {
-        (8 + 6) setUint256 SUM
-      }
-      `;
+    it('func SUM_OF_NUMBERS without parameters', async () => {
+      const input = `
+        func SUM_OF_NUMBERS endf
+        end
 
-    const code = await preprocessor.callStatic.transform(ctxAddr, input);
-    const expectedCode = [
-      'func',
-      'SUM_OF_NUMBERS',
-      'end',
-      'SUM_OF_NUMBERS',
-      'uint256',
-      '8',
-      'uint256',
-      '6',
-      '+',
-      'setUint256',
-      'SUM',
-      'end',
-    ];
-    expect(code).to.eql(expectedCode);
+        SUM_OF_NUMBERS {
+          (8 + 6) setUint256 SUM
+        }
+        `;
 
-    // to Parser
-    await app.parseCode(code);
-    const first = new Array(64).join('0') + 6;
-    const second = new Array(64).join('0') + 8;
-    // to Executor
-    const expectedProgram =
-      '0x' +
-      '30' + //
-      '0004' + //
-      '24' + // end
-      '1a' + // uin256
-      `${second}` + //
-      '1a' + // uint256
-      `${first}` + //
-      '26' +
-      '2e' +
-      '2df384fb' +
-      '24'; // bad: end
-    expect(await ctx.program()).to.equal(expectedProgram);
-  });
+      const code = await preprocessor.callStatic.transform(ctxAddr, input);
+      const expectedCode = [
+        'func',
+        'SUM_OF_NUMBERS',
+        'end',
+        'SUM_OF_NUMBERS',
+        'uint256',
+        '8',
+        'uint256',
+        '6',
+        '+',
+        'setUint256',
+        'SUM',
+        'end',
+      ];
+      expect(code).to.eql(expectedCode);
 
-  it.only('func without parameters simple code', async () => {
-    // TODO: parseCode returns error if execute this test and uncomment
-    // 13 line in ByteUtils contract
-
-    const ONE = new Array(64).join('0') + 1;
-    const TWO = new Array(64).join('0') + 2;
-
-    const input = `
-      (1 + 2) setUint256 SUM1
-    `;
-    const code = await preprocessor.callStatic.transform(ctxAddr, input);
-    await app.parseCode(code);
-
-    const expectedProgram =
-      '0x' +
-      '1a' + // body: uint256
-      `${ONE}` + // body: ONE
-      '1a' + // body: uint256
-      `${TWO}` + // body: TWO
-      '26' +
-      '2e' + // setUint256
-      '7a83eb71'; // SUM1
-    expect(await ctx.program()).to.equal(expectedProgram);
+      // to Parser
+      await app.parseCode(code);
+      const first = new Array(64).join('0') + 6;
+      const second = new Array(64).join('0') + 8;
+      // to Executor
+      const expectedProgram =
+        '0x' +
+        '30' + // func
+        '0004' + // position of SUM_OF_NUMBERS
+        '24' + // end
+        '1a' + // uint256
+        `${second}` + // 8
+        '1a' + // uint256
+        `${first}` + // 6
+        '26' + // +
+        '2e' + // setUint256
+        '2df384fb' + // SUM
+        '24'; // end
+      expect(await ctx.program()).to.equal(expectedProgram);
+    });
   });
 });

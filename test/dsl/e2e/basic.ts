@@ -1006,31 +1006,171 @@ describe('DSL: basic', () => {
     it('((F & F) | F) == F', async () => testCase(NEXT_MONTH, PREV_MONTH, ITS_RISKY, 0));
   });
 
-  it.only('func SUM_OF_NUMBERS with parameters (get uint256 variable from storage) ', async () => {
-    const input = `
-      6 8
-      func SUM_OF_NUMBERS 2
-      end
+  describe('function without parameters, without return value', () => {
+    it('func SUM_OF_NUMBERS stores a value of sum', async () => {
+      const input = `
+        func SUM_OF_NUMBERS endf
+        end
 
-      SUM_OF_NUMBERS {
-        (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
-      }
-      `;
-    await app.parse(input);
-    await app.execute();
-    expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(14);
+        SUM_OF_NUMBERS {
+          (6 + 8) setUint256 SUM
+        }
+        `;
+      await app.parse(input);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(14);
+    });
+
+    it('func SUM_OF_NUMBERS with additional set variables before functions name', async () => {
+      const input = `
+        (2 * 250) setUint256 RES_1
+        bool false
+        func SUM_OF_NUMBERS endf
+        end
+
+        SUM_OF_NUMBERS {
+          (6 + 8) setUint256 SUM
+          bool false
+          (loadLocal uint256 RES_1 / 2) setUint256 RES_2
+        }
+
+        `;
+      await app.parse(input);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(14);
+      expect(await app.getStorageUint256(hex4Bytes('RES_1'))).to.equal(500);
+      expect(await app.getStorageUint256(hex4Bytes('RES_2'))).to.equal(250);
+    });
+
+    it('func SUM_OF_NUMBERS with additional set variables after functions name', async () => {
+      const input = `
+        func SUM_OF_NUMBERS endf
+
+        (loadLocal uint256 RES_1 * 3) setUint256 RES_2
+        end
+
+        SUM_OF_NUMBERS {
+          (6 + 8) setUint256 SUM
+          bool false
+          (500 / 2) setUint256 RES_1
+        }
+        `;
+      await app.parse(input);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(14);
+      expect(await app.getStorageUint256(hex4Bytes('RES_1'))).to.equal(250);
+      expect(await app.getStorageUint256(hex4Bytes('RES_2'))).to.equal(750);
+    });
+
+    it('two func in the code', async () => {
+      const input = `
+        func SUM_OF_NUMBERS endf
+        func MUL_NUMBERS endf
+        end
+
+        SUM_OF_NUMBERS {
+          (11 + 22) setUint256 SUM_RESULT
+        }
+
+        MUL_NUMBERS {
+          (11 * 22) setUint256 MUL_RESULT
+        }
+        `;
+      await app.parse(input);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('SUM_RESULT'))).to.equal(33);
+      expect(await app.getStorageUint256(hex4Bytes('MUL_RESULT'))).to.equal(242);
+    });
+
+    it('two func in the code with storing used data', async () => {
+      const input = `
+        11 setUint256 A
+        22 setUint256 B
+        func SUM_OF_NUMBERS endf
+        33 setUint256 C
+        func MUL_NUMBERS endf
+        end
+
+        SUM_OF_NUMBERS {
+          (loadLocal uint256 A + loadLocal uint256 B) setUint256 SUM_RESULT
+        }
+
+        MUL_NUMBERS {
+          (loadLocal uint256 A * loadLocal uint256 B) setUint256 MUL_RESULT
+        }
+
+        44 setUint256 D
+        `;
+      await app.parse(input);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('SUM_RESULT'))).to.equal(33);
+      expect(await app.getStorageUint256(hex4Bytes('MUL_RESULT'))).to.equal(242);
+      expect(await app.getStorageUint256(hex4Bytes('A'))).to.equal(11);
+      expect(await app.getStorageUint256(hex4Bytes('B'))).to.equal(22);
+      expect(await app.getStorageUint256(hex4Bytes('C'))).to.equal(33);
+      expect(await app.getStorageUint256(hex4Bytes('D'))).to.equal(0);
+    });
   });
 
-  it.only('func SUM_OF_NUMBERS without parameters', async () => {
-    const input = `
-      func SUM_OF_NUMBERS end
+  describe('function with parameters, without return value', () => {
+    it('func SUM_OF_NUMBERS with parameters (get uint256 variable from storage) ', async () => {
+      const input = `
+        6 8
+        func SUM_OF_NUMBERS 2 endf
+        end
 
-      SUM_OF_NUMBERS {
-        (6 + 8) setUint256 SUM
-      }
-      `;
-    await app.parse(input);
-    await app.execute();
-    expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(14);
+        SUM_OF_NUMBERS {
+          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+        }
+        `;
+      await app.parse(input);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(14);
+    });
+
+    it('should revert if parameters provided less then amount parameters number', async () => {
+      const input = `
+        6
+        func SUM_OF_NUMBERS 2 endf
+        end
+
+        SUM_OF_NUMBERS {
+          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+        }
+        `;
+      await expect(app.parse(input)).to.be.revertedWith(
+        'Preprocessor: invalid parameters for the function'
+      );
+    });
+
+    it('should revert if func SUM_OF_NUMBERS provides zero parameters', async () => {
+      const input = `
+        6 8
+        func SUM_OF_NUMBERS 0 endf
+        end
+
+        SUM_OF_NUMBERS {
+          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+        }
+        `;
+      await expect(app.parse(input)).to.be.revertedWith(
+        'Preprocessor: amount of parameters can not be 0'
+      );
+    });
+
+    it('should revert if func SUM provides string instead of number for parameters', async () => {
+      const input = `
+        6 8
+        func SUM test endf
+        end
+
+        SUM_OF_NUMBERS {
+          (loadLocal uint256 SUM_1 + loadLocal uint256 SUM_2) setUint256 SUM
+        }
+        `;
+      await expect(app.parse(input)).to.be.revertedWith(
+        'Preprocessor: the parameter value can not be transformed to the integer value'
+      );
+    });
   });
 });
