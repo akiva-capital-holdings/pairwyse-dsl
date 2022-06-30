@@ -43,9 +43,10 @@ const config: HardhatUserConfig = {
     },
     remoteGanache: {
       url: process.env.REMOTE_GANACHE_URL,
+      timeout: 1e9,
       accounts:
-        process.env.REMOTE_GANACHE_PRIVATE_KEY !== undefined
-          ? [process.env.REMOTE_GANACHE_PRIVATE_KEY]
+        process.env.REMOTE_GANACHE_PRIVATE_KEYS !== undefined
+          ? process.env.REMOTE_GANACHE_PRIVATE_KEYS.split(',')
           : [],
     },
     ropsten: {
