@@ -116,14 +116,13 @@ contract Preprocessor {
         delete result;
         bool isFunc;
         bool isName;
-        string memory name;
-
         bool loadRemoteFlag;
         bool directUseUint256;
         uint256 loadRemoteVarCount = 3;
         uint256 paramsCount;
         string memory chunk;
         string memory res;
+        string memory name;
 
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
