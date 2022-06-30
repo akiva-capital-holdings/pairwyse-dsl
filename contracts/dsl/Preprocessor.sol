@@ -177,25 +177,35 @@ contract Preprocessor {
                 }
                 result.push(chunk);
             } else if (chunk.equal('func')) {
+                // if the chunk is 'func' then `Functions block` will occur
                 isFunc = true;
             } else if (isFunc) {
+                // `Functions block`
                 if (!isName) {
+                    // if was not set the name for a function
                     if (chunk.equal('end')) {
-                        isFunc = false;
+                        // ex. `func NAME <number_of_params> end`
+                        isFunc = false; // finish `Functions block` process
                     } else {
+                        // set the name of function
                         isName = true;
                         name = chunk;
                     }
-                } else if (isName && chunk.equal('end')) {
-                    isName = false;
-                    isFunc = false;
-                    result.push('func');
-                    result.push(name);
-                    result.push(chunk);
                 } else {
-                    isName = false;
-                    paramsCount = _parseInt(chunk);
-                    _rebuildParameters(paramsCount, name);
+                    // if it was set the name for a function
+                    if (chunk.equal('end')) {
+                        // uses for function without parameters
+                        isName = false;
+                        isFunc = false;
+                        result.push('func');
+                        result.push(name);
+                        result.push(chunk);
+                    } else {
+                        // uses for function with parameters
+                        isName = false;
+                        paramsCount = _parseInt(chunk);
+                        _rebuildParameters(paramsCount, name);
+                    }
                 }
             } else {
                 result.push(chunk);
@@ -238,7 +248,7 @@ contract Preprocessor {
             result.pop();
         }
 
-        // save
+        // save parameters in mapping checking/using valid type for each value
         for (uint256 j = 0; j < chunks.length; j += 2) {
             FuncParameter storage fp = parameters[j / 2 + 1];
             fp._type = chunks[j];
@@ -246,20 +256,35 @@ contract Preprocessor {
             fp.nameOfVariable = string(abi.encodePacked(_nameOfFunc, '_', _toString(j / 2 + 1)));
         }
 
+        // push parameters to result list depend on their type for each value
         for (uint256 j = 0; j < _paramsCount; j++) {
             FuncParameter memory fp = parameters[j + 1];
-            result.push(fp._type); // should be used in the future for other types
+            result.push(fp._type); // TODO: should be used in the future for other types
             result.push(fp.value);
-            result.push('setUint256');
+            result.push('setUint256'); // TODO: should be used in the future for other types
             result.push(fp.nameOfVariable);
-            // clear mapping data to prevent value collisions
-            fp = FuncParameter('', '0', '');
-            parameters[j + 1] = fp;
+            // clear mapping data to prevent collisions with values
+            parameters[j + 1] = FuncParameter('', '0', '');
         }
 
+        // push main code to execute function
+        // TODO: it needs to simplify
         result.push('func');
         result.push(_nameOfFunc);
         result.push('end');
+    }
+
+    function pushStringToStack(Stack stack_, string memory value) internal {
+        StackValue stackValue = new StackValue();
+        stackValue.setString(value);
+        stack_.push(stackValue);
+    }
+
+    function isOperator(IContext _ctx, string memory op) internal view returns (bool) {
+        for (uint256 i = 0; i < _ctx.operatorsLen(); i++) {
+            if (op.equal(_ctx.operators(i))) return true;
+        }
+        return false;
     }
 
     /**
@@ -310,19 +335,6 @@ contract Preprocessor {
                 break;
             }
         }
-    }
-
-    function pushStringToStack(Stack stack_, string memory value) internal {
-        StackValue stackValue = new StackValue();
-        stackValue.setString(value);
-        stack_.push(stackValue);
-    }
-
-    function isOperator(IContext _ctx, string memory op) internal view returns (bool) {
-        for (uint256 i = 0; i < _ctx.operatorsLen(); i++) {
-            if (op.equal(_ctx.operators(i))) return true;
-        }
-        return false;
     }
 
     /**

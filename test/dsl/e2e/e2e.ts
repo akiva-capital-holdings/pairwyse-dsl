@@ -279,7 +279,7 @@ describe('End-to-end', () => {
     expect(await ctx.program()).to.equal(expectedProgram);
   });
 
-  it('func SUM_OF_NUMBERS (get uint256 variable from storage) ', async () => {
+  it('func SUM_OF_NUMBERS (get uint256 variables from storage) ', async () => {
     const input = `
       6 8
       func SUM_OF_NUMBERS 2
@@ -316,5 +316,78 @@ describe('End-to-end', () => {
       'end',
     ];
     expect(code).to.eql(expectedCode);
+  });
+
+  it.only('func SUM_OF_NUMBERS without parameters', async () => {
+    const input = `
+      func SUM_OF_NUMBERS
+      end
+
+      SUM_OF_NUMBERS {
+        (8 + 6) setUint256 SUM
+      }
+      `;
+
+    const code = await preprocessor.callStatic.transform(ctxAddr, input);
+    const expectedCode = [
+      'func',
+      'SUM_OF_NUMBERS',
+      'end',
+      'SUM_OF_NUMBERS',
+      'uint256',
+      '8',
+      'uint256',
+      '6',
+      '+',
+      'setUint256',
+      'SUM',
+      'end',
+    ];
+    expect(code).to.eql(expectedCode);
+
+    // to Parser
+    await app.parseCode(code);
+    const first = new Array(64).join('0') + 6;
+    const second = new Array(64).join('0') + 8;
+    // to Executor
+    const expectedProgram =
+      '0x' +
+      '30' + //
+      '0004' + //
+      '24' + // end
+      '1a' + // uin256
+      `${second}` + //
+      '1a' + // uint256
+      `${first}` + //
+      '26' +
+      '2e' +
+      '2df384fb' +
+      '24'; // bad: end
+    expect(await ctx.program()).to.equal(expectedProgram);
+  });
+
+  it.only('func without parameters simple code', async () => {
+    // TODO: parseCode returns error if execute this test and uncomment
+    // 13 line in ByteUtils contract
+
+    const ONE = new Array(64).join('0') + 1;
+    const TWO = new Array(64).join('0') + 2;
+
+    const input = `
+      (1 + 2) setUint256 SUM1
+    `;
+    const code = await preprocessor.callStatic.transform(ctxAddr, input);
+    await app.parseCode(code);
+
+    const expectedProgram =
+      '0x' +
+      '1a' + // body: uint256
+      `${ONE}` + // body: ONE
+      '1a' + // body: uint256
+      `${TWO}` + // body: TWO
+      '26' +
+      '2e' + // setUint256
+      '7a83eb71'; // SUM1
+    expect(await ctx.program()).to.equal(expectedProgram);
   });
 });

@@ -1006,7 +1006,7 @@ describe('DSL: basic', () => {
     it('((F & F) | F) == F', async () => testCase(NEXT_MONTH, PREV_MONTH, ITS_RISKY, 0));
   });
 
-  it('func SUM_OF_NUMBERS (get uint256 variable from storage) ', async () => {
+  it.only('func SUM_OF_NUMBERS with parameters (get uint256 variable from storage) ', async () => {
     const input = `
       6 8
       func SUM_OF_NUMBERS 2
@@ -1018,14 +1018,12 @@ describe('DSL: basic', () => {
       `;
     await app.parse(input);
     await app.execute();
-    // await checkStack(StackValue, stack, 1, 1);
     expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(14);
   });
 
   it.only('func SUM_OF_NUMBERS without parameters', async () => {
     const input = `
-      func SUM_OF_NUMBERS
-      end
+      func SUM_OF_NUMBERS end
 
       SUM_OF_NUMBERS {
         (6 + 8) setUint256 SUM
@@ -1033,7 +1031,6 @@ describe('DSL: basic', () => {
       `;
     await app.parse(input);
     await app.execute();
-    // await checkStack(StackValue, stack, 1, 1);
     expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(14);
   });
 });

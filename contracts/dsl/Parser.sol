@@ -9,7 +9,7 @@ import { ByteUtils } from './libs/ByteUtils.sol';
 import { Storage } from './helpers/Storage.sol';
 import { Preprocessor } from './Preprocessor.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 contract Parser is IParser, Storage {
     using StringUtils for string;
@@ -118,8 +118,6 @@ contract Parser is IParser, Storage {
 
         labelPos[_false] = program.length; // `negative` branch position
         program = bytes.concat(program, bytes2(0)); // placeholder for `negative` branch offset
-
-        // console.logBytes(program);
     }
 
     function asmIf() public {
