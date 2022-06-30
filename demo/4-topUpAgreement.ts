@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 
 // TODO: update `agreementAddr`
-const agreementAddr = '0xC2bEf244bf5B15Fa2cCEE0cFCb31C7144D0E642c';
+const agreementAddr = '0x49e5d290799e1AeF5Bd8360B54E72D8D29Ea6E8c';
 
 (async () => {
   const [deployer] = await ethers.getSigners();

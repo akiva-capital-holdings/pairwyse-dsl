@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
 // TODO: update `agreementAddr`
-const agreementAddr = '0xC2bEf244bf5B15Fa2cCEE0cFCb31C7144D0E642c';
-const txId = 1;
+const agreementAddr = '0x49e5d290799e1AeF5Bd8360B54E72D8D29Ea6E8c';
+const txId = 2;
 const sendAmount = ethers.utils.parseEther('0.1');
 
 (async () => {
