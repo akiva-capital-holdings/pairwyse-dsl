@@ -279,7 +279,7 @@ describe('End-to-end', () => {
     expect(await ctx.program()).to.equal(expectedProgram);
   });
 
-  it.only('func SUM_OF_NUMBERS (get uint256 variable from storage) ', async () => {
+  it('func SUM_OF_NUMBERS (get uint256 variable from storage) ', async () => {
     const input = `
       6 8
       func SUM_OF_NUMBERS 2

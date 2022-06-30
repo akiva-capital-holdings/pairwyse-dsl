@@ -178,56 +178,26 @@ contract Preprocessor {
                 result.push(chunk);
             } else if (chunk.equal('func')) {
                 isFunc = true;
-                paramsCount = 0;
             } else if (isFunc) {
                 if (!isName) {
                     if (chunk.equal('end')) {
                         isFunc = false;
-                        // result.push(chunk);
                     } else {
                         isName = true;
                         name = chunk;
                     }
+                } else if (isName && chunk.equal('end')) {
+                    isName = false;
+                    isFunc = false;
+                    result.push('func');
+                    result.push(name);
+                    result.push(chunk);
                 } else {
                     isName = false;
                     paramsCount = _parseInt(chunk);
-                    string[] memory chunks = new string[](paramsCount * 2);
-                    // add parameters to the chunks without vice versa way
-                    // an index where the first variable stored will be updated by new code
-                    uint256 indexFirst = result.length - paramsCount * 2;
-                    for (uint256 j = 0; j < paramsCount * 2; j++) {
-                        // make shift for result's values
-                        // to be sure that variables get proper index name
-                        chunks[j] = result[indexFirst + j];
-                    }
-
-                    for (uint256 j = 0; j < paramsCount * 2; j++) {
-                        result.pop();
-                    }
-
-                    for (uint256 j = 0; j < chunks.length; j += 2) {
-                        FuncParameter storage fp = parameters[j / 2 + 1];
-                        fp._type = chunks[j];
-                        fp.value = chunks[j + 1];
-                        fp.nameOfVariable = string(
-                            abi.encodePacked(name, '_', _toString(j / 2 + 1))
-                        );
-                    }
-
-                    for (uint256 j = 0; j < paramsCount; j++) {
-                        FuncParameter memory fp = parameters[j + 1];
-                        result.push(fp._type); // should be used in the future for other types
-                        result.push(fp.value);
-                        result.push('setUint256');
-                        result.push(fp.nameOfVariable);
-                    }
-
-                    result.push('func');
-                    result.push(name);
-                    result.push('end');
+                    _rebuildParameters(paramsCount, name);
                 }
             } else {
-                // console.log('--',chunk);
                 result.push(chunk);
             }
         }
@@ -238,6 +208,58 @@ contract Preprocessor {
         }
 
         return result;
+    }
+
+    function _rebuildParameters(uint256 _paramsCount, string memory _nameOfFunc) internal {
+        /* 
+        `chunks` list needs to store parameters temporarly and rewrite dsl string code
+
+        `_paramsCount * 2` includes type and value for the parameter
+
+        `indexFirst` is an index where the first parameter was pushed to results
+
+        For example:
+        if the function has 6 input parameters then the indexFirst will be set in
+        the index that shows, where it was the first parameter was stored before
+        the 'func', was occurred.
+        */
+
+        string[] memory chunks = new string[](_paramsCount * 2);
+        uint256 indexFirst = result.length - _paramsCount * 2;
+
+        // store paramerets that were already pushed to results
+        for (uint256 j = 0; j < _paramsCount * 2; j++) {
+            chunks[j] = result[indexFirst + j];
+        }
+
+        // all needed parameters are stored already in chunks list
+        // clear useless variables from the DSL code string
+        for (uint256 j = 0; j < _paramsCount * 2; j++) {
+            result.pop();
+        }
+
+        // save
+        for (uint256 j = 0; j < chunks.length; j += 2) {
+            FuncParameter storage fp = parameters[j / 2 + 1];
+            fp._type = chunks[j];
+            fp.value = chunks[j + 1];
+            fp.nameOfVariable = string(abi.encodePacked(_nameOfFunc, '_', _toString(j / 2 + 1)));
+        }
+
+        for (uint256 j = 0; j < _paramsCount; j++) {
+            FuncParameter memory fp = parameters[j + 1];
+            result.push(fp._type); // should be used in the future for other types
+            result.push(fp.value);
+            result.push('setUint256');
+            result.push(fp.nameOfVariable);
+            // clear mapping data to prevent value collisions
+            fp = FuncParameter('', '0', '');
+            parameters[j + 1] = fp;
+        }
+
+        result.push('func');
+        result.push(_nameOfFunc);
+        result.push('end');
     }
 
     /**
