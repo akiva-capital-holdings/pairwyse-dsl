@@ -315,6 +315,13 @@ contract Context is IContext {
             IParser.asmBalanceOf.selector,
             OpcodeLibNames.OtherOpcodes
         );
+        addOpcode(
+            'func',
+            0x30,
+            LogicalOpcodes.opFunc.selector,
+            IParser.asmFunc.selector,
+            OpcodeLibNames.LogicalOpcodes
+        );
 
         // Complex Opcodes with sub Opcodes (branches)
         string memory name = 'loadLocal';
