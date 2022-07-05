@@ -240,8 +240,8 @@ contract Preprocessor {
      * @param _currentName is a current name of function
      * @param _isFunc describes if the func opcode was occured
      * @param _isName describes if the name for the function was already set
-     * @return isFunc the new statement of _isFunc for function processing
-     * @return isName the new statement of _isName for function processing
+     * @return isFunc the new state of _isFunc for function processing
+     * @return isName the new state of _isName for function processing
      * @return name the new name of the function
      */
     function _parceFuncMainData(
