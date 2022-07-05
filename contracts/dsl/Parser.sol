@@ -11,107 +11,192 @@ import { Preprocessor } from './Preprocessor.sol';
 
 // import 'hardhat/console.sol';
 
+/**
+ * @dev Parser of DSL code
+ *
+ * One of the core contracts of the project. It parses DSL expression that comes from user. After parsing code in Parser
+ * a bytecode of the DSL program is generated as stored in Context
+ *
+ * DSL code in postfix notation as string -> Parser -> raw bytecode
+ */
 contract Parser is IParser, Storage {
     using StringUtils for string;
     using ByteUtils for bytes;
 
     Preprocessor public preprocessor;
 
-    bytes internal program;
-    string[] internal cmds;
-    uint256 internal cmdIdx;
+    bytes internal program; // raw bytecode of the program that preprocessor is generating
+    string[] internal cmds; // DSL code in postfix form (input from Preprocessor)
+    uint256 internal cmdIdx; // Current parsing index of DSL code
 
     mapping(string => uint256) public labelPos;
 
     constructor() {
-        preprocessor = new Preprocessor();
-    }
-
-    function parse(IContext _ctx, string memory _codeRaw) external {
-        string[] memory _code = preprocessor.transform(_ctx, _codeRaw);
-        parseCode(_ctx, _code);
+        preprocessor = new Preprocessor(); // TODO: provide as input param
     }
 
     /**
-     * Asm functions
+     * @dev Transform DSL code from array in infix notation to raw bytecode
+     * @param _ctx Context contract interface
+     * @param _codeRaw Input code as a string in infix notation
+     */
+    function parse(IContext _ctx, string memory _codeRaw) external {
+        // TODO: in func params change `IContext` type to `address`
+        string[] memory _code = preprocessor.transform(_ctx, _codeRaw);
+        _parseCode(_ctx, _code);
+    }
+
+    /**
+     * @dev Asm functions
+     * Concatenates the previous program bytecode with the next command
+     * that contains in the `cmds` list. `cmdIdx` is helping to follow
+     * what exactly the command is in the process
+     * Example of code for :
+     * ```
+     * cmds = ['bool', 'true'] // current cmds
+     * cmdIdx = 0 // current parsing index of DSL code
+     * program = ''
+     * ```
+     *
+     * So it will be executed the asmSetLocalBool() function where:
+     * - `_parseVariable()` internal function will update the previous empty
+     * `program` with the bytecode of `bool` opcode
+     *
+     * Result is `program = '0x18'` (see Context.sol for `addOpcode('bool'..)`
+     * to check the code for `bool` opcode)
+     * cmdIdx = 0 // current parsing index of DSL code is the same
+     * 
+     - `asmBool()` function will concatenate previous `program` with the bytecode of `true` value
+     * `program` with the bytecode of `true` value (0x01)
+     * ```
+     * program = '0x1801'
+     * ```
      */
 
+    /**
+     * @dev Updates the program with the bool value
+     */
     function asmSetLocalBool() public {
-        parseVariable();
+        _parseVariable();
         asmBool();
     }
 
-    // setLocalUint256 VARNAME 12345
+    /**
+     * @dev Updates the program with the local variable value
+     * Example of command:
+     * ```
+     * setLocalUint256 VARNAME 12345
+     * ```
+     */
     function asmSetLocalUint256() public {
-        parseVariable();
+        _parseVariable();
         asmUint256();
     }
 
-    // (uint256 5 + uint256 7) setUint256 VARNAME
+    /**
+     * @dev Updates the program with the
+     *  * Example of command:
+     * ```
+     * (uint256 5 + uint256 7) setUint256 VARNAME
+     * ```
+     */
     function asmSetUint256() public {
-        parseVariable();
+        _parseVariable();
     }
 
+    /**
+     * @dev
+     */
     function asmLoadLocal(IContext _ctx) public {
-        parseBranchOf(_ctx, 'loadLocal');
-        parseVariable();
+        _parseBranchOf(_ctx, 'loadLocal');
+        _parseVariable();
     }
 
+    /**
+     * @dev
+     */
     function asmLoadRemote(IContext _ctx) public {
-        parseBranchOf(_ctx, 'loadRemote');
-        parseVariable();
-        parseAddress();
+        _parseBranchOf(_ctx, 'loadRemote');
+        _parseVariable();
+        _parseAddress();
     }
 
+    /**
+     * @dev
+     */
     function asmBool() public {
-        bytes1 value = bytes1(nextCmd().equal('true') ? 0x01 : 0x00);
+        bytes1 value = bytes1(_nextCmd().equal('true') ? 0x01 : 0x00);
         program = bytes.concat(program, value);
     }
 
+    /**
+     * @dev
+     */
     function asmUint256() public {
-        uint256 value = nextCmd().toUint256();
+        uint256 value = _nextCmd().toUint256();
         program = bytes.concat(program, bytes32(value));
     }
 
+    /**
+     * @dev
+     */
     function asmSend() public {
-        parseVariable();
+        _parseVariable();
         asmUint256();
     }
 
+    /**
+     * @dev
+     */
     function asmTransfer() public {
-        parseVariable(); // token address
-        parseVariable(); // receiver
+        _parseVariable(); // token address
+        _parseVariable(); // receiver
         asmUint256(); // amount
     }
 
+    /**
+     * @dev
+     */
     function asmTransferVar() public {
-        parseVariable(); // token address
-        parseVariable(); // receiver
-        parseVariable(); // amount
+        _parseVariable(); // token address
+        _parseVariable(); // receiver
+        _parseVariable(); // amount
     }
 
+    /**
+     * @dev
+     */
     function asmTransferFrom() public {
-        parseVariable(); // token address
-        parseVariable(); // from
-        parseVariable(); // to
+        _parseVariable(); // token address
+        _parseVariable(); // from
+        _parseVariable(); // to
         asmUint256(); // amount
     }
 
+    /**
+     * @dev
+     */
     function asmTransferFromVar() public {
-        parseVariable(); // token address
-        parseVariable(); // from
-        parseVariable(); // to
-        parseVariable(); // amount
+        _parseVariable(); // token address
+        _parseVariable(); // from
+        _parseVariable(); // to
+        _parseVariable(); // amount
     }
 
+    /**
+     * @dev
+     */
     function asmBalanceOf() public {
-        parseVariable(); // token address
-        parseVariable(); // user address
+        _parseVariable(); // token address
+        _parseVariable(); // user address
     }
 
+    /**
+     * @dev
+     */
     function asmIfelse() public {
-        string memory _true = nextCmd(); // "positive" branch name
-        string memory _false = nextCmd(); // "negative" branch name
+        string memory _true = _nextCmd(); // "positive" branch name
+        string memory _false = _nextCmd(); // "negative" branch name
 
         labelPos[_true] = program.length; // `positive` branch position
         program = bytes.concat(program, bytes2(0)); // placeholder for `positive` branch offset
@@ -122,8 +207,11 @@ contract Parser is IParser, Storage {
         // console.logBytes(program);
     }
 
+    /**
+     * @dev
+     */
     function asmIf() public {
-        labelPos[nextCmd()] = program.length; // `true` branch position
+        labelPos[_nextCmd()] = program.length; // `true` branch position
         program = bytes.concat(program, bytes2(0)); // placeholder for `true` branch offset
     }
 
@@ -131,11 +219,17 @@ contract Parser is IParser, Storage {
      * Internal functions
      */
 
-    function isLabel(string memory _name) internal view returns (bool) {
+    /**
+     * @dev
+     */
+    function _isLabel(string memory _name) internal view returns (bool) {
         return (labelPos[_name] > 0);
     }
 
-    function parseCode(IContext _ctx, string[] memory code) internal {
+    /**
+     * @dev
+     */
+    function _parseCode(IContext _ctx, string[] memory code) internal {
         delete program;
         cmdIdx = 0;
         cmds = code;
@@ -143,21 +237,24 @@ contract Parser is IParser, Storage {
         _ctx.stack().clear();
 
         while (cmdIdx < cmds.length) {
-            parseOpcodeWithParams(_ctx);
+            _parseOpcodeWithParams(_ctx);
         }
 
         // console.logBytes(program);
         _ctx.setProgram(program);
     }
 
-    function parseOpcodeWithParams(IContext _ctx) internal {
-        string storage cmd = nextCmd();
+    /**
+     * @dev
+     */
+    function _parseOpcodeWithParams(IContext _ctx) internal {
+        string storage cmd = _nextCmd();
         bytes1 opcode = _ctx.opCodeByName(cmd);
         require(
-            opcode != 0x0 || isLabel(cmd),
+            opcode != 0x0 || _isLabel(cmd),
             string(abi.encodePacked('Parser: "', cmd, '" command is unknown'))
         );
-        if (isLabel(cmd)) {
+        if (_isLabel(cmd)) {
             uint256 _branchLocation = program.length;
             bytes memory programBefore = program.slice(0, labelPos[cmd]);
             bytes memory programAfter = program.slice(labelPos[cmd] + 2, program.length);
@@ -176,19 +273,32 @@ contract Parser is IParser, Storage {
         // if no selector then opcode without params
     }
 
-    function nextCmd() internal returns (string storage) {
+    /**
+     * @dev next commad from the cmds list
+     * @return nextCmd string
+     */
+    function _nextCmd() internal returns (string storage) {
         return cmds[cmdIdx++];
     }
 
-    function parseVariable() internal {
-        program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(nextCmd()))));
+    /**
+     * @dev
+     */
+    function _parseVariable() internal {
+        program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(_nextCmd()))));
     }
 
-    function parseBranchOf(IContext _ctx, string memory baseOpName) internal {
-        program = bytes.concat(program, _ctx.branchCodes(baseOpName, nextCmd()));
+    /**
+     * @dev
+     */
+    function _parseBranchOf(IContext _ctx, string memory baseOpName) internal {
+        program = bytes.concat(program, _ctx.branchCodes(baseOpName, _nextCmd()));
     }
 
-    function parseAddress() internal {
-        program = bytes.concat(program, nextCmd().fromHex());
+    /**
+     * @dev
+     */
+    function _parseAddress() internal {
+        program = bytes.concat(program, _nextCmd().fromHex());
     }
 }
