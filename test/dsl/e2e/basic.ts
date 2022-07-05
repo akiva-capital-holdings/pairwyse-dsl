@@ -1168,9 +1168,7 @@ describe('DSL: basic', () => {
           (loadLocal uint256 SUM_1 + loadLocal uint256 SUM_2) setUint256 SUM
         }
         `;
-      await expect(app.parse(input)).to.be.revertedWith(
-        'Preprocessor: the parameter value can not be transformed to the integer value'
-      );
+      await expect(app.parse(input)).to.be.revertedWith('String: non-decimal character');
     });
   });
 });

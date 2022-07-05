@@ -119,9 +119,7 @@ contract Preprocessor {
         bool loadRemoteFlag;
         bool directUseUint256;
         uint256 loadRemoteVarCount = 3;
-        uint256 paramsCount;
         string memory chunk;
-        string memory res;
         string memory name;
 
         for (uint256 i = 0; i < _code.length; i++) {
@@ -141,7 +139,7 @@ contract Preprocessor {
                 chunk = _ctx.aliases(chunk);
             }
 
-            if (isOperator(_ctx, chunk)) {
+            if (_isOperator(_ctx, chunk)) {
                 // console.log("%s is an operator", chunk);
                 while (
                     _stack.length() > 0 &&
@@ -150,61 +148,33 @@ contract Preprocessor {
                     // console.log("result push:", _stack.seeLast().getString());
                     result.push(_stack.pop().getString());
                 }
-                pushStringToStack(_stack, chunk);
+                _pushStringToStack(_stack, chunk);
             } else if (chunk.equal('(')) {
-                pushStringToStack(_stack, chunk);
+                _pushStringToStack(_stack, chunk);
             } else if (chunk.equal(')')) {
                 while (!_stack.seeLast().getString().equal('(')) {
                     // console.log("result push: %s", _stack.seeLast().getString());
                     result.push(_stack.pop().getString());
                 }
                 _stack.pop(); // remove '(' that is left
-            } else if (_mayBeNumber(chunk) && !isFunc) {
-                if (!directUseUint256) {
-                    if (result.length > 0) {
-                        res = result[result.length - 1];
-                        // push additional 'uint256' if was not set before in results and
-                        // if it is not a 'loadRemote' execution
-                        if (!(res.equal('uint256')) && loadRemoteFlag == false) {
-                            result.push('uint256');
-                        }
-                    } else {
-                        result.push('uint256');
-                    }
-                } else {
-                    directUseUint256 = false;
-                }
+            } else if (_mayBeNumber(chunk) && !isFunc && !directUseUint256) {
+                _updateUINT256param(loadRemoteFlag);
+                result.push(chunk);
+            } else if (_mayBeNumber(chunk) && !isFunc && directUseUint256) {
+                directUseUint256 = false;
                 result.push(chunk);
             } else if (chunk.equal('func')) {
                 // if the chunk is 'func' then `Functions block` will occur
                 isFunc = true;
-            } else if (isFunc) {
-                // `Functions block`
-                if (!isName) {
-                    // if was not set the name for a function
-                    if (chunk.equal('endf')) {
-                        // ex. `func NAME <number_of_params> endf`
-                        isFunc = false; // finish `Functions block` process
-                    } else {
-                        // set the name of function
-                        isName = true;
-                        name = chunk;
-                    }
-                } else {
-                    // if it was set the name for a function
-                    if (chunk.equal('endf')) {
-                        // uses for function without parameters
-                        isName = false;
-                        isFunc = false;
-                        result.push('func');
-                        result.push(name);
-                    } else {
-                        // uses for function with parameters
-                        isName = false;
-                        paramsCount = _parseInt(chunk);
-                        _rebuildParameters(paramsCount, name);
-                    }
-                }
+            } else if (isFunc && !isName) {
+                // `Functions block` started
+                // if was not set the name for a function
+                (isFunc, isName, name) = _parceFuncMainData(chunk, name, isFunc, isName);
+            } else if (isFunc && isName) {
+                // `Functions block` finished
+                // if it was already set the name for a function
+                isName = false;
+                isFunc = _parceFuncParams(chunk, name, isFunc);
             } else {
                 result.push(chunk);
             }
@@ -218,6 +188,102 @@ contract Preprocessor {
         return result;
     }
 
+    /**
+     * @dev Pushes additional 'uint256' string to results in case, if there are no
+     * types provided for uint256 values or
+     * loadRemote command, is not in the processing or
+     * the last chunk that was added to results is not 'uint256'
+     * @param _loadRemoteFlag is used to check if it was started the set of parameters for 'loadRemote' opcode
+     */
+    function _updateUINT256param(bool _loadRemoteFlag) internal {
+        if (
+            result.length == 0 ||
+            (!(result[result.length - 1].equal('uint256')) && _loadRemoteFlag == false)
+        ) {
+            result.push('uint256');
+        }
+    }
+
+    /**
+     * @dev Checks parameters and updates DSL code depending on what
+     * kind of function was provided.
+     * This internal function expects 'func' that can be with and without parameters.
+     * @param _chunk is a current chunk from the DSL string code
+     * @param _currentName is a current name of function
+     * @param _isFunc describes if the func opcode was occured
+     */
+    function _parceFuncParams(
+        string memory _chunk,
+        string memory _currentName,
+        bool _isFunc
+    ) internal returns (bool) {
+        if (_chunk.equal('endf')) {
+            // if the function without parameters
+            _pushFuncName(_currentName);
+            return false;
+        } else {
+            // if the function with parameters
+            _rebuildParameters(_chunk.toUint256(), _currentName);
+            return _isFunc;
+        }
+    }
+
+    /**
+     * @dev Returns updated parameters for the `func` opcode processing
+     * Pushes the command that saves parameter in the smart contract instead
+     * of the parameters that were provided for parsing.
+     * The function will store the command like `uint256 7 setUint256 NUMBER_VAR` and
+     * remove the parameter like `uint256 7`.
+     * The DSL command will be stored before the function body.
+     * For the moment it works only with uint256 type.
+     * @param _chunk is a current chunk from the DSL string code
+     * @param _currentName is a current name of function
+     * @param _isFunc describes if the func opcode was occured
+     * @param _isName describes if the name for the function was already set
+     * @return isFunc the new statement of _isFunc for function processing
+     * @return isName the new statement of _isName for function processing
+     * @return name the new name of the function
+     */
+    function _parceFuncMainData(
+        string memory _chunk,
+        string memory _currentName,
+        bool _isFunc,
+        bool _isName
+    )
+        internal
+        pure
+        returns (
+            bool,
+            bool,
+            string memory
+        )
+    {
+        if (_chunk.equal('endf')) {
+            // finish `Functions block` process
+            // example: `func NAME <number_of_params> endf`
+            // updates only for: isFunc => false - end of func opcode
+            return (false, _isName, _currentName);
+        } else {
+            // updates only for:
+            // isName => true - setting the name of function has occurred
+            // name => current cunk
+            return (_isFunc, true, _chunk);
+        }
+    }
+
+    /**
+     * @dev Rebuilds parameters to DSL commands in result's list.
+     * Pushes the command that saves parameter in the smart contract instead
+     * of the parameters that were provided for parsing.
+     * The function will store the command like `uint256 7 setUint256 NUMBER_VAR` and
+     * remove the parameter like `uint256 7`.
+     * The DSL command will be stored before the function body.
+     * For the moment it works only with uint256 type.
+     * @param _paramsCount is an amount of parameters that provided after
+     * the name of function
+     * @param _nameOfFunc is a name of function that is used to generate
+     * the name of variables
+     */
     function _rebuildParameters(uint256 _paramsCount, string memory _nameOfFunc) internal {
         /* 
         `chunks` list needs to store parameters temporarly and rewrite dsl string code
@@ -231,112 +297,119 @@ contract Preprocessor {
         the index that shows, where it was the first parameter was stored before
         the 'func', was occurred.
         */
-        require(_paramsCount > 0, 'Preprocessor: amount of parameters can not be 0');
-        string[] memory chunks = new string[](_paramsCount * 2);
 
-        require(
-            result.length >= _paramsCount * 2,
-            'Preprocessor: invalid parameters for the function'
-        );
-        uint256 indexFirst = result.length - _paramsCount * 2;
+        uint256 _totalParams = _paramsCount * 2;
+        require(_paramsCount > 0, 'Preprocessor: amount of parameters can not be 0');
+        string[] memory chunks = new string[](_totalParams);
+
+        require(result.length >= _totalParams, 'Preprocessor: invalid parameters for the function');
+        uint256 indexFirst = result.length - _totalParams;
 
         // store paramerets that were already pushed to results
-        for (uint256 j = 0; j < _paramsCount * 2; j++) {
+        for (uint256 j = 0; j < _totalParams; j++) {
             chunks[j] = result[indexFirst + j];
         }
-        // all needed parameters are stored already in chunks list
-        // clear useless variables from the DSL code string
-        for (uint256 j = 0; j < _paramsCount * 2; j++) {
-            result.pop();
-        }
-        // save parameters in mapping checking/using valid type for each value
+
+        _cleanCode(_totalParams);
+
         for (uint256 j = 0; j < chunks.length; j += 2) {
-            FuncParameter storage fp = parameters[j / 2 + 1];
-            fp._type = chunks[j];
-            fp.value = chunks[j + 1];
-            fp.nameOfVariable = string(abi.encodePacked(_nameOfFunc, '_', _toString(j / 2 + 1)));
+            _saveParameter(j, chunks[j], chunks[j + 1], _nameOfFunc);
         }
-        // push parameters to result list depend on their type for each value
-        for (uint256 j = 0; j < _paramsCount; j++) {
+
+        _pushParameters(_paramsCount);
+        _pushFuncName(_nameOfFunc);
+    }
+
+    /**
+     * @dev Pushes parameters to result's list depend on their type for each value
+     * @param _count is an amount of parameters provided next to the name of func
+     */
+    function _pushParameters(uint256 _count) internal {
+        for (uint256 j = 0; j < _count; j++) {
             FuncParameter memory fp = parameters[j + 1];
-            result.push(fp._type); // TODO: should be used in the future for other types
-            result.push(fp.value);
-            result.push('setUint256'); // TODO: should be used in the future for other types
-            result.push(fp.nameOfVariable);
+            _rebuildParameter(fp._type, fp.value, fp.nameOfVariable);
             // clear mapping data to prevent collisions with values
             parameters[j + 1] = FuncParameter('', '0', '');
         }
-
-        // push main code to execute function
-        // TODO: it needs to simplify
-        result.push('func');
-        result.push(_nameOfFunc);
     }
 
-    function pushStringToStack(Stack stack_, string memory value) internal {
+    /**
+     * @dev Saves parameters in mapping checking/using valid type for each value
+     * @param _index is a current chunk index from temporary chunks
+     * @param _type is a type of the parameter
+     * @param _value is a value of the parameter
+     * @param _nameOfFunc is a name of function that is used to generate
+     * the name of the current variable
+     */
+    function _saveParameter(
+        uint256 _index,
+        string memory _type,
+        string memory _value,
+        string memory _nameOfFunc
+    ) internal {
+        FuncParameter storage fp = parameters[_index / 2 + 1];
+        fp._type = _type;
+        fp.value = _value;
+        fp.nameOfVariable = string(
+            abi.encodePacked(_nameOfFunc, '_', StringUtils.toString(_index / 2 + 1))
+        );
+    }
+
+    /**
+     * @dev Clears useless variables from the DSL code string as
+     * all needed parameters are already stored in chunks list
+     * @param _count is an amount of parameters provided next
+     * to the name of func. As parameters are stored with their types,
+     * the _count variable was already multiplied to 2
+     */
+    function _cleanCode(uint256 _count) internal {
+        for (uint256 j = 0; j < _count; j++) {
+            result.pop();
+        }
+    }
+
+    /**
+     * @dev Preparing and pushes the DSL command to results.
+     * The comand will save this parameter and its name in the smart contract.
+     * For example: `uint256 7 setUint256 NUMBER_VAR`
+     * For the moment it works only with uint256 types.
+     * @param _type is a type of the parameter
+     * @param _value is a value of the parameter
+     * @param _variableName is a name of variable that was generated before
+     */
+    function _rebuildParameter(
+        string memory _type,
+        string memory _value,
+        string memory _variableName
+    ) internal {
+        // TODO: '_type' - should be used in the future for other types
+        result.push(_type);
+        result.push(_value);
+        // TODO: setUint256 - update for other types in dependence on '_type'
+        result.push('setUint256');
+        result.push(_variableName);
+    }
+
+    /**
+     * @dev Pushes the func opcode and the name of the function
+     * @param _name is a current name of the function
+     */
+    function _pushFuncName(string memory _name) internal {
+        result.push('func');
+        result.push(_name);
+    }
+
+    function _pushStringToStack(Stack stack_, string memory value) internal {
         StackValue stackValue = new StackValue();
         stackValue.setString(value);
         stack_.push(stackValue);
     }
 
-    function isOperator(IContext _ctx, string memory op) internal view returns (bool) {
+    function _isOperator(IContext _ctx, string memory op) internal view returns (bool) {
         for (uint256 i = 0; i < _ctx.operatorsLen(); i++) {
             if (op.equal(_ctx.operators(i))) return true;
         }
         return false;
-    }
-
-    /**
-     * @dev Converts a `uint256` to its ASCII `string` decimal representation.
-     */
-    function _toString(uint256 value) internal pure returns (string memory) {
-        // Inspired by OraclizeAPI's implementation - MIT licence
-        // https://github.com/oraclize/ethereum-api/blob/b42146b063c7d6ee1358846c198246239e9360e8/oraclizeAPI_0.4.25.sol
-
-        if (value == 0) {
-            return '0';
-        }
-        uint256 temp = value;
-        uint256 digits;
-        while (temp != 0) {
-            digits++;
-            temp /= 10;
-        }
-        bytes memory buffer = new bytes(digits);
-        while (value != 0) {
-            digits -= 1;
-            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
-            value /= 10;
-        }
-        return string(buffer);
-    }
-
-    /**
-     * Parse Int
-     *
-     * Converts an ASCII string value into an uint as long as the string
-     * its self is a valid unsigned integer
-     *
-     * @param _value The ASCII string to be converted to an unsigned integer
-     * @return _ret The unsigned value of the ASCII string
-     */
-    function _parseInt(string memory _value) internal pure returns (uint256 _ret) {
-        bytes memory _bytesValue = bytes(_value);
-        uint256 j = 1;
-        uint256 i = _bytesValue.length - 1;
-        while (i >= 0) {
-            require(
-                uint8(_bytesValue[i]) >= 48 && uint8(_bytesValue[i]) <= 57,
-                'Preprocessor: the parameter value can not be transformed to the integer value'
-            );
-            _ret += (uint8(_bytesValue[i]) - 48) * j;
-            j *= 10;
-            if (i > 0) {
-                i--;
-            } else {
-                break;
-            }
-        }
     }
 
     /**
@@ -351,7 +424,9 @@ contract Preprocessor {
      * no-comment symbol avoiding an additional iteration
      * @param _index is a current index of a char that might be changed
      * @param _program is a current program string
-     * @return new index, searchedSymbolLen and isCommeted parameters
+     * @return new index
+     * @return searchedSymbolLen
+     * @return isCommeted
      */
     function _getCommentSymbol(
         uint256 _index,
@@ -383,7 +458,8 @@ contract Preprocessor {
      * @param _i is a current index of a char that might be changed
      * @param _ssl is a searched symbol len that might be 0, 1, 2
      * @param _p is a current program string
-     * @return new index and isCommeted parameters
+     * @return index is a new index of a char
+     * @return isCommeted
      */
     function _getEndCommentSymbol(
         uint256 _ssl,
