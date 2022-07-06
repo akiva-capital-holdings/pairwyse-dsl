@@ -53,6 +53,20 @@ library LogicalOpcodes {
         }
     }
 
+    function opFunc(IContext _ctx) public {
+        if (_ctx.stack().length() == 0) {
+            OpcodeHelpers.putToStack(_ctx, 0);
+        }
+
+        StackValue last = _getLast(_ctx);
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type in the stack');
+
+        uint16 _reference = getUint16(_ctx);
+
+        _ctx.setNextPc(_ctx.pc());
+        _ctx.setPc(_reference);
+    }
+
     function _getLast(IContext _ctx) public returns (StackValue) {
         return _ctx.stack().pop();
     }

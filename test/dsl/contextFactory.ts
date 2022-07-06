@@ -20,10 +20,10 @@ describe('ContextFactory', () => {
 
   it('deployed length', async () => {
     await factory.deployContext();
-    expect(await factory.getDeployedLen()).to.equal(1);
+    expect(await factory.getDeployedContextsLen()).to.equal(1);
     await factory.deployContext();
-    expect(await factory.getDeployedLen()).to.equal(2);
+    expect(await factory.getDeployedContextsLen()).to.equal(2);
     await factory.deployContext();
-    expect(await factory.getDeployedLen()).to.equal(3);
+    expect(await factory.getDeployedContextsLen()).to.equal(3);
   });
 });

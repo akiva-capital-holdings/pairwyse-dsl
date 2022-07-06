@@ -62,10 +62,10 @@ describe('AgreementFactory', () => {
 
   it('deployed length', async () => {
     await factory.deployAgreement(ethers.constants.AddressZero);
-    expect(await factory.getDeployedLen()).to.equal(1);
+    expect(await factory.getDeployedAgreementsLen()).to.equal(1);
     await factory.deployAgreement(ethers.constants.AddressZero);
-    expect(await factory.getDeployedLen()).to.equal(2);
+    expect(await factory.getDeployedAgreementsLen()).to.equal(2);
     await factory.deployAgreement(ethers.constants.AddressZero);
-    expect(await factory.getDeployedLen()).to.equal(3);
+    expect(await factory.getDeployedAgreementsLen()).to.equal(3);
   });
 });

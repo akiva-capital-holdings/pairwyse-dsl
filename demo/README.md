@@ -44,7 +44,7 @@ yarn start
 
 ## Create Agreement
 
-Connect to the website using Metamask. The connected account should be Deployer (0x801f54bE16B0d824Cd96CFc67f4E142327Ccde46). The network should be our remote Ganache Node (RPC URL: http://18.212.246.132:8545/; Chain ID: 5777)
+Connect to the website using Metamask. The connected account should be Deployer (0x801f54bE16B0d824Cd96CFc67f4E142327Ccde46). The network should be our remote Ganache Node
 
 On FE open console in the dev tools in you browser. Go to 'Agreement Interaction' -> 'Agreement Request' and create Agreement. The address of the newly created Agreement will appear in console as `lastAgrAddr`. Copy this address, you'll need it later.
 
