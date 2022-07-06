@@ -42,7 +42,7 @@ const config: HardhatUserConfig = {
       url: 'http://127.0.0.1:7545',
     },
     remoteGanache: {
-      url: process.env.REMOTE_GANACHE_URL,
+      url: process.env.REMOTE_GANACHE_URL || '',
       timeout: 1e9,
       accounts:
         process.env.REMOTE_GANACHE_PRIVATE_KEYS !== undefined

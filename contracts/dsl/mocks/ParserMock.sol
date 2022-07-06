@@ -6,6 +6,6 @@ import { Parser } from '../Parser.sol';
 
 contract ParserMock is Parser {
     function parseCodeExt(IContext _ctx, string[] memory _code) external {
-        parseCode(_ctx, _code);
+        _parseCode(_ctx, _code);
     }
 }
