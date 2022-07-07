@@ -30,6 +30,8 @@ contract Parser is IParser, Storage {
     uint256 internal cmdIdx; // Current parsing index of DSL code
 
     mapping(string => uint256) public labelPos;
+    mapping(string => bool) isVariable;
+    mapping(string => bytes) savedProgram;
 
     constructor() {
         preprocessor = new Preprocessor(); // TODO: provide as input param
@@ -109,7 +111,8 @@ contract Parser is IParser, Storage {
      * (uint256 5 + uint256 7) setUint256 VARNAME
      * ```
      */
-    function asmSetUint256() public {
+    function asmSetUint256(IContext _ctx) public {
+        _setVariable(_ctx, cmds[cmdIdx], 'uint256');
         _parseVariable();
     }
 
@@ -352,20 +355,26 @@ contract Parser is IParser, Storage {
      */
     function _parseOpcodeWithParams(IContext _ctx) internal {
         string storage cmd = _nextCmd();
+
         bytes1 opcode = _ctx.opCodeByName(cmd);
         require(
-            opcode != 0x0 || _isLabel(cmd),
+            opcode != 0x0 || _isLabel(cmd) || isVariable[cmd],
             string(abi.encodePacked('Parser: "', cmd, '" command is unknown'))
         );
-        if (_isLabel(cmd)) {
+
+        if (isVariable[cmd]) {
+            // if the variable was saved before its loading, so the concatenation
+            // will gather the current program and a prepared loading program for this variable
+            program = bytes.concat(program, savedProgram[cmd]);
+        } else if (_isLabel(cmd)) {
             uint256 _branchLocation = program.length;
             bytes memory programBefore = program.slice(0, labelPos[cmd]);
             bytes memory programAfter = program.slice(labelPos[cmd] + 2, program.length);
             program = bytes.concat(programBefore, bytes2(uint16(_branchLocation)), programAfter);
         } else {
             program = bytes.concat(program, opcode);
-
             bytes4 _selector = _ctx.asmSelectors(cmd);
+
             if (_selector != 0x0) {
                 (bool success, ) = address(this).delegatecall(
                     abi.encodeWithSelector(_selector, _ctx)
@@ -405,5 +414,40 @@ contract Parser is IParser, Storage {
      */
     function _parseAddress() internal {
         program = bytes.concat(program, _nextCmd().fromHex());
+    }
+
+    /**
+     * @dev Sets additional program for saved parameter, so it can be
+     * possible to load the variable directly.
+     *
+     *
+     * For example:
+     * The base command of loading stored NUMBER parameter can be used as
+     * ```
+     * (uint256 5 + uint256 7) setUint256 NUMBER
+     * (loadLocal uint256 NUMBER + 4) setUint256 NUMBER2
+     * ```
+     * so, _setVariable function participates in the simplification of loading NUMBER
+     *
+     * ```
+     * (uint256 5 + uint256 7) setUint256 NUMBER
+     * (NUMBER + 4) setUint256 NUMBER2
+     * ```
+     */
+    function _setVariable(
+        IContext _ctx,
+        string memory _name,
+        string memory _type
+    ) internal {
+        isVariable[_name] = true;
+
+        // TODO: add the loadRemote type
+        string memory _loadType = 'loadLocal';
+        bytes4 name_ = bytes4(keccak256(abi.encodePacked(_name)));
+        bytes1 type_ = _ctx.opCodeByName(_loadType);
+        bytes1 code_ = _ctx.branchCodes(_loadType, _type);
+
+        // ex. savedProgram['NUMBER'] = 'loadLocal uint256 NUMBER'
+        savedProgram[_name] = bytes.concat(type_, code_, name_);
     }
 }

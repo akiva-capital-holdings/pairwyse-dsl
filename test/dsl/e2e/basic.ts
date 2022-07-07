@@ -1112,6 +1112,20 @@ describe('DSL: basic', () => {
     });
   });
 
+  describe('Using stored variables without a loadLocal opcode', () => {
+    it('get sum of numbers', async () => {
+      const input = `
+        uint256 6 setUint256 A
+        (A + 2) setUint256 SUM
+        (4 + SUM) setUint256 SUM2
+        `;
+      await app.parse(input);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(8);
+      expect(await app.getStorageUint256(hex4Bytes('SUM2'))).to.equal(12);
+    });
+  });
+
   describe('function with parameters, without return value', () => {
     it('func SUM_OF_NUMBERS with parameters (get uint256 variable from storage) ', async () => {
       const input = `
