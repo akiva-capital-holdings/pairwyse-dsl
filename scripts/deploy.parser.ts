@@ -1,4 +1,3 @@
-// import '@nomiclabs/hardhat-ethers';
 import * as hre from 'hardhat';
 
 const { ethers } = hre;
@@ -14,11 +13,9 @@ async function main() {
   });
 
   // Deploy Parser
-  // const parser = await (
   const Parser = await ethers.getContractFactory('Parser', {
     libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
   });
-  // ).deploy();
   const parser = await Parser.deploy();
   await parser.deployed();
 

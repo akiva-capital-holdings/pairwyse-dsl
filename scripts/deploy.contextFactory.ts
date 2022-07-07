@@ -1,12 +1,14 @@
-import '@nomiclabs/hardhat-ethers';
 import * as hre from 'hardhat';
 
 const { ethers } = hre;
 
 async function deploy() {
   // Deploy ContextFactory
-  const factory = await (await ethers.getContractFactory('ContextFactory')).deploy();
-  console.log('ContextFactory address:', factory.address);
+  const ContextFactory = await ethers.getContractFactory('ContextFactory');
+  const contextFactory = await ContextFactory.deploy();
+  await contextFactory.deployed();
+
+  console.log('ContextFactory address:', contextFactory.address);
 }
 
 deploy();
