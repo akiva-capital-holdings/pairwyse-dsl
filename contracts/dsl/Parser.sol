@@ -11,107 +11,267 @@ import { Preprocessor } from './Preprocessor.sol';
 
 // import 'hardhat/console.sol';
 
+/**
+ * @dev Parser of DSL code
+ *
+ * One of the core contracts of the project. It parses DSL expression that comes from user. After parsing code in Parser
+ * a bytecode of the DSL program is generated as stored in Context
+ *
+ * DSL code in postfix notation as string -> Parser -> raw bytecode
+ */
 contract Parser is IParser, Storage {
     using StringUtils for string;
     using ByteUtils for bytes;
 
     Preprocessor public preprocessor;
 
-    bytes internal program;
-    string[] internal cmds;
-    uint256 internal cmdIdx;
+    bytes internal program; // raw bytecode of the program that preprocessor is generating
+    string[] internal cmds; // DSL code in postfix form (input from Preprocessor)
+    uint256 internal cmdIdx; // Current parsing index of DSL code
 
     mapping(string => uint256) public labelPos;
 
     constructor() {
-        preprocessor = new Preprocessor();
-    }
-
-    function parse(IContext _ctx, string memory _codeRaw) external {
-        string[] memory _code = preprocessor.transform(_ctx, _codeRaw);
-        parseCode(_ctx, _code);
+        preprocessor = new Preprocessor(); // TODO: provide as input param
     }
 
     /**
-     * Asm functions
+     * @dev Transform DSL code from array in infix notation to raw bytecode
+     * @param _ctx Context contract interface
+     * @param _codeRaw Input code as a string in infix notation
+     */
+    function parse(IContext _ctx, string memory _codeRaw) external {
+        // TODO: in func params change `IContext` type to `address`
+        string[] memory _code = preprocessor.transform(_ctx, _codeRaw);
+        _parseCode(_ctx, _code);
+    }
+
+    /**
+     * @dev Asm functions
+     * Concatenates the previous program bytecode with the next command
+     * that contains in the `cmds` list. `cmdIdx` is helping to follow
+     * what exactly the command is in the process
+     * Example of code for :
+     * ```
+     * cmds = ['bool', 'true'] // current cmds
+     * cmdIdx = 0 // current parsing index of DSL code
+     * program = ''
+     * ```
+     *
+     * So it will be executed the asmSetLocalBool() function where:
+     * - `_parseVariable()` internal function will update the previous empty
+     * `program` with the bytecode of `bool` opcode
+     *
+     * Result is `program = '0x18'` (see Context.sol for `addOpcode('bool'..)`
+     * to check the code for `bool` opcode)
+     * cmdIdx = 0 // current parsing index of DSL code is the same
+     *
+     * - `asmBool()` function will concatenate previous `program` with the bytecode of `true` value
+     * `program` with the bytecode `0x01` (see return values for Parser.sol for `asmBool()` function
+     *
+     * ```
+     * cmdIdx = 1 // parsing index of DSL code was updated
+     * program = '0x1801'
+     * ```
      */
 
+    /**
+     * @dev Updates the program with the bool value
+     *
+     * Example of a command:
+     * ```
+     * bool true
+     * ```
+     */
     function asmSetLocalBool() public {
-        parseVariable();
+        _parseVariable();
         asmBool();
     }
 
-    // setLocalUint256 VARNAME 12345
+    /**
+     * @dev Updates the program with the local variable value
+     *
+     * Example of a command:
+     * ```
+     * setLocalUint256 VARNAME 12345
+     * ```
+     */
     function asmSetLocalUint256() public {
-        parseVariable();
+        _parseVariable();
         asmUint256();
     }
 
-    // (uint256 5 + uint256 7) setUint256 VARNAME
+    /**
+     * @dev Updates the program with the local variable value
+     *
+     *  * Example of a command:
+     * ```
+     * (uint256 5 + uint256 7) setUint256 VARNAME
+     * ```
+     */
     function asmSetUint256() public {
-        parseVariable();
+        _parseVariable();
     }
 
+    /**
+     * @dev Updates the program with the LoadLocal variable
+     *
+     * Example of command:
+     * ```
+     * loadLocal uint256 NUMBER
+     * ```
+     */
     function asmLoadLocal(IContext _ctx) public {
-        parseBranchOf(_ctx, 'loadLocal');
-        parseVariable();
+        _parseBranchOf(_ctx, 'loadLocal'); // program += bytecode for `loadLocal uint256`
+        _parseVariable(); // program += bytecode for `NUMBER`
     }
 
+    /**
+     * @dev Updates the program with the LoadLocal variable
+     *
+     * Example of a command:
+     * ```
+     * loadRemote bool MARY_ADDRESS 9A676e781A523b5d0C0e43731313A708CB607508
+     * ```
+     */
     function asmLoadRemote(IContext _ctx) public {
-        parseBranchOf(_ctx, 'loadRemote');
-        parseVariable();
-        parseAddress();
+        _parseBranchOf(_ctx, 'loadRemote'); // program += bytecode for `loadRemote bool`
+        _parseVariable(); // program += bytecode for `MARY_ADDRESS`
+        _parseAddress(); // program += bytecode for `9A676e781A523b5...`
     }
 
+    /**
+     * @dev Concatenates and updates previous `program` with the `0x01`
+     * bytecode of `true` value otherwise `0x00` for `false`
+     */
     function asmBool() public {
-        bytes1 value = bytes1(nextCmd().equal('true') ? 0x01 : 0x00);
+        bytes1 value = bytes1(_nextCmd().equal('true') ? 0x01 : 0x00);
         program = bytes.concat(program, value);
     }
 
+    /**
+     * @dev Concatenates and updates previous `program` with the
+     * bytecode of uint256 value
+     */
     function asmUint256() public {
-        uint256 value = nextCmd().toUint256();
+        uint256 value = _nextCmd().toUint256();
         program = bytes.concat(program, bytes32(value));
     }
 
+    /**
+     * @dev Updates previous `program` with the amount that will be send (in wei)
+     *
+     * Example of a command:
+     * ```
+     * sendEth RECEIVER 1234
+     * ```
+     */
     function asmSend() public {
-        parseVariable();
-        asmUint256();
+        _parseVariable(); // program += bytecode for `sendEth RECEIVER`
+        asmUint256(); // program += bytecode for `1234`
     }
 
+    /**
+     * @dev Updates previous `program` with the amount of tokens
+     * that will be transfer to reciever(in wei). The `TOKEN` and `RECEIVER`
+     * parameters should be stored in smart contract
+     *
+     * Example of a command:
+     * ```
+     * transfer TOKEN RECEIVER 1234
+     * ```
+     */
     function asmTransfer() public {
-        parseVariable(); // token address
-        parseVariable(); // receiver
+        _parseVariable(); // token address
+        _parseVariable(); // receiver address
         asmUint256(); // amount
     }
 
+    /**
+     * @dev Updates previous `program` with the amount of tokens
+     * that will be transfer to reciever(in wei). The `TOKEN`, `RECEIVER`, `AMOUNT`
+     * parameters should be stored in smart contract
+     *
+     * Example of a command:
+     * ```
+     * transferVar TOKEN RECEIVER AMOUNT
+     * ```
+     */
     function asmTransferVar() public {
-        parseVariable(); // token address
-        parseVariable(); // receiver
-        parseVariable(); // amount
+        _parseVariable(); // token address
+        _parseVariable(); // receiver
+        _parseVariable(); // amount
     }
 
+    /**
+     * @dev Updates previous `program` with the amount of tokens
+     * that will be transfer from the certain address to reciever(in wei).
+     * The `TOKEN`, `FROM`, `TO` address parameters should be stored in smart contract
+     *
+     * Example of a command:
+     * ```
+     * transferFrom TOKEN FROM TO 1234
+     * ```
+     */
     function asmTransferFrom() public {
-        parseVariable(); // token address
-        parseVariable(); // from
-        parseVariable(); // to
+        _parseVariable(); // token address
+        _parseVariable(); // from
+        _parseVariable(); // to
         asmUint256(); // amount
     }
 
+    /**
+     * @dev Updates previous `program` with the amount of tokens
+     * that will be transfer from the certain address to reciever(in wei).
+     * The `TOKEN`, `FROM`, `TO`, `AMOUNT` parameters should be stored in smart contract
+     *
+     * Example of a command:
+     * ```
+     * transferFromVar TOKEN FROM TO AMOUNT
+     * ```
+     */
     function asmTransferFromVar() public {
-        parseVariable(); // token address
-        parseVariable(); // from
-        parseVariable(); // to
-        parseVariable(); // amount
+        _parseVariable(); // token address
+        _parseVariable(); // from
+        _parseVariable(); // to
+        _parseVariable(); // amount
     }
 
+    /**
+     * @dev Updates previous `program` with getting the amount of tokens
+     * The `TOKEN`, `USER` address parameters should be stored in smart contract
+     *
+     * Example of a command:
+     * ```
+     * balanceOf TOKEN USER
+     * ```
+     */
     function asmBalanceOf() public {
-        parseVariable(); // token address
-        parseVariable(); // user address
+        _parseVariable(); // token address
+        _parseVariable(); // user address
     }
 
+    /**
+     * @dev Updates previous `program` for positive and negative branch position
+     *
+     * Example of a command:
+     * ```
+     * 6 > 5 // condition is here must return true or false
+     * ifelse AA BB
+     * end
+     *
+     * branch AA {
+     *   // code for `positive` branch
+     * }
+     *
+     * branch BB {
+     *   // code for `negative` branch
+     * }
+     * ```
+     */
     function asmIfelse() public {
-        string memory _true = nextCmd(); // "positive" branch name
-        string memory _false = nextCmd(); // "negative" branch name
+        string memory _true = _nextCmd(); // "positive" branch name
+        string memory _false = _nextCmd(); // "negative" branch name
 
         labelPos[_true] = program.length; // `positive` branch position
         program = bytes.concat(program, bytes2(0)); // placeholder for `positive` branch offset
@@ -120,25 +280,58 @@ contract Parser is IParser, Storage {
         program = bytes.concat(program, bytes2(0)); // placeholder for `negative` branch offset
     }
 
+    /**
+     * @dev Updates previous `program` for positive branch position
+     *
+     * Example of a command:
+     * ```
+     * 6 > 5 // condition is here must return true or false
+     * if POSITIVE_ACTION
+     * end
+     *
+     * POSITIVE_ACTION {
+     *   // code for `positive` branch
+     * }
+     * ```
+     */
     function asmIf() public {
-        labelPos[nextCmd()] = program.length; // `true` branch position
+        labelPos[_nextCmd()] = program.length; // `true` branch position
         program = bytes.concat(program, bytes2(0)); // placeholder for `true` branch offset
     }
 
+    /**
+     * @dev Updates previous `program` for function code
+     *
+     * Example of a command:
+     * ```
+     * func NAME_OF_FUNCTION
+     *
+     * NAME_OF_FUNCTION {
+     *   // code for the body of function
+     * }
+     * ```
+     */
     function asmFunc() public {
-        labelPos[nextCmd()] = program.length; // `true` branch position
-        program = bytes.concat(program, bytes2(0)); // placeholder for `true` branch offset
+        labelPos[_nextCmd()] = program.length; // `name of function` position
+        program = bytes.concat(program, bytes2(0)); // placeholder for `name of function` offset
     }
 
     /**
      * Internal functions
      */
 
-    function isLabel(string memory _name) internal view returns (bool) {
+    /**
+     * @dev returns `true` if the name of `if/ifelse branch` or `function` exists in the labelPos list
+     * otherwise returns `false`
+     */
+    function _isLabel(string memory _name) internal view returns (bool) {
         return (labelPos[_name] > 0);
     }
 
-    function parseCode(IContext _ctx, string[] memory code) internal {
+    /**
+     * @dev Сonverts a list of commands to bytecode
+     */
+    function _parseCode(IContext _ctx, string[] memory code) internal {
         delete program;
         cmdIdx = 0;
         cmds = code;
@@ -146,21 +339,25 @@ contract Parser is IParser, Storage {
         _ctx.stack().clear();
 
         while (cmdIdx < cmds.length) {
-            parseOpcodeWithParams(_ctx);
+            _parseOpcodeWithParams(_ctx);
         }
 
         // console.logBytes(program);
         _ctx.setProgram(program);
     }
 
-    function parseOpcodeWithParams(IContext _ctx) internal {
-        string storage cmd = nextCmd();
+    /**
+     * @dev Updates the bytecode `program` in dependence on
+     * commands that were provided in `cmds` list
+     */
+    function _parseOpcodeWithParams(IContext _ctx) internal {
+        string storage cmd = _nextCmd();
         bytes1 opcode = _ctx.opCodeByName(cmd);
         require(
-            opcode != 0x0 || isLabel(cmd),
+            opcode != 0x0 || _isLabel(cmd),
             string(abi.encodePacked('Parser: "', cmd, '" command is unknown'))
         );
-        if (isLabel(cmd)) {
+        if (_isLabel(cmd)) {
             uint256 _branchLocation = program.length;
             bytes memory programBefore = program.slice(0, labelPos[cmd]);
             bytes memory programAfter = program.slice(labelPos[cmd] + 2, program.length);
@@ -179,19 +376,34 @@ contract Parser is IParser, Storage {
         // if no selector then opcode without params
     }
 
-    function nextCmd() internal returns (string storage) {
+    /**
+     * @dev Returns next commad from the cmds list, increases the
+     * command index `cmdIdx` by 1
+     * @return nextCmd string
+     */
+    function _nextCmd() internal returns (string storage) {
         return cmds[cmdIdx++];
     }
 
-    function parseVariable() internal {
-        program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(nextCmd()))));
+    /**
+     * @dev Updates previous `program` with the next provided command
+     */
+    function _parseVariable() internal {
+        program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(_nextCmd()))));
     }
 
-    function parseBranchOf(IContext _ctx, string memory baseOpName) internal {
-        program = bytes.concat(program, _ctx.branchCodes(baseOpName, nextCmd()));
+    /**
+     * @dev Updates previous `program` with the branch name, like `loadLocal` or `loadRemote`
+     * of command and its additional used type
+     */
+    function _parseBranchOf(IContext _ctx, string memory baseOpName) internal {
+        program = bytes.concat(program, _ctx.branchCodes(baseOpName, _nextCmd()));
     }
 
-    function parseAddress() internal {
-        program = bytes.concat(program, nextCmd().fromHex());
+    /**
+     * @dev Updates previous `program` with the address command that is a value
+     */
+    function _parseAddress() internal {
+        program = bytes.concat(program, _nextCmd().fromHex());
     }
 }

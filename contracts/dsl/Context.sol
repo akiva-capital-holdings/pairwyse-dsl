@@ -287,6 +287,7 @@ contract Context is IContext {
             IParser.asmSetLocalBool.selector,
             OpcodeLibNames.OtherOpcodes
         );
+        // TODO: as we can use setUint256 for setting variables, why do we need setLocalUint256?
         addOpcode(
             'setLocalUint256',
             0x2d,
