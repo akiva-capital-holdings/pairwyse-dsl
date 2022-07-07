@@ -7,7 +7,9 @@ import '@typechain/hardhat';
 import 'hardhat-gas-reporter';
 import 'solidity-coverage';
 import 'hardhat-contract-sizer';
+import * as tdly from '@tenderly/hardhat-tenderly';
 
+tdly.setup();
 dotenv.config();
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -53,6 +55,10 @@ const config: HardhatUserConfig = {
       url: process.env.ROPSTEN_URL || '',
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
+    tenderly: {
+      url: process.env.TENDERLY_FORK_URL || '',
+      chainId: 1,
+    },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS === 'true',
@@ -69,6 +75,13 @@ const config: HardhatUserConfig = {
     // disambiguatePaths: false,
     runOnCompile: process.env.CONTRACT_SIZER === 'true',
     // strict: true,
+  },
+  tenderly: {
+    project: 'project',
+    username: 'eugenefine',
+    forkNetwork: '1',
+    // privateVerification: false,
+    // deploymentsDir: "deployments"
   },
 };
 
