@@ -397,4 +397,145 @@ describe('End-to-end', () => {
       expect(await ctx.program()).to.equal(expectedProgram);
     });
   });
+
+  describe('Load local variables without loadLocal opcode', async () => {
+    it('set two local variables, one of them using in the next command', async () => {
+      const input = `
+        uint256 6 setUint256 A
+        (A + 2) setUint256 SUM
+        `;
+      const SIX = new Array(64).join('0') + 6;
+      const TWO = new Array(64).join('0') + 2;
+      const code = await preprocessor.callStatic.transform(ctxAddr, input);
+      const expectedCode = [
+        'uint256',
+        '6',
+        'setUint256',
+        'A',
+        'A',
+        'uint256',
+        '2',
+        '+',
+        'setUint256',
+        'SUM',
+      ];
+      expect(code).to.eql(expectedCode);
+
+      // to Parser
+      await app.parseCode(code);
+      const expectedProgram =
+        '0x' +
+        '1a' + // uint256
+        `${SIX}` + // 6
+        '2e' + // setUint256
+        '03783fac' + // A
+        '1b' + // loadlocal
+        '01' + // uint256
+        '03783fac' + // A
+        '1a' + // uint256
+        `${TWO}` +
+        '26' + // +
+        '2e' + // setUint256
+        '2df384fb'; // SUM
+      expect(await ctx.program()).to.equal(expectedProgram);
+    });
+
+    it('updates A variable', async () => {
+      const input = `
+        uint256 6 setUint256 A
+        (A + 2) setUint256 A
+        `;
+      const SIX = new Array(64).join('0') + 6;
+      const TWO = new Array(64).join('0') + 2;
+      const code = await preprocessor.callStatic.transform(ctxAddr, input);
+      const expectedCode = [
+        'uint256',
+        '6',
+        'setUint256',
+        'A',
+        'A',
+        'uint256',
+        '2',
+        '+',
+        'setUint256',
+        'A',
+      ];
+      expect(code).to.eql(expectedCode);
+
+      // to Parser
+      await app.parseCode(code);
+      const expectedProgram =
+        '0x' +
+        '1a' + // uint256
+        `${SIX}` + // 6
+        '2e' + // setUint256
+        '03783fac' + // A
+        '1b' + // loadlocal
+        '01' + // uint256
+        '03783fac' + // A
+        '1a' + // uint256
+        `${TWO}` +
+        '26' + // +
+        '2e' + // setUint256
+        '03783fac'; // SUM
+      expect(await ctx.program()).to.equal(expectedProgram);
+    });
+
+    it('reverts if try to set bool value instead of a number', async () => {
+      const input = `
+        true setUint256 A
+        (A + 2) setUint256 SUM
+        `;
+      const six = new Array(64).join('0') + 6;
+      const two = new Array(64).join('0') + 2;
+      const code = await preprocessor.callStatic.transform(ctxAddr, input);
+      const expectedCode = [
+        'true',
+        'setUint256',
+        'A',
+        'A',
+        'uint256',
+        '2',
+        '+',
+        'setUint256',
+        'SUM',
+      ];
+      expect(code).to.eql(expectedCode);
+
+      // to Parser
+      expect(app.parseCode(code)).revertedWith('Parser: "true" command is unknown');
+    });
+
+    it('reverts if try to get A value before if was stored', async () => {
+      const input = `
+        A setUint256 B
+        (B + 2) setUint256 SUM
+        `;
+      const six = new Array(64).join('0') + 6;
+      const two = new Array(64).join('0') + 2;
+      const code = await preprocessor.callStatic.transform(ctxAddr, input);
+      const expectedCode = ['A', 'setUint256', 'B', 'B', 'uint256', '2', '+', 'setUint256', 'SUM'];
+      expect(code).to.eql(expectedCode);
+
+      // to Parser
+      expect(app.parseCode(code)).revertedWith('Parser: "A" command is unknown');
+    });
+
+    it.skip('Use A value as bool, but it was stored as a number', async () => {
+      // TODO: should revert or use true value?
+      const SIX = new Array(64).join('0') + 6;
+      const input = `
+        uint256 6 setUint256 A
+        bool A
+        `;
+      const code = await preprocessor.callStatic.transform(ctxAddr, input);
+      const expectedCode = ['uint256', '6', 'setUint256', 'A', 'bool', 'A'];
+      expect(code).to.eql(expectedCode);
+
+      // to Parser
+      await app.parseCode(code);
+      const expectedProgram = '0x' + '1a' + `${SIX}` + '2e' + '03783fac' + '18' + '01';
+      expect(await ctx.program()).to.equal(expectedProgram);
+    });
+  });
 });
