@@ -7,16 +7,47 @@ import { StringUtils } from './libs/StringUtils.sol';
 
 // import 'hardhat/console.sol';
 
+/**
+ * @dev Preprocessor of DSL code
+ *
+ * One of the core contracts of the project. It can remove comments that were
+ * created by user in the DSL code string. It transforms the users DSL code string
+ * to the list of commands that can be used in a Parser contract.
+ *
+ * DSL code in postfix notation as
+ * user's string code -> Preprocessor -> each command is separated in the commands list
+ */
 contract Preprocessor {
     using StringUtils for string;
+    // uses for storing data for DSL functions
     struct FuncParameter {
+        // the type of variable that provides for the function
         string _type;
+        // the name of variable that will be generated in denedce on the function name
         string nameOfVariable;
+        // the value for provided variable
         string value;
     }
     mapping(uint256 => FuncParameter) parameters;
-    string[] internal result;
+    string[] internal result; // stores the list of commands after infixToPostfix transformation
 
+    /**
+     * @dev The main function that transforms the user's DSL code string to the list of commands.
+     *
+     * Example:
+     * The user's DSL code string is
+     * ```
+     * uint256 6 setUint256 A
+     * ```
+     * The end result after executing a `transform()` function is
+     * ```
+     * ['uint256', '6', 'setUint256', 'A']
+     * ```
+     *
+     * @param _ctx is a context contract
+     * @param _program is a user's DSL code string
+     * @return the list of commands that storing `result`
+     */
     function transform(IContext _ctx, string memory _program) external returns (string[] memory) {
         Stack stack = new Stack();
         string[] memory code = split(_program);
@@ -25,6 +56,16 @@ contract Preprocessor {
 
     /**
      * @dev Searches the comments in the program and removes comment lines
+     * Example:
+     * The user's DSL code string is
+     * ```
+     *  bool true
+     *  // uint256 2 * uint256 5
+     * ```
+     * The end result after executing a `cleanString()` function is
+     * ```
+     * bool true
+     * ```
      * @param _program is a current program string
      * @return _cleanedProgram new string program that contains only clean code without comments
      */
@@ -70,11 +111,30 @@ contract Preprocessor {
         }
     }
 
+    /**
+     * @dev Splits the user's DSL code string to the list of commands
+     * avoiding several symbols:
+     * - removes additional and useless symbols as ' ', `\\n`
+     * - defines and adding help 'end' symbol for the ifelse condition
+     * - defines and cleans the code from `{` and `}` symbols
+     *
+     * Example:
+     * The user's DSL code string is
+     * ```
+     * (loadLocal uint256 TIMESTAMP >    loadLocal uint256 INIT)
+     * ```
+     * The end result after executing a `split()` function is
+     * ```
+     * ['loadLocal', 'uint256', 'TIMESTAMP', '>', 'loadLocal', 'uint256', 'INIT']
+     * ```
+     *
+     * @param _program is a user's DSL code string
+     * @return the list of commands that storing in `result`
+     */
     function split(string memory _program) public returns (string[] memory) {
         delete result;
         string memory buffer;
 
-        // console.log("program len: %s", program.length());
         for (uint256 i = 0; i < _program.length(); i++) {
             string memory char = _program.char(i);
 
@@ -85,7 +145,6 @@ contract Preprocessor {
                 continue;
             }
 
-            // console.log("char: %s", char);
             if (char.equal(' ') || char.equal('\n') || char.equal('(') || char.equal(')')) {
                 if (buffer.length() > 0) {
                     result.push(buffer);
@@ -108,6 +167,25 @@ contract Preprocessor {
         return result;
     }
 
+    /**
+     * @dev Rebuild and transforms the user's DSL commands (can be prepared by
+     * the `split()` function) to the list of commands.
+     *
+     * Example:
+     * The user's DSL command contains
+     * ```
+     * ['1', '+', '2']
+     * ```
+     * The result after executing a `infixToPostfix()` function is
+     * ```
+     * ['uint256', '1', 'uint256', '2', '+']
+     * ```
+     *
+     * @param _ctx is a context contract
+     * @param _code is a DSL command list
+     * @return _stack uses for getting and storing temporary data to
+     * rebuild the list of commands
+     */
     function infixToPostfix(
         IContext _ctx,
         string[] memory _code,
@@ -140,12 +218,10 @@ contract Preprocessor {
             }
 
             if (_isOperator(_ctx, chunk)) {
-                // console.log("%s is an operator", chunk);
                 while (
                     _stack.length() > 0 &&
                     _ctx.opsPriors(chunk) <= _ctx.opsPriors(_stack.seeLast().getString())
                 ) {
-                    // console.log("result push:", _stack.seeLast().getString());
                     result.push(_stack.pop().getString());
                 }
                 _pushStringToStack(_stack, chunk);
@@ -153,7 +229,6 @@ contract Preprocessor {
                 _pushStringToStack(_stack, chunk);
             } else if (chunk.equal(')')) {
                 while (!_stack.seeLast().getString().equal('(')) {
-                    // console.log("result push: %s", _stack.seeLast().getString());
                     result.push(_stack.pop().getString());
                 }
                 _stack.pop(); // remove '(' that is left
@@ -181,7 +256,6 @@ contract Preprocessor {
         }
 
         while (_stack.length() > 0) {
-            // console.log('result push: %s', _stack.seeLast().getString());
             result.push(_stack.pop().getString());
         }
 

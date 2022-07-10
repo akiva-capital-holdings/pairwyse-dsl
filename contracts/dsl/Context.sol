@@ -11,27 +11,50 @@ import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
 
 // import 'hardhat/console.sol';
 
-// TODO: may be wise to split Context into:
-//      contract A (holds opCodeByName, selectorByOpcode, and asmSelectors)
-//      contract B (holds particular state variables: stack, program, pc, appAddress, msgSender)
+/**
+ * @dev Preprocessor of DSL code
+ *
+ * One of the core contracts of the project. It contains opcodes and aliases for commands.
+ * It provides additional information about program state and point counter (pc).
+ * Each of command that provides from the Parser contract is processed in the Context contract.
+ *
+ * TODO:
+ * 1. may be wise to split Context into:
+ *      contract A (holds opCodeByName, selectorByOpcode, and asmSelectors)
+ *      contract B (holds particular state variables: stack, program, pc, appAddress, msgSender)
+ * 2. addOpcode => should be internal `_addOpcode` and have a separated protected function
+ *   (addOpcode) that has public or external modifier
+ */
 contract Context is IContext {
+    // stack is used by Opcode libraries like `libs/opcodes/*`
+    // to store and analyze values and removing after usage
     Stack public stack;
-    bytes public program;
-    uint256 public pc;
+    bytes public program; // the bytecode of a program that provides by Parser (will be removed)
+    uint256 public pc; // poin counter shows what the part of command are in proccess now
     uint256 public nextpc;
     address public appAddress;
     address public msgSender;
-    address public comparatorOpcodes;
-    address public logicalOpcodes;
-    address public setOpcodes;
-    address public otherOpcodes;
+    address public comparatorOpcodes; // an address for ComparatorOpcodes library, can be changed
+    address public logicalOpcodes; // an address for LogicalOpcodes library, can be changed
+    address public setOpcodes; // an address for SetOpcodes library (AND, OR, XOR), can be changed
+    address public otherOpcodes; // an address for OtherOpcodes library, can be changed
     uint256 public msgValue;
 
-    mapping(string => bytes1) public opCodeByName; // name => hex
-    mapping(bytes1 => bytes4) public selectorByOpcode;
+    mapping(string => bytes1) public opCodeByName; // name => opcode (hex)
+    mapping(bytes1 => bytes4) public selectorByOpcode; // opcode (hex) => selector (hex)
+
+    // emun OpcodeLibNames {...} from IContext
+    // Depending on the hex value, it will take the proper
+    // library from the OpcodeLibNames enum check the library for each opcode
+    // where the opcode adds to the Context contract
     mapping(bytes1 => OpcodeLibNames) public opcodeLibNameByOpcode;
-    mapping(string => bytes4) public asmSelectors;
-    mapping(string => uint256) public opsPriors;
+
+    // if the command is complex and uses `asm functions` then it will store
+    // the selector of the usage function from the Parser for that opcode.
+    // Each opcode that was added to the context should contain the selector otherwise
+    // it should be set by 0x0
+    mapping(string => bytes4) public asmSelectors; // command => selector
+    mapping(string => uint256) public opsPriors; // stores the priority for operators
     string[] public operators;
 
     // baseOpName -> branchCode -> selector
@@ -54,7 +77,7 @@ contract Context is IContext {
 
     function initOpcodes() external {
         // Opcodes for operators
-        addOpcodeForOperator(
+        _addOpcodeForOperator(
             '==',
             0x01,
             ComparatorOpcodes.opEq.selector,
@@ -62,7 +85,7 @@ contract Context is IContext {
             OpcodeLibNames.ComparatorOpcodes,
             1
         );
-        addOpcodeForOperator(
+        _addOpcodeForOperator(
             '!=',
             0x14,
             ComparatorOpcodes.opNotEq.selector,
@@ -70,7 +93,7 @@ contract Context is IContext {
             OpcodeLibNames.ComparatorOpcodes,
             1
         );
-        addOpcodeForOperator(
+        _addOpcodeForOperator(
             '<',
             0x03,
             ComparatorOpcodes.opLt.selector,
@@ -78,7 +101,7 @@ contract Context is IContext {
             OpcodeLibNames.ComparatorOpcodes,
             1
         );
-        addOpcodeForOperator(
+        _addOpcodeForOperator(
             '>',
             0x04,
             ComparatorOpcodes.opGt.selector,
@@ -86,7 +109,7 @@ contract Context is IContext {
             OpcodeLibNames.ComparatorOpcodes,
             1
         );
-        addOpcodeForOperator(
+        _addOpcodeForOperator(
             '<=',
             0x06,
             ComparatorOpcodes.opLe.selector,
@@ -94,7 +117,7 @@ contract Context is IContext {
             OpcodeLibNames.ComparatorOpcodes,
             1
         );
-        addOpcodeForOperator(
+        _addOpcodeForOperator(
             '>=',
             0x07,
             ComparatorOpcodes.opGe.selector,
@@ -102,7 +125,7 @@ contract Context is IContext {
             OpcodeLibNames.ComparatorOpcodes,
             1
         );
-        addOpcodeForOperator(
+        _addOpcodeForOperator(
             'swap',
             0x05,
             ComparatorOpcodes.opSwap.selector,
@@ -110,7 +133,7 @@ contract Context is IContext {
             OpcodeLibNames.ComparatorOpcodes,
             3
         );
-        addOpcodeForOperator(
+        _addOpcodeForOperator(
             '!',
             0x02,
             ComparatorOpcodes.opNot.selector,
@@ -119,7 +142,7 @@ contract Context is IContext {
             4
         );
 
-        addOpcodeForOperator(
+        _addOpcodeForOperator(
             'and',
             0x12,
             SetOpcodes.opAnd.selector,
@@ -127,7 +150,7 @@ contract Context is IContext {
             OpcodeLibNames.SetOpcodes,
             3
         );
-        addOpcodeForOperator(
+        _addOpcodeForOperator(
             'xor',
             0x11,
             SetOpcodes.opXor.selector,
@@ -135,7 +158,7 @@ contract Context is IContext {
             OpcodeLibNames.SetOpcodes,
             2
         );
-        addOpcodeForOperator(
+        _addOpcodeForOperator(
             'or',
             0x13,
             SetOpcodes.opOr.selector,
@@ -144,7 +167,7 @@ contract Context is IContext {
             2
         );
 
-        addOpcodeForOperator(
+        _addOpcodeForOperator(
             '+',
             0x26,
             SetOpcodes.opAdd.selector,
@@ -152,7 +175,7 @@ contract Context is IContext {
             OpcodeLibNames.SetOpcodes,
             2
         );
-        addOpcodeForOperator(
+        _addOpcodeForOperator(
             '-',
             0x27,
             SetOpcodes.opSub.selector,
@@ -160,7 +183,7 @@ contract Context is IContext {
             OpcodeLibNames.SetOpcodes,
             2
         );
-        addOpcodeForOperator(
+        _addOpcodeForOperator(
             '*',
             0x28,
             SetOpcodes.opMul.selector,
@@ -168,7 +191,7 @@ contract Context is IContext {
             OpcodeLibNames.SetOpcodes,
             3
         );
-        addOpcodeForOperator(
+        _addOpcodeForOperator(
             '/',
             0x29,
             SetOpcodes.opDiv.selector,
@@ -325,6 +348,15 @@ contract Context is IContext {
         );
 
         // Complex Opcodes with sub Opcodes (branches)
+
+        /*
+            Types usage examples of loadLocal and loadRemote commands:
+                loadLocal uint256 NUMBER_STORED_VALUE
+                loadRemote bool ADDRESS_STORED_VALUE 9A676e781A523b5d0C0e43731313A708CB607508
+
+            Where `*_STORED_VALUE` parameters can be set by using `setLocalBool`, `setLocalUint256`
+            or `setUint256` opcodes
+        */
         string memory name = 'loadLocal';
         addOpcode(
             name,
@@ -333,10 +365,10 @@ contract Context is IContext {
             IParser.asmLoadLocal.selector,
             OpcodeLibNames.OtherOpcodes
         );
-        addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadLocalUint256.selector);
-        addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadLocalBool.selector);
-        addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadLocalAddress.selector);
-        addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadLocalBytes32.selector);
+        _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadLocalUint256.selector);
+        _addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadLocalBool.selector);
+        _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadLocalAddress.selector);
+        _addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadLocalBytes32.selector);
 
         name = 'loadRemote';
         addOpcode(
@@ -346,35 +378,72 @@ contract Context is IContext {
             IParser.asmLoadRemote.selector,
             OpcodeLibNames.OtherOpcodes
         );
-        addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadRemoteUint256.selector);
-        addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadRemoteBool.selector);
-        addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
-        addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadRemoteBytes32.selector);
+        _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadRemoteUint256.selector);
+        _addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadRemoteBool.selector);
+        _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
+        _addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadRemoteBytes32.selector);
 
         // Aliases
+
+        /*
+            As the blockTimestamp is the current opcode the user can use TIME alias to
+            simplify the DSL code string.
+            Example of the base command:
+                `blockTimestamp < loadLocal uint256 FUND_INVESTMENT_DATE`
+            Example of the alias of the base command:
+                `TIME < loadLocal uint256 FUND_INVESTMENT_DATE`
+        */
         _addAlias('TIME', 'blockTimestamp');
     }
 
+    /**
+     * @dev Returns the amount of stored operators
+     */
     function operatorsLen() external view returns (uint256) {
         return operators.length;
     }
 
+    /**
+     * @dev Sets the new address of the ComparatorOpcodes library
+     * @param _comparatorOpcodes is the new address of the library
+     */
     function setComparatorOpcodesAddr(address _comparatorOpcodes) public {
         comparatorOpcodes = _comparatorOpcodes;
     }
 
+    /**
+     * @dev Sets the new address of the LogicalOpcodes library
+     * @param _logicalOpcodes is the new address of the library
+     */
     function setLogicalOpcodesAddr(address _logicalOpcodes) public {
         logicalOpcodes = _logicalOpcodes;
     }
 
+    /**
+     * @dev Sets the new address of the SetOpcodes library
+     * @param _setOpcodes is the new address of the library
+     */
     function setSetOpcodesAddr(address _setOpcodes) public {
         setOpcodes = _setOpcodes;
     }
 
+    /**
+     * @dev Sets the new address of the OtherOpcodes library
+     * @param _otherOpcodes is the new address of the library
+     */
     function setOtherOpcodesAddr(address _otherOpcodes) public {
         otherOpcodes = _otherOpcodes;
     }
 
+    /**
+     * @dev Adds the opcode for the DSL command
+     * @param _name is the name of the command
+     * @param _opcode is the opcode of the command
+     * @param _opSelector is the selector of the function for this opcode
+       from onle of library in `contracts/libs/opcodes/*`
+     * @param _asmSelector is the selector of the function from the Parser for that opcode
+     * @param _libName is the name of library that is used fot the opcode
+     */
     function addOpcode(
         string memory _name,
         bytes1 _opcode,
@@ -393,7 +462,111 @@ contract Context is IContext {
         asmSelectors[_name] = _asmSelector;
     }
 
-    function addOpcodeForOperator(
+    /**
+     * @dev ATTENTION! Works only during development! Will be removed.
+     * Sets the final version of the program.
+     *
+     * @param _data is the bytecode of the full program
+     */
+    function setProgram(bytes memory _data) public {
+        program = _data;
+        setPc(0);
+    }
+
+    /**
+     * @dev Returns the slice of the current program using the index and the step values
+     *
+     * @param _index is a last byte of the slice
+     * @param _step is the step of the slice
+     * @return the slice of stored bytecode in the `program` variable
+     */
+    function programAt(uint256 _index, uint256 _step) public view returns (bytes memory) {
+        bytes memory data = program;
+        return this.programSlice(data, _index, _step);
+    }
+
+    /**
+     * @dev Returns the slice of the program using a step value
+     *
+     * @param _payload is bytecode of program that will be sliced
+     * @param _index is a last byte of the slice
+     * @param _step is the step of the slice
+     * @return the slice of provided _payload bytecode
+     */
+    function programSlice(
+        bytes calldata _payload,
+        uint256 _index,
+        uint256 _step
+    ) public pure returns (bytes memory) {
+        require(_payload.length > _index, 'Context: slicing out of range');
+        return _payload[_index:_index + _step];
+    }
+
+    /**
+     * @dev Sets the current point counter for the program
+     *
+     * @param _pc is the new value of the pc
+     */
+    function setPc(uint256 _pc) public {
+        pc = _pc;
+    }
+
+    /**
+     * @dev Sets the next point counter for the program
+     *
+     * @param _nextpc is the new value of the nextpc
+     */
+    function setNextPc(uint256 _nextpc) public {
+        nextpc = _nextpc;
+    }
+
+    /**
+     * @dev Increases the current point counter with the provided value and saves the sum
+     *
+     * @param _val is the new value that is used for summing it and the current pc value
+     */
+    function incPc(uint256 _val) public {
+        pc += _val;
+    }
+
+    /**
+     * @dev Sets/Updates application Address by the provided value
+     *
+     * @param _addr is the new application Address, can not be a zero address
+     */
+    function setAppAddress(address _addr) public nonZeroAddress(_addr) {
+        appAddress = _addr;
+    }
+
+    /**
+     * @dev Sets/Updates msgSender by the provided value
+     *
+     * @param _msgSender is the new msgSender
+     */
+    function setMsgSender(address _msgSender) public nonZeroAddress(_msgSender) {
+        msgSender = _msgSender;
+    }
+
+    /**
+     * @dev Sets/Updates msgValue by the provided value
+     *
+     * @param _msgValue is the new msgValue
+     */
+    function setMsgValue(uint256 _msgValue) public {
+        msgValue = _msgValue;
+    }
+
+    /**
+     * @dev Adds the opcode for the operator
+     * @param _name is the name of the operator
+     * @param _opcode is the opcode of the operator
+     * @param _opSelector is the selector of the function for this operator
+       from onle of library in `contracts/libs/opcodes/*`
+     * @param _asmSelector is the selector of the function from the Parser for this operator
+     * @param _libName is the name of library that is used fot the operator
+     * @param _priority is the priority for the opcode
+     */
+    function _addOpcodeForOperator(
         string memory _name,
         bytes1 _opcode,
         bytes4 _opSelector,
@@ -402,10 +575,18 @@ contract Context is IContext {
         uint256 _priority
     ) internal {
         addOpcode(_name, _opcode, _opSelector, _asmSelector, _libName);
-        addOperator(_name, _priority);
+        _addOperator(_name, _priority);
     }
 
-    function addOpcodeBranch(
+    /**
+     * @dev As branched (complex) DSL commands have their own name, types and values the
+     * _addOpcodeBranch provides adding opcodes using additional internal branch opcodes.
+     * @param _baseOpName is the name of the command
+     * @param _branchName is the type for the value
+     * @param _branchCode is the code for the certain name and its type
+     * @param _selector is the selector of the function from the Parser for this command
+     */
+    function _addOpcodeBranch(
         string memory _baseOpName,
         string memory _branchName,
         bytes1 _branchCode,
@@ -421,59 +602,25 @@ contract Context is IContext {
         branchCodes[_baseOpName][_branchName] = _branchCode;
     }
 
-    // Note: bigger number => bigger priority
-    function addOperator(string memory _op, uint256 _priority) internal {
+    /**
+     * @dev Adds the operator by its priority
+     * Note: bigger number => bigger priority
+     *
+     * @param _op is the name of the operator
+     * @param _priority is the priority of the operator
+     */
+    function _addOperator(string memory _op, uint256 _priority) internal {
         opsPriors[_op] = _priority;
         operators.push(_op);
     }
 
     /**
      * @dev Adds an alias to the already existing DSL command
+     *
+     * @param _baseCmd is the name of the command
+     * @param _alias is the alias command name for the base command
      */
     function _addAlias(string memory _baseCmd, string memory _alias) internal {
         aliases[_alias] = _baseCmd;
-    }
-
-    function setProgram(bytes memory _data) public {
-        program = _data;
-        setPc(0);
-    }
-
-    function programAt(uint256 _index, uint256 _step) public view returns (bytes memory) {
-        bytes memory data = program;
-        return this.programSlice(data, _index, _step);
-    }
-
-    function programSlice(
-        bytes calldata _payload,
-        uint256 _index,
-        uint256 _step
-    ) public pure returns (bytes memory) {
-        require(_payload.length > _index, 'Context: slicing out of range');
-        return _payload[_index:_index + _step];
-    }
-
-    function setPc(uint256 _pc) public {
-        pc = _pc;
-    }
-
-    function setNextPc(uint256 _nextpc) public {
-        nextpc = _nextpc;
-    }
-
-    function incPc(uint256 _val) public {
-        pc += _val;
-    }
-
-    function setAppAddress(address _addr) public nonZeroAddress(_addr) {
-        appAddress = _addr;
-    }
-
-    function setMsgSender(address _msgSender) public nonZeroAddress(_msgSender) {
-        msgSender = _msgSender;
-    }
-
-    function setMsgValue(uint256 _msgValue) public {
-        msgValue = _msgValue;
     }
 }
