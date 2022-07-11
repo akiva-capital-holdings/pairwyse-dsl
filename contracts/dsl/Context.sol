@@ -16,7 +16,7 @@ import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
  *
  * One of the core contracts of the project. It contains opcodes and aliases for commands.
  * It provides additional information about program state and point counter (pc).
- * Each of command that provides from the Parser contract is processed in the Context contract.
+ * Each of command that is provided by the Parser contract is processed in the Context contract.
  *
  * TODO:
  * 1. may be wise to split Context into:
@@ -29,8 +29,8 @@ contract Context is IContext {
     // stack is used by Opcode libraries like `libs/opcodes/*`
     // to store and analyze values and removing after usage
     Stack public stack;
-    bytes public program; // the bytecode of a program that provides by Parser (will be removed)
-    uint256 public pc; // poin counter shows what the part of command are in proccess now
+    bytes public program; // the bytecode of a program that is provided by Parser (will be removed)
+    uint256 public pc; // point counter shows what the part of command are in proccess now
     uint256 public nextpc;
     address public appAddress;
     address public msgSender;
