@@ -10,10 +10,10 @@ contract ContextMock is Context {
         bytes1 _branchCode,
         bytes4 _selector
     ) external {
-        addOpcodeBranch(_baseOpName, _branchName, _branchCode, _selector);
+        _addOpcodeBranch(_baseOpName, _branchName, _branchCode, _selector);
     }
 
     function addOperatorExt(string memory _op, uint256 _priority) external {
-        addOperator(_op, _priority);
+        _addOperator(_op, _priority);
     }
 }

@@ -72,6 +72,8 @@ interface IContext {
 
     function setOtherOpcodesAddr(address _opcodes) external;
 
+    // TODO: can we remove these comments?
+
     // function addOpcode(
     //     string memory _name,
     //     bytes1 _opcode,
@@ -80,7 +82,7 @@ interface IContext {
     //     OpcodeLibNames _libName
     // ) external;
 
-    // function addOpcodeForOperator(
+    // function _addOpcodeForOperator(
     //     string memory _name,
     //     bytes1 _opcode,
     //     bytes4 _opSelector,
@@ -89,7 +91,7 @@ interface IContext {
     //     uint256 _priority
     // ) external;
 
-    // function addOpcodeBranch(
+    // function _addOpcodeBranch(
     //     string memory _baseOpName,
     //     string memory _branchName,
     //     bytes1 _branchCode,

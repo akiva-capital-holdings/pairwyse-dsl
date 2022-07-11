@@ -14,7 +14,8 @@ import { Preprocessor } from './Preprocessor.sol';
 /**
  * @dev Parser of DSL code
  *
- * One of the core contracts of the project. It parses DSL expression that comes from user. After parsing code in Parser
+ * One of the core contracts of the project. It parses DSL expression
+ * that comes from user. After parsing code in Parser
  * a bytecode of the DSL program is generated as stored in Context
  *
  * DSL code in postfix notation as string -> Parser -> raw bytecode

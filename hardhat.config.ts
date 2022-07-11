@@ -12,6 +12,8 @@ import * as tdly from '@tenderly/hardhat-tenderly';
 tdly.setup();
 dotenv.config();
 
+console.log({ TENDERLY_FORK_URL: process.env.TENDERLY_FORK_URL });
+
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
 task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
