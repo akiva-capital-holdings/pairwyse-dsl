@@ -4,6 +4,7 @@ coverage
 coverage.json
 typechain
 *.log
+deployments/localhost_*
 
 #Hardhat files
 cache
