@@ -9,7 +9,11 @@ import 'solidity-coverage';
 import 'hardhat-contract-sizer';
 import * as tdly from '@tenderly/hardhat-tenderly';
 
-tdly.setup();
+// Skip Tenderly setup in GitHub Actions as it causes workflow failure
+console.log(process.env.GITHUB_ACTIONS);
+if (!process.env.GITHUB_ACTIONS) {
+  tdly.setup();
+}
 dotenv.config();
 
 // This is a sample Hardhat task. To learn how to create your own go to
