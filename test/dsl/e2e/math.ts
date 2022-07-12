@@ -1,37 +1,14 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
-import { App, Context, Parser, Stack, StackValue__factory } from '../../../typechain';
+import { App, Context, Parser } from '../../../typechain';
 import { hex4Bytes } from '../../utils/utils';
 
-describe('DSL: math', () => {
-  let stack: Stack;
+describe.only('DSL: math', () => {
   let ctx: Context;
   let app: App;
   let parser: Parser;
-  let appAddrHex: string;
-  let StackValue: StackValue__factory;
-  let NEXT_MONTH: number;
-  let PREV_MONTH: number;
-  let lastBlockTimestamp: number;
-  // TODO: does js have a normal storage for a huge numbers?
-  // let max256 = Math.pow(2, 256) - 1;
-  // let max256 = ethers.BigNumber.from(`${max256}`);
-  let max256 = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
 
   before(async () => {
-    lastBlockTimestamp = (
-      await ethers.provider.getBlock(
-        // eslint-disable-next-line no-underscore-dangle
-        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
-      )
-    ).timestamp;
-
-    NEXT_MONTH = lastBlockTimestamp + 60 * 60 * 24 * 30;
-    PREV_MONTH = lastBlockTimestamp - 60 * 60 * 24 * 30;
-
-    // Create StackValue Factory instance
-    StackValue = await ethers.getContractFactory('StackValue');
-
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
     const comparatorOpcodesLib = await (
@@ -79,16 +56,10 @@ describe('DSL: math', () => {
     await ctx.setSetOpcodesAddr(setOpcodesLib.address);
     await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
 
-    // Create Stack instance
-    const StackCont = await ethers.getContractFactory('Stack');
-    const contextStackAddress = await ctx.stack();
-    stack = StackCont.attach(contextStackAddress);
-
     // Deploy Application
     app = await (
       await ethers.getContractFactory('App', { libraries: { Executor: executorLib.address } })
     ).deploy(parser.address, ctx.address);
-    appAddrHex = app.address.slice(2);
   });
 
   describe('division case', () => {
@@ -171,54 +142,56 @@ describe('DSL: math', () => {
   });
 
   describe('overflow case', () => {
-    let preMax256 =
-      '115792089237316195423570985008687907853269984665640564039457584007913129639934';
+    const MAX_UINT256 = ethers.constants.MaxUint256;
+    const PRE_MAX_UINT256 = MAX_UINT256.sub(1);
 
     it('can not be added a maximum uint256 value to a simple one', async () => {
-      await app.parse(`${max256} + 1`);
+      await app.parse(`${MAX_UINT256} + 1`);
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
 
-      await app.parse(`uint256 ${max256} + uint256 1`);
+      await app.parse(`uint256 ${MAX_UINT256} + uint256 1`);
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
     });
 
     it('can not to be added a simple uint256 value to a maximum one', async () => {
-      await app.parse(`1 + ${max256}`);
+      await app.parse(`1 + ${MAX_UINT256}`);
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
 
-      await app.parse(`uint256 1 + uint256 ${max256}`);
+      await app.parse(`uint256 1 + uint256 ${MAX_UINT256}`);
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
     });
 
     it('can not to be added a maximum uint256 value to the maximum one', async () => {
-      await app.parse(`${max256} + ${max256}`);
+      await app.parse(`${MAX_UINT256} + ${MAX_UINT256}`);
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
 
-      await app.parse(`uint256 ${max256} + uint256 ${max256}`);
+      await app.parse(`uint256 ${MAX_UINT256} + uint256 ${MAX_UINT256}`);
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
     });
 
     it('can be added a pre maximum uint256 value to the simple one', async () => {
-      await app.parse(`${preMax256} + 1`);
+      await app.parse(`${PRE_MAX_UINT256} + 1`);
       await app.execute();
 
-      await app.parse(`uint256 ${preMax256} + uint256 1`);
+      await app.parse(`uint256 ${PRE_MAX_UINT256} + uint256 1`);
       await app.execute();
     });
 
     it('can be added a simple uint256 value to pre maximum one', async () => {
-      await app.parse(`1 + ${preMax256}`);
+      await app.parse(`1 + ${PRE_MAX_UINT256}`);
       await app.execute();
 
-      await app.parse(`uint256 1 + uint256 ${preMax256}`);
+      await app.parse(`uint256 1 + uint256 ${PRE_MAX_UINT256}`);
       await app.execute();
     });
 
-    it('reverts if add a pre maximum uint256 value to the simple one that is bigger then uint256', async () => {
-      await app.parse(`${preMax256} + 2`);
+    // eslint-disable-next-line no-multi-str
+    it('reverts if add a pre maximum uint256 value to the simple one that is bigger then \
+uint256', async () => {
+      await app.parse(`${PRE_MAX_UINT256} + 2`);
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
 
-      await app.parse(`uint256 ${preMax256} + uint256 2`);
+      await app.parse(`uint256 ${PRE_MAX_UINT256} + uint256 2`);
       await expect(app.execute()).to.be.revertedWith('Executor: call not success');
     });
 

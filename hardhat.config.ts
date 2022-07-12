@@ -32,7 +32,7 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  // defaultNetwork: 'tenderly',
+  defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
       chainId: 1337,
