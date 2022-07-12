@@ -9,7 +9,7 @@ import { LogicalOpcodes } from './libs/opcodes/LogicalOpcodes.sol';
 import { SetOpcodes } from './libs/opcodes/SetOpcodes.sol';
 import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Preprocessor of DSL code
