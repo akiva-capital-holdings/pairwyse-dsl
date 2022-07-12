@@ -7,9 +7,9 @@ import '@typechain/hardhat';
 import 'hardhat-gas-reporter';
 import 'solidity-coverage';
 import 'hardhat-contract-sizer';
-// import * as tdly from '@tenderly/hardhat-tenderly';
+import * as tdly from '@tenderly/hardhat-tenderly';
 
-// tdly.setup();
+tdly.setup();
 dotenv.config();
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -22,9 +22,6 @@ task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
   }
 });
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
-
 const config: HardhatUserConfig = {
   solidity: {
     version: '0.8.11',
@@ -35,7 +32,7 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  defaultNetwork: 'tenderly',
+  // defaultNetwork: 'tenderly',
   networks: {
     hardhat: {
       chainId: 1337,
@@ -72,18 +69,13 @@ const config: HardhatUserConfig = {
     timeout: 1e9,
   },
   contractSizer: {
-    // alphaSort: true,
-    // disambiguatePaths: false,
     runOnCompile: process.env.CONTRACT_SIZER === 'true',
-    // strict: true,
   },
-  // tenderly: {
-  //   project: 'project',
-  //   username: 'eugenefine',
-  //   forkNetwork: '1',
-  //   // privateVerification: false,
-  //   // deploymentsDir: "deployments"
-  // },
+  tenderly: {
+    project: 'project',
+    username: 'eugenefine',
+    forkNetwork: '1',
+  },
 };
 
 export default config;
