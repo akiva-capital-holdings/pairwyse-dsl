@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { StringUtilsMock } from '../../../typechain';
 
-describe('StringUtils', () => {
+describe.skip('StringUtils', () => {
   let app: StringUtilsMock;
 
   before(async () => {
