@@ -42,7 +42,7 @@ const config: HardhatUserConfig = {
     },
     localhost: {
       timeout: 1e9,
-      url: 'http://127.0.0.1:7545',
+      url: 'http://127.0.0.1:8545',
     },
     remoteGanache: {
       url: process.env.REMOTE_GANACHE_URL || '',
