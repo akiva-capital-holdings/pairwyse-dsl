@@ -28,4 +28,4 @@ jobs:
         env:
           TENDERLY_FORK_URL: ${{ secrets.TENDERLY_FORK_URL }}
       - name: Running tests & test coverage
-        run: yarn test
+        run: yarn coverage
