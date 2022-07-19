@@ -3,8 +3,7 @@ import { expect } from 'chai';
 import { App, Context, Parser } from '../../../typechain';
 import { hex4Bytes } from '../../utils/utils';
 
-// TODO: fix
-describe.skip('DSL: math', () => {
+describe('DSL: math', () => {
   let ctx: Context;
   let app: App;
   let parser: Parser;

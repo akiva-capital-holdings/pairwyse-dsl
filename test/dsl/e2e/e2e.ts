@@ -506,14 +506,11 @@ describe('End-to-end', () => {
       expect(app.parseCode(code)).revertedWith('Parser: "true" command is unknown');
     });
 
-    // TODO: fix
-    it.skip('reverts if try to get A value before if was stored', async () => {
+    it('reverts if try to get A value before if was stored', async () => {
       const input = `
         A setUint256 B
         (B + 2) setUint256 SUM
         `;
-      const six = new Array(64).join('0') + 6;
-      const two = new Array(64).join('0') + 2;
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
       const expectedCode = ['A', 'setUint256', 'B', 'B', 'uint256', '2', '+', 'setUint256', 'SUM'];
       expect(code).to.eql(expectedCode);
@@ -522,7 +519,7 @@ describe('End-to-end', () => {
       expect(app.parseCode(code)).revertedWith('Parser: "A" command is unknown');
     });
 
-    it.skip('Use A value as bool, but it was stored as a number', async () => {
+    it('Use A value as bool, but it was stored as a number', async () => {
       // TODO: should revert or use true value?
       const SIX = new Array(64).join('0') + 6;
       const input = `
@@ -535,7 +532,7 @@ describe('End-to-end', () => {
 
       // to Parser
       await app.parseCode(code);
-      const expectedProgram = '0x' + '1a' + `${SIX}` + '2e' + '03783fac' + '18' + '01';
+      const expectedProgram = `0x1a${SIX}2e03783fac1800`;
       expect(await ctx.program()).to.equal(expectedProgram);
     });
   });

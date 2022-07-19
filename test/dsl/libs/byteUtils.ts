@@ -4,9 +4,9 @@ import { hex4Bytes } from '../../utils/utils';
 
 import { ByteUtilsMock } from '../../../typechain';
 
-describe.skip('byteUtils', () => {
+describe('byteUtils', () => {
   let app: ByteUtilsMock;
-  const data = hex4Bytes('0x000000000111'); // 0xb9fbdd9200000000000000000000000000000000000000000000000000000000
+  const data = hex4Bytes('0x000000000111');
 
   before(async () => {
     const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();

@@ -4,7 +4,7 @@ import { ethers } from 'hardhat';
 import { StackType } from '../../../src/interfaces';
 import { StackValue } from '../../../typechain';
 
-describe.skip('StackValue', () => {
+describe('StackValue', () => {
   let stackValue: StackValue;
   let first: SignerWithAddress;
 
