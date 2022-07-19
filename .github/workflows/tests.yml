@@ -12,19 +12,25 @@ jobs:
   test_all:
     name: Run all tests & coverage
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
         node-version: [16.x]
+
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - run: yarn
+
+      - name: Install dependencies
+      - run: yarn --frozen-lockfile
+
       - name: Build artifacts
         run: yarn build
-        env:
-          TENDERLY_FORK_URL: ${{ secrets.TENDERLY_FORK_URL }}
+        # env:
+        #   TENDERLY_FORK_URL: ${{ secrets.TENDERLY_FORK_URL }}
+
       - name: Running tests & test coverage
         run: yarn test
