@@ -10,9 +10,9 @@ import 'hardhat-contract-sizer';
 // import * as tdly from '@tenderly/hardhat-tenderly';
 
 // Enable Tenderly (v. 1.1.4) setup only if needed as it causes tests to fall
-if (process.env.DEPLOY_TO_TENDERLY === 'true') {
-  tdly.setup();
-}
+// if (process.env.DEPLOY_TO_TENDERLY === 'true') {
+//   tdly.setup();
+// }
 dotenv.config();
 
 const {
@@ -25,9 +25,9 @@ const {
   REPORT_GAS,
   ETHERSCAN_API_KEY,
   CONTRACT_SIZER,
-  TENDERLY_PROJECT,
-  TENDERLY_USERNAME,
-  TENDERLY_FORK_ID,
+  // TENDERLY_PROJECT,
+  // TENDERLY_USERNAME,
+  // TENDERLY_FORK_ID,
 } = process.env;
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -87,11 +87,11 @@ const config: HardhatUserConfig = {
   contractSizer: {
     runOnCompile: CONTRACT_SIZER === 'true',
   },
-  tenderly: {
-    project: TENDERLY_PROJECT || '',
-    username: TENDERLY_USERNAME || '',
-    forkNetwork: TENDERLY_FORK_ID,
-  },
+  // tenderly: {
+  //   project: TENDERLY_PROJECT || '',
+  //   username: TENDERLY_USERNAME || '',
+  //   forkNetwork: TENDERLY_FORK_ID,
+  // },
 };
 
 export default config;
