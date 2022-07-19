@@ -1,5 +1,12 @@
 import { ethers } from 'hardhat';
-import { App, Context, Parser, Stack, StackValue__factory } from '../../../typechain';
+import {
+  App,
+  Context,
+  Parser,
+  Stack,
+  StackValue__factory,
+  Stack__factory,
+} from '../../../typechain-types';
 import { checkStack } from '../../utils/utils';
 
 describe('Boolean Algebra', () => {
@@ -11,7 +18,7 @@ describe('Boolean Algebra', () => {
 
   before(async () => {
     // Create StackValue Factory instance
-    StackValue = await ethers.getContractFactory('StackValue');
+    StackValue = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
@@ -51,24 +58,24 @@ describe('Boolean Algebra', () => {
     const ParserCont = await ethers.getContractFactory('Parser', {
       libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
     });
-    parser = await ParserCont.deploy();
+    parser = (await ParserCont.deploy()) as Parser;
 
     // Deploy Context
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
+    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
     await ctx.setComparatorOpcodesAddr(comparatorOpcodesLib.address);
     await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
     await ctx.setSetOpcodesAddr(setOpcodesLib.address);
     await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
 
     // Create Stack instance
-    const StackCont = await ethers.getContractFactory('Stack');
+    const StackCont = (await ethers.getContractFactory('Stack')) as Stack__factory;
     const contextStackAddress = await ctx.stack();
     stack = StackCont.attach(contextStackAddress);
 
     // Deploy Application
-    app = await (
+    app = (await (
       await ethers.getContractFactory('App', { libraries: { Executor: executorLib.address } })
-    ).deploy(parser.address, ctx.address);
+    ).deploy(parser.address, ctx.address)) as App;
   });
 
   describe('Commutative law', async () => {

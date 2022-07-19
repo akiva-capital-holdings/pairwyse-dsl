@@ -7,7 +7,7 @@ import {
   Context,
   Stack,
   LogicalOpcodesMock,
-} from '../../../../typechain';
+} from '../../../../typechain-types';
 import { getBytesStringLength, pushToStack, uint256StrToHex } from '../../../utils/utils';
 
 // TODO: need more tests here without mocked opcodes.
@@ -22,10 +22,10 @@ describe('Logical opcodes', () => {
   let stack: Stack;
 
   before(async () => {
-    StackCont = await ethers.getContractFactory('Stack');
-    StackValue = await ethers.getContractFactory('StackValue');
+    StackCont = (await ethers.getContractFactory('Stack')) as Stack__factory;
+    StackValue = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
 
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
+    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
     ctxAddr = ctx.address;
 
     // Deploy libraries
@@ -37,15 +37,15 @@ describe('Logical opcodes', () => {
     ).deploy();
 
     // Deploy LogicalOpcodesMock
-    app = await (
+    app = (await (
       await ethers.getContractFactory('LogicalOpcodesMock', {
         libraries: { LogicalOpcodes: logicalOpcodesLib.address },
       })
-    ).deploy();
+    ).deploy()) as LogicalOpcodesMock;
 
     // Create Stack instance
     const stackAddr = await ctx.stack();
-    stack = await ethers.getContractAt('Stack', stackAddr);
+    stack = (await ethers.getContractAt('Stack', stackAddr)) as Stack;
 
     // Setup
     await ctx.initOpcodes();

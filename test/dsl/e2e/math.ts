@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
-import { App, Context, Parser } from '../../../typechain';
+import { App, Context, Parser } from '../../../typechain-types';
 import { hex4Bytes } from '../../utils/utils';
 
 describe('DSL: math', () => {
@@ -47,19 +47,19 @@ describe('DSL: math', () => {
     const ParserCont = await ethers.getContractFactory('Parser', {
       libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
     });
-    parser = await ParserCont.deploy();
+    parser = (await ParserCont.deploy()) as Parser;
 
     // Deploy Context & setup
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
+    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
     await ctx.setComparatorOpcodesAddr(comparatorOpcodesLib.address);
     await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
     await ctx.setSetOpcodesAddr(setOpcodesLib.address);
     await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
 
     // Deploy Application
-    app = await (
+    app = (await (
       await ethers.getContractFactory('App', { libraries: { Executor: executorLib.address } })
-    ).deploy(parser.address, ctx.address);
+    ).deploy(parser.address, ctx.address)) as App;
   });
 
   describe('division case', () => {

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { hex4Bytes } from '../../utils/utils';
 
-import { ByteUtilsMock } from '../../../typechain';
+import { ByteUtilsMock } from '../../../typechain-types';
 
 describe('byteUtils', () => {
   let app: ByteUtilsMock;
@@ -10,11 +10,11 @@ describe('byteUtils', () => {
 
   before(async () => {
     const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
-    app = await (
+    app = (await (
       await ethers.getContractFactory('ByteUtilsMock', {
         libraries: { ByteUtils: byteLib.address },
       })
-    ).deploy();
+    ).deploy()) as ByteUtilsMock;
   });
 
   it('should slice if start index are valid', async () => {

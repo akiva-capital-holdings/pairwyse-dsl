@@ -2,7 +2,7 @@
 // import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 // import { expect } from 'chai';
 // import { ethers } from 'hardhat';
-// import { ConditionalTxs, Context, Context__factory, Parser } from '../../typechain';
+// import { ConditionalTxs, Context, Context__factory, Parser } from '../../typechain-types';
 // import { hex4Bytes } from '../utils/utils';
 
 // describe.only('Conditional transactions', () => {

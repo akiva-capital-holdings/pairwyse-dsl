@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Context, ParserMock } from '../../typechain';
+import { Context, ParserMock } from '../../typechain-types';
 
 describe('Parser', () => {
   let sender: SignerWithAddress;
@@ -20,12 +20,12 @@ describe('Parser', () => {
     const ParserCont = await ethers.getContractFactory('ParserMock', {
       libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
     });
-    app = await ParserCont.deploy();
+    app = (await ParserCont.deploy()) as ParserMock;
   });
 
   beforeEach(async () => {
     // Deploy & setup Context
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
+    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
     ctxAddr = ctx.address;
     await ctx.initOpcodes();
     await ctx.setAppAddress(app.address);

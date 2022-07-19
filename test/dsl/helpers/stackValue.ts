@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { StackType } from '../../../src/interfaces';
-import { StackValue } from '../../../typechain';
+import { StackValue } from '../../../typechain-types';
 
 describe('StackValue', () => {
   let stackValue: StackValue;
@@ -13,7 +13,7 @@ describe('StackValue', () => {
   });
 
   beforeEach(async () => {
-    stackValue = await (await ethers.getContractFactory('StackValue')).deploy();
+    stackValue = (await (await ethers.getContractFactory('StackValue')).deploy()) as StackValue;
   });
 
   it('get/set Uint256', async () => {

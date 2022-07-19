@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { parseEther } from 'ethers/lib/utils';
-import { App, Context, Parser, Stack, StackValue__factory } from '../../../typechain';
+import { App, Context, Parser, Stack, StackValue__factory } from '../../../typechain-types';
 import { checkStack, checkStackTail, checkStackTailv2, hex4Bytes } from '../../utils/utils';
 
 describe('DSL: basic', () => {
@@ -27,7 +27,7 @@ describe('DSL: basic', () => {
     PREV_MONTH = lastBlockTimestamp - 60 * 60 * 24 * 30;
 
     // Create StackValue Factory instance
-    StackValue = await ethers.getContractFactory('StackValue');
+    StackValue = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
@@ -67,10 +67,10 @@ describe('DSL: basic', () => {
     const ParserCont = await ethers.getContractFactory('Parser', {
       libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
     });
-    parser = await ParserCont.deploy();
+    parser = (await ParserCont.deploy()) as Parser;
 
     // Deploy Context & setup
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
+    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
     await ctx.setComparatorOpcodesAddr(comparatorOpcodesLib.address);
     await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
     await ctx.setSetOpcodesAddr(setOpcodesLib.address);
@@ -79,12 +79,12 @@ describe('DSL: basic', () => {
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
     const contextStackAddress = await ctx.stack();
-    stack = StackCont.attach(contextStackAddress);
+    stack = StackCont.attach(contextStackAddress) as Stack;
 
     // Deploy Application
-    app = await (
+    app = (await (
       await ethers.getContractFactory('App', { libraries: { Executor: executorLib.address } })
-    ).deploy(parser.address, ctx.address);
+    ).deploy(parser.address, ctx.address)) as App;
     appAddrHex = app.address.slice(2);
   });
 

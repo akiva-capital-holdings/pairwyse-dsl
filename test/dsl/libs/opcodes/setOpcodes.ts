@@ -7,7 +7,7 @@ import {
   Context,
   Stack,
   SetOpcodesMock,
-} from '../../../../typechain';
+} from '../../../../typechain-types';
 import { checkStack, pushToStack } from '../../../utils/utils';
 
 describe('Set opcodes', () => {
@@ -20,10 +20,10 @@ describe('Set opcodes', () => {
   /* eslint-enable camelcase */
 
   before(async () => {
-    StackCont = await ethers.getContractFactory('Stack');
-    StackValue = await ethers.getContractFactory('StackValue');
+    StackCont = (await ethers.getContractFactory('Stack')) as Stack__factory;
+    StackValue = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
 
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
+    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
     ctxAddr = ctx.address;
 
     // Deploy libraries
@@ -35,15 +35,15 @@ describe('Set opcodes', () => {
     ).deploy();
 
     // Deploy SetOpcodesMock
-    app = await (
+    app = (await (
       await ethers.getContractFactory('SetOpcodesMock', {
         libraries: { SetOpcodes: setOpcodesLib.address },
       })
-    ).deploy();
+    ).deploy()) as SetOpcodesMock;
 
     // Create Stack instance
     const stackAddr = await ctx.stack();
-    stack = await ethers.getContractAt('Stack', stackAddr);
+    stack = (await ethers.getContractAt('Stack', stackAddr)) as Stack;
 
     // Setup
     await ctx.initOpcodes();

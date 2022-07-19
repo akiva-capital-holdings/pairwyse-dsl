@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Preprocessor } from '../../typechain';
+import { Preprocessor } from '../../typechain-types';
 import { Testcase } from '../types';
 
 describe('Preprocessor', () => {
@@ -43,11 +43,11 @@ describe('Preprocessor', () => {
     await ctx.addOperatorExt('!=', 1);
 
     // Deploy Preprocessor
-    app = await (
+    app = (await (
       await ethers.getContractFactory('Preprocessor', {
         libraries: { StringUtils: stringLib.address },
       })
-    ).deploy();
+    ).deploy()) as Preprocessor;
   });
 
   describe('infix to postfix', () => {

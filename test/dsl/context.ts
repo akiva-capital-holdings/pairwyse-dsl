@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { ContextMock } from '../../typechain';
+import { ContextMock } from '../../typechain-types';
 
 describe('Context', () => {
   let app: ContextMock;
@@ -14,7 +14,7 @@ describe('Context', () => {
 
   beforeEach(async () => {
     const ContextCont = await ethers.getContractFactory('ContextMock');
-    app = await ContextCont.deploy();
+    app = (await ContextCont.deploy()) as ContextMock;
   });
 
   describe('addOpcode', () => {

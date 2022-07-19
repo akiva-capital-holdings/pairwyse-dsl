@@ -2,8 +2,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Context, StackValue__factory, Stack } from '../../../typechain';
-import { ExecutorMock } from '../../../typechain/ExecutorMock';
+import { Context, StackValue__factory, Stack, ExecutorMock } from '../../../typechain-types';
 import { checkStack, checkStackTail, hex4Bytes } from '../../utils/utils';
 
 describe('Executor', () => {
@@ -18,7 +17,7 @@ describe('Executor', () => {
     [sender] = await ethers.getSigners();
 
     // Create StackValue Factory instance
-    StackValue = await ethers.getContractFactory('StackValue');
+    StackValue = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
@@ -53,14 +52,14 @@ describe('Executor', () => {
     const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
 
     // Deploy ExecutorMock
-    app = await (
+    app = (await (
       await ethers.getContractFactory('ExecutorMock', {
         libraries: { Executor: executorLib.address },
       })
-    ).deploy();
+    ).deploy()) as ExecutorMock;
 
     // Deploy & setup Context
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
+    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
     ctxAddr = ctx.address;
     await ctx.initOpcodes();
     await ctx.setAppAddress(app.address);
@@ -73,7 +72,7 @@ describe('Executor', () => {
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
     const contextStackAddress = await ctx.stack();
-    stack = StackCont.attach(contextStackAddress);
+    stack = StackCont.attach(contextStackAddress) as Stack;
   });
 
   afterEach(async () => {

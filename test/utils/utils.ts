@@ -10,8 +10,7 @@ import {
   Context,
   StackValue,
   ERC20,
-  Token,
-} from '../../typechain';
+} from '../../typechain-types';
 import { OpConditionalTxFunc } from '../types';
 
 /**

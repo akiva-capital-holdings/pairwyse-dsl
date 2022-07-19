@@ -1,17 +1,17 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { StringUtilsMock } from '../../../typechain';
+import { StringUtilsMock } from '../../../typechain-types';
 
 describe('StringUtils', () => {
   let app: StringUtilsMock;
 
   before(async () => {
     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
-    app = await (
+    app = (await (
       await ethers.getContractFactory('StringUtilsMock', {
         libraries: { StringUtils: stringLib.address },
       })
-    ).deploy();
+    ).deploy()) as StringUtilsMock;
   });
 
   it('char', async () => {

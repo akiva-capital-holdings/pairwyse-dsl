@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { hex4Bytes } from '../test/utils/utils';
+import { hex4Bytes } from '../../test/utils/utils';
 
 // TODO: update `agreementAddr`
 const agreementAddr = '0xC2bEf244bf5B15Fa2cCEE0cFCb31C7144D0E642c';
