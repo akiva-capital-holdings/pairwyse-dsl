@@ -7,7 +7,7 @@ import '@typechain/hardhat';
 import 'hardhat-gas-reporter';
 import 'solidity-coverage';
 import 'hardhat-contract-sizer';
-import * as tdly from '@tenderly/hardhat-tenderly';
+// import * as tdly from '@tenderly/hardhat-tenderly';
 
 // Enable Tenderly (v. 1.1.4) setup only if needed as it causes tests to fall
 if (process.env.DEPLOY_TO_TENDERLY === 'true') {
@@ -57,7 +57,7 @@ const config: HardhatUserConfig = {
     },
     localhost: {
       timeout: 1e9,
-      url: 'http://127.0.0.1:7545',
+      url: 'http://127.0.0.1:8545',
     },
     remoteGanache: {
       url: REMOTE_GANACHE_URL || '',
