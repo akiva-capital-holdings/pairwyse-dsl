@@ -7,11 +7,6 @@ async function main() {
   const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
   const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
 
-  console.log({
-    stringLibAddr: stringLib.address,
-    byteLibAddr: byteLib.address,
-  });
-
   // Deploy Parser
   const Parser = await ethers.getContractFactory('Parser', {
     libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
