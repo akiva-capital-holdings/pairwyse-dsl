@@ -29,8 +29,8 @@ jobs:
 
       - name: Build artifacts
         run: yarn build
-        # env:
-        #   TENDERLY_FORK_URL: ${{ secrets.TENDERLY_FORK_URL }}
+        env:
+          TENDERLY_FORK_URL: ${{ secrets.TENDERLY_FORK_URL }}
 
       - name: Running tests & test coverage
         run: yarn test
