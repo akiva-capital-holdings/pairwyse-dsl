@@ -5,7 +5,7 @@ import { IContext } from './interfaces/IContext.sol';
 import { Stack, StackValue } from './helpers/Stack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 /**
  * @dev Preprocessor of DSL code
@@ -236,10 +236,10 @@ contract Preprocessor {
                     result.push(_stack.pop().getString());
                 }
                 _stack.pop(); // remove '(' that is left
-            } else if (_mayBeNumber(chunk) && !isFunc && !directUseUint256) {
+            } else if (chunk.mayBeNumber() && !isFunc && !directUseUint256) {
                 _updateUINT256param(loadRemoteFlag);
                 result.push(_parseNumber(chunk, loadRemoteFlag));
-            } else if (_mayBeNumber(chunk) && !isFunc && directUseUint256) {
+            } else if (chunk.mayBeNumber() && !isFunc && directUseUint256) {
                 directUseUint256 = false;
                 result.push(chunk);
             } else if (chunk.equal('func')) {
@@ -273,19 +273,20 @@ contract Preprocessor {
      * `uint256 1000000` - simple
      * `uint256 1e6 - complex`
      * @param _chunk provided number by the user
-     * @return _updatedChunk amount in Wei of provided _chunk value
+     * @param _loadRemoteFlag is used to check if it was started the set of parameters for 'loadRemote' opcode
+     * @return updatedChunk amount in Wei of provided _chunk value
      */
     function _parseNumber(string memory _chunk, bool _loadRemoteFlag)
         internal
         view
-        returns (string memory _updatedChunk)
+        returns (string memory updatedChunk)
     {
         if (_loadRemoteFlag) return _chunk;
 
         try _chunk.toUint256() {
-            _updatedChunk = _chunk;
+            updatedChunk = _chunk;
         } catch {
-            _updatedChunk = _chunk.getWei();
+            updatedChunk = _chunk.getWei();
         }
     }
 
@@ -590,18 +591,6 @@ contract Preprocessor {
             return true;
         } catch Error(string memory) {
             return false;
-        }
-    }
-
-    /**
-     * @dev If the string starts with a number, so we assume that it's a number.
-     * @param _value is a current chunk
-     * @return _isNumber that is true if the string starts with a number, otherwise is false
-     */
-    function _mayBeNumber(string memory _value) internal pure returns (bool _isNumber) {
-        bytes1 _firstByte = bytes(_value)[0];
-        if (uint8(_firstByte) >= 48 && uint8(_firstByte) <= 57) {
-            _isNumber = true;
         }
     }
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 library StringUtils {
     function char(string memory s, uint256 index) public pure returns (string memory) {
@@ -74,7 +74,7 @@ library StringUtils {
     }
 
     // string decimal number with e symbol (1e18) to uint256 (in wei)
-    function getWei(string memory _s) public view returns (string memory _result) {
+    function getWei(string memory _s) public pure returns (string memory result) {
         bool isFound; // was `e` symbol found
         uint256 tmp;
         bytes memory b = bytes(_s);
@@ -99,7 +99,19 @@ library StringUtils {
         }
 
         require(!equal(decimals, ''), 'StringUtils: decimals was not provided');
-        _result = toString(toUint256(base) * (10**toUint256(decimals)));
+        result = toString(toUint256(base) * (10**toUint256(decimals)));
+    }
+
+    /**
+     * @dev If the string starts with a number, so we assume that it's a number.
+     * @param _value is a current chunk
+     * @return isNumber that is true if the string starts with a number, otherwise is false
+     */
+    function mayBeNumber(string memory _value) public pure returns (bool isNumber) {
+        bytes1 _firstByte = bytes(_value)[0];
+        if (uint8(_firstByte) >= 48 && uint8(_firstByte) <= 57) {
+            isNumber = true;
+        }
     }
 
     // Convert an hexadecimal character to their value
