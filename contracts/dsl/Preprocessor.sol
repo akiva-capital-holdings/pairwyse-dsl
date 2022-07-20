@@ -236,10 +236,10 @@ contract Preprocessor {
                     result.push(_stack.pop().getString());
                 }
                 _stack.pop(); // remove '(' that is left
-            } else if (_mayBeNumber(chunk) && !isFunc && !directUseUint256) {
+            } else if (chunk.mayBeNumber() && !isFunc && !directUseUint256) {
                 _updateUINT256param(loadRemoteFlag);
-                result.push(chunk);
-            } else if (_mayBeNumber(chunk) && !isFunc && directUseUint256) {
+                result.push(_parseNumber(chunk, loadRemoteFlag));
+            } else if (chunk.mayBeNumber() && !isFunc && directUseUint256) {
                 directUseUint256 = false;
                 result.push(chunk);
             } else if (chunk.equal('func')) {
@@ -264,6 +264,30 @@ contract Preprocessor {
         }
 
         return result;
+    }
+
+    /**
+     * @dev As the string of values can be simple and complex for DSL this function returns a number in
+     * Wei regardless of what type of number parameter was provided by the user.
+     * For example:
+     * `uint256 1000000` - simple
+     * `uint256 1e6 - complex`
+     * @param _chunk provided number by the user
+     * @param _loadRemoteFlag is used to check if it was started the set of parameters for 'loadRemote' opcode
+     * @return updatedChunk amount in Wei of provided _chunk value
+     */
+    function _parseNumber(string memory _chunk, bool _loadRemoteFlag)
+        internal
+        view
+        returns (string memory updatedChunk)
+    {
+        if (_loadRemoteFlag) return _chunk;
+
+        try _chunk.toUint256() {
+            updatedChunk = _chunk;
+        } catch {
+            updatedChunk = _chunk.getWei();
+        }
     }
 
     /**
@@ -567,18 +591,6 @@ contract Preprocessor {
             return true;
         } catch Error(string memory) {
             return false;
-        }
-    }
-
-    /**
-     * @dev If the string starts with a number, so we assume that it's a number.
-     * @param _value is a current chunk
-     * @return isNumber that is true if the string starts with a number, otherwise is false
-     */
-    function _mayBeNumber(string memory _value) internal pure returns (bool isNumber) {
-        bytes1 _firstByte = bytes(_value)[0];
-        if (uint8(_firstByte) >= 48 && uint8(_firstByte) <= 57) {
-            isNumber = true;
         }
     }
 

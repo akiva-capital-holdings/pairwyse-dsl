@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
-import { parseEther } from 'ethers/lib/utils';
+import { parseEther, parseUnits } from 'ethers/lib/utils';
 import { App, Context, Parser, Stack, StackValue__factory } from '../../../typechain-types';
 import { checkStack, checkStackTail, checkStackTailv2, hex4Bytes } from '../../utils/utils';
 
@@ -1183,6 +1183,105 @@ describe('DSL: basic', () => {
         }
         `;
       await expect(app.parse(input)).to.be.revertedWith('String: non-decimal character');
+    });
+  });
+
+  describe('Simplified writing number in wei', () => {
+    it('should store a simple number with 18 decimals', async () => {
+      const input = '(uint256 1e18) setUint256 SUM';
+      await app.parse(input);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(parseUnits('1', 18));
+    });
+
+    it('should store a simple number with 18 decimals without uint256 type', async () => {
+      const input = '(123e18) setUint256 SUM';
+      await app.parse(input);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(parseUnits('123', 18));
+    });
+
+    it('should store a simple number with 36 decimals', async () => {
+      const input = '(uint256 1e36) setUint256 SUM';
+      await app.parse(input);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(parseUnits('1', 36));
+    });
+
+    it('should store a long number with 18 decimals', async () => {
+      const input = '(uint256 1000000000000000e18) setUint256 SUM';
+      await app.parse(input);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(
+        parseUnits('1000000000000000', 18)
+      );
+    });
+
+    it('should store a simple number with 10 decimals', async () => {
+      const input = '(uint256 146e10) setUint256 SUM';
+      await app.parse(input);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(parseUnits('146', 10));
+    });
+
+    it('should store a long number with 10 decimals', async () => {
+      const input = '(uint256 1000000000000000e10) setUint256 SUM';
+      await app.parse(input);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(
+        parseUnits('1000000000000000', 10)
+      );
+    });
+
+    it('should store a simple number without decimals even using simplified method', async () => {
+      const input = '(uint256 123e0) setUint256 SUM';
+      await app.parse(input);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(123);
+    });
+
+    it('should store a long number without decimals even using simplified method', async () => {
+      const input = '(uint256 1000000000000000e0) setUint256 SUM';
+      await app.parse(input);
+      await app.execute();
+      expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(1000000000000000);
+    });
+
+    it('should revert if tried to put several `e` symbol', async () => {
+      const input = '(uint256 10000000e00000000e18) setUint256 SUM';
+      await expect(app.parse(input)).to.be.revertedWith('StringUtils: invalid format');
+    });
+
+    it('should revert if tried to put not `e` symbol', async () => {
+      const input = '(uint256 10000000a18) setUint256 SUM';
+      await expect(app.parse(input)).to.be.revertedWith('StringUtils: invalid format');
+    });
+
+    it('should revert if tried to put Upper `E` symbol', async () => {
+      const input = '(uint256 10000000E18) setUint256 SUM';
+      await expect(app.parse(input)).to.be.revertedWith('StringUtils: invalid format');
+    });
+
+    it('should revert if tried to put `0x65` symbol', async () => {
+      const input = '(uint256 100000000x6518) setUint256 SUM';
+      await expect(app.parse(input)).to.be.revertedWith('StringUtils: invalid format');
+    });
+
+    it('should revert if base does not exist', async () => {
+      const input = '(uint256 e18) setUint256 SUM';
+      await expect(app.parse(input)).to.be.revertedWith(
+        'Parser: delegatecall to asmSelector failed'
+      );
+    });
+
+    it('should revert if decimals does not exist', async () => {
+      const input = '(uint256 45e) setUint256 SUM';
+      await expect(app.parse(input)).to.be.revertedWith('StringUtils: decimals were not provided');
+    });
+
+    it('should revert if two `e` were provided', async () => {
+      const input = '(uint256 45ee6) setUint256 SUM';
+      await expect(app.parse(input)).to.be.revertedWith('StringUtils: invalid format');
     });
   });
 });
