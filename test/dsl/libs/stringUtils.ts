@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { StringUtilsMock } from '../../../typechain-types';
 import { parseUnits } from 'ethers/lib/utils';
+import { StringUtilsMock } from '../../../typechain-types';
 
 describe('StringUtils', () => {
   let app: StringUtilsMock;
@@ -88,7 +88,7 @@ describe('StringUtils', () => {
     expect(app.getWei('10000000e00000000e18')).to.be.revertedWith('StringUtils: invalid format');
     expect(app.getWei('10000000a18')).to.be.revertedWith('StringUtils: invalid format');
     expect(app.getWei('10000000E18')).to.be.revertedWith('StringUtils: invalid format');
-    expect(app.getWei('45e')).to.be.revertedWith('StringUtils: decimals was not provided');
+    expect(app.getWei('45e')).to.be.revertedWith('StringUtils: decimals were not provided');
     expect(app.getWei('45ee6')).to.be.revertedWith('StringUtils: invalid format');
     expect(app.getWei('e18')).to.be.revertedWith('StringUtils: base was not provided');
   });

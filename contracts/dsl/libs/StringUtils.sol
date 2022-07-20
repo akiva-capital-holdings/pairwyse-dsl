@@ -98,7 +98,7 @@ library StringUtils {
             }
         }
 
-        require(!equal(decimals, ''), 'StringUtils: decimals was not provided');
+        require(!equal(decimals, ''), 'StringUtils: decimals were not provided');
         result = toString(toUint256(base) * (10**toUint256(decimals)));
     }
 
