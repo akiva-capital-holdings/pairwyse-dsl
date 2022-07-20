@@ -34,4 +34,9 @@ contract StringUtilsMock {
     function fromHexChar(bytes1 c) public pure returns (uint8) {
         return StringUtils.fromHexChar(c);
     }
+
+    // string decimal number with e symbol (1e18) to uint256 (in wei)
+    function getWei(string memory _s) public view returns (string memory) {
+        return StringUtils.getWei(_s);
+    }
 }

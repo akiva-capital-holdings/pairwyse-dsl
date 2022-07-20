@@ -5,7 +5,7 @@ import { IContext } from './interfaces/IContext.sol';
 import { Stack, StackValue } from './helpers/Stack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Preprocessor of DSL code
@@ -238,7 +238,7 @@ contract Preprocessor {
                 _stack.pop(); // remove '(' that is left
             } else if (_mayBeNumber(chunk) && !isFunc && !directUseUint256) {
                 _updateUINT256param(loadRemoteFlag);
-                result.push(chunk);
+                result.push(_parseNumber(chunk, loadRemoteFlag));
             } else if (_mayBeNumber(chunk) && !isFunc && directUseUint256) {
                 directUseUint256 = false;
                 result.push(chunk);
@@ -264,6 +264,29 @@ contract Preprocessor {
         }
 
         return result;
+    }
+
+    /**
+     * @dev As the string of values can be simple and complex for DSL this function returns a number in
+     * Wei regardless of what type of number parameter was provided by the user.
+     * For example:
+     * `uint256 1000000` - simple
+     * `uint256 1e6 - complex`
+     * @param _chunk provided number by the user
+     * @return _updatedChunk amount in Wei of provided _chunk value
+     */
+    function _parseNumber(string memory _chunk, bool _loadRemoteFlag)
+        internal
+        view
+        returns (string memory _updatedChunk)
+    {
+        if (_loadRemoteFlag) return _chunk;
+
+        try _chunk.toUint256() {
+            _updatedChunk = _chunk;
+        } catch {
+            _updatedChunk = _chunk.getWei();
+        }
     }
 
     /**
@@ -573,12 +596,12 @@ contract Preprocessor {
     /**
      * @dev If the string starts with a number, so we assume that it's a number.
      * @param _value is a current chunk
-     * @return isNumber that is true if the string starts with a number, otherwise is false
+     * @return _isNumber that is true if the string starts with a number, otherwise is false
      */
-    function _mayBeNumber(string memory _value) internal pure returns (bool isNumber) {
+    function _mayBeNumber(string memory _value) internal pure returns (bool _isNumber) {
         bytes1 _firstByte = bytes(_value)[0];
         if (uint8(_firstByte) >= 48 && uint8(_firstByte) <= 57) {
-            isNumber = true;
+            _isNumber = true;
         }
     }
 

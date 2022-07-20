@@ -56,15 +56,11 @@ describe('Parser', () => {
     });
 
     it('error: if adding number with a number that contains string', async () => {
-      await expect(app.parse(ctxAddr, '10d + 1')).to.be.revertedWith(
-        'Parser: delegatecall to asmSelector failed'
-      );
+      await expect(app.parse(ctxAddr, '10d + 1')).to.be.revertedWith('StringUtils: invalid format');
     });
 
     it('error: if adding number with a number that can be hex', async () => {
-      await expect(app.parse(ctxAddr, '1 + 0x1')).to.be.revertedWith(
-        'Parser: delegatecall to asmSelector failed'
-      );
+      await expect(app.parse(ctxAddr, '1 + 0x1')).to.be.revertedWith('StringUtils: invalid format');
     });
 
     it('error: if adding uint256 with string value with a number', async () => {

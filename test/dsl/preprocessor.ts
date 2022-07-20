@@ -689,10 +689,10 @@ describe('Preprocessor', () => {
       expect(cmds).to.eql(expected);
     });
 
-    it('Should return a text with uint256 opCode', async () => {
-      const cmds = await app.callStatic.transform(ctxAddr, '1 and 2-test');
-      const expected = ['uint256', '1', 'uint256', '2-test', 'and'];
-      expect(cmds).to.eql(expected);
+    it('revert if the text `opCode` used with uint256', async () => {
+      await expect(app.callStatic.transform(ctxAddr, '1 and 2-test')).to.be.revertedWith(
+        'StringUtils: invalid format'
+      );
     });
   });
 });
