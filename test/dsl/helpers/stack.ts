@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Stack, StackValue__factory } from '../../../typechain';
+import { Stack, StackValue__factory } from '../../../typechain-types';
 
 describe('Stack', () => {
   let stack: Stack;
@@ -10,8 +10,8 @@ describe('Stack', () => {
 
   before(async () => {
     [first] = await ethers.getSigners();
-    stack = await (await ethers.getContractFactory('Stack')).deploy();
-    StackValueCont = await ethers.getContractFactory('StackValue');
+    stack = (await (await ethers.getContractFactory('Stack')).deploy()) as Stack;
+    StackValueCont = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
   });
 
   it('push & length & seeLast & pop & clear', async () => {

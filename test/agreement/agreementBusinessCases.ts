@@ -5,8 +5,8 @@ import { formatEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
 import { changeTokenBalanceAndGetTxHash, hex4Bytes } from '../utils/utils';
 import { businessCaseSteps } from '../../scripts/data/agreement';
-import { Agreement } from '../../typechain/Agreement';
-import { ConditionalTxs, Token, Context__factory } from '../../typechain';
+import { Agreement } from '../../typechain-types/Agreement';
+import { ConditionalTxs, Token, Context__factory } from '../../typechain-types';
 import { TxObject } from '../types';
 
 const dotenv = require('dotenv');
@@ -384,15 +384,15 @@ initiating funds\x1b[0m
   before(async () => {
     [, , , whale, GP, ...LPs] = await ethers.getSigners();
 
-    let address = process.env.AGREEMENT_ADDR;
+    const address = process.env.AGREEMENT_ADDR;
     if (address) {
-      agreement = await ethers.getContractAt('Agreement', address);
+      agreement = (await ethers.getContractAt('Agreement', address)) as Agreement;
     } else {
       // TODO: what should we do if the user did not set the AGREEMENT_ADDR?
       console.log('The agreement address is undefined');
     }
     txsAddr = await agreement.txs();
-    txs = await ethers.getContractAt('ConditionalTxs', txsAddr);
+    txs = (await ethers.getContractAt('ConditionalTxs', txsAddr)) as ConditionalTxs;
   });
 
   beforeEach(async () => {
@@ -412,9 +412,9 @@ initiating funds\x1b[0m
     await txs.setStorageUint256(hex4Bytes('LP_TOTAL'), 0);
     await txs.setStorageUint256(hex4Bytes('GP_REMAINING'), 0);
     await txs.setStorageUint256(hex4Bytes('TWO_PERCENT'), 0);
-    dai = await (await ethers.getContractFactory('Token'))
+    dai = (await (await ethers.getContractFactory('Token'))
       .connect(whale)
-      .deploy(parseUnits('100000000', 18));
+      .deploy(parseUnits('100000000', 18))) as Token;
   });
 
   afterEach(async () => {
@@ -661,9 +661,10 @@ initiating funds\x1b[0m
 
     // used the 34% / 66% percentage, as in the third agreement we have dividing values by 66 %
     // P1 = 100 - 34
-    // ex. loadLocal uint256 DEPOSIT_MIN_PERCENT * loadLocal uint256 LP_INITIAL / loadLocal uint256 P1
+    // ex. loadLocal uint256 DEPOSIT_MIN_PERCENT * loadLocal uint256 LP_INITIAL / loadLocal uint256
+    // P1
     businessCaseTest(
-      'Scenario 15: Should be non zero value in the end of a contract. Correct LP investment profit',
+      'Scenario 15: Should be non zero value in the end of contract. Correct LP investment profit',
       parseUnits('340000', 0), // GP_INITIAL
       [parseUnits('900000', 0)], // LP_INITIAL
       parseUnits('1000000', 0), // INITIAL_FUNDS_TARGET

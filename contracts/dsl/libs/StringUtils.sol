@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+// import 'hardhat/console.sol';
+
 library StringUtils {
     function char(string memory s, uint256 index) public pure returns (string memory) {
         require(index < length(s), 'String: index out of range');
@@ -68,6 +70,47 @@ library StringUtils {
             tmp = uint8(b[i]);
             require(tmp >= 0x30 && tmp <= 0x39, 'String: non-decimal character');
             value = value * 10 + (tmp - 0x30); // 0x30 ascii is '0'
+        }
+    }
+
+    // string decimal number with e symbol (1e18) to uint256 (in wei)
+    function getWei(string memory _s) public pure returns (string memory result) {
+        bool isFound; // was `e` symbol found
+        uint256 tmp;
+        bytes memory b = bytes(_s);
+        string memory base;
+        string memory decimals;
+
+        for (uint256 i = 0; i < b.length; i++) {
+            tmp = uint8(b[i]);
+            if (tmp >= 0x30 && tmp <= 0x39) {
+                if (!isFound) {
+                    base = concat(base, string(abi.encodePacked(b[i])));
+                } else {
+                    decimals = concat(decimals, string(abi.encodePacked(b[i])));
+                }
+            } else if (tmp == 0x65 && !isFound) {
+                require(!equal(base, ''), 'StringUtils: base was not provided');
+                isFound = true;
+            } else if (tmp != 0x65 || isFound) {
+                // use only one `e` sympol between values without spaces; example: 1e18 or 456e10
+                revert('StringUtils: invalid format');
+            }
+        }
+
+        require(!equal(decimals, ''), 'StringUtils: decimals were not provided');
+        result = toString(toUint256(base) * (10**toUint256(decimals)));
+    }
+
+    /**
+     * @dev If the string starts with a number, so we assume that it's a number.
+     * @param _value is a current chunk
+     * @return isNumber that is true if the string starts with a number, otherwise is false
+     */
+    function mayBeNumber(string memory _value) public pure returns (bool isNumber) {
+        bytes1 _firstByte = bytes(_value)[0];
+        if (uint8(_firstByte) >= 48 && uint8(_firstByte) <= 57) {
+            isNumber = true;
         }
     }
 

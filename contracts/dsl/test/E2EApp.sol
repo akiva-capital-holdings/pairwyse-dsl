@@ -29,16 +29,16 @@ contract E2EApp is Storage {
     }
 
     function parse(string memory _program) external {
-        parser.parse(ctx, _program);
+        parser.parse(address(ctx), _program);
     }
 
     function parseCode(string[] memory _code) external {
-        parser.parseCodeExt(ctx, _code);
+        parser.parseCodeExt(address(ctx), _code);
     }
 
     function execute() external payable {
         ctx.setMsgValue(msg.value);
-        Executor.execute(ctx);
+        Executor.execute(address(ctx));
     }
 
     function setupContext() internal {

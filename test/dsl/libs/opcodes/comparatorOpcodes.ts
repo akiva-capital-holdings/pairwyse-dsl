@@ -6,7 +6,7 @@ import {
   Context,
   Stack,
   ComparatorOpcodesMock,
-} from '../../../../typechain';
+} from '../../../../typechain-types';
 import { checkStack, pushToStack } from '../../../utils/utils';
 /* eslint-enable camelcase */
 
@@ -21,10 +21,10 @@ describe('Comparator opcodes', () => {
   let stack: Stack;
 
   before(async () => {
-    StackCont = await ethers.getContractFactory('Stack');
-    StackValue = await ethers.getContractFactory('StackValue');
+    StackCont = (await ethers.getContractFactory('Stack')) as Stack__factory;
+    StackValue = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
 
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
+    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
     ctxAddr = ctx.address;
 
     // Deploy libraries
@@ -36,15 +36,15 @@ describe('Comparator opcodes', () => {
     ).deploy();
 
     // Deploy ComparatorOpcodesMock
-    app = await (
+    app = (await (
       await ethers.getContractFactory('ComparatorOpcodesMock', {
         libraries: { ComparatorOpcodes: comparatorOpcodesLib.address },
       })
-    ).deploy();
+    ).deploy()) as ComparatorOpcodesMock;
 
     // Create Stack instance
     const stackAddr = await ctx.stack();
-    stack = await ethers.getContractAt('Stack', stackAddr);
+    stack = (await ethers.getContractAt('Stack', stackAddr)) as Stack;
 
     // Setup
     await ctx.initOpcodes();

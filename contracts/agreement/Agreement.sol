@@ -31,7 +31,7 @@ contract Agreement {
     function parse(string memory _code, Context _ctx) external {
         _ctx.initOpcodes();
         _ctx.setAppAddress(address(txs));
-        parser.parse(_ctx, _code);
+        parser.parse(address(_ctx), _code);
     }
 
     function update(

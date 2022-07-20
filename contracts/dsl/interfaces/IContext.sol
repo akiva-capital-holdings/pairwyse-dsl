@@ -106,7 +106,7 @@ interface IContext {
         bytes calldata _payload,
         uint256 _index,
         uint256 _step
-    ) external pure returns (bytes memory);
+    ) external view returns (bytes memory);
 
     function setPc(uint256 _pc) external;
 

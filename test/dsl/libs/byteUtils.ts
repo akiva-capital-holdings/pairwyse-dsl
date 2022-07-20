@@ -2,19 +2,19 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { hex4Bytes } from '../../utils/utils';
 
-import { ByteUtilsMock } from '../../../typechain';
+import { ByteUtilsMock } from '../../../typechain-types';
 
 describe('byteUtils', () => {
   let app: ByteUtilsMock;
-  let data = hex4Bytes('0x000000000111'); // 0xb9fbdd9200000000000000000000000000000000000000000000000000000000
+  const data = hex4Bytes('0x000000000111');
 
   before(async () => {
     const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
-    app = await (
+    app = (await (
       await ethers.getContractFactory('ByteUtilsMock', {
         libraries: { ByteUtils: byteLib.address },
       })
-    ).deploy();
+    ).deploy()) as ByteUtilsMock;
   });
 
   it('should slice if start index are valid', async () => {
@@ -28,14 +28,14 @@ describe('byteUtils', () => {
   });
 
   it('returns error if start index is greater than the end index', async () => {
-    let msg = "ByteUtils: 'end' index must be greater than 'start'";
+    const msg = "ByteUtils: 'end' index must be greater than 'start'";
     expect(app.slice(data, 5, 1)).to.be.revertedWith(msg);
     expect(app.slice(data, 0, 0)).to.be.revertedWith(msg);
     expect(app.slice(data, 32, 32)).to.be.revertedWith(msg);
   });
 
   it('returns error if end index greater than array length', async () => {
-    let msg = "ByteUtils: 'end' is greater than the length of the array";
+    const msg = "ByteUtils: 'end' is greater than the length of the array";
     expect(app.slice(data, 4, 33)).to.be.revertedWith(msg);
     expect(app.slice(data, 23, 67)).to.be.revertedWith(msg);
     expect(app.slice(data, 0, 35)).to.be.revertedWith(msg);

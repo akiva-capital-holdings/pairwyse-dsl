@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ethers } from 'hardhat';
-import { TxObject } from '../test/types';
-import { Agreement, ContextFactory } from '../typechain';
+import { TxObject } from '../../test/types';
+import { Agreement, ContextFactory } from '../../typechain-types';
 
 // TODO: update `agreementAddr`
 const agreementAddr = '0xC2bEf244bf5B15Fa2cCEE0cFCb31C7144D0E642c';

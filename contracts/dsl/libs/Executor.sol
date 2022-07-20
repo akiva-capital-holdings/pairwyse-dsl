@@ -6,9 +6,12 @@ import { IContext } from '../interfaces/IContext.sol';
 // import 'hardhat/console.sol';
 
 library Executor {
-    function execute(IContext _ctx) public {
+    function execute(address _ctxAddr) public {
+        // console.log('Executor.execute()');
+        IContext _ctx = IContext(_ctxAddr);
         // console.logBytes(_ctx.program());
         require(_ctx.program().length > 0, 'Executor: empty program');
+
         while (_ctx.pc() < _ctx.program().length) {
             bytes memory opcodeBytes = _ctx.programAt(_ctx.pc(), 1);
             bytes1 opcodeByte1 = bytes1(uint8(opcodeBytes[0]));

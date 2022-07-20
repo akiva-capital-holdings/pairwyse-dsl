@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Preprocessor } from '../../typechain';
+import { Preprocessor } from '../../typechain-types';
 import { Testcase } from '../types';
 
 describe('Preprocessor', () => {
@@ -43,11 +43,11 @@ describe('Preprocessor', () => {
     await ctx.addOperatorExt('!=', 1);
 
     // Deploy Preprocessor
-    app = await (
+    app = (await (
       await ethers.getContractFactory('Preprocessor', {
         libraries: { StringUtils: stringLib.address },
       })
-    ).deploy();
+    ).deploy()) as Preprocessor;
   });
 
   describe('infix to postfix', () => {
@@ -689,10 +689,10 @@ describe('Preprocessor', () => {
       expect(cmds).to.eql(expected);
     });
 
-    it('Should return a text with uint256 opCode', async () => {
-      const cmds = await app.callStatic.transform(ctxAddr, '1 and 2-test');
-      const expected = ['uint256', '1', 'uint256', '2-test', 'and'];
-      expect(cmds).to.eql(expected);
+    it('revert if the text `opCode` used with uint256', async () => {
+      await expect(app.callStatic.transform(ctxAddr, '1 and 2-test')).to.be.revertedWith(
+        'StringUtils: invalid format'
+      );
     });
   });
 });

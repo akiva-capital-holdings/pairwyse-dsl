@@ -4,17 +4,18 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { formatEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
 import { changeTokenBalanceAndGetTxHash, hex4Bytes } from '../utils/utils';
-import { businessCaseSteps } from '../../scripts/data/agreement';
-import { Agreement } from '../../typechain/Agreement';
-import { ConditionalTxs, Context__factory } from '../../typechain';
+// import { businessCaseSteps } from '../../scripts/data/agreement';
+import { Agreement } from '../../typechain-types/Agreement';
+import { ConditionalTxs, Context__factory } from '../../typechain-types';
 import { TxObject } from '../types';
+import { ERC20 } from '../../typechain-types/dsl/test/ERC20Mintable.sol';
 
 const dotenv = require('dotenv');
 
 dotenv.config();
 
 describe.skip('Agreement: business case tests math', () => {
-  let ContextCont: Context__factory;
+  // let ContextCont: Context__factory;
   let agreement: Agreement;
   let whale: SignerWithAddress;
   let GP: SignerWithAddress;
@@ -216,7 +217,7 @@ describe.skip('Agreement: business case tests math', () => {
 
         const txn3Hash = await changeTokenBalanceAndGetTxHash(
           () => agreement.connect(GP).execute(3),
-          dai,
+          dai as ERC20,
           [GP],
           [GP_REMAINING_BN.mul(-1)]
         );
@@ -255,7 +256,7 @@ describe.skip('Agreement: business case tests math', () => {
           console.log(`GP withdraws GP Initial Deposit = ${formatEther(GP_INITIAL)} DAI`);
           const txn4Hash = await changeTokenBalanceAndGetTxHash(
             () => agreement.connect(LP).execute(4),
-            dai,
+            dai as ERC20,
             [GP, LP],
             [GP_INITIAL, LP_INITIAL]
           );
@@ -289,7 +290,7 @@ describe.skip('Agreement: business case tests math', () => {
 
         const txn5Hash = await changeTokenBalanceAndGetTxHash(
           () => agreement.connect(GP).execute(5),
-          dai,
+          dai as ERC20,
           [GP],
           [PURCHASE_AMOUNT_BN]
         );
@@ -361,7 +362,7 @@ describe.skip('Agreement: business case tests math', () => {
 
         const txn71Hash = await changeTokenBalanceAndGetTxHash(
           () => agreement.connect(GP).execute(71),
-          dai,
+          dai as ERC20,
           [GP],
           [MANAGEMENT_FEE_BN]
         );
@@ -416,7 +417,7 @@ describe.skip('Agreement: business case tests math', () => {
 
         const txn72Hash = await changeTokenBalanceAndGetTxHash(
           () => agreement.connect(GP).execute(72),
-          dai,
+          dai as ERC20,
           [GP],
           [CARRY_BN]
         );
@@ -466,7 +467,7 @@ describe.skip('Agreement: business case tests math', () => {
 
         const txn73Hash = await changeTokenBalanceAndGetTxHash(
           () => agreement.connect(GP).execute(73),
-          dai,
+          dai as ERC20,
           [GP],
           [GP_PRINICIPAL_BN]
         );
@@ -510,7 +511,7 @@ describe.skip('Agreement: business case tests math', () => {
 
           const txn81Hash = await changeTokenBalanceAndGetTxHash(
             () => agreement.connect(LP).execute(81),
-            dai,
+            dai as ERC20,
             [LP],
             [LP_PROFIT_BN]
           );
@@ -557,7 +558,7 @@ describe.skip('Agreement: business case tests math', () => {
 
           const txn82Hash = await changeTokenBalanceAndGetTxHash(
             () => agreement.connect(LP).execute(82),
-            dai,
+            dai as ERC20,
             [LP],
             [LP_PRINCIPAL_BN]
           );
@@ -608,20 +609,20 @@ describe.skip('Agreement: business case tests math', () => {
     NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
     NEXT_TWO_MONTH = LAST_BLOCK_TIMESTAMP + 2 * ONE_MONTH;
 
-    ContextCont = await ethers.getContractFactory('Context');
+    // ContextCont = await ethers.getContractFactory('Context') as Context__factory;
   });
 
   beforeEach(async () => {
     const address = process.env.AGREEMENT_ADDR;
     if (address) {
-      agreement = await ethers.getContractAt('Agreement', address);
+      agreement = (await ethers.getContractAt('Agreement', address)) as Agreement;
     } else {
       console.log('The agreement address is undefined');
       return;
     }
 
     txsAddr = await agreement.txs();
-    txs = await ethers.getContractAt('ConditionalTxs', txsAddr);
+    txs = (await ethers.getContractAt('ConditionalTxs', txsAddr)) as ConditionalTxs;
   });
 
   afterEach(async () => {

@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { AgreementFactory as AgreementFactoryType } from '../../typechain';
+import { AgreementFactory as AgreementFactoryType } from '../../typechain-types';
 
 describe('AgreementFactory', () => {
   let factory: AgreementFactoryType;
@@ -39,7 +39,7 @@ describe('AgreementFactory', () => {
     ).deploy();
 
     // Deploy AgreementFactory
-    factory = await (
+    factory = (await (
       await ethers.getContractFactory('AgreementFactory', {
         libraries: {
           ComparatorOpcodes: comparatorOpcodesLib.address,
@@ -49,7 +49,7 @@ describe('AgreementFactory', () => {
           Executor: executorLib.address,
         },
       })
-    ).deploy();
+    ).deploy()) as AgreementFactoryType;
   });
 
   it('deploy agreement', async () => {

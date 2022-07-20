@@ -1,13 +1,15 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { ContextFactory as ContextFactoryType } from '../../typechain';
+import { ContextFactory as ContextFactoryType } from '../../typechain-types';
 
 describe('ContextFactory', () => {
   let factory: ContextFactoryType;
 
   beforeEach(async () => {
     // Deploy ContextFactory
-    factory = await (await ethers.getContractFactory('ContextFactory')).deploy();
+    factory = (await (
+      await ethers.getContractFactory('ContextFactory')
+    ).deploy()) as ContextFactoryType;
   });
 
   it('deploy context', async () => {

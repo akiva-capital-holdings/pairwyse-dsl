@@ -3,8 +3,8 @@ import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
 import { hex4Bytes } from '../utils/utils';
-import { Agreement } from '../../typechain/Agreement';
-import { ConditionalTxs } from '../../typechain';
+import { Agreement } from '../../typechain-types/Agreement';
+import { ConditionalTxs } from '../../typechain-types';
 
 const dotenv = require('dotenv');
 
@@ -40,13 +40,13 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
 
     const address = process.env.AGREEMENT_ADDR;
     if (address) {
-      agreement = await ethers.getContractAt('Agreement', address);
+      agreement = (await ethers.getContractAt('Agreement', address)) as Agreement;
     } else {
       // TODO: what should we do if the user did not set the AGREEMENT_ADDR?
       console.log('The agreement address is undefined');
     }
     txsAddr = await agreement.txs();
-    txs = await ethers.getContractAt('ConditionalTxs', txsAddr);
+    txs = (await ethers.getContractAt('ConditionalTxs', txsAddr)) as ConditionalTxs;
   });
 
   beforeEach(async () => {

@@ -22,12 +22,12 @@ contract App is Storage {
     }
 
     function parse(string memory _program) external {
-        parser.parse(ctx, _program);
+        parser.parse(address(ctx), _program);
     }
 
     function execute() external payable {
         ctx.setMsgValue(msg.value);
-        Executor.execute(ctx);
+        Executor.execute(address(ctx));
     }
 
     function setupContext() internal {

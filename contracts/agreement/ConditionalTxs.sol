@@ -92,19 +92,18 @@ contract ConditionalTxs is Storage {
         uint256 _msgValue,
         address _signatory
     ) external {
-        // console.log('execTx');
         Tx memory txn = txs[_txId];
-        // require(
-        //     checkConditions(_txId, _msgValue),
-        //     'ConditionalTxs: txn condition is not satisfied'
-        // );
+        require(
+            checkConditions(_txId, _msgValue),
+            'ConditionalTxs: txn condition is not satisfied'
+        );
         require(
             !isExecutedBySignatory[_txId][_signatory],
             'ConditionalTxs: txn already was executed by this signatory'
         );
 
         txn.transactionCtx.setMsgValue(_msgValue);
-        Executor.execute(txn.transactionCtx);
+        Executor.execute(address(txn.transactionCtx));
         isExecutedBySignatory[_txId][_signatory] = true;
 
         // Check is tx was executed by all signatories
@@ -123,7 +122,6 @@ contract ConditionalTxs is Storage {
         uint256 _txId,
         uint256 _msgValue /*onlyOwner*/
     ) public returns (bool) {
-        // console.log('checkConditions');
         Tx memory txn = txs[_txId];
 
         Tx memory requiredTx;
@@ -141,13 +139,11 @@ contract ConditionalTxs is Storage {
             );
         }
 
-        bool _res;
+        bool _res = true;
         for (uint256 i = 0; i < conditionCtxs[_txId].length; i++) {
             conditionCtxs[_txId][i].setMsgValue(_msgValue);
-            Executor.execute(conditionCtxs[_txId][i]);
-            _res = _res && conditionCtxs[_txId][i].stack().seeLast().getUint256() == 0
-                ? false
-                : true;
+            Executor.execute(address(conditionCtxs[_txId][i]));
+            _res = _res && (conditionCtxs[_txId][i].stack().seeLast().getUint256() > 0);
         }
         return _res;
     }

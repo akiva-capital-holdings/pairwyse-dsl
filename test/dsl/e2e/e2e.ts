@@ -1,6 +1,12 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
-import { E2EApp, Context, Preprocessor, Stack, StackValue__factory } from '../../../typechain';
+import {
+  E2EApp,
+  Context,
+  Preprocessor,
+  Stack,
+  StackValue__factory,
+} from '../../../typechain-types';
 import { checkStack, hex4Bytes, hex4BytesShort } from '../../utils/utils';
 
 async function getChainId() {
@@ -31,7 +37,7 @@ describe('End-to-end', () => {
     PREV_MONTH = lastBlockTimestamp - 60 * 60 * 24 * 30;
 
     // Create StackValue Factory instance
-    StackValue = await ethers.getContractFactory('StackValue');
+    StackValue = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
@@ -68,11 +74,11 @@ describe('End-to-end', () => {
     const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
 
     // Deploy Preprocessor
-    preprocessor = await (
+    preprocessor = (await (
       await ethers.getContractFactory('Preprocessor', {
         libraries: { StringUtils: stringLib.address },
       })
-    ).deploy();
+    ).deploy()) as Preprocessor;
 
     // Deploy ParserMock
     const parser = await (
@@ -82,7 +88,7 @@ describe('End-to-end', () => {
     ).deploy();
 
     // Deploy Context & setup
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
+    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
     ctxAddr = ctx.address;
     await ctx.setComparatorOpcodesAddr(comparatorOpcodesLib.address);
     await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
@@ -92,12 +98,12 @@ describe('End-to-end', () => {
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
     const contextStackAddress = await ctx.stack();
-    stack = StackCont.attach(contextStackAddress);
+    stack = StackCont.attach(contextStackAddress) as Stack;
 
     // Deploy Application
-    app = await (
+    app = (await (
       await ethers.getContractFactory('E2EApp', { libraries: { Executor: executorLib.address } })
-    ).deploy(preprocessor.address, parser.address, ctxAddr);
+    ).deploy(preprocessor.address, parser.address, ctxAddr)) as E2EApp;
   });
 
   describe('blockChainId < loadLocal uint256 VAR', () => {
@@ -511,8 +517,6 @@ describe('End-to-end', () => {
         A setUint256 B
         (B + 2) setUint256 SUM
         `;
-      const six = new Array(64).join('0') + 6;
-      const two = new Array(64).join('0') + 2;
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
       const expectedCode = ['A', 'setUint256', 'B', 'B', 'uint256', '2', '+', 'setUint256', 'SUM'];
       expect(code).to.eql(expectedCode);
@@ -521,7 +525,7 @@ describe('End-to-end', () => {
       expect(app.parseCode(code)).revertedWith('Parser: "A" command is unknown');
     });
 
-    it.skip('Use A value as bool, but it was stored as a number', async () => {
+    it('Use A value as bool, but it was stored as a number', async () => {
       // TODO: should revert or use true value?
       const SIX = new Array(64).join('0') + 6;
       const input = `
@@ -534,7 +538,7 @@ describe('End-to-end', () => {
 
       // to Parser
       await app.parseCode(code);
-      const expectedProgram = '0x' + '1a' + `${SIX}` + '2e' + '03783fac' + '18' + '01';
+      const expectedProgram = `0x1a${SIX}2e03783fac1800`;
       expect(await ctx.program()).to.equal(expectedProgram);
     });
   });

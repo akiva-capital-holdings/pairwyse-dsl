@@ -9,8 +9,26 @@ import 'solidity-coverage';
 import 'hardhat-contract-sizer';
 // import * as tdly from '@tenderly/hardhat-tenderly';
 
-// tdly.setup();
+// Enable Tenderly (v. 1.1.4) setup only if needed as it causes tests to fall
+// if (process.env.DEPLOY_TO_TENDERLY === 'true') {
+//   tdly.setup();
+// }
 dotenv.config();
+
+const {
+  OPTIMIZER,
+  REMOTE_GANACHE_URL,
+  REMOTE_GANACHE_PRIVATE_KEYS,
+  ROPSTEN_URL,
+  PRIVATE_KEY,
+  TENDERLY_FORK_URL,
+  REPORT_GAS,
+  ETHERSCAN_API_KEY,
+  CONTRACT_SIZER,
+  // TENDERLY_PROJECT,
+  // TENDERLY_USERNAME,
+  // TENDERLY_FORK_ID,
+} = process.env;
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -22,20 +40,17 @@ task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
   }
 });
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
-
 const config: HardhatUserConfig = {
   solidity: {
     version: '0.8.11',
     settings: {
       optimizer: {
-        enabled: process.env.OPTIMIZER === 'true',
+        enabled: OPTIMIZER === 'true',
         runs: 100,
       },
     },
   },
-  defaultNetwork: 'tenderly',
+  defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
       chainId: 1337,
@@ -45,44 +60,37 @@ const config: HardhatUserConfig = {
       url: 'http://127.0.0.1:8545',
     },
     remoteGanache: {
-      url: process.env.REMOTE_GANACHE_URL || '',
+      url: REMOTE_GANACHE_URL || '',
       timeout: 1e9,
       accounts:
-        process.env.REMOTE_GANACHE_PRIVATE_KEYS !== undefined
-          ? process.env.REMOTE_GANACHE_PRIVATE_KEYS.split(',')
-          : [],
+        REMOTE_GANACHE_PRIVATE_KEYS !== undefined ? REMOTE_GANACHE_PRIVATE_KEYS.split(',') : [],
     },
     ropsten: {
-      url: process.env.ROPSTEN_URL || '',
-      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      url: ROPSTEN_URL || '',
+      accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
     },
     tenderly: {
-      url: process.env.TENDERLY_FORK_URL || '',
+      url: TENDERLY_FORK_URL || '',
       chainId: 1,
     },
   },
   gasReporter: {
-    enabled: process.env.REPORT_GAS === 'true',
+    enabled: REPORT_GAS === 'true',
     currency: 'USD',
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: ETHERSCAN_API_KEY,
   },
   mocha: {
     timeout: 1e9,
   },
   contractSizer: {
-    // alphaSort: true,
-    // disambiguatePaths: false,
-    runOnCompile: process.env.CONTRACT_SIZER === 'true',
-    // strict: true,
+    runOnCompile: CONTRACT_SIZER === 'true',
   },
   // tenderly: {
-  //   project: 'project',
-  //   username: 'eugenefine',
-  //   forkNetwork: '1',
-  //   // privateVerification: false,
-  //   // deploymentsDir: "deployments"
+  //   project: TENDERLY_PROJECT || '',
+  //   username: TENDERLY_USERNAME || '',
+  //   forkNetwork: TENDERLY_FORK_ID,
   // },
 };
 

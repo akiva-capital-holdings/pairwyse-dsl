@@ -1,13 +1,14 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
-import { Context, ParserMock } from '../../typechain';
+import { ethers, network } from 'hardhat';
+import { Context, ParserMock } from '../../typechain-types';
 
 describe('Parser', () => {
   let sender: SignerWithAddress;
   let app: ParserMock;
   let ctx: Context;
   let ctxAddr: string;
+  let snapshotId: number;
 
   before(async () => {
     [sender] = await ethers.getSigners();
@@ -20,40 +21,25 @@ describe('Parser', () => {
     const ParserCont = await ethers.getContractFactory('ParserMock', {
       libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
     });
-    app = await ParserCont.deploy();
-  });
+    app = (await ParserCont.deploy()) as ParserMock;
 
-  beforeEach(async () => {
     // Deploy & setup Context
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
+    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
     ctxAddr = ctx.address;
     await ctx.initOpcodes();
     await ctx.setAppAddress(app.address);
     await ctx.setMsgSender(sender.address);
+
+    // Make a snapshot
+    snapshotId = await network.provider.send('evm_snapshot');
+  });
+
+  afterEach(async () => {
+    // Return to the snapshot
+    await network.provider.send('evm_revert', [snapshotId]);
   });
 
   describe('parse', () => {
-    // it.only('the maximum length of statement', async () => {
-    //   await app.parse(
-    //     ctxAddr,
-    //     `
-    //   (uint256 9805
-    //     * (loadLocal uint256 GP_DEPOSIT_REMAINING + loadLocal uint256 GP_DEPOSIT_INITIAL)
-    //   <
-    //   uint256 200
-    //     * loadLocal uint256 LP_DEPOSIT_INITIAL)
-    //   and
-    //   (blockTimestamp > loadLocal uint256 CLOSING_DATE_PLUS_ONE_DAY)
-    //   and
-    //   (blockTimestamp < loadLocal uint256 FUND_INVESTMENT_DATE)
-    //   and
-    //   (blockTimestamp < loadLocal uint256 FUND_INVESTMENT_DATE)
-    //   and
-
-    // `
-    //   );
-    // });
-
     it('error: delegatecall to asmSelector failed', async () => {
       await expect(app.parse(ctxAddr, 'uint256')).to.be.revertedWith(
         'delegatecall to asmSelector failed'
@@ -70,15 +56,11 @@ describe('Parser', () => {
     });
 
     it('error: if adding number with a number that contains string', async () => {
-      await expect(app.parse(ctxAddr, '10d + 1')).to.be.revertedWith(
-        'Parser: delegatecall to asmSelector failed'
-      );
+      await expect(app.parse(ctxAddr, '10d + 1')).to.be.revertedWith('StringUtils: invalid format');
     });
 
     it('error: if adding number with a number that can be hex', async () => {
-      await expect(app.parse(ctxAddr, '1 + 0x1')).to.be.revertedWith(
-        'Parser: delegatecall to asmSelector failed'
-      );
+      await expect(app.parse(ctxAddr, '1 + 0x1')).to.be.revertedWith('StringUtils: invalid format');
     });
 
     it('error: if adding uint256 with string value with a number', async () => {
