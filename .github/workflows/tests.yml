@@ -16,16 +16,15 @@ jobs:
       matrix:
         node-version: [16.x]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Install dependencies
-      - run: yarn --frozen-lockfile
+      - run: yarn
       - name: Build artifacts
         run: yarn build
         env:
           TENDERLY_FORK_URL: ${{ secrets.TENDERLY_FORK_URL }}
       - name: Running tests & test coverage
-        run: yarn coverage
+        run: yarn test

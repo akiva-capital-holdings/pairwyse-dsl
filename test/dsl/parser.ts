@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
+import { ethers, network } from 'hardhat';
 import { Context, ParserMock } from '../../typechain-types';
 
 describe('Parser', () => {
@@ -8,6 +8,7 @@ describe('Parser', () => {
   let app: ParserMock;
   let ctx: Context;
   let ctxAddr: string;
+  let snapshotId: number;
 
   before(async () => {
     [sender] = await ethers.getSigners();
@@ -21,39 +22,24 @@ describe('Parser', () => {
       libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
     });
     app = (await ParserCont.deploy()) as ParserMock;
-  });
 
-  beforeEach(async () => {
     // Deploy & setup Context
     ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
     ctxAddr = ctx.address;
     await ctx.initOpcodes();
     await ctx.setAppAddress(app.address);
     await ctx.setMsgSender(sender.address);
+
+    // Make a snapshot
+    snapshotId = await network.provider.send('evm_snapshot');
+  });
+
+  afterEach(async () => {
+    // Return to the snapshot
+    await network.provider.send('evm_revert', [snapshotId]);
   });
 
   describe('parse', () => {
-    // it.only('the maximum length of statement', async () => {
-    //   await app.parse(
-    //     ctxAddr,
-    //     `
-    //   (uint256 9805
-    //     * (loadLocal uint256 GP_DEPOSIT_REMAINING + loadLocal uint256 GP_DEPOSIT_INITIAL)
-    //   <
-    //   uint256 200
-    //     * loadLocal uint256 LP_DEPOSIT_INITIAL)
-    //   and
-    //   (blockTimestamp > loadLocal uint256 CLOSING_DATE_PLUS_ONE_DAY)
-    //   and
-    //   (blockTimestamp < loadLocal uint256 FUND_INVESTMENT_DATE)
-    //   and
-    //   (blockTimestamp < loadLocal uint256 FUND_INVESTMENT_DATE)
-    //   and
-
-    // `
-    //   );
-    // });
-
     it('error: delegatecall to asmSelector failed', async () => {
       await expect(app.parse(ctxAddr, 'uint256')).to.be.revertedWith(
         'delegatecall to asmSelector failed'

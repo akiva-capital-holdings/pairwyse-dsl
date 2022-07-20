@@ -40,13 +40,12 @@ contract Parser is IParser, Storage {
 
     /**
      * @dev Transform DSL code from array in infix notation to raw bytecode
-     * @param _ctx Context contract interface
+     * @param _ctxAddr Context contract interface address
      * @param _codeRaw Input code as a string in infix notation
      */
-    function parse(IContext _ctx, string memory _codeRaw) external {
-        // TODO: in func params change `IContext` type to `address`
-        string[] memory _code = preprocessor.transform(_ctx, _codeRaw);
-        _parseCode(_ctx, _code);
+    function parse(address _ctxAddr, string memory _codeRaw) external {
+        string[] memory _code = preprocessor.transform(_ctxAddr, _codeRaw);
+        _parseCode(_ctxAddr, _code);
     }
 
     /**
@@ -335,29 +334,29 @@ contract Parser is IParser, Storage {
     /**
      * @dev Сonverts a list of commands to bytecode
      */
-    function _parseCode(IContext _ctx, string[] memory code) internal {
+    function _parseCode(address _ctxAddr, string[] memory code) internal {
         delete program;
         cmdIdx = 0;
         cmds = code;
-        _ctx.setPc(0);
-        _ctx.stack().clear();
+        IContext(_ctxAddr).setPc(0);
+        IContext(_ctxAddr).stack().clear();
 
         while (cmdIdx < cmds.length) {
-            _parseOpcodeWithParams(_ctx);
+            _parseOpcodeWithParams(_ctxAddr);
         }
 
         // console.logBytes(program);
-        _ctx.setProgram(program);
+        IContext(_ctxAddr).setProgram(program);
     }
 
     /**
      * @dev Updates the bytecode `program` in dependence on
      * commands that were provided in `cmds` list
      */
-    function _parseOpcodeWithParams(IContext _ctx) internal {
+    function _parseOpcodeWithParams(address _ctxAddr) internal {
         string storage cmd = _nextCmd();
 
-        bytes1 opcode = _ctx.opCodeByName(cmd);
+        bytes1 opcode = IContext(_ctxAddr).opCodeByName(cmd);
         require(
             opcode != 0x0 || _isLabel(cmd) || isVariable[cmd],
             string(abi.encodePacked('Parser: "', cmd, '" command is unknown'))
@@ -374,11 +373,11 @@ contract Parser is IParser, Storage {
             program = bytes.concat(programBefore, bytes2(uint16(_branchLocation)), programAfter);
         } else {
             program = bytes.concat(program, opcode);
-            bytes4 _selector = _ctx.asmSelectors(cmd);
+            bytes4 _selector = IContext(_ctxAddr).asmSelectors(cmd);
 
             if (_selector != 0x0) {
                 (bool success, ) = address(this).delegatecall(
-                    abi.encodeWithSelector(_selector, _ctx)
+                    abi.encodeWithSelector(_selector, IContext(_ctxAddr))
                 );
                 require(success, 'Parser: delegatecall to asmSelector failed');
             }

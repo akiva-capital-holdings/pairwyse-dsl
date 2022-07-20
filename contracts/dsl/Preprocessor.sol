@@ -44,14 +44,17 @@ contract Preprocessor {
      * ['uint256', '6', 'setUint256', 'A']
      * ```
      *
-     * @param _ctx is a context contract
+     * @param _ctxAddr is a context contract address
      * @param _program is a user's DSL code string
      * @return the list of commands that storing `result`
      */
-    function transform(IContext _ctx, string memory _program) external returns (string[] memory) {
+    function transform(address _ctxAddr, string memory _program)
+        external
+        returns (string[] memory)
+    {
         Stack stack = new Stack();
         string[] memory code = split(_program);
-        return infixToPostfix(_ctx, code, stack);
+        return infixToPostfix(_ctxAddr, code, stack);
     }
 
     /**
@@ -181,13 +184,13 @@ contract Preprocessor {
      * ['uint256', '1', 'uint256', '2', '+']
      * ```
      *
-     * @param _ctx is a context contract
+     * @param _ctxAddr is a context contract address
      * @param _code is a DSL command list
      * @return _stack uses for getting and storing temporary data to
      * rebuild the list of commands
      */
     function infixToPostfix(
-        IContext _ctx,
+        address _ctxAddr,
         string[] memory _code,
         Stack _stack
     ) public returns (string[] memory) {
@@ -213,14 +216,15 @@ contract Preprocessor {
             );
 
             // Replace alises with base commands
-            if (_isAlias(_ctx, chunk)) {
-                chunk = _ctx.aliases(chunk);
+            if (_isAlias(_ctxAddr, chunk)) {
+                chunk = IContext(_ctxAddr).aliases(chunk);
             }
 
-            if (_isOperator(_ctx, chunk)) {
+            if (_isOperator(_ctxAddr, chunk)) {
                 while (
                     _stack.length() > 0 &&
-                    _ctx.opsPriors(chunk) <= _ctx.opsPriors(_stack.seeLast().getString())
+                    IContext(_ctxAddr).opsPriors(chunk) <=
+                    IContext(_ctxAddr).opsPriors(_stack.seeLast().getString())
                 ) {
                     result.push(_stack.pop().getString());
                 }
@@ -479,9 +483,9 @@ contract Preprocessor {
         stack_.push(stackValue);
     }
 
-    function _isOperator(IContext _ctx, string memory op) internal view returns (bool) {
-        for (uint256 i = 0; i < _ctx.operatorsLen(); i++) {
-            if (op.equal(_ctx.operators(i))) return true;
+    function _isOperator(address _ctxAddr, string memory op) internal view returns (bool) {
+        for (uint256 i = 0; i < IContext(_ctxAddr).operatorsLen(); i++) {
+            if (op.equal(IContext(_ctxAddr).operators(i))) return true;
         }
         return false;
     }
@@ -489,8 +493,8 @@ contract Preprocessor {
     /**
      * @dev Checks if a string is an alias to a command from DSL
      */
-    function _isAlias(IContext _ctx, string memory _cmd) internal view returns (bool) {
-        return !_ctx.aliases(_cmd).equal('');
+    function _isAlias(address _ctxAddr, string memory _cmd) internal view returns (bool) {
+        return !IContext(_ctxAddr).aliases(_cmd).equal('');
     }
 
     /**
