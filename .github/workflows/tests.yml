@@ -22,6 +22,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: yarn
+      - name: Generate typechain types
+        run: yarn typechain
       - name: Build artifacts
         run: yarn build
         env:
