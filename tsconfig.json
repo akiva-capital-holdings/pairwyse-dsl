@@ -13,7 +13,6 @@
     "./scripts",
     "./test",
     "./typechain-types",
-    "off-chain-converter",
     "./demo"
   ],
   "files": [
