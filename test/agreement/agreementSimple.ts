@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
 import { hex4Bytes } from '../utils/utils';
-import { Agreement } from '../../typechain-types/Agreement';
+import { Agreement } from '../../typechain-types/agreement';
 import { ConditionalTxs } from '../../typechain-types';
 
 const dotenv = require('dotenv');
