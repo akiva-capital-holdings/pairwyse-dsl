@@ -5,7 +5,7 @@ import { formatEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
 import { changeTokenBalanceAndGetTxHash, hex4Bytes } from '../utils/utils';
 import { businessCaseSteps } from '../../scripts/data/agreement';
-import { Agreement } from '../../typechain-types/Agreement';
+import { Agreement } from '../../typechain-types/agreement';
 import { ConditionalTxs, Token, Context__factory } from '../../typechain-types';
 import { TxObject } from '../types';
 

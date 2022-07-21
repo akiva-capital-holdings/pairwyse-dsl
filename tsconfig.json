@@ -4,6 +4,7 @@
     "module": "commonjs",
     "strict": true,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "outDir": "dist",
     "declaration": true,
     "allowJs": false
@@ -11,8 +12,7 @@
   "include": [
     "./scripts",
     "./test",
-    "./typechain",
-    "off-chain-converter",
+    "./typechain-types",
     "./demo"
   ],
   "files": [
