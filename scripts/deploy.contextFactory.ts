@@ -8,7 +8,7 @@ async function deploy() {
   const contextFactory = await ContextFactory.deploy();
   await contextFactory.deployed();
 
-  console.log('ContextFactory address:', contextFactory.address);
+  console.log(`\x1b[42m ContextFactory address \x1b[0m\x1b[32m ${contextFactory.address}\x1b[0m`);
 }
 
 deploy();

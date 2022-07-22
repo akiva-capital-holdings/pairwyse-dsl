@@ -48,7 +48,7 @@ async function deploy() {
       },
     })
   ).deploy();
-  console.log('AgreementFactory address:', factory.address);
+  console.log(`\x1b[42m AgreementFactory address \x1b[0m\x1b[32m ${factory.address}\x1b[0m`);
 }
 
 deploy();

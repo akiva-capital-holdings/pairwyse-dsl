@@ -144,7 +144,7 @@ async function deploy() {
   await addSteps(businessCaseSteps(GP, [LPs[0], LPs[1]], 4), ContextCont, agreement.address);
   // await addSteps(businessCaseSteps(GP, [LPs[0], LPs[1]], 5), ContextCont, agreement.address);
 
-  console.log('Agreement address: ', agreement.address);
+  console.log(`\x1b[42m Agreement address \x1b[0m\x1b[32m ${agreement.address}\x1b[0m`);
 }
 
 deploy();

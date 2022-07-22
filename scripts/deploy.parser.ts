@@ -14,7 +14,7 @@ async function main() {
   const parser = await Parser.deploy();
   await parser.deployed();
 
-  console.log('Parser address:', parser.address);
+  console.log(`\x1b[42m Parser address \x1b[0m\x1b[32m ${parser.address}\x1b[0m`);
 }
 
 main();
