@@ -1,5 +1,16 @@
 # Agreement Transferring Funds Demo
 
+## Versions
+
+```
+➜ node -v
+v16.13.1
+➜  yarn -v
+1.22.17
+```
+
+Node
+
 ## Steps to reproduce
 
 ### Setup Solidity SC
