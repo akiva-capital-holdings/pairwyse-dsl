@@ -17,6 +17,52 @@ describe('Context', () => {
     app = await ContextCont.deploy();
   });
 
+  describe('Operators', () => {
+    it('initOpcodes', async () => {
+      expect(await app.operatorsLen()).to.equal(0);
+      await expect(app.operators(0)).to.be.reverted;
+      await expect(app.operators(7)).to.be.reverted;
+      await expect(app.operators(14)).to.be.reverted;
+      await app.initOpcodes();
+      expect(await app.operatorsLen()).to.equal(15);
+      // check the first operaror
+      expect(await app.operators(0)).to.equal('==');
+      // check the middle operaror
+      expect(await app.operators(7)).to.equal('!');
+      // check the last operator
+      expect(await app.operators(14)).to.equal('/');
+    });
+
+    it('should add the operator', async () => {
+      await app.addOperatorExt('+', 999);
+      expect(await app.operatorsLen()).to.equal(1);
+      expect(await app.opsPriors('+')).to.equal(999);
+      expect(await app.operators(0)).to.equal('+');
+    });
+
+    it('should add the opcode for the operator', async () => {
+      const name = '+';
+      const opcode = '0x01';
+      const opSelector = '0x00000001';
+      const asmSelector = '0x00000000';
+      await app.addOpcodeForOperatorExt(
+        name,
+        opcode,
+        opSelector,
+        asmSelector,
+        OpcodeLibNames.ComparisonOpcodes,
+        999
+      );
+      expect(await app.opCodeByName(name)).to.equal(opcode);
+      expect(await app.selectorByOpcode(opcode)).to.equal(opSelector);
+      expect(await app.asmSelectors(name)).to.equal(asmSelector);
+
+      expect(await app.operatorsLen()).to.equal(1);
+      expect(await app.opsPriors('+')).to.equal(999);
+      expect(await app.operators(0)).to.equal('+');
+    });
+  });
+
   describe('addOpcode', () => {
     it('error: empty opcode selector', async () => {
       await expect(
@@ -76,14 +122,6 @@ describe('Context', () => {
     });
   });
 
-  it('setProgram', async () => {
-    await app.setPc('0x03');
-    expect(await app.pc()).to.equal('0x03');
-    await app.setProgram('0x123456');
-    expect(await app.program()).to.equal('0x123456');
-    expect(await app.pc()).to.equal('0x00');
-  });
-
   describe('programAt & programSlice', () => {
     it('get slice', async () => {
       await app.setProgram('0x01020304');
@@ -98,6 +136,14 @@ describe('Context', () => {
       await app.setProgram('0x01020304');
       await expect(app.programAt(4, 1)).to.be.revertedWith('Context: slicing out of range');
     });
+  });
+
+  it('setProgram', async () => {
+    await app.setPc('0x03');
+    expect(await app.pc()).to.equal('0x03');
+    await app.setProgram('0x123456');
+    expect(await app.program()).to.equal('0x123456');
+    expect(await app.pc()).to.equal('0x00');
   });
 
   it('setPc', async () => {
