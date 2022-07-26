@@ -1,9 +1,8 @@
 import '@nomiclabs/hardhat-ethers';
 import * as hre from 'hardhat';
 // TODO: would it be better to store types bot in the test directory?
-import { parseEther } from 'ethers/lib/utils';
 import { TxObject } from '../test/types';
-import { aliceAndBobSteps, aliceBobAndCarl, businessCaseSteps } from './data/agreement';
+import { businessCaseSteps } from './data/agreement';
 
 import { Context__factory } from '../typechain-types';
 import { AgreementMock } from '../typechain-types/agreement/mocks';
@@ -102,11 +101,11 @@ async function deploy() {
       Executor: executorLib.address,
     },
   });
-  agreement = await AgreementContract.deploy(parser.address);
+  agreement = (await AgreementContract.deploy(parser.address)) as AgreementMock;
   await agreement.deployed();
 
   const ContextCont = await ethers.getContractFactory('Context');
-  const [alice, GP, ...LPs] = await ethers.getSigners();
+  const [, GP, ...LPs] = await ethers.getSigners();
 
   await addSteps(businessCaseSteps(GP, [LPs[0], LPs[1]], BASE), ContextCont);
 

@@ -22,10 +22,10 @@ describe('Logical opcodes', () => {
   let stack: Stack;
 
   before(async () => {
-    StackCont = (await ethers.getContractFactory('Stack')) as Stack__factory;
-    StackValue = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
+    StackCont = await ethers.getContractFactory('Stack');
+    StackValue = await ethers.getContractFactory('StackValue');
 
-    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
+    ctx = await (await ethers.getContractFactory('Context')).deploy();
     ctxAddr = ctx.address;
 
     // Deploy libraries
@@ -37,15 +37,15 @@ describe('Logical opcodes', () => {
     ).deploy();
 
     // Deploy LogicalOpcodesMock
-    app = (await (
+    app = await (
       await ethers.getContractFactory('LogicalOpcodesMock', {
         libraries: { LogicalOpcodes: logicalOpcodesLib.address },
       })
-    ).deploy()) as LogicalOpcodesMock;
+    ).deploy();
 
     // Create Stack instance
     const stackAddr = await ctx.stack();
-    stack = (await ethers.getContractAt('Stack', stackAddr)) as Stack;
+    stack = await ethers.getContractAt('Stack', stackAddr);
 
     // Setup
     await ctx.initOpcodes();

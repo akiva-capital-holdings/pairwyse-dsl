@@ -186,7 +186,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await expect(await agreement.connect(alice).execute(34)).to.changeEtherBalance(alice, oneEthBN);
     expect(await token.balanceOf(alice.address)).to.equal(0);
 
-    // TODO: Why was it commented?
+    // TODO: Why was it commented? - To speed up the test. It may be enabled
 
     // // If Alice didn't return 10 tokens to Bob before EXPIRY
     // // then Bob can collect 10 tokens from Carl

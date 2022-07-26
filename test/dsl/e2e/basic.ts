@@ -27,7 +27,7 @@ describe('DSL: basic', () => {
     PREV_MONTH = lastBlockTimestamp - 60 * 60 * 24 * 30;
 
     // Create StackValue Factory instance
-    StackValue = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
+    StackValue = await ethers.getContractFactory('StackValue');
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
@@ -79,12 +79,12 @@ describe('DSL: basic', () => {
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
     const contextStackAddress = await ctx.stack();
-    stack = StackCont.attach(contextStackAddress) as Stack;
+    stack = StackCont.attach(contextStackAddress);
 
     // Deploy Application
-    app = (await (
+    app = await (
       await ethers.getContractFactory('App', { libraries: { Executor: executorLib.address } })
-    ).deploy(parser.address, ctx.address)) as App;
+    ).deploy(parser.address, ctx.address);
     appAddrHex = app.address.slice(2);
   });
 

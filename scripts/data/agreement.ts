@@ -178,7 +178,6 @@ export const businessCaseSteps = (
       txId: Number(base + 4),
       requiredTxs: [Number(base + 2)],
       signatories: LPs,
-      // todo: `transferVar DAI GP GP_INITIAL` into a separate branch
       transaction: `
         (transferVar DAI GP GP_INITIAL)
         and
