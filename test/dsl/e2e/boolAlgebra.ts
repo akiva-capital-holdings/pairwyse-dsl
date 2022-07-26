@@ -22,8 +22,15 @@ describe('Boolean Algebra', () => {
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const comparatorOpcodesLib = await (
-      await ethers.getContractFactory('ComparatorOpcodes', {
+    const comparisonOpcodesLib = await (
+      await ethers.getContractFactory('ComparisonOpcodes', {
+        libraries: {
+          OpcodeHelpers: opcodeHelpersLib.address,
+        },
+      })
+    ).deploy();
+    const branchingOpcodesLib = await (
+      await ethers.getContractFactory('BranchingOpcodes', {
         libraries: {
           OpcodeHelpers: opcodeHelpersLib.address,
         },
@@ -31,13 +38,6 @@ describe('Boolean Algebra', () => {
     ).deploy();
     const logicalOpcodesLib = await (
       await ethers.getContractFactory('LogicalOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const setOpcodesLib = await (
-      await ethers.getContractFactory('SetOpcodes', {
         libraries: {
           OpcodeHelpers: opcodeHelpersLib.address,
         },
@@ -62,9 +62,9 @@ describe('Boolean Algebra', () => {
 
     // Deploy Context
     ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
-    await ctx.setComparatorOpcodesAddr(comparatorOpcodesLib.address);
+    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLib.address);
+    await ctx.setBranchingOpcodesAddr(branchingOpcodesLib.address);
     await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
-    await ctx.setSetOpcodesAddr(setOpcodesLib.address);
     await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
 
     // Create Stack instance

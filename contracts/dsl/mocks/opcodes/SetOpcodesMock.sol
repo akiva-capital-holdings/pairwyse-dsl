@@ -2,15 +2,15 @@
 pragma solidity ^0.8.0;
 
 import { IContext } from '../../interfaces/IContext.sol';
-import { SetOpcodes } from '../../libs/opcodes/SetOpcodes.sol';
+import { LogicalOpcodes } from '../../libs/opcodes/LogicalOpcodes.sol';
 
-contract SetOpcodesMock {
+contract LogicalOpcodesMock {
     /**
      * @dev Compares two values in the stack. Put 1 if both of them are 1, put
      *      0 otherwise
      */
     function opAnd(IContext _ctx) public {
-        SetOpcodes.opAnd(_ctx);
+        LogicalOpcodes.opAnd(_ctx);
     }
 
     /**
@@ -18,14 +18,14 @@ contract SetOpcodesMock {
      *      put 0 otherwise
      */
     function opOr(IContext _ctx) public {
-        SetOpcodes.opOr(_ctx);
+        LogicalOpcodes.opOr(_ctx);
     }
 
     function opXor(IContext _ctx) public {
-        SetOpcodes.opXor(_ctx);
+        LogicalOpcodes.opXor(_ctx);
     }
 
     function opAdd(IContext _ctx) public {
-        SetOpcodes.opAdd(_ctx);
+        LogicalOpcodes.opAdd(_ctx);
     }
 }

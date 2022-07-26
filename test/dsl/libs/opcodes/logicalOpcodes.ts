@@ -6,7 +6,7 @@ import {
   StackValue__factory,
   Context,
   Stack,
-  LogicalOpcodesMock,
+  BranchingOpcodesMock,
 } from '../../../../typechain-types';
 import { getBytesStringLength, pushToStack, uint256StrToHex } from '../../../utils/utils';
 
@@ -16,7 +16,7 @@ describe('Logical opcodes', () => {
   let StackCont: Stack__factory;
   let StackValue: StackValue__factory;
   /* eslint-enable camelcase */
-  let app: LogicalOpcodesMock;
+  let app: BranchingOpcodesMock;
   let ctx: Context;
   let ctxAddr: string;
   let stack: Stack;
@@ -30,16 +30,16 @@ describe('Logical opcodes', () => {
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const logicalOpcodesLib = await (
-      await ethers.getContractFactory('LogicalOpcodes', {
+    const branchingOpcodesLib = await (
+      await ethers.getContractFactory('BranchingOpcodes', {
         libraries: { OpcodeHelpers: opcodeHelpersLib.address },
       })
     ).deploy();
 
-    // Deploy LogicalOpcodesMock
+    // Deploy BranchingOpcodesMock
     app = await (
-      await ethers.getContractFactory('LogicalOpcodesMock', {
-        libraries: { LogicalOpcodes: logicalOpcodesLib.address },
+      await ethers.getContractFactory('BranchingOpcodesMock', {
+        libraries: { BranchingOpcodes: branchingOpcodesLib.address },
       })
     ).deploy();
 
@@ -50,7 +50,7 @@ describe('Logical opcodes', () => {
     // Setup
     await ctx.initOpcodes();
     await ctx.setAppAddress(ctx.address);
-    await ctx.setOtherOpcodesAddr(logicalOpcodesLib.address);
+    await ctx.setOtherOpcodesAddr(branchingOpcodesLib.address);
   });
 
   afterEach(async () => {

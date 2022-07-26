@@ -12,79 +12,104 @@ import { StackValue } from '../../helpers/Stack.sol';
 // import 'hardhat/console.sol';
 
 /**
- * @title Logical operator opcodes
- * @notice Opcodes for logical operators such as if/esle, switch/case
+ * @title Set operator opcodes
+ * @notice Opcodes for set operators such as AND, OR, XOR
  */
-// TODO: rename to BranchingOpcodes
 library LogicalOpcodes {
     using UnstructuredStorage for bytes32;
     using StringUtils for string;
 
-    function opIfelse(IContext _ctx) public {
-        if (_ctx.stack().length() == 0) {
-            OpcodeHelpers.putToStack(_ctx, 0); // for if-else condition to work all the time
-        }
+    /**
+     * @dev Compares two values in the stack. Put 1 if both of them are 1, put
+     *      0 otherwise
+     */
+    function opAnd(IContext _ctx) public {
+        StackValue last = _ctx.stack().pop();
+        StackValue prev = _ctx.stack().pop();
 
-        StackValue last = _getLast(_ctx);
-        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type in the stack');
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
 
-        uint16 _posTrueBranch = getUint16(_ctx);
-        uint16 _posFalseBranch = getUint16(_ctx);
+        bool result = (prev.getUint256() > 0) && (last.getUint256() > 0);
 
-        _ctx.setNextPc(_ctx.pc());
-        _ctx.setPc(last.getUint256() > 0 ? _posTrueBranch : _posFalseBranch);
+        OpcodeHelpers.putToStack(_ctx, result ? 1 : 0);
     }
 
-    function opIf(IContext _ctx) public {
-        if (_ctx.stack().length() == 0) {
-            OpcodeHelpers.putToStack(_ctx, 0); // for if condition to work all the time
-        }
+    /**
+     * @dev Compares two values in the stack. Put 1 if either one of them is 1,
+     *      put 0 otherwise
+     */
+    function opOr(IContext _ctx) public {
+        StackValue last = _ctx.stack().pop();
+        StackValue prev = _ctx.stack().pop();
 
-        StackValue last = _getLast(_ctx);
-        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type in the stack');
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
 
-        uint16 _posTrueBranch = getUint16(_ctx);
+        bool result = (prev.getUint256() > 0) || (last.getUint256() > 0);
 
-        if (last.getUint256() != 0) {
-            _ctx.setNextPc(_ctx.pc());
-            _ctx.setPc(_posTrueBranch);
-        } else {
-            _ctx.setNextPc(_ctx.program().length);
-        }
+        OpcodeHelpers.putToStack(_ctx, result ? 1 : 0);
     }
 
-    function opFunc(IContext _ctx) public {
-        if (_ctx.stack().length() == 0) {
-            OpcodeHelpers.putToStack(_ctx, 0);
-        }
+    function opXor(IContext _ctx) public {
+        StackValue last = _ctx.stack().pop();
+        StackValue prev = _ctx.stack().pop();
 
-        StackValue last = _getLast(_ctx);
-        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type in the stack');
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
 
-        uint16 _reference = getUint16(_ctx);
+        bool result = ((prev.getUint256() > 0) && (last.getUint256() == 0)) ||
+            ((prev.getUint256() == 0) && (last.getUint256() > 0));
 
-        _ctx.setNextPc(_ctx.pc());
-        _ctx.setPc(_reference);
+        OpcodeHelpers.putToStack(_ctx, result ? 1 : 0);
     }
 
-    function _getLast(IContext _ctx) public returns (StackValue) {
-        return _ctx.stack().pop();
+    function opAdd(IContext _ctx) public {
+        StackValue last = _ctx.stack().pop();
+        StackValue prev = _ctx.stack().pop();
+
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+
+        uint256 result = prev.getUint256() + last.getUint256();
+
+        OpcodeHelpers.putToStack(_ctx, result);
     }
 
-    function opEnd(IContext _ctx) public {
-        _ctx.setPc(_ctx.nextpc());
-        _ctx.setNextPc(_ctx.program().length);
+    function opSub(IContext _ctx) public {
+        StackValue last = _ctx.stack().pop();
+        StackValue prev = _ctx.stack().pop();
+
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+
+        uint256 result = prev.getUint256() - last.getUint256();
+
+        OpcodeHelpers.putToStack(_ctx, result);
     }
 
-    function getUint16(IContext _ctx) public returns (uint16) {
-        bytes memory data = OpcodeHelpers.nextBytes(_ctx, 2);
+    function opMul(IContext _ctx) public {
+        StackValue last = _ctx.stack().pop();
+        StackValue prev = _ctx.stack().pop();
 
-        // Convert bytes to bytes8
-        bytes2 result;
-        assembly {
-            result := mload(add(data, 0x20))
-        }
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
 
-        return uint16(result);
+        uint256 result = prev.getUint256() * last.getUint256();
+
+        OpcodeHelpers.putToStack(_ctx, result);
+    }
+
+    // Note: integer division. Example: 5 / 2 = 2
+    function opDiv(IContext _ctx) public {
+        StackValue last = _ctx.stack().pop();
+        StackValue prev = _ctx.stack().pop();
+
+        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
+        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+
+        uint256 result = prev.getUint256() / last.getUint256();
+
+        OpcodeHelpers.putToStack(_ctx, result);
     }
 }

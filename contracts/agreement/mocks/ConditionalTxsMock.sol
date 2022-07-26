@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 import { IContext } from '../../dsl/interfaces/IContext.sol';
-import { ComparatorOpcodes } from '../../dsl/libs/opcodes/ComparatorOpcodes.sol';
+import { ComparisonOpcodes } from '../../dsl/libs/opcodes/ComparisonOpcodes.sol';
+import { BranchingOpcodes } from '../../dsl/libs/opcodes/BranchingOpcodes.sol';
 import { LogicalOpcodes } from '../../dsl/libs/opcodes/LogicalOpcodes.sol';
-import { SetOpcodes } from '../../dsl/libs/opcodes/SetOpcodes.sol';
 import { OtherOpcodes } from '../../dsl/libs/opcodes/OtherOpcodes.sol';
 import { Executor } from '../../dsl/libs/Executor.sol';
 import { StringUtils } from '../../dsl/libs/StringUtils.sol';
@@ -55,9 +55,9 @@ contract ConditionalTxsMock is Storage {
         string memory _conditionStr,
         IContext _conditionCtx
     ) external {
-        _conditionCtx.setComparatorOpcodesAddr(address(ComparatorOpcodes));
+        _conditionCtx.setComparisonOpcodesAddr(address(ComparisonOpcodes));
+        _conditionCtx.setBranchingOpcodesAddr(address(BranchingOpcodes));
         _conditionCtx.setLogicalOpcodesAddr(address(LogicalOpcodes));
-        _conditionCtx.setSetOpcodesAddr(address(SetOpcodes));
         _conditionCtx.setOtherOpcodesAddr(address(OtherOpcodes));
 
         conditionCtxs[_txId].push(_conditionCtx);
@@ -73,9 +73,9 @@ contract ConditionalTxsMock is Storage {
             conditionStrs[_txId].length > 0,
             'The transaction should have at least one condition'
         );
-        _transactionCtx.setComparatorOpcodesAddr(address(ComparatorOpcodes));
+        _transactionCtx.setComparisonOpcodesAddr(address(ComparisonOpcodes));
+        _transactionCtx.setBranchingOpcodesAddr(address(BranchingOpcodes));
         _transactionCtx.setLogicalOpcodesAddr(address(LogicalOpcodes));
-        _transactionCtx.setSetOpcodesAddr(address(SetOpcodes));
         _transactionCtx.setOtherOpcodesAddr(address(OtherOpcodes));
 
         txs[_txId].transactionCtx = _transactionCtx;

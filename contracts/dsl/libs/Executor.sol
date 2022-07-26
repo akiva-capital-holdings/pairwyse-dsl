@@ -24,12 +24,12 @@ library Executor {
 
             address _lib;
 
-            if (_libName == IContext.OpcodeLibNames.ComparatorOpcodes) {
-                _lib = _ctx.comparatorOpcodes();
+            if (_libName == IContext.OpcodeLibNames.ComparisonOpcodes) {
+                _lib = _ctx.comparisonOpcodes();
+            } else if (_libName == IContext.OpcodeLibNames.BranchingOpcodes) {
+                _lib = _ctx.branchingOpcodes();
             } else if (_libName == IContext.OpcodeLibNames.LogicalOpcodes) {
                 _lib = _ctx.logicalOpcodes();
-            } else if (_libName == IContext.OpcodeLibNames.SetOpcodes) {
-                _lib = _ctx.setOpcodes();
             } else {
                 _lib = _ctx.otherOpcodes();
             }

@@ -9,7 +9,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-describe('Agreement: Alice, Bob, Carl', () => {
+describe.skip('Agreement: Alice, Bob, Carl', () => {
   let agreement: AgreementMock;
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;

@@ -15,8 +15,7 @@ import { StackValue } from '../../helpers/Stack.sol';
  * @title Comparator operator opcodes
  * @notice Opcodes for comparator operators such as >, <, =, !, etc.
  */
-// TODO: rename to ComparisonOpcodes
-library ComparatorOpcodes {
+library ComparisonOpcodes {
     using UnstructuredStorage for bytes32;
     using StringUtils for string;
 

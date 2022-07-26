@@ -6,9 +6,9 @@ describe('Context', () => {
   let app: ContextMock;
 
   enum OpcodeLibNames {
-    ComparatorOpcodes,
+    ComparisonOpcodes,
+    BranchingOpcodes,
     LogicalOpcodes,
-    SetOpcodes,
     OtherOpcodes,
   }
 
@@ -20,7 +20,7 @@ describe('Context', () => {
   describe('addOpcode', () => {
     it('error: empty opcode selector', async () => {
       await expect(
-        app.addOpcode('+', '0x01', '0x00000000', '0x00000000', OpcodeLibNames.ComparatorOpcodes)
+        app.addOpcode('+', '0x01', '0x00000000', '0x00000000', OpcodeLibNames.ComparisonOpcodes)
       ).to.be.revertedWith('Context: empty opcode selector');
     });
     it('error: duplicate opcode', async () => {
@@ -29,13 +29,13 @@ describe('Context', () => {
         '0x01',
         '0x00000001',
         '0x00000000',
-        OpcodeLibNames.ComparatorOpcodes
+        OpcodeLibNames.ComparisonOpcodes
       );
       await expect(
-        app.addOpcode('+', '0x02', '0x00000001', '0x00000000', OpcodeLibNames.ComparatorOpcodes)
+        app.addOpcode('+', '0x02', '0x00000001', '0x00000000', OpcodeLibNames.ComparisonOpcodes)
       ).to.be.revertedWith('Context: duplicate opcode name or code');
       await expect(
-        app.addOpcode('*', '0x01', '0x00000001', '0x00000000', OpcodeLibNames.ComparatorOpcodes)
+        app.addOpcode('*', '0x01', '0x00000001', '0x00000000', OpcodeLibNames.ComparisonOpcodes)
       ).to.be.revertedWith('Context: duplicate opcode name or code');
     });
     it('success', async () => {
@@ -43,7 +43,7 @@ describe('Context', () => {
       const opcode = '0x01';
       const opSelector = '0x00000001';
       const asmSelector = '0x00000000';
-      await app.addOpcode(name, opcode, opSelector, asmSelector, OpcodeLibNames.ComparatorOpcodes);
+      await app.addOpcode(name, opcode, opSelector, asmSelector, OpcodeLibNames.ComparisonOpcodes);
       expect(await app.opCodeByName(name)).to.equal(opcode);
       expect(await app.selectorByOpcode(opcode)).to.equal(opSelector);
       expect(await app.asmSelectors(name)).to.equal(asmSelector);

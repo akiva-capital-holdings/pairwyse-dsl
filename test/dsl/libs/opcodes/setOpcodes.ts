@@ -6,14 +6,14 @@ import {
   StackValue__factory,
   Context,
   Stack,
-  SetOpcodesMock,
+  LogicalOpcodesMock,
 } from '../../../../typechain-types';
 import { checkStack, pushToStack } from '../../../utils/utils';
 
 describe('Set opcodes', () => {
   let StackCont: Stack__factory;
   let StackValue: StackValue__factory;
-  let app: SetOpcodesMock;
+  let app: LogicalOpcodesMock;
   let ctx: Context;
   let ctxAddr: string;
   let stack: Stack;
@@ -28,18 +28,18 @@ describe('Set opcodes', () => {
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const setOpcodesLib = await (
-      await ethers.getContractFactory('SetOpcodes', {
+    const logicalOpcodesLib = await (
+      await ethers.getContractFactory('LogicalOpcodes', {
         libraries: { OpcodeHelpers: opcodeHelpersLib.address },
       })
     ).deploy();
 
-    // Deploy SetOpcodesMock
+    // Deploy LogicalOpcodesMock
     app = (await (
-      await ethers.getContractFactory('SetOpcodesMock', {
-        libraries: { SetOpcodes: setOpcodesLib.address },
+      await ethers.getContractFactory('LogicalOpcodesMock', {
+        libraries: { LogicalOpcodes: logicalOpcodesLib.address },
       })
-    ).deploy()) as SetOpcodesMock;
+    ).deploy()) as LogicalOpcodesMock;
 
     // Create Stack instance
     const stackAddr = await ctx.stack();
@@ -48,7 +48,7 @@ describe('Set opcodes', () => {
     // Setup
     await ctx.initOpcodes();
     await ctx.setAppAddress(ctx.address);
-    await ctx.setSetOpcodesAddr(setOpcodesLib.address);
+    await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
   });
 
   afterEach(async () => {

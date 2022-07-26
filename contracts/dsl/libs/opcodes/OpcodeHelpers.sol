@@ -14,7 +14,7 @@ import { StackValue } from '../../helpers/Stack.sol';
 /**
  * @title Opcode helper functions
  * @notice Opcode helper functions that are used in other opcode libraries
- * @dev Opcode libraries are: ComparatorOpcodes, LogicalOpcodes, SetOpcodes, and OtherOpcodes
+ * @dev Opcode libraries are: ComparisonOpcodes, BranchingOpcodes, LogicalOpcodes, and OtherOpcodes
  */
 library OpcodeHelpers {
     using UnstructuredStorage for bytes32;

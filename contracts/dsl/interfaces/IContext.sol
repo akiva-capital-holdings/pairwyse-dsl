@@ -5,9 +5,9 @@ import '../helpers/Stack.sol';
 
 interface IContext {
     enum OpcodeLibNames {
-        ComparatorOpcodes,
+        ComparisonOpcodes,
+        BranchingOpcodes,
         LogicalOpcodes,
-        SetOpcodes,
         OtherOpcodes
     }
 
@@ -24,11 +24,11 @@ interface IContext {
 
     function msgSender() external view returns (address);
 
-    function comparatorOpcodes() external view returns (address);
+    function comparisonOpcodes() external view returns (address);
+
+    function branchingOpcodes() external view returns (address);
 
     function logicalOpcodes() external view returns (address);
-
-    function setOpcodes() external view returns (address);
 
     function otherOpcodes() external view returns (address);
 
@@ -64,11 +64,11 @@ interface IContext {
 
     function operatorsLen() external view returns (uint256);
 
-    function setComparatorOpcodesAddr(address _opcodes) external;
+    function setComparisonOpcodesAddr(address _opcodes) external;
+
+    function setBranchingOpcodesAddr(address _opcodes) external;
 
     function setLogicalOpcodesAddr(address _opcodes) external;
-
-    function setSetOpcodesAddr(address _opcodes) external;
 
     function setOtherOpcodesAddr(address _opcodes) external;
 
