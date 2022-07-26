@@ -5,9 +5,9 @@ import { formatEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
 import { changeTokenBalanceAndGetTxHash, hex4Bytes } from '../utils/utils';
 import { businessCaseSteps } from '../../scripts/data/agreement';
-import { Agreement } from '../../typechain-types/agreement';
-import { ConditionalTxs, Token, Context__factory } from '../../typechain-types';
+import { Token, Context__factory } from '../../typechain-types';
 import { TxObject } from '../types';
+import { AgreementMock, ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
 
 const dotenv = require('dotenv');
 
@@ -15,12 +15,12 @@ dotenv.config();
 
 describe.skip('Agreement: business case', () => {
   let ContextCont: Context__factory;
-  let agreement: Agreement;
+  let agreement: AgreementMock;
   let whale: SignerWithAddress;
   let GP: SignerWithAddress;
   let LPs: SignerWithAddress[];
   let txsAddr: string;
-  let txs: ConditionalTxs;
+  let txs: ConditionalTxsMock;
   let NEXT_MONTH: number;
   let NEXT_TWO_MONTH: number;
   let LAST_BLOCK_TIMESTAMP: number;
@@ -386,13 +386,13 @@ initiating funds\x1b[0m
 
     const address = process.env.AGREEMENT_ADDR;
     if (address) {
-      agreement = (await ethers.getContractAt('Agreement', address)) as Agreement;
+      agreement = (await ethers.getContractAt('Agreement', address)) as AgreementMock;
     } else {
       // TODO: what should we do if the user did not set the AGREEMENT_ADDR?
       console.log('The agreement address is undefined');
     }
     txsAddr = await agreement.txs();
-    txs = (await ethers.getContractAt('ConditionalTxs', txsAddr)) as ConditionalTxs;
+    txs = (await ethers.getContractAt('ConditionalTxs', txsAddr)) as ConditionalTxsMock;
   });
 
   beforeEach(async () => {
@@ -412,9 +412,9 @@ initiating funds\x1b[0m
     await txs.setStorageUint256(hex4Bytes('LP_TOTAL'), 0);
     await txs.setStorageUint256(hex4Bytes('GP_REMAINING'), 0);
     await txs.setStorageUint256(hex4Bytes('TWO_PERCENT'), 0);
-    dai = (await (await ethers.getContractFactory('Token'))
+    dai = await (await ethers.getContractFactory('Token'))
       .connect(whale)
-      .deploy(parseUnits('100000000', 18))) as Token;
+      .deploy(parseUnits('100000000', 18));
   });
 
   afterEach(async () => {

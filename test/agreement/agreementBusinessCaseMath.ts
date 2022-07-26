@@ -1,27 +1,24 @@
+/* eslint-disable @typescript-eslint/no-loop-func */
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { formatEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
 import { changeTokenBalanceAndGetTxHash, hex4Bytes } from '../utils/utils';
-// import { businessCaseSteps } from '../../scripts/data/agreement';
-import { Agreement } from '../../typechain-types/agreement';
-import { ConditionalTxs, Context__factory } from '../../typechain-types';
+import { Context__factory } from '../../typechain-types';
 import { TxObject } from '../types';
 import { ERC20 } from '../../typechain-types/dsl/test/ERC20Mintable.sol';
-
-const dotenv = require('dotenv');
-
-dotenv.config();
+import { AgreementMock, ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
+import { businessCaseSteps } from '../../scripts/data/agreement';
 
 describe.skip('Agreement: business case tests math', () => {
   // let ContextCont: Context__factory;
-  let agreement: Agreement;
+  let agreement: AgreementMock;
   let whale: SignerWithAddress;
   let GP: SignerWithAddress;
   let LPs: SignerWithAddress[];
   let txsAddr: string;
-  let txs: ConditionalTxs;
+  let txs: ConditionalTxsMock;
   let NEXT_MONTH: number;
   let NEXT_TWO_MONTH: number;
   let LAST_BLOCK_TIMESTAMP: number;
@@ -30,6 +27,7 @@ describe.skip('Agreement: business case tests math', () => {
   const ONE_DAY = 60 * 60 * 24;
   const ONE_MONTH = ONE_DAY * 30;
   const ONE_YEAR = ONE_DAY * 365;
+  const BASE = 4;
 
   // Add tx objects to Agreement
   const addSteps = async (steps: TxObject[], Ctx: Context__factory) => {
@@ -72,6 +70,7 @@ describe.skip('Agreement: business case tests math', () => {
 
   const businessCaseTestDivisionErrors = (
     name: string,
+    base: string,
     GP_INITIAL: BigNumber,
     LP_INITIAL_ARR: BigNumber[],
     INITIAL_FUNDS_TARGET: BigNumber,
@@ -120,7 +119,8 @@ describe.skip('Agreement: business case tests math', () => {
       let EXPECTED_CONTRACT_BAL = 0;
 
       // ✅ Step 1
-      console.log('\n🏃 Agreement Lifecycle - Txn #1');
+      let txId = base.concat('1');
+      console.log(`\n🏃 Agreement Lifecycle - Txn #${txId}`);
       await dai.connect(whale).transfer(GP.address, GP_INITIAL);
       await dai.connect(GP).approve(txsAddr, GP_INITIAL);
       console.log(`GP Initial Deposit = ${formatEther(GP_INITIAL)} DAI`);
@@ -133,7 +133,7 @@ describe.skip('Agreement: business case tests math', () => {
       await txs.setStorageUint256(hex4Bytes('MANAGEMENT_PERCENT'), MANAGEMENT_FEE_PERCENTAGE);
       await txs.setStorageUint256(hex4Bytes('DEPOSIT_MIN_PERCENT'), DEPOSIT_MIN_PERCENT);
 
-      const txn1 = await agreement.connect(GP).execute(1);
+      const txn1 = await agreement.connect(GP).execute(txId);
       EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.add(GP_INITIAL);
       EXPECTED_CONTRACT_BAL += GP_INITIAL.toNumber();
       let daiBal = await dai.balanceOf(txsAddr);
@@ -150,7 +150,8 @@ describe.skip('Agreement: business case tests math', () => {
       console.log(`txn hash: \x1b[35m${txn1.hash}\x1b[0m`);
 
       // ✅ Step 2
-      console.log('\n🏃 Agreement Lifecycle - Txn #2');
+      txId = base.concat('2');
+      console.log(`\n🏃 Agreement Lifecycle - Txn #${txId}`);
       await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
       let LP_TOTAL = BigNumber.from(0);
       for await (const [i, LP_INITIAL] of LP_INITIAL_ARR.entries()) {
@@ -164,7 +165,7 @@ describe.skip('Agreement: business case tests math', () => {
         await txs.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
         await txs.setStorageUint256(hex4Bytes('CLOSING_DATE'), NEXT_TWO_MONTH);
 
-        const txn2 = await agreement.connect(LP).execute(2);
+        const txn2 = await agreement.connect(LP).execute(txId);
 
         EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.add(LP_INITIAL);
         EXPECTED_CONTRACT_BAL += LP_INITIAL.toNumber();
@@ -187,11 +188,12 @@ describe.skip('Agreement: business case tests math', () => {
         expect(LP_TOTAL).to.equal(DSL_LP_TOTAL);
       }
 
-      let GP_REMAINING_BN = BigNumber.from(0);
+      let GP_REMAINING_BN: BigNumber;
       let GP_REMAINING = 0;
       if (!GP_FAILS_TO_DO_GAP_DEPOSIT) {
         // ✅ Step 3
-        console.log('\n🏃 Agreement Lifecycle - Txn #3');
+        txId = base.concat('3');
+        console.log(`\n🏃 Agreement Lifecycle - Txn #${txId}`);
 
         await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH]);
         GP_REMAINING_BN = BigNumber.from(DEPOSIT_MIN_PERCENT)
@@ -211,12 +213,14 @@ describe.skip('Agreement: business case tests math', () => {
 
         // Note: we give GP 2 days time to obtain P1 - MAX_PERCENT, P2 = DEPOSIT_MIN_PERCENT:
         // a P1% / P2% ratio of LP / GP deposits
+        console.log(1);
         await txs.setStorageUint256(hex4Bytes('LOW_LIM'), GP_GAP_DEPOSIT_LOWER_TIME);
         await txs.setStorageUint256(hex4Bytes('UP_LIM'), GP_GAP_DEPOSIT_UPPER_TIME);
         await txs.setStorageUint256(hex4Bytes('P1'), MAX_PERCENT);
+        console.log(2);
 
         const txn3Hash = await changeTokenBalanceAndGetTxHash(
-          () => agreement.connect(GP).execute(3),
+          () => agreement.connect(GP).execute(txId),
           dai as ERC20,
           [GP],
           [GP_REMAINING_BN.mul(-1)]
@@ -255,14 +259,14 @@ describe.skip('Agreement: business case tests math', () => {
           console.log(`LP withdraws LP Initial Deposit = ${formatEther(LP_INITIAL)} DAI`);
           console.log(`GP withdraws GP Initial Deposit = ${formatEther(GP_INITIAL)} DAI`);
           const txn4Hash = await changeTokenBalanceAndGetTxHash(
-            () => agreement.connect(LP).execute(4),
+            () => agreement.connect(LP).execute(base.concat('4')),
             dai as ERC20,
             [GP, LP],
             [GP_INITIAL, LP_INITIAL]
           );
           console.log(`txn hash: \x1b[35m${txn4Hash}\x1b[0m`);
         } else {
-          await expect(agreement.connect(LP).execute(4)).to.be.revertedWith(
+          await expect(agreement.connect(LP).execute(base.concat('4'))).to.be.revertedWith(
             'Agreement: tx condition is not satisfied'
           );
           console.log(`\x1b[33m
@@ -277,7 +281,7 @@ describe.skip('Agreement: business case tests math', () => {
       if (!GP_FAILS_TO_DO_GAP_DEPOSIT) {
         // ✅ Step 5
         console.log('\n🏃 Agreement Lifecycle - Txn #5');
-        let DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
+        const DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
         const PURCHASE_AMOUNT_BN = DAI_BAL_OF_TXS.mul(PURCHASE_PERCENT).div(100);
         const PURCHASE_AMOUNT = (EXPECTED_CONTRACT_BAL * PURCHASE_PERCENT) / 100;
         console.log(`GP ETH Asset Purchase = ${formatEther(PURCHASE_AMOUNT_BN)} DAI`);
@@ -289,7 +293,7 @@ describe.skip('Agreement: business case tests math', () => {
         await txs.setStorageUint256(hex4Bytes('PURCHASE_PERCENT'), PURCHASE_PERCENT);
 
         const txn5Hash = await changeTokenBalanceAndGetTxHash(
-          () => agreement.connect(GP).execute(5),
+          () => agreement.connect(GP).execute(base.concat('5')),
           dai as ERC20,
           [GP],
           [PURCHASE_AMOUNT_BN]
@@ -327,7 +331,7 @@ describe.skip('Agreement: business case tests math', () => {
         console.log(`Fund Investment Return = ${formatEther(GP_PURCHASE_RETURN_BN)} DAI`);
 
         const cashBalanceBefore = await dai.balanceOf(txsAddr);
-        const txn6 = await agreement.connect(GP).execute(6);
+        const txn6 = await agreement.connect(GP).execute(base.concat('6'));
         const cashBalanceAfter = await dai.balanceOf(txsAddr);
 
         EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.add(GP_PURCHASE_RETURN_BN);
@@ -361,7 +365,7 @@ describe.skip('Agreement: business case tests math', () => {
         console.log(`GP Management Fee = ${formatEther(MANAGEMENT_FEE_BN)} DAI`);
 
         const txn71Hash = await changeTokenBalanceAndGetTxHash(
-          () => agreement.connect(GP).execute(71),
+          () => agreement.connect(GP).execute(base.concat('71')),
           dai as ERC20,
           [GP],
           [MANAGEMENT_FEE_BN]
@@ -384,7 +388,6 @@ describe.skip('Agreement: business case tests math', () => {
 
         // ✅ Step 7b
         console.log('\n🏃 Agreement Lifecycle - Txn #72');
-        DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
 
         let PROFIT_BN = BigNumber.from(EXPECTED_CONTRACT_BAL_BN)
           .add(MANAGEMENT_FEE_BN)
@@ -416,7 +419,7 @@ describe.skip('Agreement: business case tests math', () => {
         await txs.setStorageUint256(hex4Bytes('PROFIT_PART'), PROFIT_PART);
 
         const txn72Hash = await changeTokenBalanceAndGetTxHash(
-          () => agreement.connect(GP).execute(72),
+          () => agreement.connect(GP).execute(base.concat('72')),
           dai as ERC20,
           [GP],
           [CARRY_BN]
@@ -439,7 +442,6 @@ describe.skip('Agreement: business case tests math', () => {
 
         // ✅ Step 7c
         console.log('\n🏃 Agreement Lifecycle - Txn #73');
-        DAI_BAL_OF_TXS = await dai.balanceOf(txsAddr);
         const LOSS_BN = PROFIT_BN.gt(0)
           ? BigNumber.from(0)
           : GP_INITIAL.add(LP_TOTAL)
@@ -466,7 +468,7 @@ describe.skip('Agreement: business case tests math', () => {
         console.log(`GP Principal = ${formatEther(GP_PRINICIPAL_BN)} DAI`);
 
         const txn73Hash = await changeTokenBalanceAndGetTxHash(
-          () => agreement.connect(GP).execute(73),
+          () => agreement.connect(GP).execute(base.concat('73')),
           dai as ERC20,
           [GP],
           [GP_PRINICIPAL_BN]
@@ -510,7 +512,7 @@ describe.skip('Agreement: business case tests math', () => {
           console.log(`LP Investment Profit = ${formatEther(LP_PROFIT_BN)} DAI`);
 
           const txn81Hash = await changeTokenBalanceAndGetTxHash(
-            () => agreement.connect(LP).execute(81),
+            () => agreement.connect(LP).execute(base.concat('81')),
             dai as ERC20,
             [LP],
             [LP_PROFIT_BN]
@@ -557,7 +559,7 @@ describe.skip('Agreement: business case tests math', () => {
           console.log(`LP Principal = ${formatEther(LP_PRINCIPAL_BN)} DAI`);
 
           const txn82Hash = await changeTokenBalanceAndGetTxHash(
-            () => agreement.connect(LP).execute(82),
+            () => agreement.connect(LP).execute(base.concat('82')),
             dai as ERC20,
             [LP],
             [LP_PRINCIPAL_BN]
@@ -613,26 +615,87 @@ describe.skip('Agreement: business case tests math', () => {
   });
 
   beforeEach(async () => {
-    const address = process.env.AGREEMENT_ADDR;
-    if (address) {
-      agreement = (await ethers.getContractAt('Agreement', address)) as Agreement;
+    const agreementAddr = process.env.AGREEMENT_ADDR;
+    console.log({ agreementAddr });
+    if (agreementAddr) {
+      agreement = await ethers.getContractAt('AgreementMock', agreementAddr);
     } else {
       console.log('The agreement address is undefined');
       return;
     }
 
+    console.log(await agreement.parser());
     txsAddr = await agreement.txs();
-    txs = (await ethers.getContractAt('ConditionalTxs', txsAddr)) as ConditionalTxs;
-  });
+    console.log({ txsAddr });
 
-  afterEach(async () => {
-    // reset the ConditionalTxs contract after each test to use the same agreement again
-    // await agreement.resetTXs();
+    // const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
+    // const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
+    // const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
+
+    // const comparatorOpcodesLib = await (
+    //   await ethers.getContractFactory('ComparatorOpcodes', {
+    //     libraries: {
+    //       OpcodeHelpers: opcodeHelpersLib.address,
+    //     },
+    //   })
+    // ).deploy();
+
+    // const logicalOpcodesLib = await (
+    //   await ethers.getContractFactory('LogicalOpcodes', {
+    //     libraries: {
+    //       OpcodeHelpers: opcodeHelpersLib.address,
+    //     },
+    //   })
+    // ).deploy();
+
+    // const setOpcodesLib = await (
+    //   await ethers.getContractFactory('SetOpcodes', {
+    //     libraries: {
+    //       OpcodeHelpers: opcodeHelpersLib.address,
+    //     },
+    //   })
+    // ).deploy();
+
+    // const otherOpcodesLib = await (
+    //   await ethers.getContractFactory('OtherOpcodes', {
+    //     libraries: {
+    //       OpcodeHelpers: opcodeHelpersLib.address,
+    //     },
+    //   })
+    // ).deploy();
+
+    // const ParserCont = await ethers.getContractFactory('Parser', {
+    //   libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
+    // });
+    // const parser = await ParserCont.deploy();
+    // const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
+    // const AgreementContract = await ethers.getContractFactory('AgreementMock', {
+    //   libraries: {
+    //     ComparatorOpcodes: comparatorOpcodesLib.address,
+    //     LogicalOpcodes: logicalOpcodesLib.address,
+    //     SetOpcodes: setOpcodesLib.address,
+    //     OtherOpcodes: otherOpcodesLib.address,
+    //     Executor: executorLib.address,
+    //   },
+    // });
+    // agreement = await AgreementContract.deploy(parser.address);
+    // await agreement.deployed();
+
+    // const ContextCont = await ethers.getContractFactory('Context');
+    // const [alice, GP, ...LPs] = await ethers.getSigners();
+
+    // await addSteps(businessCaseSteps(GP, [LPs[0], LPs[1]], BASE), ContextCont);
+
+    console.log(await agreement.parser());
+    txsAddr = await agreement.txs();
+    console.log({ txsAddr });
+    txs = await ethers.getContractAt('ConditionalTxsMock', txsAddr);
   });
 
   describe('Lifecycle Test', () => {
     businessCaseTestDivisionErrors(
       'Scenario 0: Try to get math errors. LP deposits; GP balances; Profit Realized',
+      BASE.toString(), // base
       BigNumber.from('23'), // GP_INITIAL
       [BigNumber.from('257'), BigNumber.from('733')], // LP_INITIAL
       BigNumber.from('997'), // INITIAL_FUNDS_TARGET

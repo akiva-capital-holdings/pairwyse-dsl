@@ -1,11 +1,12 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
-import { ConditionalTxs, Context, Context__factory, Parser } from '../../typechain-types';
+import { Context, Context__factory, Parser } from '../../typechain-types';
+import { ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
 import { hex4Bytes } from '../utils/utils';
 
 describe('Conditional transactions', () => {
-  let app: ConditionalTxs;
+  let app: ConditionalTxsMock;
   let parser: Parser;
   let ContextCont: Context__factory;
   let alice: SignerWithAddress;
@@ -75,7 +76,7 @@ describe('Conditional transactions', () => {
     const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
 
     // Deploy contracts
-    ContextCont = (await ethers.getContractFactory('Context')) as Context__factory;
+    ContextCont = await ethers.getContractFactory('Context');
     app = (await (
       await ethers.getContractFactory('ConditionalTxs', {
         libraries: {
@@ -86,15 +87,15 @@ describe('Conditional transactions', () => {
           Executor: executorLib.address,
         },
       })
-    ).deploy()) as ConditionalTxs;
-    parser = (await (
+    ).deploy()) as ConditionalTxsMock;
+    parser = await (
       await ethers.getContractFactory('Parser', {
         libraries: {
           StringUtils: stringLib.address,
           ByteUtils: byteLib.address,
         },
       })
-    ).deploy()) as Parser;
+    ).deploy();
 
     // Make a snapshot
     snapshotId = await network.provider.send('evm_snapshot');

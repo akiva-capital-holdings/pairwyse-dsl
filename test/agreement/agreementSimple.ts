@@ -3,21 +3,20 @@ import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
 import { hex4Bytes } from '../utils/utils';
-import { Agreement } from '../../typechain-types/agreement';
-import { ConditionalTxs } from '../../typechain-types';
+import { AgreementMock, ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
 
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-describe.skip('Agreement: Alice, Bob, Carl', () => {
-  let agreement: Agreement;
+describe('Agreement: Alice, Bob, Carl', () => {
+  let agreement: AgreementMock;
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
   let carl: SignerWithAddress;
   let anybody: SignerWithAddress;
   let txsAddr: string;
-  let txs: ConditionalTxs;
+  let txs: ConditionalTxsMock;
   let NEXT_MONTH: number;
   let LAST_BLOCK_TIMESTAMP: number;
 
@@ -40,13 +39,13 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
 
     const address = process.env.AGREEMENT_ADDR;
     if (address) {
-      agreement = (await ethers.getContractAt('Agreement', address)) as Agreement;
+      agreement = (await ethers.getContractAt('Agreement', address)) as AgreementMock;
     } else {
       // TODO: what should we do if the user did not set the AGREEMENT_ADDR?
       console.log('The agreement address is undefined');
     }
     txsAddr = await agreement.txs();
-    txs = (await ethers.getContractAt('ConditionalTxs', txsAddr)) as ConditionalTxs;
+    txs = (await ethers.getContractAt('ConditionalTxs', txsAddr)) as ConditionalTxsMock;
   });
 
   beforeEach(async () => {
