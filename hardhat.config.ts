@@ -19,7 +19,7 @@ dotenv.config();
 const {
   OPTIMIZER,
   REMOTE_GANACHE_URL,
-  REMOTE_GANACHE_PRIVATE_KEYS,
+  REMOTE_GANACHE_MNEMONIC,
   ROPSTEN_URL,
   PRIVATE_KEY,
   TENDERLY_FORK_URL,
@@ -51,6 +51,7 @@ const config: HardhatUserConfig = {
       },
     },
   },
+  // Note: make `tenderly` to verify contracts on Tenderly during running deployment scripts
   defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
@@ -63,8 +64,10 @@ const config: HardhatUserConfig = {
     remoteGanache: {
       url: REMOTE_GANACHE_URL || '',
       timeout: 1e9,
-      accounts:
-        REMOTE_GANACHE_PRIVATE_KEYS !== undefined ? REMOTE_GANACHE_PRIVATE_KEYS.split(',') : [],
+      accounts: {
+        mnemonic:
+          REMOTE_GANACHE_MNEMONIC || 'test test test test test test test test test test test junk',
+      },
     },
     ropsten: {
       url: ROPSTEN_URL || '',
