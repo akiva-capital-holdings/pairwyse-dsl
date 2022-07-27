@@ -317,6 +317,7 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         // TODO: as we can use setUint256 for setting variables, why do we need setLocalUint256?
+        // TODO: remove `setLocalUint256` and check that it doesn't influence the system
         addOpcode(
             'setLocalUint256',
             0x2d,

@@ -1,6 +1,6 @@
 import '@nomiclabs/hardhat-ethers';
 import * as hre from 'hardhat';
-// TODO: would it be better to store types bot in the test directory?
+// TODO: would it be better to store types both in the test directory?
 import { parseEther } from 'ethers/lib/utils';
 import { TxObject } from '../test/types';
 import { aliceAndBobSteps, aliceBobAndCarl, businessCaseSteps } from './data/agreement';

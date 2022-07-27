@@ -26,20 +26,6 @@ library OpcodeHelpers {
         _ctx.stack().push(resultValue);
     }
 
-    // TODO: will be used these functions in the future?
-
-    // function putToStack(IContext _ctx, string memory _value) public {
-    //     StackValue resultValue = new StackValue();
-    //     resultValue.setString(_value);
-    //     _ctx.stack().push(resultValue);
-    // }
-
-    // function putToStack(IContext _ctx, address _value) public {
-    //     StackValue resultValue = new StackValue();
-    //     resultValue.setAddress(_value);
-    //     _ctx.stack().push(resultValue);
-    // }
-
     function nextBytes(IContext _ctx, uint256 size) public returns (bytes memory out) {
         out = _ctx.programAt(_ctx.pc(), size);
         _ctx.incPc(size);

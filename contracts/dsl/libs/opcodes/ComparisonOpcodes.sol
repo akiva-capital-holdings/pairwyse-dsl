@@ -22,9 +22,7 @@ library ComparisonOpcodes {
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if they are equal.
      */
-    function opEq(
-        IContext _ctx /** TODO: checkStackLength(2) */
-    ) public {
+    function opEq(IContext _ctx) public {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 

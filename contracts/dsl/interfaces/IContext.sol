@@ -72,32 +72,6 @@ interface IContext {
 
     function setOtherOpcodesAddr(address _opcodes) external;
 
-    // TODO: can we remove these comments?
-
-    // function addOpcode(
-    //     string memory _name,
-    //     bytes1 _opcode,
-    //     bytes4 _opSelector,
-    //     bytes4 _asmSelector,
-    //     OpcodeLibNames _libName
-    // ) external;
-
-    // function _addOpcodeForOperator(
-    //     string memory _name,
-    //     bytes1 _opcode,
-    //     bytes4 _opSelector,
-    //     bytes4 _asmSelector,
-    //     OpcodeLibNames _libName,
-    //     uint256 _priority
-    // ) external;
-
-    // function _addOpcodeBranch(
-    //     string memory _baseOpName,
-    //     string memory _branchName,
-    //     bytes1 _branchCode,
-    //     bytes4 _selector
-    // ) external;
-
     function setProgram(bytes memory _data) external;
 
     function programAt(uint256 _index, uint256 _step) external view returns (bytes memory);

@@ -484,10 +484,10 @@ contract Preprocessor {
         string memory _value,
         string memory _variableName
     ) internal {
-        // TODO: '_type' - should be used in the future for other types
         result.push(_type);
         result.push(_value);
         // TODO: setUint256 - update for other types in dependence on '_type'
+        // TODO: create mapping (_type => `setUint256`)
         result.push('setUint256');
         result.push(_variableName);
     }
