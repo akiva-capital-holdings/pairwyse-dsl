@@ -62,20 +62,6 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctx, 1);
     }
 
-    function opSetLocalUint256(IContext _ctx) public {
-        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
-
-        bytes memory data = OpcodeHelpers.nextBytes(_ctx, 32);
-        uint256 _val = uint256(bytes32(data));
-
-        // Set local variable by it's hex
-        (bool success, ) = _ctx.appAddress().call(
-            abi.encodeWithSignature('setStorageUint256(bytes32,uint256)', _varNameB32, _val)
-        );
-        require(success, 'Opcodes: opSetLocal call not success');
-        OpcodeHelpers.putToStack(_ctx, 1);
-    }
-
     function opSetUint256(IContext _ctx) public {
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
 

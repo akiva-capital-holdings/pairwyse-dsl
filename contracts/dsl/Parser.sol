@@ -93,19 +93,6 @@ contract Parser is IParser, Storage {
     /**
      * @dev Updates the program with the local variable value
      *
-     * Example of a command:
-     * ```
-     * setLocalUint256 VARNAME 12345
-     * ```
-     */
-    function asmSetLocalUint256() public {
-        _parseVariable();
-        asmUint256();
-    }
-
-    /**
-     * @dev Updates the program with the local variable value
-     *
      *  * Example of a command:
      * ```
      * (uint256 5 + uint256 7) setUint256 VARNAME

@@ -106,8 +106,4 @@ contract OtherOpcodesMock is Storage {
     function opLoadRemote(IContext _ctx, string memory funcSignature) public {
         OtherOpcodes.opLoadRemote(_ctx, funcSignature);
     }
-
-    function opSetLocalUint256(IContext _ctx) public {
-        OtherOpcodes.opSetLocalUint256(_ctx);
-    }
 }

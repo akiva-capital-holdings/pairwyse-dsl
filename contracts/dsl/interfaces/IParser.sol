@@ -18,8 +18,6 @@ interface IParser {
 
     function asmSetLocalBool() external;
 
-    function asmSetLocalUint256() external;
-
     function asmSetUint256(IContext _ctx) external;
 
     function asmLoadLocal(IContext _ctx) external;

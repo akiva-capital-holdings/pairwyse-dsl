@@ -467,21 +467,4 @@ describe('Other opcodes', () => {
     await app.opLoadRemote(ctxAddr, testSignature);
     await checkStackTailv2(StackValue, stack, [testValue]);
   });
-
-  it('opSetLocalUint256', async () => {
-    const testValue = '10000';
-    const bytes32TestValueName = hex4Bytes('NUMBER');
-    const number = bytes32TestValueName.substring(2, 10);
-    const testValueHexPadded = uint256StrToHex(testValue);
-
-    await ctx.setProgram(`0x${number}${testValueHexPadded}`);
-
-    await app.opSetLocalUint256(ctxAddr);
-
-    const settedValue = await app.getStorageUint256(bytes32TestValueName);
-
-    expect(settedValue).to.be.equal(testValue);
-
-    await checkStackTailv2(StackValue, stack, [1]);
-  });
 });

@@ -595,7 +595,7 @@ contract Preprocessor {
     }
 
     /**
-     * @dev This function is used to check if 'transferFrom', 'setLocalUint256',
+     * @dev This function is used to check if 'transferFrom',
      * 'sendEth' and 'transfer' functions(opcodes) won't use 'uint256' opcode during code
      * execution directly. So it needs to be sure that executed code won't mess up
      * parameters for the simple number and a number that be used for these functions.
@@ -609,12 +609,7 @@ contract Preprocessor {
         returns (bool _isDirect)
     {
         _isDirect = _directUseUint256;
-        if (
-            _chunk.equal('transferFrom') ||
-            _chunk.equal('setLocalUint256') ||
-            _chunk.equal('sendEth') ||
-            _chunk.equal('transfer')
-        ) {
+        if (_chunk.equal('transferFrom') || _chunk.equal('sendEth') || _chunk.equal('transfer')) {
             _isDirect = true;
         }
     }
