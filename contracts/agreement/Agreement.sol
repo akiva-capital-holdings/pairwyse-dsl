@@ -22,7 +22,7 @@ contract Agreement {
 
     constructor(address _parser) {
         parser = IParser(_parser);
-        txs = new ConditionalTxs();
+        txs = new ConditionalTxs(); // TODO: provide as an input param
     }
 
     function parse(string memory _code, Context _ctx) external {

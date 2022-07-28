@@ -24,10 +24,10 @@ describe('Other opcodes', () => {
   let testERC20: ERC20Mintable;
 
   before(async () => {
-    StackCont = (await ethers.getContractFactory('Stack')) as Stack__factory;
-    StackValue = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
+    StackCont = await ethers.getContractFactory('Stack');
+    StackValue = await ethers.getContractFactory('StackValue');
 
-    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
+    ctx = await (await ethers.getContractFactory('Context')).deploy();
     ctxAddr = ctx.address;
 
     // Deploy libraries
@@ -39,18 +39,18 @@ describe('Other opcodes', () => {
     ).deploy();
 
     // Deploy OtherOpcodesMock
-    app = (await (
+    app = await (
       await ethers.getContractFactory('OtherOpcodesMock', {
         libraries: { OtherOpcodes: otherOpcodesLib.address },
       })
-    ).deploy()) as OtherOpcodesMock;
+    ).deploy();
 
     // Create Stack instance
     const stackAddr = await ctx.stack();
-    stack = (await ethers.getContractAt('Stack', stackAddr)) as Stack;
+    stack = await ethers.getContractAt('Stack', stackAddr);
 
     // Deploy Storage contract to simulate another app (needed for testing loadRemove opcodes)
-    anotherApp = (await (await ethers.getContractFactory('Storage')).deploy()) as Storage;
+    anotherApp = await (await ethers.getContractFactory('Storage')).deploy();
 
     // Setup
     await ctx.initOpcodes();
@@ -58,9 +58,7 @@ describe('Other opcodes', () => {
     await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
 
     // Deploy test ERC20 and mint some to ctx
-    testERC20 = (await (
-      await ethers.getContractFactory('ERC20Mintable')
-    ).deploy('Test', 'TST')) as ERC20Mintable;
+    testERC20 = await (await ethers.getContractFactory('ERC20Mintable')).deploy('Test', 'TST');
   });
 
   afterEach(async () => {

@@ -6,20 +6,18 @@ import {
   StackValue__factory,
   Context,
   Stack,
-  BranchingOpcodesMock,
+  LogicalOpcodesMock,
 } from '../../../../typechain-types';
-import { getBytesStringLength, pushToStack, uint256StrToHex } from '../../../utils/utils';
+import { checkStack, pushToStack } from '../../../utils/utils';
 
-// TODO: need more tests here without mocked opcodes.
-// TODO: add comments: what are these tests checking here?
 describe('Logical opcodes', () => {
   let StackCont: Stack__factory;
   let StackValue: StackValue__factory;
-  /* eslint-enable camelcase */
-  let app: BranchingOpcodesMock;
+  let app: LogicalOpcodesMock;
   let ctx: Context;
   let ctxAddr: string;
   let stack: Stack;
+  /* eslint-enable camelcase */
 
   before(async () => {
     StackCont = await ethers.getContractFactory('Stack');
@@ -30,16 +28,16 @@ describe('Logical opcodes', () => {
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const branchingOpcodesLib = await (
-      await ethers.getContractFactory('BranchingOpcodes', {
+    const logicalOpcodesLib = await (
+      await ethers.getContractFactory('LogicalOpcodes', {
         libraries: { OpcodeHelpers: opcodeHelpersLib.address },
       })
     ).deploy();
 
-    // Deploy BranchingOpcodesMock
+    // Deploy LogicalOpcodesMock
     app = await (
-      await ethers.getContractFactory('BranchingOpcodesMock', {
-        libraries: { BranchingOpcodes: branchingOpcodesLib.address },
+      await ethers.getContractFactory('LogicalOpcodesMock', {
+        libraries: { LogicalOpcodes: logicalOpcodesLib.address },
       })
     ).deploy();
 
@@ -50,7 +48,7 @@ describe('Logical opcodes', () => {
     // Setup
     await ctx.initOpcodes();
     await ctx.setAppAddress(ctx.address);
-    await ctx.setOtherOpcodesAddr(branchingOpcodesLib.address);
+    await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
   });
 
   afterEach(async () => {
@@ -58,79 +56,114 @@ describe('Logical opcodes', () => {
     await stack.clear();
   });
 
-  it('opIfelse', async () => {
-    const testBranchTrue = '0001';
-    const testBranchFalse = '0002';
+  describe('opAnd', () => {
+    it('errors', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [1, '5']);
+      await expect(app.opAnd(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
 
-    await ctx.setProgram(`0x${testBranchTrue}${testBranchFalse}`);
-    await pushToStack(StackValue, ctx, StackCont, [1]);
+      await pushToStack(StackValue, ctx, StackCont, ['5', '5']);
+      await expect(app.opAnd(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
+    });
 
-    await app.opIfelse(ctxAddr);
+    it('success', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [1, 1]);
+      await app.opAnd(ctxAddr);
+      await checkStack(StackValue, stack, 1, 1);
 
-    let pc = await ctx.pc();
+      await stack.clear();
+      await ctx.setPc(0);
 
-    expect(pc).to.be.equal(testBranchTrue);
+      await pushToStack(StackValue, ctx, StackCont, [3, 2222]);
+      await app.opAnd(ctxAddr);
+      await checkStack(StackValue, stack, 1, 1);
 
-    await ctx.setPc(0);
-    await pushToStack(StackValue, ctx, StackCont, [0]);
+      await stack.clear();
+      await ctx.setPc(0);
 
-    await app.opIfelse(ctxAddr);
+      await pushToStack(StackValue, ctx, StackCont, [2, 0]);
+      await app.opAnd(ctxAddr);
+      await checkStack(StackValue, stack, 1, 0);
 
-    pc = await ctx.pc();
+      await stack.clear();
+      await ctx.setPc(0);
 
-    expect(pc).to.be.equal(testBranchFalse);
+      await pushToStack(StackValue, ctx, StackCont, [0, 0]);
+      await app.opAnd(ctxAddr);
+      await checkStack(StackValue, stack, 1, 0);
+    });
   });
 
-  it('opIf', async () => {
-    const testBranchTrue = '0001';
+  describe('opOr', () => {
+    it('errors', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [1, '5']);
+      await expect(app.opOr(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
 
-    await ctx.setProgram(`0x${testBranchTrue}`);
-    await pushToStack(StackValue, ctx, StackCont, [1]);
+      await pushToStack(StackValue, ctx, StackCont, ['5', '5']);
+      await expect(app.opOr(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
+    });
 
-    await app.opIf(ctxAddr);
+    it('success', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [1, 1]);
+      await app.opOr(ctxAddr);
+      await checkStack(StackValue, stack, 1, 1);
 
-    const pc = await ctx.pc();
-    let nextPc = await ctx.nextpc();
+      await stack.clear();
+      await ctx.setPc(0);
 
-    expect(pc).to.be.equal(testBranchTrue);
-    // Note: opIf internally calls getUint16 and sets nextpc after check,
-    //       hence there is no way to get intermediate pc.
-    //       So in this case nextPc should be equal 2 because of getUint16 incrementing pc
-    //       by 2 and opIf is only operation called.
-    expect(nextPc).to.be.equal(2);
+      await pushToStack(StackValue, ctx, StackCont, [3, 2222]);
+      await app.opOr(ctxAddr);
+      await checkStack(StackValue, stack, 1, 1);
 
-    await ctx.setPc(0);
-    await pushToStack(StackValue, ctx, StackCont, [0]);
+      await stack.clear();
+      await ctx.setPc(0);
 
-    await app.opIf(ctxAddr);
+      await pushToStack(StackValue, ctx, StackCont, [2, 0]);
+      await app.opOr(ctxAddr);
+      await checkStack(StackValue, stack, 1, 1);
 
-    nextPc = await ctx.nextpc();
-    const programLength = getBytesStringLength(await ctx.program());
+      await stack.clear();
+      await ctx.setPc(0);
 
-    expect(nextPc).to.be.equal(programLength);
+      await pushToStack(StackValue, ctx, StackCont, [0, 0]);
+      await app.opOr(ctxAddr);
+      await checkStack(StackValue, stack, 1, 0);
+    });
   });
 
-  it('opEnd', async () => {
-    await ctx.setProgram('0xAAFCCEADFADC');
+  describe('opXor', () => {
+    it('errors', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [1, '5']);
+      await expect(app.opXor(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
 
-    await app.opEnd(ctxAddr);
+      await pushToStack(StackValue, ctx, StackCont, ['5', '5']);
+      await expect(app.opXor(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
+    });
 
-    const pc = await ctx.pc();
-    const nextPc = await ctx.nextpc();
-    const programLength = getBytesStringLength(await ctx.program());
+    it('success', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [1, 1]);
+      await app.opXor(ctxAddr);
+      await checkStack(StackValue, stack, 1, 0);
 
-    expect(pc).to.be.equal(2);
-    expect(nextPc).to.be.equal(programLength);
-  });
+      await stack.clear();
+      await ctx.setPc(0);
 
-  it('getUint16', async () => {
-    const testValueUint256 = 10;
-    const testValueHex = uint256StrToHex(10, 2);
+      await pushToStack(StackValue, ctx, StackCont, [3, 2222]);
+      await app.opXor(ctxAddr);
+      await checkStack(StackValue, stack, 1, 0);
 
-    await ctx.setProgram(`0x${testValueHex}`);
+      await stack.clear();
+      await ctx.setPc(0);
 
-    const result = await app.callStatic.getUint16(ctxAddr);
+      await pushToStack(StackValue, ctx, StackCont, [2, 0]);
+      await app.opXor(ctxAddr);
+      await checkStack(StackValue, stack, 1, 1);
 
-    expect(result).to.be.equal(testValueUint256);
+      await stack.clear();
+      await ctx.setPc(0);
+
+      await pushToStack(StackValue, ctx, StackCont, [0, 0]);
+      await app.opXor(ctxAddr);
+      await checkStack(StackValue, stack, 1, 0);
+    });
   });
 });

@@ -1,6 +1,5 @@
 import '@nomiclabs/hardhat-ethers';
 import * as hre from 'hardhat';
-// TODO: would it be better to store types both in the test directory?
 import { parseEther } from 'ethers/lib/utils';
 import { TxObject } from '../test/types';
 import { aliceAndBobSteps, aliceBobAndCarl, businessCaseSteps } from './data/agreement';
@@ -135,7 +134,7 @@ async function deploy() {
   // await addSteps(businessCaseSteps(GP, [LPs[0]], 5), ContextCont, agreement.address);
 
   /*
-    TODO: pay attention, that the agreement.ts and agreementBusinessCase.ts has
+    Note: pay attention, that the agreement.ts and agreementBusinessCase.ts has
     only one LP signature in the required list!
     It has to be used another test, like `Lifecycle Test Multiple LPs`
     to check multiple LPs
