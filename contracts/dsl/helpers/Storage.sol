@@ -1,26 +1,24 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IStorage } from '../interfaces/IStorage.sol';
 import { UnstructuredStorage } from '../libs/UnstructuredStorage.sol';
 
-// TODO: make a library
-contract Storage is IStorage {
+contract Storage {
     using UnstructuredStorage for bytes32;
 
-    function getStorageBool(bytes32 position) public view override returns (bool data) {
+    function getStorageBool(bytes32 position) public view returns (bool data) {
         return position.getStorageBool();
     }
 
-    function getStorageAddress(bytes32 position) public view override returns (address data) {
+    function getStorageAddress(bytes32 position) public view returns (address data) {
         return position.getStorageAddress();
     }
 
-    function getStorageBytes32(bytes32 position) public view override returns (bytes32 data) {
+    function getStorageBytes32(bytes32 position) public view returns (bytes32 data) {
         return position.getStorageBytes32();
     }
 
-    function getStorageUint256(bytes32 position) public view override returns (uint256 data) {
+    function getStorageUint256(bytes32 position) public view returns (uint256 data) {
         return position.getStorageUint256();
     }
 

@@ -22,7 +22,14 @@ contract Preprocessor is IPreprocessor {
     using StringUtils for string;
 
     mapping(uint256 => FuncParameter) internal parameters;
+    // type -> function name. maps DSL type (like `uint256`, `address`, `string`, or `bytes32`) to function name that
+    // can put value of this type into stack
+    mapping(string => string) internal rebuildParamTypes;
     string[] internal result; // stores the list of commands after infixToPostfix transformation
+
+    constructor() {
+        rebuildParamTypes['uint256'] = 'setUint256';
+    }
 
     /**
      * @dev The main function that transforms the user's DSL code string to the list of commands.
@@ -479,8 +486,6 @@ contract Preprocessor is IPreprocessor {
     ) internal {
         result.push(_type);
         result.push(_value);
-        // TODO: setUint256 - update for other types in dependence on '_type'
-        // TODO: create mapping (_type => `setUint256`)
         result.push('setUint256');
         result.push(_variableName);
     }

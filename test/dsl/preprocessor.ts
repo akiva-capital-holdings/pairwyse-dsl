@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { Preprocessor } from '../../typechain-types';
 import { Testcase } from '../types';
 
-describe('Preprocessor', () => {
+describe.only('Preprocessor', () => {
   let app: Preprocessor;
   let ctxAddr: string;
 
