@@ -6,7 +6,7 @@ import {
   StackValue__factory,
   Context,
   Stack,
-  LogicalOpcodesMock,
+  BranchingOpcodesMock,
 } from '../../../../typechain-types';
 import { getBytesStringLength, pushToStack, uint256StrToHex } from '../../../utils/utils';
 
@@ -16,41 +16,41 @@ describe('Logical opcodes', () => {
   let StackCont: Stack__factory;
   let StackValue: StackValue__factory;
   /* eslint-enable camelcase */
-  let app: LogicalOpcodesMock;
+  let app: BranchingOpcodesMock;
   let ctx: Context;
   let ctxAddr: string;
   let stack: Stack;
 
   before(async () => {
-    StackCont = (await ethers.getContractFactory('Stack')) as Stack__factory;
-    StackValue = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
+    StackCont = await ethers.getContractFactory('Stack');
+    StackValue = await ethers.getContractFactory('StackValue');
 
-    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
+    ctx = await (await ethers.getContractFactory('Context')).deploy();
     ctxAddr = ctx.address;
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const logicalOpcodesLib = await (
-      await ethers.getContractFactory('LogicalOpcodes', {
+    const branchingOpcodesLib = await (
+      await ethers.getContractFactory('BranchingOpcodes', {
         libraries: { OpcodeHelpers: opcodeHelpersLib.address },
       })
     ).deploy();
 
-    // Deploy LogicalOpcodesMock
-    app = (await (
-      await ethers.getContractFactory('LogicalOpcodesMock', {
-        libraries: { LogicalOpcodes: logicalOpcodesLib.address },
+    // Deploy BranchingOpcodesMock
+    app = await (
+      await ethers.getContractFactory('BranchingOpcodesMock', {
+        libraries: { BranchingOpcodes: branchingOpcodesLib.address },
       })
-    ).deploy()) as LogicalOpcodesMock;
+    ).deploy();
 
     // Create Stack instance
     const stackAddr = await ctx.stack();
-    stack = (await ethers.getContractAt('Stack', stackAddr)) as Stack;
+    stack = await ethers.getContractAt('Stack', stackAddr);
 
     // Setup
     await ctx.initOpcodes();
     await ctx.setAppAddress(ctx.address);
-    await ctx.setOtherOpcodesAddr(logicalOpcodesLib.address);
+    await ctx.setOtherOpcodesAddr(branchingOpcodesLib.address);
   });
 
   afterEach(async () => {

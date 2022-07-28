@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 contract StackValue {
+    // TODO: get rid of non-uint256 types
     enum StackType {
         // NONE in an OpSpec shows that the op pops or yields nothing
         NONE,

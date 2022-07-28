@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 import { IContext } from './interfaces/IContext.sol';
 import { IParser } from './interfaces/IParser.sol';
 import { Stack } from './helpers/Stack.sol';
-import { ComparatorOpcodes } from './libs/opcodes/ComparatorOpcodes.sol';
+import { ComparisonOpcodes } from './libs/opcodes/ComparisonOpcodes.sol';
+import { BranchingOpcodes } from './libs/opcodes/BranchingOpcodes.sol';
 import { LogicalOpcodes } from './libs/opcodes/LogicalOpcodes.sol';
-import { SetOpcodes } from './libs/opcodes/SetOpcodes.sol';
 import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
 
 // import 'hardhat/console.sol';
@@ -34,9 +34,9 @@ contract Context is IContext {
     uint256 public nextpc;
     address public appAddress;
     address public msgSender;
-    address public comparatorOpcodes; // an address for ComparatorOpcodes library, can be changed
-    address public logicalOpcodes; // an address for LogicalOpcodes library, can be changed
-    address public setOpcodes; // an address for SetOpcodes library (AND, OR, XOR), can be changed
+    address public comparisonOpcodes; // an address for ComparisonOpcodes library, can be changed
+    address public branchingOpcodes; // an address for BranchingOpcodes library, can be changed
+    address public logicalOpcodes; // an address for LogicalOpcodes library (AND, OR, XOR), can be changed
     address public otherOpcodes; // an address for OtherOpcodes library, can be changed
     uint256 public msgValue;
 
@@ -80,123 +80,123 @@ contract Context is IContext {
         _addOpcodeForOperator(
             '==',
             0x01,
-            ComparatorOpcodes.opEq.selector,
+            ComparisonOpcodes.opEq.selector,
             0x0,
-            OpcodeLibNames.ComparatorOpcodes,
+            OpcodeLibNames.ComparisonOpcodes,
             1
         );
         _addOpcodeForOperator(
             '!=',
             0x14,
-            ComparatorOpcodes.opNotEq.selector,
+            ComparisonOpcodes.opNotEq.selector,
             0x0,
-            OpcodeLibNames.ComparatorOpcodes,
+            OpcodeLibNames.ComparisonOpcodes,
             1
         );
         _addOpcodeForOperator(
             '<',
             0x03,
-            ComparatorOpcodes.opLt.selector,
+            ComparisonOpcodes.opLt.selector,
             0x0,
-            OpcodeLibNames.ComparatorOpcodes,
+            OpcodeLibNames.ComparisonOpcodes,
             1
         );
         _addOpcodeForOperator(
             '>',
             0x04,
-            ComparatorOpcodes.opGt.selector,
+            ComparisonOpcodes.opGt.selector,
             0x0,
-            OpcodeLibNames.ComparatorOpcodes,
+            OpcodeLibNames.ComparisonOpcodes,
             1
         );
         _addOpcodeForOperator(
             '<=',
             0x06,
-            ComparatorOpcodes.opLe.selector,
+            ComparisonOpcodes.opLe.selector,
             0x0,
-            OpcodeLibNames.ComparatorOpcodes,
+            OpcodeLibNames.ComparisonOpcodes,
             1
         );
         _addOpcodeForOperator(
             '>=',
             0x07,
-            ComparatorOpcodes.opGe.selector,
+            ComparisonOpcodes.opGe.selector,
             0x0,
-            OpcodeLibNames.ComparatorOpcodes,
+            OpcodeLibNames.ComparisonOpcodes,
             1
         );
         _addOpcodeForOperator(
             'swap',
             0x05,
-            ComparatorOpcodes.opSwap.selector,
+            ComparisonOpcodes.opSwap.selector,
             0x0,
-            OpcodeLibNames.ComparatorOpcodes,
+            OpcodeLibNames.ComparisonOpcodes,
             3
         );
         _addOpcodeForOperator(
             '!',
             0x02,
-            ComparatorOpcodes.opNot.selector,
+            ComparisonOpcodes.opNot.selector,
             0x0,
-            OpcodeLibNames.ComparatorOpcodes,
+            OpcodeLibNames.ComparisonOpcodes,
             4
         );
 
         _addOpcodeForOperator(
             'and',
             0x12,
-            SetOpcodes.opAnd.selector,
+            LogicalOpcodes.opAnd.selector,
             0x0,
-            OpcodeLibNames.SetOpcodes,
+            OpcodeLibNames.LogicalOpcodes,
             3
         );
         _addOpcodeForOperator(
             'xor',
             0x11,
-            SetOpcodes.opXor.selector,
+            LogicalOpcodes.opXor.selector,
             0x0,
-            OpcodeLibNames.SetOpcodes,
+            OpcodeLibNames.LogicalOpcodes,
             2
         );
         _addOpcodeForOperator(
             'or',
             0x13,
-            SetOpcodes.opOr.selector,
+            LogicalOpcodes.opOr.selector,
             0x0,
-            OpcodeLibNames.SetOpcodes,
+            OpcodeLibNames.LogicalOpcodes,
             2
         );
 
         _addOpcodeForOperator(
             '+',
             0x26,
-            SetOpcodes.opAdd.selector,
+            LogicalOpcodes.opAdd.selector,
             0x0,
-            OpcodeLibNames.SetOpcodes,
+            OpcodeLibNames.LogicalOpcodes,
             2
         );
         _addOpcodeForOperator(
             '-',
             0x27,
-            SetOpcodes.opSub.selector,
+            LogicalOpcodes.opSub.selector,
             0x0,
-            OpcodeLibNames.SetOpcodes,
+            OpcodeLibNames.LogicalOpcodes,
             2
         );
         _addOpcodeForOperator(
             '*',
             0x28,
-            SetOpcodes.opMul.selector,
+            LogicalOpcodes.opMul.selector,
             0x0,
-            OpcodeLibNames.SetOpcodes,
+            OpcodeLibNames.LogicalOpcodes,
             3
         );
         _addOpcodeForOperator(
             '/',
             0x29,
-            SetOpcodes.opDiv.selector,
+            LogicalOpcodes.opDiv.selector,
             0x0,
-            OpcodeLibNames.SetOpcodes,
+            OpcodeLibNames.LogicalOpcodes,
             3
         );
 
@@ -204,25 +204,31 @@ contract Context is IContext {
         addOpcode(
             'ifelse',
             0x23,
-            LogicalOpcodes.opIfelse.selector,
+            BranchingOpcodes.opIfelse.selector,
             IParser.asmIfelse.selector,
-            OpcodeLibNames.LogicalOpcodes
+            OpcodeLibNames.BranchingOpcodes
         );
         addOpcode(
             'if',
             0x25,
-            LogicalOpcodes.opIf.selector,
+            BranchingOpcodes.opIf.selector,
             IParser.asmIf.selector,
-            OpcodeLibNames.LogicalOpcodes
+            OpcodeLibNames.BranchingOpcodes
         );
-        addOpcode('end', 0x24, LogicalOpcodes.opEnd.selector, 0x0, OpcodeLibNames.LogicalOpcodes);
+        addOpcode(
+            'end',
+            0x24,
+            BranchingOpcodes.opEnd.selector,
+            0x0,
+            OpcodeLibNames.BranchingOpcodes
+        );
         // 'branch' tag gets replaced with 'end' tag. So this is just another name of the 'end' tag
         addOpcode(
             'branch',
             0x2f,
-            LogicalOpcodes.opEnd.selector,
+            BranchingOpcodes.opEnd.selector,
             0x0,
-            OpcodeLibNames.LogicalOpcodes
+            OpcodeLibNames.BranchingOpcodes
         );
 
         // Simple Opcodes
@@ -311,6 +317,7 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         // TODO: as we can use setUint256 for setting variables, why do we need setLocalUint256?
+        // TODO: remove `setLocalUint256` and check that it doesn't influence the system
         addOpcode(
             'setLocalUint256',
             0x2d,
@@ -342,9 +349,9 @@ contract Context is IContext {
         addOpcode(
             'func',
             0x30,
-            LogicalOpcodes.opFunc.selector,
+            BranchingOpcodes.opFunc.selector,
             IParser.asmFunc.selector,
-            OpcodeLibNames.LogicalOpcodes
+            OpcodeLibNames.BranchingOpcodes
         );
 
         // Complex Opcodes with sub Opcodes (branches)
@@ -404,11 +411,19 @@ contract Context is IContext {
     }
 
     /**
-     * @dev Sets the new address of the ComparatorOpcodes library
-     * @param _comparatorOpcodes is the new address of the library
+     * @dev Sets the new address of the ComparisonOpcodes library
+     * @param _comparisonOpcodes is the new address of the library
      */
-    function setComparatorOpcodesAddr(address _comparatorOpcodes) public {
-        comparatorOpcodes = _comparatorOpcodes;
+    function setComparisonOpcodesAddr(address _comparisonOpcodes) public {
+        comparisonOpcodes = _comparisonOpcodes;
+    }
+
+    /**
+     * @dev Sets the new address of the BranchingOpcodes library
+     * @param _branchingOpcodes is the new address of the library
+     */
+    function setBranchingOpcodesAddr(address _branchingOpcodes) public {
+        branchingOpcodes = _branchingOpcodes;
     }
 
     /**
@@ -417,14 +432,6 @@ contract Context is IContext {
      */
     function setLogicalOpcodesAddr(address _logicalOpcodes) public {
         logicalOpcodes = _logicalOpcodes;
-    }
-
-    /**
-     * @dev Sets the new address of the SetOpcodes library
-     * @param _setOpcodes is the new address of the library
-     */
-    function setSetOpcodesAddr(address _setOpcodes) public {
-        setOpcodes = _setOpcodes;
     }
 
     /**

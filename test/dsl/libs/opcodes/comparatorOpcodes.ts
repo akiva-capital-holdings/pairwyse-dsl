@@ -5,7 +5,7 @@ import {
   StackValue__factory,
   Context,
   Stack,
-  ComparatorOpcodesMock,
+  ComparisonOpcodesMock,
 } from '../../../../typechain-types';
 import { checkStack, pushToStack } from '../../../utils/utils';
 /* eslint-enable camelcase */
@@ -15,7 +15,7 @@ describe('Comparator opcodes', () => {
   let StackCont: Stack__factory;
   // eslint-disable-next-line camelcase
   let StackValue: StackValue__factory;
-  let app: ComparatorOpcodesMock;
+  let app: ComparisonOpcodesMock;
   let ctx: Context;
   let ctxAddr: string;
   let stack: Stack;
@@ -29,18 +29,18 @@ describe('Comparator opcodes', () => {
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const comparatorOpcodesLib = await (
-      await ethers.getContractFactory('ComparatorOpcodes', {
+    const comparisonOpcodesLib = await (
+      await ethers.getContractFactory('ComparisonOpcodes', {
         libraries: { OpcodeHelpers: opcodeHelpersLib.address },
       })
     ).deploy();
 
-    // Deploy ComparatorOpcodesMock
+    // Deploy ComparisonOpcodesMock
     app = (await (
-      await ethers.getContractFactory('ComparatorOpcodesMock', {
-        libraries: { ComparatorOpcodes: comparatorOpcodesLib.address },
+      await ethers.getContractFactory('ComparisonOpcodesMock', {
+        libraries: { ComparisonOpcodes: comparisonOpcodesLib.address },
       })
-    ).deploy()) as ComparatorOpcodesMock;
+    ).deploy()) as ComparisonOpcodesMock;
 
     // Create Stack instance
     const stackAddr = await ctx.stack();
@@ -49,7 +49,7 @@ describe('Comparator opcodes', () => {
     // Setup
     await ctx.initOpcodes();
     await ctx.setAppAddress(ctx.address);
-    await ctx.setComparatorOpcodesAddr(comparatorOpcodesLib.address);
+    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLib.address);
   });
 
   afterEach(async () => {

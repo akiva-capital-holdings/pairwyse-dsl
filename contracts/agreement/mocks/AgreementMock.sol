@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IParser } from '../dsl/interfaces/IParser.sol';
-import { IContext } from '../dsl/interfaces/IContext.sol';
-import { Context } from '../dsl/Context.sol';
-import { ConditionalTxs } from './ConditionalTxs.sol';
+import { IParser } from '../../dsl/interfaces/IParser.sol';
+import { IContext } from '../../dsl/interfaces/IContext.sol';
+import { Context } from '../../dsl/Context.sol';
+import { ConditionalTxsMock } from './ConditionalTxsMock.sol';
+
+import { IERC20 } from '../../dsl/interfaces/IERC20.sol';
 
 //  import 'hardhat/console.sol';
 
-contract Agreement {
+contract AgreementMock {
     IParser public parser;
-    ConditionalTxs public txs;
+    ConditionalTxsMock public txs;
 
     event NewTransaction(
         uint256 txId,
@@ -22,7 +24,7 @@ contract Agreement {
 
     constructor(address _parser) {
         parser = IParser(_parser);
-        txs = new ConditionalTxs();
+        txs = new ConditionalTxsMock();
     }
 
     function parse(string memory _code, Context _ctx) external {
@@ -87,5 +89,18 @@ contract Agreement {
         (IContext transactionCtx, , ) = txs.txs(_txId);
         txs.execTx(_txId, _msgValue, _signatory);
         return transactionCtx.stack().seeLast().getUint256() == 0 ? false : true;
+    }
+
+    function returnFunds() public {
+        // send fund back to the executor
+        txs.returnFunds(msg.sender);
+        payable(msg.sender).transfer(address(this).balance);
+    }
+
+    function returnTokens(address _token) public {
+        // send tokens back to the sender
+        txs.returnTokens(_token);
+        uint256 amount = IERC20(_token).balanceOf(address(this));
+        IERC20(_token).transfer(msg.sender, amount);
     }
 }

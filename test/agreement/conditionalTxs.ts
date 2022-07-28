@@ -1,11 +1,12 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
-import { ConditionalTxs, Context, Context__factory, Parser } from '../../typechain-types';
+import { Context, Context__factory, Parser } from '../../typechain-types';
+import { ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
 import { hex4Bytes } from '../utils/utils';
 
 describe('Conditional transactions', () => {
-  let app: ConditionalTxs;
+  let app: ConditionalTxsMock;
   let parser: Parser;
   let ContextCont: Context__factory;
   let alice: SignerWithAddress;
@@ -42,8 +43,15 @@ describe('Conditional transactions', () => {
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const comparatorOpcodesLib = await (
-      await ethers.getContractFactory('ComparatorOpcodes', {
+    const comparisonOpcodesLib = await (
+      await ethers.getContractFactory('ComparisonOpcodes', {
+        libraries: {
+          OpcodeHelpers: opcodeHelpersLib.address,
+        },
+      })
+    ).deploy();
+    const branchingOpcodesLib = await (
+      await ethers.getContractFactory('BranchingOpcodes', {
         libraries: {
           OpcodeHelpers: opcodeHelpersLib.address,
         },
@@ -51,13 +59,6 @@ describe('Conditional transactions', () => {
     ).deploy();
     const logicalOpcodesLib = await (
       await ethers.getContractFactory('LogicalOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const setOpcodesLib = await (
-      await ethers.getContractFactory('SetOpcodes', {
         libraries: {
           OpcodeHelpers: opcodeHelpersLib.address,
         },
@@ -75,26 +76,26 @@ describe('Conditional transactions', () => {
     const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
 
     // Deploy contracts
-    ContextCont = (await ethers.getContractFactory('Context')) as Context__factory;
+    ContextCont = await ethers.getContractFactory('Context');
     app = (await (
       await ethers.getContractFactory('ConditionalTxs', {
         libraries: {
-          ComparatorOpcodes: comparatorOpcodesLib.address,
+          ComparisonOpcodes: comparisonOpcodesLib.address,
+          BranchingOpcodes: branchingOpcodesLib.address,
           LogicalOpcodes: logicalOpcodesLib.address,
-          SetOpcodes: setOpcodesLib.address,
           OtherOpcodes: otherOpcodesLib.address,
           Executor: executorLib.address,
         },
       })
-    ).deploy()) as ConditionalTxs;
-    parser = (await (
+    ).deploy()) as ConditionalTxsMock;
+    parser = await (
       await ethers.getContractFactory('Parser', {
         libraries: {
           StringUtils: stringLib.address,
           ByteUtils: byteLib.address,
         },
       })
-    ).deploy()) as Parser;
+    ).deploy();
 
     // Make a snapshot
     snapshotId = await network.provider.send('evm_snapshot');

@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IContext } from '../dsl/interfaces/IContext.sol';
-import { ComparisonOpcodes } from '../dsl/libs/opcodes/ComparisonOpcodes.sol';
-import { BranchingOpcodes } from '../dsl/libs/opcodes/BranchingOpcodes.sol';
-import { LogicalOpcodes } from '../dsl/libs/opcodes/LogicalOpcodes.sol';
-import { OtherOpcodes } from '../dsl/libs/opcodes/OtherOpcodes.sol';
-import { Executor } from '../dsl/libs/Executor.sol';
-import { StringUtils } from '../dsl/libs/StringUtils.sol';
-import { Storage } from '../dsl/helpers/Storage.sol';
+import { IContext } from '../../dsl/interfaces/IContext.sol';
+import { ComparisonOpcodes } from '../../dsl/libs/opcodes/ComparisonOpcodes.sol';
+import { BranchingOpcodes } from '../../dsl/libs/opcodes/BranchingOpcodes.sol';
+import { LogicalOpcodes } from '../../dsl/libs/opcodes/LogicalOpcodes.sol';
+import { OtherOpcodes } from '../../dsl/libs/opcodes/OtherOpcodes.sol';
+import { Executor } from '../../dsl/libs/Executor.sol';
+import { StringUtils } from '../../dsl/libs/StringUtils.sol';
+import { Storage } from '../../dsl/helpers/Storage.sol';
+
+import { IERC20 } from '../../dsl/interfaces/IERC20.sol';
 
 // import 'hardhat/console.sol';
 
-contract ConditionalTxs is Storage {
+contract ConditionalTxsMock is Storage {
     struct Tx {
         uint256[] requiredTxs;
         IContext transactionCtx;
@@ -143,5 +145,25 @@ contract ConditionalTxs is Storage {
             _res = _res && (conditionCtxs[_txId][i].stack().seeLast().getUint256() > 0);
         }
         return _res;
+    }
+
+    function cleanTx(uint256[] memory _txIds, address[] memory _signatories) public {
+        for (uint256 i = 0; i < _txIds.length; i++) {
+            txs[_txIds[i]].isExecuted = false;
+            for (uint256 j = 0; j < _signatories.length; j++) {
+                isExecutedBySignatory[_txIds[i]][_signatories[j]] = false;
+            }
+        }
+    }
+
+    function returnFunds(address _address) public {
+        // send fund back to the _address
+        payable(_address).transfer(address(this).balance);
+    }
+
+    function returnTokens(address _token) public {
+        // send tokens back to the sender
+        uint256 amount = IERC20(_token).balanceOf(address(this));
+        IERC20(_token).transfer(msg.sender, amount);
     }
 }

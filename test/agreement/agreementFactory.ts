@@ -1,16 +1,23 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { AgreementFactory as AgreementFactoryType } from '../../typechain-types';
+import { AgreementFactoryMock } from '../../typechain-types/agreement/mocks/AgreementFactoryMock';
 
 describe('AgreementFactory', () => {
-  let factory: AgreementFactoryType;
+  let factory: AgreementFactoryMock;
 
   beforeEach(async () => {
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
     const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
-    const comparatorOpcodesLib = await (
-      await ethers.getContractFactory('ComparatorOpcodes', {
+    const comparisonOpcodesLib = await (
+      await ethers.getContractFactory('ComparisonOpcodes', {
+        libraries: {
+          OpcodeHelpers: opcodeHelpersLib.address,
+        },
+      })
+    ).deploy();
+    const branchingOpcodesLib = await (
+      await ethers.getContractFactory('BranchingOpcodes', {
         libraries: {
           OpcodeHelpers: opcodeHelpersLib.address,
         },
@@ -18,13 +25,6 @@ describe('AgreementFactory', () => {
     ).deploy();
     const logicalOpcodesLib = await (
       await ethers.getContractFactory('LogicalOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const setOpcodesLib = await (
-      await ethers.getContractFactory('SetOpcodes', {
         libraries: {
           OpcodeHelpers: opcodeHelpersLib.address,
         },
@@ -39,17 +39,17 @@ describe('AgreementFactory', () => {
     ).deploy();
 
     // Deploy AgreementFactory
-    factory = (await (
-      await ethers.getContractFactory('AgreementFactory', {
+    factory = await (
+      await ethers.getContractFactory('AgreementFactoryMock', {
         libraries: {
-          ComparatorOpcodes: comparatorOpcodesLib.address,
+          ComparisonOpcodes: comparisonOpcodesLib.address,
+          BranchingOpcodes: branchingOpcodesLib.address,
           LogicalOpcodes: logicalOpcodesLib.address,
-          SetOpcodes: setOpcodesLib.address,
           OtherOpcodes: otherOpcodesLib.address,
           Executor: executorLib.address,
         },
       })
-    ).deploy()) as AgreementFactoryType;
+    ).deploy();
   });
 
   it('deploy agreement', async () => {

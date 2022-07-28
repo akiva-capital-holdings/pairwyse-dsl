@@ -20,13 +20,10 @@ library StringUtils {
     }
 
     function concat(string memory s1, string memory s2) internal pure returns (string memory) {
-        // TODO: check collisions in the hash value
-        // https://docs.soliditylang.org/en/v0.8.13/abi-spec.html#non-standard-packed-mode
         return string(abi.encodePacked(s1, s2));
     }
 
     // Convert an hexadecimal string (without "0x" prefix) to raw bytes
-    // TODO: check if the string is empty
     function fromHex(string memory s) public pure returns (bytes memory) {
         bytes memory ss = bytes(s);
         require(ss.length % 2 == 0, 'String: hex lenght not even'); // length must be even
@@ -125,6 +122,5 @@ library StringUtils {
         if (c >= bytes1('A') && c <= bytes1('F')) {
             result = 10 + uint8(c) - uint8(bytes1('A'));
         }
-        // TODO: check that returns 0
     }
 }

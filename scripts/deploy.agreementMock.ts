@@ -1,17 +1,20 @@
 import '@nomiclabs/hardhat-ethers';
 import * as hre from 'hardhat';
-// TODO: would it be better to store types both in the test directory?
-import { parseEther } from 'ethers/lib/utils';
+// TODO: would it be better to store types bot in the test directory?
 import { TxObject } from '../test/types';
-import { aliceAndBobSteps, aliceBobAndCarl, businessCaseSteps } from './data/agreement';
+import { businessCaseSteps } from './data/agreement';
 
 import { Context__factory } from '../typechain-types';
+import { AgreementMock } from '../typechain-types/agreement/mocks';
 
 const { ethers } = hre;
 
-const addSteps = async (steps: TxObject[], Ctx: Context__factory, agreementAddress: string) => {
+let agreement: AgreementMock;
+const BASE = 4;
+
+const addSteps = async (steps: TxObject[], Ctx: Context__factory) => {
   let txCtx;
-  const agreement = await ethers.getContractAt('Agreement', agreementAddress);
+
   for await (const step of steps) {
     console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
     txCtx = await Ctx.deploy();
@@ -33,6 +36,7 @@ const addSteps = async (steps: TxObject[], Ctx: Context__factory, agreementAddre
     console.log('\nTerm transaction');
     console.log(`\n\taddress: \x1b[35m${txCtx.address}\x1b[0m`);
     console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
+    console.log(step.txId);
     const { hash } = await agreement.update(
       step.txId,
       step.requiredTxs,
@@ -88,7 +92,7 @@ async function deploy() {
   });
   const parser = await ParserCont.deploy();
   const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
-  const AgreementContract = await ethers.getContractFactory('Agreement', {
+  const AgreementContract = await ethers.getContractFactory('AgreementMock', {
     libraries: {
       ComparisonOpcodes: comparisonOpcodesLib.address,
       BranchingOpcodes: branchingOpcodesLib.address,
@@ -97,54 +101,19 @@ async function deploy() {
       Executor: executorLib.address,
     },
   });
-  const agreement = await AgreementContract.deploy(parser.address);
+  agreement = (await AgreementContract.deploy(parser.address)) as AgreementMock;
   await agreement.deployed();
 
   const ContextCont = await ethers.getContractFactory('Context');
-  let alice;
-  let bob;
-  let carl;
-  let anybody;
-  let GP;
-  let LPs;
-  [alice, bob, carl, anybody, GP, ...LPs] = await ethers.getSigners();
-  const oneEthBN = parseEther('1');
-  const tenTokens = parseEther('10');
+  const [, GP, ...LPs] = await ethers.getSigners();
 
-  const txId = 1;
-  const requiredTxs: number[] = [];
-  const signatories = [alice.address];
-  const conditions = ['blockTimestamp > loadLocal uint256 LOCK_TIME'];
-  const transaction = 'sendEth RECEIVER 1000000000000000000';
-  // ---> steps for Alice, Bob and Carl <---
+  await addSteps(businessCaseSteps(GP, [LPs[0], LPs[1]], BASE), ContextCont);
 
-  await addSteps(
-    [{ txId, requiredTxs, signatories, conditions, transaction }],
-    ContextCont,
-    agreement.address
-  );
-  await addSteps(aliceAndBobSteps(alice, bob, oneEthBN, tenTokens), ContextCont, agreement.address);
-  await addSteps(
-    aliceBobAndCarl(alice, bob, carl, oneEthBN, tenTokens),
-    ContextCont,
-    agreement.address
-  );
+  console.log(await agreement.parser());
+  const txsAddr = await agreement.txs();
+  console.log({ txsAddr });
 
-  // ---> steps for businessCases with one LP <---
-  await addSteps(businessCaseSteps(GP, [LPs[0]], 4), ContextCont, agreement.address);
-  // await addSteps(businessCaseSteps(GP, [LPs[0]], 5), ContextCont, agreement.address);
-
-  /*
-    TODO: pay attention, that the agreement.ts and agreementBusinessCase.ts has
-    only one LP signature in the required list!
-    It has to be used another test, like `Lifecycle Test Multiple LPs`
-    to check multiple LPs
-  */
-  // ---> steps for businessCases with multiple LPs <---
-  await addSteps(businessCaseSteps(GP, [LPs[0], LPs[1]], 4), ContextCont, agreement.address);
-  // await addSteps(businessCaseSteps(GP, [LPs[0], LPs[1]], 5), ContextCont, agreement.address);
-
-  console.log(`\x1b[42m Agreement address \x1b[0m\x1b[32m ${agreement.address}\x1b[0m`);
+  console.log(`\x1b[42m Mock agreement address \x1b[0m\x1b[32m ${agreement.address}\x1b[0m`);
 }
 
 deploy();

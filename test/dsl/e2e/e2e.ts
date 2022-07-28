@@ -7,13 +7,12 @@ import {
   Stack,
   StackValue__factory,
 } from '../../../typechain-types';
-import { checkStack, hex4Bytes, hex4BytesShort } from '../../utils/utils';
+import { checkStack, checkStackTailv2, hex4Bytes, hex4BytesShort } from '../../utils/utils';
 
 async function getChainId() {
   return ethers.provider.getNetwork().then((network) => network.chainId);
 }
 
-// TODO: make more thorough end-to-end testing
 describe('End-to-end', () => {
   let stack: Stack;
   let preprocessor: Preprocessor;
@@ -41,8 +40,15 @@ describe('End-to-end', () => {
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const comparatorOpcodesLib = await (
-      await ethers.getContractFactory('ComparatorOpcodes', {
+    const comparisonOpcodesLib = await (
+      await ethers.getContractFactory('ComparisonOpcodes', {
+        libraries: {
+          OpcodeHelpers: opcodeHelpersLib.address,
+        },
+      })
+    ).deploy();
+    const branchingOpcodesLib = await (
+      await ethers.getContractFactory('BranchingOpcodes', {
         libraries: {
           OpcodeHelpers: opcodeHelpersLib.address,
         },
@@ -50,13 +56,6 @@ describe('End-to-end', () => {
     ).deploy();
     const logicalOpcodesLib = await (
       await ethers.getContractFactory('LogicalOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const setOpcodesLib = await (
-      await ethers.getContractFactory('SetOpcodes', {
         libraries: {
           OpcodeHelpers: opcodeHelpersLib.address,
         },
@@ -90,9 +89,9 @@ describe('End-to-end', () => {
     // Deploy Context & setup
     ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
     ctxAddr = ctx.address;
-    await ctx.setComparatorOpcodesAddr(comparatorOpcodesLib.address);
+    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLib.address);
+    await ctx.setBranchingOpcodesAddr(branchingOpcodesLib.address);
     await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
-    await ctx.setSetOpcodesAddr(setOpcodesLib.address);
     await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
 
     // Create Stack instance
@@ -526,20 +525,26 @@ describe('End-to-end', () => {
     });
 
     it('Use A value as bool, but it was stored as a number', async () => {
-      // TODO: should revert or use true value?
-      const SIX = new Array(64).join('0') + 6;
-      const input = `
-        uint256 6 setUint256 A
-        bool A
-        `;
+      await app.setStorageUint256(hex4Bytes('A'), 6);
+      const input = 'bool A';
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
-      const expectedCode = ['uint256', '6', 'setUint256', 'A', 'bool', 'A'];
+      const expectedCode = ['bool', 'A'];
       expect(code).to.eql(expectedCode);
 
       // to Parser
       await app.parseCode(code);
-      const expectedProgram = `0x1a${SIX}2e03783fac1800`;
+      const expectedProgram = '0x1800';
       expect(await ctx.program()).to.equal(expectedProgram);
+
+      // Execute and check
+      await app.execute();
+      StackValue = await ethers.getContractFactory('StackValue');
+      const StackCont = await ethers.getContractFactory('Stack');
+      const contextStackAddress = await ctx.stack();
+      stack = StackCont.attach(contextStackAddress);
+      await checkStackTailv2(StackValue, stack, [0]);
+      expect(await app.getStorageUint256(hex4Bytes('A'))).equal(6);
+      expect(await app.getStorageBool(hex4Bytes('A'))).equal(true);
     });
   });
 });
