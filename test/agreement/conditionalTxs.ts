@@ -77,6 +77,11 @@ describe('Conditional transactions', () => {
 
     // Deploy contracts
     ContextCont = await ethers.getContractFactory('Context');
+    const preprocessor = await (
+      await ethers.getContractFactory('Preprocessor', {
+        libraries: { StringUtils: stringLib.address },
+      })
+    ).deploy();
     app = (await (
       await ethers.getContractFactory('ConditionalTxs', {
         libraries: {
@@ -95,7 +100,7 @@ describe('Conditional transactions', () => {
           ByteUtils: byteLib.address,
         },
       })
-    ).deploy();
+    ).deploy(preprocessor.address);
 
     // Make a snapshot
     snapshotId = await network.provider.send('evm_snapshot');

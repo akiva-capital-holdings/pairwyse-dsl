@@ -14,7 +14,7 @@ describe('Context', () => {
 
   beforeEach(async () => {
     const ContextCont = await ethers.getContractFactory('ContextMock');
-    app = (await ContextCont.deploy()) as ContextMock;
+    app = await ContextCont.deploy();
   });
 
   describe('addOpcode', () => {

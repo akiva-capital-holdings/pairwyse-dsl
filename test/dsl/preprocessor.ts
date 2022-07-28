@@ -43,11 +43,11 @@ describe('Preprocessor', () => {
     await ctx.addOperatorExt('!=', 1);
 
     // Deploy Preprocessor
-    app = (await (
+    app = await (
       await ethers.getContractFactory('Preprocessor', {
         libraries: { StringUtils: stringLib.address },
       })
-    ).deploy()) as Preprocessor;
+    ).deploy();
   });
 
   describe('infix to postfix', () => {

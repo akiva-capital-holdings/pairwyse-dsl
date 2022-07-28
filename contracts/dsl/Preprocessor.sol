@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { IContext } from './interfaces/IContext.sol';
+import { IPreprocessor } from './interfaces/IPreprocessor.sol';
 import { Stack, StackValue } from './helpers/Stack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 
@@ -17,18 +18,10 @@ import { StringUtils } from './libs/StringUtils.sol';
  * DSL code in postfix notation as
  * user's string code -> Preprocessor -> each command is separated in the commands list
  */
-contract Preprocessor {
+contract Preprocessor is IPreprocessor {
     using StringUtils for string;
-    // uses for storing data for DSL functions
-    struct FuncParameter {
-        // the type of variable that provides for the function
-        string _type;
-        // the name of variable that will be generated in denedce on the function name
-        string nameOfVariable;
-        // the value for provided variable
-        string value;
-    }
-    mapping(uint256 => FuncParameter) parameters;
+
+    mapping(uint256 => FuncParameter) internal parameters;
     string[] internal result; // stores the list of commands after infixToPostfix transformation
 
     /**
@@ -278,7 +271,7 @@ contract Preprocessor {
      */
     function _parseNumber(string memory _chunk, bool _loadRemoteFlag)
         internal
-        view
+        pure
         returns (string memory updatedChunk)
     {
         if (_loadRemoteFlag) return _chunk;

@@ -36,7 +36,7 @@ describe('End-to-end', () => {
     PREV_MONTH = lastBlockTimestamp - 60 * 60 * 24 * 30;
 
     // Create StackValue Factory instance
-    StackValue = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
+    StackValue = await ethers.getContractFactory('StackValue');
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
@@ -73,21 +73,21 @@ describe('End-to-end', () => {
     const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
 
     // Deploy Preprocessor
-    preprocessor = (await (
+    preprocessor = await (
       await ethers.getContractFactory('Preprocessor', {
         libraries: { StringUtils: stringLib.address },
       })
-    ).deploy()) as Preprocessor;
+    ).deploy();
 
     // Deploy ParserMock
     const parser = await (
       await ethers.getContractFactory('ParserMock', {
         libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
       })
-    ).deploy();
+    ).deploy(preprocessor.address);
 
     // Deploy Context & setup
-    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
+    ctx = await (await ethers.getContractFactory('Context')).deploy();
     ctxAddr = ctx.address;
     await ctx.setComparisonOpcodesAddr(comparisonOpcodesLib.address);
     await ctx.setBranchingOpcodesAddr(branchingOpcodesLib.address);
@@ -97,12 +97,12 @@ describe('End-to-end', () => {
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
     const contextStackAddress = await ctx.stack();
-    stack = StackCont.attach(contextStackAddress) as Stack;
+    stack = StackCont.attach(contextStackAddress);
 
     // Deploy Application
-    app = (await (
+    app = await (
       await ethers.getContractFactory('E2EApp', { libraries: { Executor: executorLib.address } })
-    ).deploy(preprocessor.address, parser.address, ctxAddr)) as E2EApp;
+    ).deploy(preprocessor.address, parser.address, ctxAddr);
   });
 
   describe('blockChainId < loadLocal uint256 VAR', () => {
@@ -491,8 +491,6 @@ describe('End-to-end', () => {
         true setUint256 A
         (A + 2) setUint256 SUM
         `;
-      const six = new Array(64).join('0') + 6;
-      const two = new Array(64).join('0') + 2;
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
       const expectedCode = [
         'true',

@@ -7,7 +7,7 @@ import { Preprocessor } from '../Preprocessor.sol';
 interface IParser {
     // Variables
 
-    function preprocessor() external returns (Preprocessor);
+    // function preprAddr() external returns (address);
 
     event ExecRes(bool result);
     event NewConditionalTx(address txObj);

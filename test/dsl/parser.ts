@@ -17,14 +17,21 @@ describe('Parser', () => {
     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
     const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
 
+    // Deploy Preprocessor
+    const preprocessor = await (
+      await ethers.getContractFactory('Preprocessor', {
+        libraries: { StringUtils: stringLib.address },
+      })
+    ).deploy();
+
     // Deploy Parser
     const ParserCont = await ethers.getContractFactory('ParserMock', {
       libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
     });
-    app = (await ParserCont.deploy()) as ParserMock;
+    app = await ParserCont.deploy(preprocessor.address);
 
     // Deploy & setup Context
-    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
+    ctx = await (await ethers.getContractFactory('Context')).deploy();
     ctxAddr = ctx.address;
     await ctx.initOpcodes();
     await ctx.setAppAddress(app.address);

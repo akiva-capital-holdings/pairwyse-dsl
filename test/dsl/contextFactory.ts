@@ -7,9 +7,7 @@ describe('ContextFactory', () => {
 
   beforeEach(async () => {
     // Deploy ContextFactory
-    factory = (await (
-      await ethers.getContractFactory('ContextFactory')
-    ).deploy()) as ContextFactoryType;
+    factory = await (await ethers.getContractFactory('ContextFactory')).deploy();
   });
 
   it('deploy context', async () => {
