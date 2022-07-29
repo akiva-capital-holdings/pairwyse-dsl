@@ -43,23 +43,30 @@ describe('DSL: math', () => {
     const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
     const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
 
+    // Deploy Preprocessor
+    const preprocessor = await (
+      await ethers.getContractFactory('Preprocessor', {
+        libraries: { StringUtils: stringLib.address },
+      })
+    ).deploy();
+
     // Deploy Parser
     const ParserCont = await ethers.getContractFactory('Parser', {
       libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
     });
-    parser = (await ParserCont.deploy()) as Parser;
+    parser = await ParserCont.deploy(preprocessor.address);
 
     // Deploy Context & setup
-    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
+    ctx = await (await ethers.getContractFactory('Context')).deploy();
     await ctx.setComparisonOpcodesAddr(comparisonOpcodesLib.address);
     await ctx.setBranchingOpcodesAddr(branchingOpcodesLib.address);
     await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
     await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
 
     // Deploy Application
-    app = (await (
+    app = await (
       await ethers.getContractFactory('App', { libraries: { Executor: executorLib.address } })
-    ).deploy(parser.address, ctx.address)) as App;
+    ).deploy(parser.address, ctx.address);
   });
 
   describe('division case', () => {

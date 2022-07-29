@@ -5,6 +5,9 @@ import { IContext } from '../interfaces/IContext.sol';
 import { Parser } from '../Parser.sol';
 
 contract ParserMock is Parser {
+    // solhint-disable-next-line no-empty-blocks
+    constructor(address _preprAddr) Parser(_preprAddr) {}
+
     function parseCodeExt(address _ctxAddr, string[] memory _code) external {
         _parseCode(_ctxAddr, _code);
     }

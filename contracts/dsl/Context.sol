@@ -316,15 +316,6 @@ contract Context is IContext {
             IParser.asmSetLocalBool.selector,
             OpcodeLibNames.OtherOpcodes
         );
-        // TODO: as we can use setUint256 for setting variables, why do we need setLocalUint256?
-        // TODO: remove `setLocalUint256` and check that it doesn't influence the system
-        addOpcode(
-            'setLocalUint256',
-            0x2d,
-            OtherOpcodes.opSetLocalUint256.selector,
-            IParser.asmSetLocalUint256.selector,
-            OpcodeLibNames.OtherOpcodes
-        );
         addOpcode(
             'setUint256',
             0x2e,
@@ -361,7 +352,7 @@ contract Context is IContext {
                 loadLocal uint256 NUMBER_STORED_VALUE
                 loadRemote bool ADDRESS_STORED_VALUE 9A676e781A523b5d0C0e43731313A708CB607508
 
-            Where `*_STORED_VALUE` parameters can be set by using `setLocalBool`, `setLocalUint256`
+            Where `*_STORED_VALUE` parameters can be set by using `setLocalBool`
             or `setUint256` opcodes
         */
         string memory name = 'loadLocal';

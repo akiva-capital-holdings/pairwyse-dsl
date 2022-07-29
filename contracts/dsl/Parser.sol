@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import { IERC20 } from './interfaces/IERC20.sol';
 import { IContext } from './interfaces/IContext.sol';
 import { IParser } from './interfaces/IParser.sol';
+import { IPreprocessor } from './interfaces/IPreprocessor.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 import { ByteUtils } from './libs/ByteUtils.sol';
 import { Storage } from './helpers/Storage.sol';
@@ -24,18 +25,18 @@ contract Parser is IParser, Storage {
     using StringUtils for string;
     using ByteUtils for bytes;
 
-    Preprocessor public preprocessor;
+    address public preprAddr; // Preprocessor contract address
 
     bytes internal program; // raw bytecode of the program that preprocessor is generating
     string[] internal cmds; // DSL code in postfix form (input from Preprocessor)
     uint256 internal cmdIdx; // Current parsing index of DSL code
 
     mapping(string => uint256) public labelPos;
-    mapping(string => bool) isVariable;
-    mapping(string => bytes) savedProgram;
+    mapping(string => bool) internal isVariable;
+    mapping(string => bytes) internal savedProgram;
 
-    constructor() {
-        preprocessor = new Preprocessor(); // TODO: provide as input param
+    constructor(address _preprAddr) {
+        preprAddr = _preprAddr;
     }
 
     /**
@@ -44,7 +45,7 @@ contract Parser is IParser, Storage {
      * @param _codeRaw Input code as a string in infix notation
      */
     function parse(address _ctxAddr, string memory _codeRaw) external {
-        string[] memory _code = preprocessor.transform(_ctxAddr, _codeRaw);
+        string[] memory _code = IPreprocessor(preprAddr).transform(_ctxAddr, _codeRaw);
         _parseCode(_ctxAddr, _code);
     }
 
@@ -88,19 +89,6 @@ contract Parser is IParser, Storage {
     function asmSetLocalBool() public {
         _parseVariable();
         asmBool();
-    }
-
-    /**
-     * @dev Updates the program with the local variable value
-     *
-     * Example of a command:
-     * ```
-     * setLocalUint256 VARNAME 12345
-     * ```
-     */
-    function asmSetLocalUint256() public {
-        _parseVariable();
-        asmUint256();
     }
 
     /**
@@ -441,7 +429,6 @@ contract Parser is IParser, Storage {
     ) internal {
         isVariable[_name] = true;
 
-        // TODO: add the loadRemote type
         string memory _loadType = 'loadLocal';
         bytes4 name_ = bytes4(keccak256(abi.encodePacked(_name)));
         bytes1 type_ = _ctx.opCodeByName(_loadType);

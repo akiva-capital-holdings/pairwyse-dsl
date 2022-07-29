@@ -10,7 +10,7 @@ import {
 import { checkStack, pushToStack } from '../../../utils/utils';
 /* eslint-enable camelcase */
 
-describe('Comparator opcodes', () => {
+describe('Comparison opcodes', () => {
   // eslint-disable-next-line camelcase
   let StackCont: Stack__factory;
   // eslint-disable-next-line camelcase
@@ -21,10 +21,10 @@ describe('Comparator opcodes', () => {
   let stack: Stack;
 
   before(async () => {
-    StackCont = (await ethers.getContractFactory('Stack')) as Stack__factory;
-    StackValue = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
+    StackCont = await ethers.getContractFactory('Stack');
+    StackValue = await ethers.getContractFactory('StackValue');
 
-    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
+    ctx = await (await ethers.getContractFactory('Context')).deploy();
     ctxAddr = ctx.address;
 
     // Deploy libraries
@@ -36,15 +36,15 @@ describe('Comparator opcodes', () => {
     ).deploy();
 
     // Deploy ComparisonOpcodesMock
-    app = (await (
+    app = await (
       await ethers.getContractFactory('ComparisonOpcodesMock', {
         libraries: { ComparisonOpcodes: comparisonOpcodesLib.address },
       })
-    ).deploy()) as ComparisonOpcodesMock;
+    ).deploy();
 
     // Create Stack instance
     const stackAddr = await ctx.stack();
-    stack = (await ethers.getContractAt('Stack', stackAddr)) as Stack;
+    stack = await ethers.getContractAt('Stack', stackAddr);
 
     // Setup
     await ctx.initOpcodes();

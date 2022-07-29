@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import { IContext } from '../../interfaces/IContext.sol';
-import { IStorage } from '../../interfaces/IStorage.sol';
 import { IERC20 } from '../../interfaces/IERC20.sol';
 import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
@@ -57,20 +56,6 @@ library OtherOpcodes {
         // Set local variable by it's hex
         (bool success, ) = _ctx.appAddress().call(
             abi.encodeWithSignature('setStorageBool(bytes32,bool)', _varNameB32, _boolVal)
-        );
-        require(success, 'Opcodes: opSetLocal call not success');
-        OpcodeHelpers.putToStack(_ctx, 1);
-    }
-
-    function opSetLocalUint256(IContext _ctx) public {
-        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
-
-        bytes memory data = OpcodeHelpers.nextBytes(_ctx, 32);
-        uint256 _val = uint256(bytes32(data));
-
-        // Set local variable by it's hex
-        (bool success, ) = _ctx.appAddress().call(
-            abi.encodeWithSignature('setStorageUint256(bytes32,uint256)', _varNameB32, _val)
         );
         require(success, 'Opcodes: opSetLocal call not success');
         OpcodeHelpers.putToStack(_ctx, 1);

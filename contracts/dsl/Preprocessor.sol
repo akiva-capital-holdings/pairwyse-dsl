@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { IContext } from './interfaces/IContext.sol';
+import { IPreprocessor } from './interfaces/IPreprocessor.sol';
 import { Stack, StackValue } from './helpers/Stack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 
@@ -17,19 +18,18 @@ import { StringUtils } from './libs/StringUtils.sol';
  * DSL code in postfix notation as
  * user's string code -> Preprocessor -> each command is separated in the commands list
  */
-contract Preprocessor {
+contract Preprocessor is IPreprocessor {
     using StringUtils for string;
-    // uses for storing data for DSL functions
-    struct FuncParameter {
-        // the type of variable that provides for the function
-        string _type;
-        // the name of variable that will be generated in denedce on the function name
-        string nameOfVariable;
-        // the value for provided variable
-        string value;
-    }
-    mapping(uint256 => FuncParameter) parameters;
+
+    mapping(uint256 => FuncParameter) internal parameters;
+    // type -> function name. maps DSL type (like `uint256`, `address`, `string`, or `bytes32`) to function name that
+    // can put value of this type into stack
+    mapping(string => string) internal rebuildParamTypes;
     string[] internal result; // stores the list of commands after infixToPostfix transformation
+
+    constructor() {
+        rebuildParamTypes['uint256'] = 'setUint256';
+    }
 
     /**
      * @dev The main function that transforms the user's DSL code string to the list of commands.
@@ -278,7 +278,7 @@ contract Preprocessor {
      */
     function _parseNumber(string memory _chunk, bool _loadRemoteFlag)
         internal
-        view
+        pure
         returns (string memory updatedChunk)
     {
         if (_loadRemoteFlag) return _chunk;
@@ -486,8 +486,6 @@ contract Preprocessor {
     ) internal {
         result.push(_type);
         result.push(_value);
-        // TODO: setUint256 - update for other types in dependence on '_type'
-        // TODO: create mapping (_type => `setUint256`)
         result.push('setUint256');
         result.push(_variableName);
     }
@@ -595,7 +593,7 @@ contract Preprocessor {
     }
 
     /**
-     * @dev This function is used to check if 'transferFrom', 'setLocalUint256',
+     * @dev This function is used to check if 'transferFrom',
      * 'sendEth' and 'transfer' functions(opcodes) won't use 'uint256' opcode during code
      * execution directly. So it needs to be sure that executed code won't mess up
      * parameters for the simple number and a number that be used for these functions.
@@ -609,12 +607,7 @@ contract Preprocessor {
         returns (bool _isDirect)
     {
         _isDirect = _directUseUint256;
-        if (
-            _chunk.equal('transferFrom') ||
-            _chunk.equal('setLocalUint256') ||
-            _chunk.equal('sendEth') ||
-            _chunk.equal('transfer')
-        ) {
+        if (_chunk.equal('transferFrom') || _chunk.equal('sendEth') || _chunk.equal('transfer')) {
             _isDirect = true;
         }
     }

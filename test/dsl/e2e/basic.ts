@@ -63,14 +63,21 @@ describe('DSL: basic', () => {
     const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
     const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
 
+    // Deploy Preprocessor
+    const preprocessor = await (
+      await ethers.getContractFactory('Preprocessor', {
+        libraries: { StringUtils: stringLib.address },
+      })
+    ).deploy();
+
     // Deploy Parser
     const ParserCont = await ethers.getContractFactory('Parser', {
       libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
     });
-    parser = (await ParserCont.deploy()) as Parser;
+    parser = await ParserCont.deploy(preprocessor.address);
 
     // Deploy Context & setup
-    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
+    ctx = await (await ethers.getContractFactory('Context')).deploy();
     await ctx.setComparisonOpcodesAddr(comparisonOpcodesLib.address);
     await ctx.setBranchingOpcodesAddr(branchingOpcodesLib.address);
     await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
@@ -408,15 +415,6 @@ describe('DSL: basic', () => {
     await app.parse('setLocalBool BOOLVAR false');
     await app.execute();
     expect(await app.getStorageBool(hex4Bytes('BOOLVAR'))).to.equal(false);
-  });
-
-  it('setLocalUint256', async () => {
-    await app.parse('setLocalUint256 UINTVAR 15');
-    await app.execute();
-    expect(await app.getStorageUint256(hex4Bytes('UINTVAR'))).to.equal(15);
-    await app.parse('setLocalUint256 UINTVAR 239423894');
-    await app.execute();
-    expect(await app.getStorageUint256(hex4Bytes('UINTVAR'))).to.equal(239423894);
   });
 
   it('setUint256', async () => {

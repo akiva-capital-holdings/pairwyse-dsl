@@ -1,6 +1,5 @@
 import '@nomiclabs/hardhat-ethers';
 import * as hre from 'hardhat';
-// TODO: would it be better to store types bot in the test directory?
 import { TxObject } from '../test/types';
 import { businessCaseSteps } from './data/agreement';
 
