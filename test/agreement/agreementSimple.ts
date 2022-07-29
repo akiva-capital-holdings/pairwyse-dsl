@@ -1,15 +1,17 @@
-import { ethers } from 'hardhat';
+import { ethers, network } from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
 import { hex4Bytes } from '../utils/utils';
 import { AgreementMock, ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
+import { deploy, addSteps } from '../../scripts/deploy.agreement';
+import { aliceAndBobSteps, aliceBobAndCarl, businessCaseSteps } from '../../scripts/data/agreement';
 
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-describe.skip('Agreement: Alice, Bob, Carl', () => {
+describe.only('Agreement: Alice, Bob, Carl', () => {
   let agreement: AgreementMock;
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
@@ -19,6 +21,7 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
   let txs: ConditionalTxsMock;
   let NEXT_MONTH: number;
   let LAST_BLOCK_TIMESTAMP: number;
+  let snapshotId: number;
 
   const ONE_DAY = 60 * 60 * 24;
   const ONE_MONTH = ONE_DAY * 30;
@@ -26,7 +29,37 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
   const tenTokens = parseEther('10');
 
   before(async () => {
+    // TODO: need more simplifications for all tests
+    /*
+      - deployment module
+      - tests module templates
+      - gather module
+    */
+    agreement = (await deploy()) as AgreementMock;
     [alice, bob, carl, anybody] = await ethers.getSigners();
+
+    const txId = 1;
+    const requiredTxs: number[] = [];
+    const signatories = [alice.address];
+    const conditions = ['blockTimestamp > loadLocal uint256 LOCK_TIME'];
+    const transaction = 'sendEth RECEIVER 1000000000000000000';
+    const ContextCont = await ethers.getContractFactory('Context');
+
+    await addSteps(
+      [{ txId, requiredTxs, signatories, conditions, transaction }],
+      ContextCont,
+      agreement.address
+    );
+    await addSteps(
+      aliceAndBobSteps(alice, bob, oneEthBN, tenTokens),
+      ContextCont,
+      agreement.address
+    );
+    await addSteps(
+      aliceBobAndCarl(alice, bob, carl, oneEthBN, tenTokens),
+      ContextCont,
+      agreement.address
+    );
 
     LAST_BLOCK_TIMESTAMP = (
       await ethers.provider.getBlock(
@@ -36,27 +69,13 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
     ).timestamp;
 
     NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
-
-    const address = process.env.AGREEMENT_ADDR;
-    if (address) {
-      agreement = (await ethers.getContractAt('Agreement', address)) as AgreementMock;
-    } else {
-      // TODO: what should we do if the user did not set the AGREEMENT_ADDR?
-      console.log('The agreement address is undefined');
-    }
     txsAddr = await agreement.txs();
     txs = (await ethers.getContractAt('ConditionalTxs', txsAddr)) as ConditionalTxsMock;
-  });
-
-  beforeEach(async () => {
-    // returns funds to executor. Prevent errors in next
-    // tests that might be occurred in previous tests
-    await agreement.connect(anybody).returnFunds();
+    snapshotId = await network.provider.send('evm_snapshot');
   });
 
   afterEach(async () => {
-    // returns funds to executor
-    await agreement.connect(anybody).returnFunds();
+    await network.provider.send('evm_revert', [snapshotId]);
   });
 
   it('one condition', async () => {
@@ -89,7 +108,7 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
     );
 
     // clean transaction history inside of the contracts
-    await txs.cleanTx([1], [alice.address]);
+    // await txs.cleanTx([1], [alice.address]);
   });
 
   it('Alice (borrower) and Bob (lender)', async () => {
@@ -138,7 +157,7 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
     expect(await token.balanceOf(alice.address)).to.equal(0);
 
     // clean transaction history inside of the contracts
-    await txs.cleanTx([21, 22, 23], [alice.address, bob.address]);
+    // await txs.cleanTx([21, 22, 23], [alice.address, bob.address]);
   });
 
   it('Alice (borrower), Bob (lender), and Carl (insurer)', async () => {
@@ -211,6 +230,6 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
     );
 
     // clean transaction history inside of the contracts
-    await txs.cleanTx([31, 32, 33, 34, 35, 36], [alice.address, bob.address, carl.address]);
+    // await txs.cleanTx([31, 32, 33, 34, 35, 36], [alice.address, bob.address, carl.address]);
   });
 });

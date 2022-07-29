@@ -71,7 +71,7 @@ library StringUtils {
     }
 
     // string decimal number with e symbol (1e18) to uint256 (in wei)
-    function getWei(string memory _s) public view returns (string memory result) {
+    function getWei(string memory _s) public pure returns (string memory result) {
         bool isFound; // was `e` symbol found
         uint256 tmp;
         bytes memory b = bytes(_s);

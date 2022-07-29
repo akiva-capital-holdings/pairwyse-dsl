@@ -41,7 +41,7 @@ contract StringUtilsMock {
     }
 
     // string decimal number with e symbol (1e18) to uint256 (in wei)
-    function getWei(string memory _s) public view returns (string memory) {
+    function getWei(string memory _s) public pure returns (string memory) {
         return StringUtils.getWei(_s);
     }
 
