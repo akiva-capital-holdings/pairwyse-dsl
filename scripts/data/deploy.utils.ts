@@ -90,15 +90,7 @@ export const deployOpcodeLibs = async () => {
   ];
 };
 
-export const deploy = async () => {
-  let comparisonOpcodesLibAddr;
-  let branchingOpcodesLibAddr;
-  let logicalOpcodesLibAddr;
-  let otherOpcodesLibAddr;
-
-  [comparisonOpcodesLibAddr, branchingOpcodesLibAddr, logicalOpcodesLibAddr, otherOpcodesLibAddr] =
-    await deployOpcodeLibs();
-
+export const deployBase = async () => {
   const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
   const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
 
@@ -107,18 +99,52 @@ export const deploy = async () => {
   });
   const parser = await ParserCont.deploy();
   const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
+  return [parser.address, executorLib.address];
+};
+
+export const deployAgreement = async (
+  comparisonOpcodesLibAddr: string,
+  branchingOpcodesLibAddr: string,
+  logicalOpcodesLibAddr: string,
+  otherOpcodesLibAddr: string,
+  executorLibAddr: string,
+  parserAddr: string
+) => {
   const AgreementContract = await ethers.getContractFactory('AgreementMock', {
     libraries: {
       ComparisonOpcodes: comparisonOpcodesLibAddr,
       BranchingOpcodes: branchingOpcodesLibAddr,
       LogicalOpcodes: logicalOpcodesLibAddr,
       OtherOpcodes: otherOpcodesLibAddr,
-      Executor: executorLib.address,
+      Executor: executorLibAddr,
     },
   });
-  const agreement = await AgreementContract.deploy(parser.address);
+  const agreement = await AgreementContract.deploy(parserAddr);
   await agreement.deployed();
 
   console.log(`\x1b[42m Agreement address \x1b[0m\x1b[32m ${agreement.address}\x1b[0m`);
-  return agreement;
+  return agreement.address;
+};
+
+export const deployAgreementFull = async () => {
+  let comparisonOpcodesLibAddr: string;
+  let branchingOpcodesLibAddr: string;
+  let logicalOpcodesLibAddr: string;
+  let otherOpcodesLibAddr: string;
+  let executorLibAddr: string;
+  let parserAddr: string;
+
+  [comparisonOpcodesLibAddr, branchingOpcodesLibAddr, logicalOpcodesLibAddr, otherOpcodesLibAddr] =
+    await deployOpcodeLibs();
+
+  [parserAddr, executorLibAddr] = await deployBase();
+  const agreementAddr = await deployAgreement(
+    comparisonOpcodesLibAddr,
+    branchingOpcodesLibAddr,
+    logicalOpcodesLibAddr,
+    otherOpcodesLibAddr,
+    executorLibAddr,
+    parserAddr
+  );
+  return agreementAddr;
 };

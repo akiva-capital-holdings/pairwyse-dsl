@@ -4,7 +4,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
 import { hex4Bytes } from '../utils/utils';
 import { AgreementMock, ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
-import { deploy, addSteps } from '../../scripts/deploy.agreement';
+import { deployAgreementFull, addSteps } from '../../scripts/data/deploy.utils';
 import { aliceAndBobSteps, aliceBobAndCarl, businessCaseSteps } from '../../scripts/data/agreement';
 
 const dotenv = require('dotenv');
@@ -13,6 +13,7 @@ dotenv.config();
 
 describe.only('Agreement: Alice, Bob, Carl', () => {
   let agreement: AgreementMock;
+  let agreementAddr: string;
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
   let carl: SignerWithAddress;
@@ -35,7 +36,9 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
       - tests module templates
       - gather module
     */
-    agreement = (await deploy()) as AgreementMock;
+    agreementAddr = await deployAgreementFull();
+    agreement = await ethers.getContractAt('AgreementMock', agreementAddr);
+
     [alice, bob, carl, anybody] = await ethers.getSigners();
 
     const txId = 1;
@@ -69,6 +72,7 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
     ).timestamp;
 
     NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
+
     txsAddr = await agreement.txs();
     txs = (await ethers.getContractAt('ConditionalTxs', txsAddr)) as ConditionalTxsMock;
     snapshotId = await network.provider.send('evm_snapshot');

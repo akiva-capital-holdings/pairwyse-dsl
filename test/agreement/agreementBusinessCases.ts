@@ -8,7 +8,7 @@ import { businessCaseSteps } from '../../scripts/data/agreement';
 import { Token, Context__factory } from '../../typechain-types';
 import { TxObject } from '../types';
 import { AgreementMock, ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
-import { deploy, addSteps } from '../../scripts/deploy.agreement';
+import { deployAgreementFull, addSteps } from '../../scripts/data/deploy.utils';
 
 const dotenv = require('dotenv');
 
@@ -17,6 +17,7 @@ dotenv.config();
 describe.skip('Agreement: business case', () => {
   let ContextCont: Context__factory;
   let agreement: AgreementMock;
+  let agreementAddr: string;
   let whale: SignerWithAddress;
   let GP: SignerWithAddress;
   let LPs: SignerWithAddress[];
@@ -383,10 +384,11 @@ initiating funds\x1b[0m
   };
 
   before(async () => {
-    agreement = await deploy();
+    agreementAddr = await deployAgreementFull();
+    agreement = await ethers.getContractAt('AgreementMock', agreementAddr);
     [, , , whale, GP, ...LPs] = await ethers.getSigners();
     ContextCont = await ethers.getContractFactory('Context');
-    await addSteps(businessCaseSteps(GP, [LPs[0]], 4), ContextCont, agreement.address);
+    await addSteps(businessCaseSteps(GP, [LPs[0]], 4), ContextCont, agreementAddr);
 
     txsAddr = await agreement.txs();
     txs = (await ethers.getContractAt('ConditionalTxs', txsAddr)) as ConditionalTxsMock;
