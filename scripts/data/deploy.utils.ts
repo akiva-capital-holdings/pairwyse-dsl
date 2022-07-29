@@ -93,11 +93,16 @@ export const deployOpcodeLibs = async () => {
 export const deployParser = async () => {
   const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
   const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
+  const preprocessor = await (
+    await ethers.getContractFactory('Preprocessor', {
+      libraries: { StringUtils: stringLib.address },
+    })
+  ).deploy();
 
   const ParserCont = await ethers.getContractFactory('Parser', {
     libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
   });
-  const parser = await ParserCont.deploy();
+  const parser = await ParserCont.deploy(preprocessor.address);
   return parser.address;
 };
 

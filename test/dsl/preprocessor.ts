@@ -753,28 +753,6 @@ describe('Preprocessor', () => {
       expect(cmds).to.eql(expected);
     });
 
-    it('should transform correctly if setLocalUint256 is in the code', async () => {
-      const input = `
-      loadRemote bytes32 BYTES ${appAddrHex}
-      setLocalUint256 UINTVAR 239423894
-      bool true
-      `;
-
-      const cmds = await app.callStatic.transform(ctxAddr, input);
-      const expected = [
-        'loadRemote',
-        'bytes32',
-        'BYTES',
-        appAddrHex,
-        'setLocalUint256',
-        'UINTVAR',
-        '239423894',
-        'bool',
-        'true',
-      ];
-      expect(cmds).to.eql(expected);
-    });
-
     it('should transform correctly if sendEth is in the code', async () => {
       const input = `
       loadRemote bool BOOL_V ${appAddrHex}

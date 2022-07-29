@@ -439,7 +439,7 @@ initiating funds\x1b[0m
     );
   });
 
-  describe.only('Lifecycle Test one LP', () => {
+  describe('Lifecycle Test one LP', () => {
     businessCaseTest(
       'Scenario 1:  LP deposits; GP balances; Profit Realized',
       parseUnits('20', 18), // GP_INITIAL

@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { AgreementFactoryMock } from '../../typechain-types/agreement/mocks/AgreementFactoryMock';
 import { deployAgreementFactory } from '../../scripts/data/deploy.utils';
 
-describe.only('AgreementFactory', () => {
+describe('AgreementFactory', () => {
   let factory: AgreementFactoryMock;
 
   beforeEach(async () => {

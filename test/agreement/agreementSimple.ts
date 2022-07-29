@@ -11,7 +11,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-describe.only('Agreement: Alice, Bob, Carl', () => {
+describe.skip('Agreement: Alice, Bob, Carl', () => {
   let agreement: AgreementMock;
   let agreementAddr: string;
   let alice: SignerWithAddress;
