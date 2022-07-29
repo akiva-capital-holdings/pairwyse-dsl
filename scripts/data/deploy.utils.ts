@@ -90,7 +90,7 @@ export const deployOpcodeLibs = async () => {
   ];
 };
 
-export const deployBase = async () => {
+export const deployParser = async () => {
   const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
   const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
 
@@ -98,18 +98,34 @@ export const deployBase = async () => {
     libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
   });
   const parser = await ParserCont.deploy();
-  const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
-  return [parser.address, executorLib.address];
+  return parser.address;
 };
 
-export const deployAgreement = async (
-  comparisonOpcodesLibAddr: string,
-  branchingOpcodesLibAddr: string,
-  logicalOpcodesLibAddr: string,
-  otherOpcodesLibAddr: string,
-  executorLibAddr: string,
-  parserAddr: string
-) => {
+export const deployExecutor = async () => {
+  const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
+  return executorLib.address;
+};
+
+export const deployBase = async () => {
+  let parserAddr = await deployParser();
+  let executorLibAddr = await deployExecutor();
+
+  return [parserAddr, executorLibAddr];
+};
+
+export const deployAgreement = async () => {
+  let comparisonOpcodesLibAddr: string;
+  let branchingOpcodesLibAddr: string;
+  let logicalOpcodesLibAddr: string;
+  let otherOpcodesLibAddr: string;
+  let executorLibAddr: string;
+  let parserAddr: string;
+
+  [comparisonOpcodesLibAddr, branchingOpcodesLibAddr, logicalOpcodesLibAddr, otherOpcodesLibAddr] =
+    await deployOpcodeLibs();
+
+  [parserAddr, executorLibAddr] = await deployBase();
+
   const AgreementContract = await ethers.getContractFactory('AgreementMock', {
     libraries: {
       ComparisonOpcodes: comparisonOpcodesLibAddr,
@@ -122,11 +138,55 @@ export const deployAgreement = async (
   const agreement = await AgreementContract.deploy(parserAddr);
   await agreement.deployed();
 
-  console.log(`\x1b[42m Agreement address \x1b[0m\x1b[32m ${agreement.address}\x1b[0m`);
+  console.log(`\x1b[32m Agreement address \x1b[0m\x1b[32m ${agreement.address}\x1b[0m`);
+
+  // TODO: comments below will be used only to fix tests for busines cases
+  // then it shoul be removed
+  /*
+      TODO: pay attention, that the agreement.ts and agreementBusinessCase.ts has
+      only one LP signature in the required list!
+      It has to be used another test, like `Lifecycle Test Multiple LPs`
+      to check multiple LPs
+    */
+  // ---> steps for businessCases with multiple LPs <---
+  // await addSteps(businessCaseSteps(GP, [LPs[0], LPs[1]], 4), ContextCont, agreement.address);
+  // await addSteps(businessCaseSteps(GP, [LPs[0], LPs[1]], 5), ContextCont, agreement.address);
+
   return agreement.address;
 };
 
-export const deployAgreementFull = async () => {
+export const deployAgreementFactory = async () => {
+  let comparisonOpcodesLibAddr: string;
+  let branchingOpcodesLibAddr: string;
+  let logicalOpcodesLibAddr: string;
+  let otherOpcodesLibAddr: string;
+  let executorLibAddr: string;
+  let parserAddr: string;
+
+  [comparisonOpcodesLibAddr, branchingOpcodesLibAddr, logicalOpcodesLibAddr, otherOpcodesLibAddr] =
+    await deployOpcodeLibs();
+
+  executorLibAddr = await deployExecutor();
+
+  // Deploy AgreementFactory
+  const factory = await (
+    await ethers.getContractFactory('AgreementFactoryMock', {
+      libraries: {
+        ComparisonOpcodes: comparisonOpcodesLibAddr,
+        BranchingOpcodes: branchingOpcodesLibAddr,
+        LogicalOpcodes: logicalOpcodesLibAddr,
+        OtherOpcodes: otherOpcodesLibAddr,
+        Executor: executorLibAddr,
+      },
+    })
+  ).deploy();
+  await factory.deployed();
+
+  return factory.address;
+};
+
+export const deployConditionalTxs = async () => {
+  // Deploy libraries
   let comparisonOpcodesLibAddr: string;
   let branchingOpcodesLibAddr: string;
   let logicalOpcodesLibAddr: string;
@@ -138,13 +198,18 @@ export const deployAgreementFull = async () => {
     await deployOpcodeLibs();
 
   [parserAddr, executorLibAddr] = await deployBase();
-  const agreementAddr = await deployAgreement(
-    comparisonOpcodesLibAddr,
-    branchingOpcodesLibAddr,
-    logicalOpcodesLibAddr,
-    otherOpcodesLibAddr,
-    executorLibAddr,
-    parserAddr
-  );
-  return agreementAddr;
+
+  const app = await (
+    await ethers.getContractFactory('ConditionalTxs', {
+      libraries: {
+        ComparisonOpcodes: comparisonOpcodesLibAddr,
+        BranchingOpcodes: branchingOpcodesLibAddr,
+        LogicalOpcodes: logicalOpcodesLibAddr,
+        OtherOpcodes: otherOpcodesLibAddr,
+        Executor: executorLibAddr,
+      },
+    })
+  ).deploy();
+
+  return [app.address, parserAddr];
 };

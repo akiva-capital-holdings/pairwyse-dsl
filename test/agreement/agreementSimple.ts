@@ -4,14 +4,14 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
 import { hex4Bytes } from '../utils/utils';
 import { AgreementMock, ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
-import { deployAgreementFull, addSteps } from '../../scripts/data/deploy.utils';
+import { deployAgreement, addSteps } from '../../scripts/data/deploy.utils';
 import { aliceAndBobSteps, aliceBobAndCarl } from '../../scripts/data/agreement';
 
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-describe('Agreement: Alice, Bob, Carl', () => {
+describe.only('Agreement: Alice, Bob, Carl', () => {
   let agreement: AgreementMock;
   let agreementAddr: string;
   let alice: SignerWithAddress;
@@ -36,7 +36,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
       - tests module templates
       - gather module
     */
-    agreementAddr = await deployAgreementFull();
+    agreementAddr = await deployAgreement();
     agreement = await ethers.getContractAt('AgreementMock', agreementAddr);
 
     [alice, bob, carl, anybody] = await ethers.getSigners();

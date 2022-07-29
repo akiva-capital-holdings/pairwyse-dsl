@@ -8,7 +8,7 @@ import { businessCaseSteps } from '../../scripts/data/agreement';
 import { Token, Context__factory } from '../../typechain-types';
 import { TxObject } from '../types';
 import { AgreementMock, ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
-import { deployAgreementFull, addSteps } from '../../scripts/data/deploy.utils';
+import { deployAgreement, addSteps } from '../../scripts/data/deploy.utils';
 
 const dotenv = require('dotenv');
 
@@ -384,11 +384,14 @@ initiating funds\x1b[0m
   };
 
   before(async () => {
-    agreementAddr = await deployAgreementFull();
+    agreementAddr = await deployAgreement();
     agreement = await ethers.getContractAt('AgreementMock', agreementAddr);
     [, , , whale, GP, ...LPs] = await ethers.getSigners();
     ContextCont = await ethers.getContractFactory('Context');
+
+    // ---> steps for businessCases with one LP <---
     await addSteps(businessCaseSteps(GP, [LPs[0]], 4), ContextCont, agreementAddr);
+    // await addSteps(businessCaseSteps(GP, [LPs[0]], 5), ContextCont, agreementAddr);
 
     txsAddr = await agreement.txs();
     txs = (await ethers.getContractAt('ConditionalTxs', txsAddr)) as ConditionalTxsMock;
@@ -419,7 +422,7 @@ initiating funds\x1b[0m
     await network.provider.send('evm_revert', [snapshotId]);
   });
 
-  describe.skip('Lifecycle Test Multiple LPs', () => {
+  describe('Lifecycle Test Multiple LPs', () => {
     businessCaseTest(
       'Scenario 1: LPs deposit; GP balances; Profit Realized',
       parseUnits('20', 18), // GP_INITIAL
@@ -436,7 +439,7 @@ initiating funds\x1b[0m
     );
   });
 
-  describe.skip('Lifecycle Test one LP', () => {
+  describe.only('Lifecycle Test one LP', () => {
     businessCaseTest(
       'Scenario 1:  LP deposits; GP balances; Profit Realized',
       parseUnits('20', 18), // GP_INITIAL
@@ -451,9 +454,7 @@ initiating funds\x1b[0m
       20, // PROFIT_PART
       false // GP_FAILS_TO_DO_GAP_DEPOSIT
     );
-  });
 
-  describe.skip('Lifecycle Test one LP', () => {
     // businessCaseTest(
     //   'Scenario 2:  GP fails to balance LP deposit',
     //   parseUnits('20', 18), // GP_INITIAL
@@ -469,20 +470,20 @@ initiating funds\x1b[0m
     //   true // GP_FAILS_TO_DO_GAP_DEPOSIT
     // );
 
-    businessCaseTest(
-      'Scenario 3:  Loss incurred, fully covered by GP',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('10', 18), // CAPITAL_LOSS
-      parseUnits('0', 18), // CAPITAL_GAINS
-      2, // DEPOSIT_MIN_PERCENT
-      90, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 3:  Loss incurred, fully covered by GP',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('990', 18)], // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('10', 18), // CAPITAL_LOSS
+    //   parseUnits('0', 18), // CAPITAL_GAINS
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   90, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
     // businessCaseTest(
     //   'Scenario 4:  Loss incurred, not fully covered by GP',
     //   parseUnits('20', 18), // GP_INITIAL
