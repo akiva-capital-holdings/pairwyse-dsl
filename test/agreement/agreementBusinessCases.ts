@@ -1,4 +1,4 @@
-import { ethers } from 'hardhat';
+import { ethers, network } from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { formatEther, parseUnits } from 'ethers/lib/utils';
@@ -8,6 +8,7 @@ import { businessCaseSteps } from '../../scripts/data/agreement';
 import { Token, Context__factory } from '../../typechain-types';
 import { TxObject } from '../types';
 import { AgreementMock, ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
+import { deployAgreement, addSteps } from '../../scripts/data/deploy.utils';
 
 const dotenv = require('dotenv');
 
@@ -16,6 +17,7 @@ dotenv.config();
 describe.skip('Agreement: business case', () => {
   let ContextCont: Context__factory;
   let agreement: AgreementMock;
+  let agreementAddr: string;
   let whale: SignerWithAddress;
   let GP: SignerWithAddress;
   let LPs: SignerWithAddress[];
@@ -26,6 +28,7 @@ describe.skip('Agreement: business case', () => {
   let LAST_BLOCK_TIMESTAMP: number;
   let MAX_PERCENT: number;
   let dai: Token;
+  let snapshotId: number;
 
   const ONE_DAY = 60 * 60 * 24;
   const ONE_MONTH = ONE_DAY * 30;
@@ -46,7 +49,7 @@ describe.skip('Agreement: business case', () => {
     GP_FAILS_TO_DO_GAP_DEPOSIT: boolean
   ) => {
     it(name, async () => {
-      await cleanParam();
+      // await cleanParam();
 
       MAX_PERCENT = 100 - DEPOSIT_MIN_PERCENT;
       // Start the test
@@ -137,12 +140,14 @@ describe.skip('Agreement: business case', () => {
         await txs.setStorageUint256(hex4Bytes('LOW_LIM'), GP_GAP_DEPOSIT_LOWER_TIME);
         await txs.setStorageUint256(hex4Bytes('UP_LIM'), GP_GAP_DEPOSIT_UPPER_TIME);
         await txs.setStorageUint256(hex4Bytes('P1'), MAX_PERCENT);
+        console.log('-------------1');
         const txn3Hash = await changeTokenBalanceAndGetTxHash(
           () => agreement.connect(GP).execute(43),
           dai,
           [GP],
           [GP_REMAINING.mul(-1)]
         );
+        console.log('-------------2');
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(txsAddr))} DAI`);
         console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
         console.log(`txn hash: \x1b[35m${txn3Hash}\x1b[0m`);
@@ -375,27 +380,22 @@ initiating funds\x1b[0m
           console.log(`txn hash: \x1b[35m${txn82Hash}\x1b[0m`);
         }
       }
-
-      // clean transaction history inside of the contracts
-      await cleanParam();
     });
   };
 
   before(async () => {
+    agreementAddr = await deployAgreement();
+    agreement = await ethers.getContractAt('AgreementMock', agreementAddr);
     [, , , whale, GP, ...LPs] = await ethers.getSigners();
+    ContextCont = await ethers.getContractFactory('Context');
 
-    const address = process.env.AGREEMENT_ADDR;
-    if (address) {
-      agreement = (await ethers.getContractAt('Agreement', address)) as AgreementMock;
-    } else {
-      // TODO: what should we do if the user did not set the AGREEMENT_ADDR?
-      console.log('The agreement address is undefined');
-    }
+    // ---> steps for businessCases with one LP <---
+    await addSteps(businessCaseSteps(GP, [LPs[0]], 4), ContextCont, agreementAddr);
+    // await addSteps(businessCaseSteps(GP, [LPs[0]], 5), ContextCont, agreementAddr);
+
     txsAddr = await agreement.txs();
     txs = (await ethers.getContractAt('ConditionalTxs', txsAddr)) as ConditionalTxsMock;
-  });
 
-  beforeEach(async () => {
     LAST_BLOCK_TIMESTAMP = (
       await ethers.provider.getBlock(
         // eslint-disable-next-line no-underscore-dangle
@@ -408,31 +408,21 @@ initiating funds\x1b[0m
 
     // returns funds to executor. Prevent errors in next
     // tests that might be occurred in previous tests
-    await agreement.connect(whale).returnFunds();
+    // await agreement.connect(whale).returnFunds();
     await txs.setStorageUint256(hex4Bytes('LP_TOTAL'), 0);
     await txs.setStorageUint256(hex4Bytes('GP_REMAINING'), 0);
     await txs.setStorageUint256(hex4Bytes('TWO_PERCENT'), 0);
-    dai = await (await ethers.getContractFactory('Token'))
+    dai = (await (await ethers.getContractFactory('Token'))
       .connect(whale)
-      .deploy(parseUnits('100000000', 18));
+      .deploy(parseUnits('100000000', 18))) as Token;
+    snapshotId = await network.provider.send('evm_snapshot');
   });
 
   afterEach(async () => {
-    // returns funds to executor
-    await agreement.connect(whale).returnFunds();
-    await agreement.connect(whale).returnTokens(dai.address);
+    await network.provider.send('evm_revert', [snapshotId]);
   });
 
-  async function cleanParam() {
-    const addresses: string[] = [whale.address, GP.address];
-    for (let i = 0; i < LPs.length; i++) {
-      const LP = LPs[i];
-      addresses.push(LP.address);
-    }
-    await txs.cleanTx([41, 42, 43, 44, 45, 46, 471, 472, 473, 481, 482], addresses);
-  }
-
-  describe.skip('Lifecycle Test Multiple LPs', () => {
+  describe('Lifecycle Test Multiple LPs', () => {
     businessCaseTest(
       'Scenario 1: LPs deposit; GP balances; Profit Realized',
       parseUnits('20', 18), // GP_INITIAL
@@ -449,7 +439,7 @@ initiating funds\x1b[0m
     );
   });
 
-  describe.skip('Lifecycle Test one LP', () => {
+  describe('Lifecycle Test one LP', () => {
     businessCaseTest(
       'Scenario 1:  LP deposits; GP balances; Profit Realized',
       parseUnits('20', 18), // GP_INITIAL
@@ -465,217 +455,217 @@ initiating funds\x1b[0m
       false // GP_FAILS_TO_DO_GAP_DEPOSIT
     );
 
-    businessCaseTest(
-      'Scenario 2:  GP fails to balance LP deposit',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200', 18), // CAPITAL_GAINS,
-      2, // DEPOSIT_MIN_PERCENT
-      90, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      true // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 2:  GP fails to balance LP deposit',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('990', 18)], // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200', 18), // CAPITAL_GAINS,
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   90, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   true // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
 
-    businessCaseTest(
-      'Scenario 3:  Loss incurred, fully covered by GP',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('10', 18), // CAPITAL_LOSS
-      parseUnits('0', 18), // CAPITAL_GAINS
-      2, // DEPOSIT_MIN_PERCENT
-      90, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
-    businessCaseTest(
-      'Scenario 4:  Loss incurred, not fully covered by GP',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('100', 18), // CAPITAL_LOSS
-      parseUnits('0', 18), // CAPITAL_GAINS,
-      2, // DEPOSIT_MIN_PERCENT
-      90, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 3:  Loss incurred, fully covered by GP',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('990', 18)], // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('10', 18), // CAPITAL_LOSS
+    //   parseUnits('0', 18), // CAPITAL_GAINS
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   90, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
+    // businessCaseTest(
+    //   'Scenario 4:  Loss incurred, not fully covered by GP',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('990', 18)], // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('100', 18), // CAPITAL_LOSS
+    //   parseUnits('0', 18), // CAPITAL_GAINS,
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   90, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
 
-    businessCaseTest(
-      'Scenario 5: Using bigger values, PURCHASE_PERCENT less than 90',
-      parseUnits('20000', 18), // GP_INITIAL
-      [parseUnits('990000', 18)], // LP_INITIAL
-      parseUnits('1000000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200000', 18), // CAPITAL_GAINS,
-      2, // DEPOSIT_MIN_PERCENT
-      89, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 5: Using bigger values, PURCHASE_PERCENT less than 90',
+    //   parseUnits('20000', 18), // GP_INITIAL
+    //   [parseUnits('990000', 18)], // LP_INITIAL
+    //   parseUnits('1000000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200000', 18), // CAPITAL_GAINS,
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   89, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
 
-    businessCaseTest(
-      'Scenario 6:  GP_INITIAL less than needed',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990000', 18)], // LP_INITIAL
-      parseUnits('100000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200000', 18), // CAPITAL_GAINS,
-      2, // DEPOSIT_MIN_PERCENT
-      89, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 6:  GP_INITIAL less than needed',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('990000', 18)], // LP_INITIAL
+    //   parseUnits('100000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200000', 18), // CAPITAL_GAINS,
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   89, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
 
-    businessCaseTest(
-      'Scenario 7:  PURCHASE_PERCENT more than 90',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200', 18), // CAPITAL_GAINS
-      2, // DEPOSIT_MIN_PERCENT
-      91, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 7:  PURCHASE_PERCENT more than 90',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('990', 18)], // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200', 18), // CAPITAL_GAINS
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   91, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
 
-    businessCaseTest(
-      'Scenario 8:  HURDLE is 1 percent',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200', 18), // CAPITAL_GAINS
-      2, // DEPOSIT_MIN_PERCENT
-      89, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      1, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 8:  HURDLE is 1 percent',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('990', 18)], // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200', 18), // CAPITAL_GAINS
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   89, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   1, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
 
-    businessCaseTest(
-      'Scenario 9:  MANAGEMENT_FEE_PERCENTAGE is 33%',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200', 18), // CAPITAL_GAINS
-      2, // DEPOSIT_MIN_PERCENT
-      90, // PURCHASE_PERCENT
-      33, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 9:  MANAGEMENT_FEE_PERCENTAGE is 33%',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('990', 18)], // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200', 18), // CAPITAL_GAINS
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   90, // PURCHASE_PERCENT
+    //   33, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
 
-    businessCaseTest(
-      'Scenario 10:  Carry Charge is 0%',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200', 18), // CAPITAL_GAINS
-      2, // DEPOSIT_MIN_PERCENT
-      90, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      0, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 10:  Carry Charge is 0%',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('990', 18)], // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200', 18), // CAPITAL_GAINS
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   90, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   0, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
 
-    businessCaseTest(
-      'Scenario 11:  CAPITAL_GAINS capital gains is big',
-      parseUnits('20', 18), // GP_INITIAL
-      [parseUnits('990', 18)], // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('333333', 18), // CAPITAL_GAINS
-      2, // DEPOSIT_MIN_PERCENT
-      90, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 11:  CAPITAL_GAINS capital gains is big',
+    //   parseUnits('20', 18), // GP_INITIAL
+    //   [parseUnits('990', 18)], // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('333333', 18), // CAPITAL_GAINS
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   90, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
 
-    businessCaseTest(
-      'Scenario 12: smart contract does not store funds if values are small',
-      parseUnits('1999999', 0), // GP_INITIAL
-      [parseUnits('98555555', 0)], // LP_INITIAL
-      parseUnits('99999999', 0), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 0), // CAPITAL_LOSS
-      parseUnits('23636363', 0), // CAPITAL_GAINS
-      2, // DEPOSIT_MIN_PERCENT
-      90, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 12: smart contract does not store funds if values are small',
+    //   parseUnits('1999999', 0), // GP_INITIAL
+    //   [parseUnits('98555555', 0)], // LP_INITIAL
+    //   parseUnits('99999999', 0), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 0), // CAPITAL_LOSS
+    //   parseUnits('23636363', 0), // CAPITAL_GAINS
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   90, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
 
-    businessCaseTest(
-      'Scenario 13:  smart contract does not store funds if values too small',
-      parseUnits('1998', 0), // GP_INITIAL
-      [parseUnits('99999', 0)], // LP_INITIAL
-      parseUnits('99900', 0), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 0), // CAPITAL_LOSS
-      parseUnits('19111', 0), // CAPITAL_GAINS
-      2, // DEPOSIT_MIN_PERCENT
-      90, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 13:  smart contract does not store funds if values too small',
+    //   parseUnits('1998', 0), // GP_INITIAL
+    //   [parseUnits('99999', 0)], // LP_INITIAL
+    //   parseUnits('99900', 0), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 0), // CAPITAL_LOSS
+    //   parseUnits('19111', 0), // CAPITAL_GAINS
+    //   2, // DEPOSIT_MIN_PERCENT
+    //   90, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
 
-    businessCaseTest(
-      'Scenario 14: DEPOSIT_MIN_PERCENT is 1%',
-      parseUnits('10', 18), // GP_INITIAL
-      [parseUnits('999', 18)], // LP_INITIAL
-      parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 18), // CAPITAL_LOSS
-      parseUnits('200', 18), // CAPITAL_GAINS
-      1, // DEPOSIT_MIN_PERCENT
-      90, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // businessCaseTest(
+    //   'Scenario 14: DEPOSIT_MIN_PERCENT is 1%',
+    //   parseUnits('10', 18), // GP_INITIAL
+    //   [parseUnits('999', 18)], // LP_INITIAL
+    //   parseUnits('1000', 18), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 18), // CAPITAL_LOSS
+    //   parseUnits('200', 18), // CAPITAL_GAINS
+    //   1, // DEPOSIT_MIN_PERCENT
+    //   90, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
 
-    // used the 34% / 66% percentage, as in the third agreement we have dividing values by 66 %
-    // P1 = 100 - 34
-    // ex. loadLocal uint256 DEPOSIT_MIN_PERCENT * loadLocal uint256 LP_INITIAL / loadLocal uint256
-    // P1
-    businessCaseTest(
-      'Scenario 15: Should be non zero value in the end of contract. Correct LP investment profit',
-      parseUnits('340000', 0), // GP_INITIAL
-      [parseUnits('900000', 0)], // LP_INITIAL
-      parseUnits('1000000', 0), // INITIAL_FUNDS_TARGET
-      parseUnits('0', 0), // CAPITAL_LOSS
-      parseUnits('340000', 0), // CAPITAL_GAINS
-      34, // DEPOSIT_MIN_PERCENT
-      90, // PURCHASE_PERCENT
-      2, // MANAGEMENT_FEE_PERCENTAGE
-      9, // HURDLE
-      20, // PROFIT_PART
-      false // GP_FAILS_TO_DO_GAP_DEPOSIT
-    );
+    // // used the 34% / 66% percentage, as in the third agreement we have dividing values by 66 %
+    // // P1 = 100 - 34
+    // // ex. loadLocal uint256 DEPOSIT_MIN_PERCENT * loadLocal uint256 LP_INITIAL / loadLocal uint256
+    // // P1
+    // businessCaseTest(
+    //   'Scenario 15: Should be non zero value in the end of contract. Correct LP investment profit',
+    //   parseUnits('340000', 0), // GP_INITIAL
+    //   [parseUnits('900000', 0)], // LP_INITIAL
+    //   parseUnits('1000000', 0), // INITIAL_FUNDS_TARGET
+    //   parseUnits('0', 0), // CAPITAL_LOSS
+    //   parseUnits('340000', 0), // CAPITAL_GAINS
+    //   34, // DEPOSIT_MIN_PERCENT
+    //   90, // PURCHASE_PERCENT
+    //   2, // MANAGEMENT_FEE_PERCENTAGE
+    //   9, // HURDLE
+    //   20, // PROFIT_PART
+    //   false // GP_FAILS_TO_DO_GAP_DEPOSIT
+    // );
   });
 });

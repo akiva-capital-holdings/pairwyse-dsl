@@ -90,17 +90,4 @@ contract AgreementMock {
         txs.execTx(_txId, _msgValue, _signatory);
         return transactionCtx.stack().seeLast().getUint256() == 0 ? false : true;
     }
-
-    function returnFunds() public {
-        // send fund back to the executor
-        txs.returnFunds(msg.sender);
-        payable(msg.sender).transfer(address(this).balance);
-    }
-
-    function returnTokens(address _token) public {
-        // send tokens back to the sender
-        txs.returnTokens(_token);
-        uint256 amount = IERC20(_token).balanceOf(address(this));
-        IERC20(_token).transfer(msg.sender, amount);
-    }
 }

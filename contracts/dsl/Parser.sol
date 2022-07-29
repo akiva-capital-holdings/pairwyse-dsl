@@ -32,8 +32,8 @@ contract Parser is IParser, Storage {
     uint256 internal cmdIdx; // Current parsing index of DSL code
 
     mapping(string => uint256) public labelPos;
-    mapping(string => bool) internal isVariable;
-    mapping(string => bytes) internal savedProgram;
+    mapping(string => bytes) public savedProgram; 
+    mapping(string => bool) public isVariable;
 
     constructor(address _preprAddr) {
         preprAddr = _preprAddr;
@@ -99,34 +99,34 @@ contract Parser is IParser, Storage {
      * (uint256 5 + uint256 7) setUint256 VARNAME
      * ```
      */
-    function asmSetUint256(IContext _ctx) public {
-        _setVariable(_ctx, cmds[cmdIdx], 'uint256');
+    function asmSetUint256(address _ctxAddr) public {
+        _setVariable(_ctxAddr, cmds[cmdIdx], 'uint256');
         _parseVariable();
     }
 
     /**
-     * @dev Updates the program with the LoadLocal variable
+     * @dev Updates the program with the loadLocal variable
      *
      * Example of command:
      * ```
      * loadLocal uint256 NUMBER
      * ```
      */
-    function asmLoadLocal(IContext _ctx) public {
-        _parseBranchOf(_ctx, 'loadLocal'); // program += bytecode for `loadLocal uint256`
+    function asmLoadLocal(address _ctxAddr) public {
+        _parseBranchOf(_ctxAddr, 'loadLocal'); // program += bytecode for `loadLocal uint256`
         _parseVariable(); // program += bytecode for `NUMBER`
     }
 
     /**
-     * @dev Updates the program with the LoadLocal variable
+     * @dev Updates the program with the loadRemote variable
      *
      * Example of a command:
      * ```
      * loadRemote bool MARY_ADDRESS 9A676e781A523b5d0C0e43731313A708CB607508
      * ```
      */
-    function asmLoadRemote(IContext _ctx) public {
-        _parseBranchOf(_ctx, 'loadRemote'); // program += bytecode for `loadRemote bool`
+    function asmLoadRemote(address _ctxAddr) public {
+        _parseBranchOf(_ctxAddr, 'loadRemote'); // program += bytecode for `loadRemote bool`
         _parseVariable(); // program += bytecode for `MARY_ADDRESS`
         _parseAddress(); // program += bytecode for `9A676e781A523b5...`
     }
@@ -393,8 +393,8 @@ contract Parser is IParser, Storage {
      * @dev Updates previous `program` with the branch name, like `loadLocal` or `loadRemote`
      * of command and its additional used type
      */
-    function _parseBranchOf(IContext _ctx, string memory baseOpName) internal {
-        program = bytes.concat(program, _ctx.branchCodes(baseOpName, _nextCmd()));
+    function _parseBranchOf(address _ctxAddr, string memory baseOpName) internal {
+        program = bytes.concat(program, IContext(_ctxAddr).branchCodes(baseOpName, _nextCmd()));
     }
 
     /**
@@ -420,19 +420,24 @@ contract Parser is IParser, Storage {
      * ```
      * (uint256 5 + uint256 7) setUint256 NUMBER
      * (NUMBER + 4) setUint256 NUMBER2
+     *
+     * @param _ctxAddr is a Context contract address
+     * @param _name is a name of a global variable for storing in the contract
+     * @param _type is a type of a global variable for storing
      * ```
      */
     function _setVariable(
-        IContext _ctx,
+        address _ctxAddr,
         string memory _name,
         string memory _type
     ) internal {
+        require(!_name.equal(''), 'Parse: the name of variable can not be empty');
         isVariable[_name] = true;
 
         string memory _loadType = 'loadLocal';
         bytes4 name_ = bytes4(keccak256(abi.encodePacked(_name)));
-        bytes1 type_ = _ctx.opCodeByName(_loadType);
-        bytes1 code_ = _ctx.branchCodes(_loadType, _type);
+        bytes1 type_ = IContext(_ctxAddr).opCodeByName(_loadType);
+        bytes1 code_ = IContext(_ctxAddr).branchCodes(_loadType, _type);
 
         // ex. savedProgram['NUMBER'] = 'loadLocal uint256 NUMBER'
         savedProgram[_name] = bytes.concat(type_, code_, name_);

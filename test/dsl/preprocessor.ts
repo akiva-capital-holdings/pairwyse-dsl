@@ -6,6 +6,7 @@ import { Testcase } from '../types';
 describe('Preprocessor', () => {
   let app: Preprocessor;
   let ctxAddr: string;
+  let appAddrHex: string;
 
   const jsTransform = (expr: string) =>
     expr
@@ -48,6 +49,7 @@ describe('Preprocessor', () => {
         libraries: { StringUtils: stringLib.address },
       })
     ).deploy();
+    appAddrHex = app.address.slice(2);
   });
 
   describe('infix to postfix', () => {
@@ -692,6 +694,207 @@ describe('Preprocessor', () => {
     it('revert if the text `opCode` used with uint256', async () => {
       await expect(app.callStatic.transform(ctxAddr, '1 and 2-test')).to.be.revertedWith(
         'StringUtils: invalid format'
+      );
+    });
+  });
+
+  describe('complex opcodes', () => {
+    it('should transform correctly if loadRemote is in the code', async () => {
+      const input = `
+        uint256 4
+        loadRemote bytes32 BYTES ${appAddrHex}
+        bool true
+        loadRemote bytes32 BYTES2 ${appAddrHex} + loadRemote bytes32 BYTES ${appAddrHex}
+      `;
+
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = [
+        'uint256',
+        '4',
+        'loadRemote',
+        'bytes32',
+        'BYTES',
+        appAddrHex,
+        'bool',
+        'true',
+        'loadRemote',
+        'bytes32',
+        'BYTES2',
+        appAddrHex,
+        'loadRemote',
+        'bytes32',
+        'BYTES',
+        appAddrHex,
+        '+',
+      ];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('should transform correctly if transferFrom is in the code', async () => {
+      const input = `
+      loadRemote bytes32 BYTES ${appAddrHex}
+      transferFrom DAI OWNER RECEIVER
+      bool true
+      `;
+
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = [
+        'loadRemote',
+        'bytes32',
+        'BYTES',
+        appAddrHex,
+        'transferFrom',
+        'DAI',
+        'OWNER',
+        'RECEIVER',
+        'bool',
+        'true',
+      ];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('should transform correctly if sendEth is in the code', async () => {
+      const input = `
+      loadRemote bool BOOL_V ${appAddrHex}
+      sendEth RECEIVER 239423894
+      10000000
+      `;
+
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = [
+        'loadRemote',
+        'bool',
+        'BOOL_V',
+        appAddrHex,
+        'sendEth',
+        'RECEIVER',
+        '239423894',
+        'uint256',
+        '10000000',
+      ];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('should transform correctly if `transfer` is in the code', async () => {
+      const input = `
+      bool false
+      transfer DAI RECEIVER 239423894
+      10000000
+      uint256 200
+      `;
+
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = [
+        'bool',
+        'false',
+        'transfer',
+        'DAI',
+        'RECEIVER',
+        '239423894',
+        'uint256',
+        '10000000',
+        'uint256',
+        '200',
+      ];
+      expect(cmds).to.eql(expected);
+    });
+  });
+
+  describe('DSL functions', () => {
+    it('comand list for a SUM_OF_NUMBERS function (without parameters)', async () => {
+      const input = `
+        func SUM_OF_NUMBERS endf
+        end
+
+        SUM_OF_NUMBERS {
+          (6 + 8) setUint256 SUM
+        }
+        `;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = [
+        'func',
+        'SUM_OF_NUMBERS',
+        'end',
+        'SUM_OF_NUMBERS',
+        'uint256',
+        '6',
+        'uint256',
+        '8',
+        '+',
+        'setUint256',
+        'SUM',
+        'end',
+      ];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('comand list for a SUM_OF_NUMBERS function (with two parameters)', async () => {
+      const input = `
+        6 8
+        func SUM_OF_NUMBERS 2 endf
+        end
+
+        SUM_OF_NUMBERS {
+          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+        }
+        `;
+      const expected = [
+        'uint256',
+        '6',
+        'setUint256',
+        'SUM_OF_NUMBERS_1',
+        'uint256',
+        '8',
+        'setUint256',
+        'SUM_OF_NUMBERS_2',
+        'func',
+        'SUM_OF_NUMBERS',
+        'end',
+        'SUM_OF_NUMBERS',
+        'loadLocal',
+        'uint256',
+        'SUM_OF_NUMBERS_1',
+        'loadLocal',
+        'uint256',
+        'SUM_OF_NUMBERS_2',
+        '+',
+        'setUint256',
+        'SUM',
+        'end',
+      ];
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(expected);
+    });
+
+    it('returns error if amount of parameters is 0 for the function', async () => {
+      const input = `
+        6 8
+        func SUM_OF_NUMBERS 0 endf
+        end
+
+        SUM_OF_NUMBERS {
+          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+        }
+        `;
+
+      await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
+        'Preprocessor: amount of parameters can not be 0'
+      );
+    });
+
+    it('returns error if amount of parameters is less then provided for the function', async () => {
+      const input = `
+        6
+        func SUM_OF_NUMBERS 2 endf
+        end
+
+        SUM_OF_NUMBERS {
+          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+        }
+        `;
+
+      await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
+        'Preprocessor: invalid parameters for the function'
       );
     });
   });

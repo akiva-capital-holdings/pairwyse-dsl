@@ -89,7 +89,7 @@ library StringUtils {
             } else if (tmp == 0x65 && !isFound) {
                 require(!equal(base, ''), 'StringUtils: base was not provided');
                 isFound = true;
-            } else if (tmp != 0x65 || isFound) {
+            } else {
                 // use only one `e` sympol between values without spaces; example: 1e18 or 456e10
                 revert('StringUtils: invalid format');
             }
@@ -101,26 +101,28 @@ library StringUtils {
 
     /**
      * @dev If the string starts with a number, so we assume that it's a number.
-     * @param _value is a current chunk
+     * @param _string is a current string for checking
      * @return isNumber that is true if the string starts with a number, otherwise is false
      */
-    function mayBeNumber(string memory _value) public pure returns (bool isNumber) {
-        bytes1 _firstByte = bytes(_value)[0];
+    function mayBeNumber(string memory _string) public pure returns (bool isNumber) {
+        require(!equal(_string, ''), 'StringUtils: a string was not provided');
+        bytes1 _firstByte = bytes(_string)[0];
         if (uint8(_firstByte) >= 48 && uint8(_firstByte) <= 57) {
             isNumber = true;
         }
     }
 
     // Convert an hexadecimal character to their value
-    function fromHexChar(bytes1 c) public pure returns (uint8 result) {
+    function fromHexChar(bytes1 c) public pure returns (uint8) {
         if (c >= bytes1('0') && c <= bytes1('9')) {
-            result = uint8(c) - uint8(bytes1('0'));
+            return uint8(c) - uint8(bytes1('0'));
         }
         if (c >= bytes1('a') && c <= bytes1('f')) {
-            result = 10 + uint8(c) - uint8(bytes1('a'));
+            return 10 + uint8(c) - uint8(bytes1('a'));
         }
         if (c >= bytes1('A') && c <= bytes1('F')) {
-            result = 10 + uint8(c) - uint8(bytes1('A'));
+            return 10 + uint8(c) - uint8(bytes1('A'));
         }
+        revert('StringUtils: a hex value not from the range 0-9, a-f, A-F');
     }
 }

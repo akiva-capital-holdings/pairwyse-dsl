@@ -2,6 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
 import { Context, ParserMock } from '../../typechain-types';
+import { hex4Bytes } from '../utils/utils';
 
 describe('Parser', () => {
   let sender: SignerWithAddress;
@@ -9,6 +10,7 @@ describe('Parser', () => {
   let ctx: Context;
   let ctxAddr: string;
   let snapshotId: number;
+  let appAddrHex: string;
 
   before(async () => {
     [sender] = await ethers.getSigners();
@@ -29,6 +31,7 @@ describe('Parser', () => {
       libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
     });
     app = await ParserCont.deploy(preprocessor.address);
+    appAddrHex = app.address.slice(2);
 
     // Deploy & setup Context
     ctx = await (await ethers.getContractFactory('Context')).deploy();
@@ -196,5 +199,121 @@ describe('Parser', () => {
         '24'; // bad: end
       expect(await ctx.program()).to.equal(expected);
     });
+  });
+
+  describe('setVariable', () => {
+    it('should set the global variable (uint256)', async () => {
+      const name = 'TEST_NUMBER';
+      expect(await app.isVariable('TEST_NUMBER')).to.be.equal(false);
+      expect(await app.savedProgram('TEST_NUMBER')).to.be.equal('0x');
+      await app.setVariableExt(ctxAddr, name, 'uint256');
+      expect(await app.isVariable('TEST_NUMBER')).to.be.equal(true);
+      /*
+        1b - opcode for loadLocal command
+        01 - branchCode for loadLocal command with uint256 type
+        1cc054ab - bytecode for a `TEST_NUMBER` name
+      */
+      expect(await app.savedProgram('TEST_NUMBER')).to.be.equal('0x1b011cc054ab');
+    });
+
+    it('reverts if try to set empty global variable name', async () => {
+      const name = 'TEST_NUMBER';
+      expect(await app.isVariable('')).to.be.equal(false);
+      expect(await app.savedProgram('')).to.be.equal('0x');
+      await expect(app.setVariableExt(ctxAddr, '', 'uint256')).to.be.revertedWith(
+        'Parse: the name of variable can not be empty'
+      );
+      expect(await app.isVariable('')).to.be.equal(false);
+      expect(await app.savedProgram('')).to.be.equal('0x');
+    });
+  });
+
+  describe('Load local variables without loadLocal opcode', async () => {
+    it('set two local variables, one of them using in the next command', async () => {
+      /*
+        Example:
+          uint256 6 setUint256 A
+          (A + 2) setUint256 SUM
+      */
+      const SIX = new Array(64).join('0') + 6;
+      const TWO = new Array(64).join('0') + 2;
+      const code = [
+        'uint256',
+        '6',
+        'setUint256',
+        'A',
+        'A',
+        'uint256',
+        '2',
+        '+',
+        'setUint256',
+        'SUM',
+      ];
+      expect(await app.savedProgram('A')).to.be.equal('0x');
+      expect(await app.savedProgram('SUM')).to.be.equal('0x');
+      await app.parseCodeExt(ctxAddr, code);
+
+      expect(await app.savedProgram('A')).to.be.equal(
+        '0x' +
+          '1b' + // opcode for loadLocal command
+          '01' + // branchCode for loadLocal command with uint256 type
+          '03783fac' // bytecode for an `A` name
+      );
+      expect(await app.savedProgram('SUM')).to.be.equal(
+        '0x' +
+          '1b' + // opcode for loadLocal command
+          '01' + // branchCode for loadLocal command with uint256 type
+          '2df384fb' // bytecode for a `SUM` name
+      );
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '1a' + // uint256
+          `${SIX}` + // 6
+          '2e' + // setUint256
+          '03783fac' + // bytecode for an `A` name
+          '1b' + // loadLocal
+          '01' + // branchCode for loadLocal command with uint256 type
+          '03783fac' + // A
+          '1a' + // uint256
+          `${TWO}` +
+          '26' + // +
+          '2e' + // setUint256
+          '2df384fb' // bytecode for a `SUM` name
+      );
+    });
+  });
+
+  describe('asmLoadRemote', () => {
+    it('updates the program with the loadRemote variable (uin256)', async () => {
+      // Set NUMBER
+      const bytes32Number = hex4Bytes('NUMBER');
+      await app.setStorageUint256(bytes32Number, 1000);
+
+      await app.parseCodeExt(ctxAddr, ['loadRemote', 'uint256', 'NUMBER', appAddrHex]);
+
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '1c' + // loadRemote
+          '01' + // uint256
+          '545cbf77' + // bytecode for a `NUMBER` name
+          appAddrHex.toLowerCase()
+      );
+    });
+
+    it('updates the program with the loadRemote variable (bool)', async () => {
+      const bytes32Bool = hex4Bytes('BOOL_VALUE');
+      // Set BOOL_VALUE
+      await app.setStorageBool(bytes32Bool, true);
+
+      await app.parseCodeExt(ctxAddr, ['loadRemote', 'bool', 'BOOL_VALUE', appAddrHex]);
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '1c' + // loadRemote
+          '02' + // bool
+          'f11f9a5d' + // bytecode for a `BOOL_VALUE` name
+          appAddrHex.toLowerCase()
+      );
+    });
+    // TODO: add for other types
   });
 });

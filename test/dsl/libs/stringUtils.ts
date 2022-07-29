@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { parseUnits } from 'ethers/lib/utils';
 import { StringUtilsMock } from '../../../typechain-types';
+import { BigNumber } from 'ethers';
 
 describe('StringUtils', () => {
   let app: StringUtilsMock;
@@ -47,11 +48,13 @@ describe('StringUtils', () => {
 
     await expect(app.fromHex('1')).to.be.revertedWith('String: hex lenght not even');
     expect(await app.fromHex('')).to.equal('0x');
+    expect(await app.fromHex('01')).to.equal('0x01');
     expect(await app.fromHex('1234')).to.equal('0x1234');
     expect(await app.fromHex(addr)).to.equal(addrFull.address.toLowerCase());
   });
 
   it('toUint256', async () => {
+    const num = '123456789012345678901234567890';
     // hex 0x29
     await expect(app.toUint256('/')).to.be.revertedWith('String: non-decimal character');
     // hex 0x3A
@@ -59,21 +62,33 @@ describe('StringUtils', () => {
     expect(await app.toUint256('')).to.equal('0');
     expect(await app.toUint256('0')).to.equal('0');
     expect(await app.toUint256('9')).to.equal('9');
-    expect(await app.toUint256('123456789012345678901234567890')).to.equal(
-      '123456789012345678901234567890'
-    );
+    expect(await app.toUint256(num)).to.equal(num);
+  });
+
+  it('toString', async () => {
+    const num = '123456789012345678901234567890';
+    expect(await app.fromUint256toString(5)).to.equal('5');
+    expect(await app.fromUint256toString(0)).to.equal('0');
+    expect(await app.fromUint256toString(0xdfd9)).to.equal('57305');
+    expect(await app.fromUint256toString(BigNumber.from(num))).to.equal(num);
   });
 
   it('fromHexChar', async () => {
     expect(await app.fromHexChar(Buffer.from('0'))).to.equal(0);
-    expect(await app.fromHexChar(Buffer.from('k'))).to.equal(0);
-    expect(await app.fromHexChar(Buffer.from('Z'))).to.equal(0);
-
     expect(await app.fromHexChar(Buffer.from('1'))).to.equal(1);
     expect(await app.fromHexChar(Buffer.from('a'))).to.equal(10);
     expect(await app.fromHexChar(Buffer.from('f'))).to.equal(15);
     expect(await app.fromHexChar(Buffer.from('A'))).to.equal(10);
     expect(await app.fromHexChar(Buffer.from('F'))).to.equal(15);
+    await expect(app.fromHexChar(Buffer.from('k'))).to.be.revertedWith(
+      'StringUtils: a hex value not from the range 0-9, a-f, A-F'
+    );
+    await expect(app.fromHexChar(Buffer.from('Z'))).to.be.revertedWith(
+      'StringUtils: a hex value not from the range 0-9, a-f, A-F'
+    );
+    await expect(app.fromHexChar(Buffer.from('K'))).to.be.revertedWith(
+      'StringUtils: a hex value not from the range 0-9, a-f, A-F'
+    );
   });
 
   it('getWei', async () => {
@@ -85,11 +100,23 @@ describe('StringUtils', () => {
     expect(await app.getWei('1000000000000000e10')).to.equal(parseUnits('1000000000000000', 10));
     expect(await app.getWei('123e0')).to.equal('123');
     expect(await app.getWei('1000000000000000e0')).to.equal('1000000000000000');
-    expect(app.getWei('10000000e00000000e18')).to.be.revertedWith('StringUtils: invalid format');
-    expect(app.getWei('10000000a18')).to.be.revertedWith('StringUtils: invalid format');
-    expect(app.getWei('10000000E18')).to.be.revertedWith('StringUtils: invalid format');
-    expect(app.getWei('45e')).to.be.revertedWith('StringUtils: decimals were not provided');
-    expect(app.getWei('45ee6')).to.be.revertedWith('StringUtils: invalid format');
-    expect(app.getWei('e18')).to.be.revertedWith('StringUtils: base was not provided');
+    await expect(app.getWei('10000000e00000000e18')).to.be.revertedWith(
+      'StringUtils: invalid format'
+    );
+    await expect(app.getWei('10000000a18')).to.be.revertedWith('StringUtils: invalid format');
+    await expect(app.getWei('10000000E18')).to.be.revertedWith('StringUtils: invalid format');
+    await expect(app.getWei('45e')).to.be.revertedWith('StringUtils: decimals were not provided');
+    await expect(app.getWei('45eb6')).to.be.revertedWith('StringUtils: invalid format');
+    await expect(app.getWei('45ee6')).to.be.revertedWith('StringUtils: invalid format');
+    await expect(app.getWei('e18')).to.be.revertedWith('StringUtils: base was not provided');
+  });
+
+  it('mayBeNumber', async () => {
+    await expect(app.mayBeNumber('')).to.be.revertedWith('StringUtils: a string was not provided');
+    expect(await app.mayBeNumber('}34')).to.be.equal(false);
+    expect(await app.mayBeNumber('12345')).to.be.equal(true);
+    expect(await app.mayBeNumber(' !')).to.be.equal(false);
+    expect(await app.mayBeNumber('e')).to.be.equal(false);
+    expect(await app.mayBeNumber('F543')).to.be.equal(false);
   });
 });

@@ -5,10 +5,13 @@ import { IParser } from '../interfaces/IParser.sol';
 import { IContext } from '../interfaces/IContext.sol';
 import { Executor } from '../libs/Executor.sol';
 import { Storage } from '../helpers/Storage.sol';
+import { StringUtils } from '../libs/StringUtils.sol';
 
 // import "hardhat/console.sol";
 
 contract App is Storage {
+    using StringUtils for string;
+
     IParser public parser;
     IContext public ctx;
 
@@ -18,7 +21,7 @@ contract App is Storage {
     constructor(IParser _parser, IContext _ctx) {
         parser = _parser;
         ctx = _ctx;
-        setupContext();
+        _setupContext();
     }
 
     function parse(string memory _program) external {
@@ -30,7 +33,7 @@ contract App is Storage {
         Executor.execute(address(ctx));
     }
 
-    function setupContext() internal {
+    function _setupContext() internal {
         ctx.initOpcodes();
         ctx.setAppAddress(address(this));
         ctx.setMsgSender(msg.sender);

@@ -1,55 +1,15 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { AgreementFactoryMock } from '../../typechain-types/agreement/mocks/AgreementFactoryMock';
+import { deployAgreementFactory } from '../../scripts/data/deploy.utils';
 
 describe('AgreementFactory', () => {
   let factory: AgreementFactoryMock;
 
   beforeEach(async () => {
-    // Deploy libraries
-    const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
-    const comparisonOpcodesLib = await (
-      await ethers.getContractFactory('ComparisonOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const branchingOpcodesLib = await (
-      await ethers.getContractFactory('BranchingOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const logicalOpcodesLib = await (
-      await ethers.getContractFactory('LogicalOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const otherOpcodesLib = await (
-      await ethers.getContractFactory('OtherOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-
     // Deploy AgreementFactory
-    factory = await (
-      await ethers.getContractFactory('AgreementFactoryMock', {
-        libraries: {
-          ComparisonOpcodes: comparisonOpcodesLib.address,
-          BranchingOpcodes: branchingOpcodesLib.address,
-          LogicalOpcodes: logicalOpcodesLib.address,
-          OtherOpcodes: otherOpcodesLib.address,
-          Executor: executorLib.address,
-        },
-      })
-    ).deploy();
+    const factoryAddr = await deployAgreementFactory();
+    factory = await ethers.getContractAt('AgreementFactoryMock', factoryAddr);
   });
 
   it('deploy agreement', async () => {

@@ -18,11 +18,11 @@ interface IParser {
 
     function asmSetLocalBool() external;
 
-    function asmSetUint256(IContext _ctx) external;
+    function asmSetUint256(address _ctxAddr) external;
 
-    function asmLoadLocal(IContext _ctx) external;
+    function asmLoadLocal(address _ctxAddr) external;
 
-    function asmLoadRemote(IContext _ctx) external;
+    function asmLoadRemote(address _ctxAddr) external;
 
     function asmBool() external;
 
