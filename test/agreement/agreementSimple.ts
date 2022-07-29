@@ -5,13 +5,13 @@ import { parseEther } from 'ethers/lib/utils';
 import { hex4Bytes } from '../utils/utils';
 import { AgreementMock, ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
 import { deployAgreementFull, addSteps } from '../../scripts/data/deploy.utils';
-import { aliceAndBobSteps, aliceBobAndCarl, businessCaseSteps } from '../../scripts/data/agreement';
+import { aliceAndBobSteps, aliceBobAndCarl } from '../../scripts/data/agreement';
 
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-describe.only('Agreement: Alice, Bob, Carl', () => {
+describe('Agreement: Alice, Bob, Carl', () => {
   let agreement: AgreementMock;
   let agreementAddr: string;
   let alice: SignerWithAddress;
