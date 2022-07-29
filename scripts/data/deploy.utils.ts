@@ -126,7 +126,7 @@ export const deployAgreement = async () => {
 
   [parserAddr, executorLibAddr] = await deployBase();
 
-  const AgreementContract = await ethers.getContractFactory('AgreementMock', {
+  const AgreementContract = await ethers.getContractFactory('Agreement', {
     libraries: {
       ComparisonOpcodes: comparisonOpcodesLibAddr,
       BranchingOpcodes: branchingOpcodesLibAddr,
@@ -170,7 +170,7 @@ export const deployAgreementFactory = async () => {
 
   // Deploy AgreementFactory
   const factory = await (
-    await ethers.getContractFactory('AgreementFactoryMock', {
+    await ethers.getContractFactory('AgreementFactory', {
       libraries: {
         ComparisonOpcodes: comparisonOpcodesLibAddr,
         BranchingOpcodes: branchingOpcodesLibAddr,
