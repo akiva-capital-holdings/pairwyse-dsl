@@ -6,7 +6,7 @@ import { IPreprocessor } from './interfaces/IPreprocessor.sol';
 import { Stack, StackValue } from './helpers/Stack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Preprocessor of DSL code
@@ -280,7 +280,8 @@ contract Preprocessor is IPreprocessor {
      * @param _chunk provided number by the user
      * @return updatedChunk amount in Wei of provided _chunk value
      */
-    function _parseNumber(string memory _chunk) internal pure returns (string memory updatedChunk) {
+    function _parseNumber(string memory _chunk) internal view returns (string memory updatedChunk) {
+        console.log(_chunk, '---');
         try _chunk.toUint256() {
             updatedChunk = _chunk;
         } catch {

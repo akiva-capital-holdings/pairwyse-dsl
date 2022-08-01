@@ -1,5 +1,7 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
+import { parseUnits } from 'ethers/lib/utils';
+
 import { Preprocessor } from '../../typechain-types';
 import { Testcase } from '../types';
 
@@ -896,6 +898,137 @@ describe('Preprocessor', () => {
       await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
         'Preprocessor: invalid parameters for the function'
       );
+    });
+  });
+
+  describe.only('Simplified writing number in wei', () => {
+    it('should store a simple number with 18 decimals', async () => {
+      const input = '(uint256 1e18) setUint256 SUM';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(['uint256', parseUnits('1', 18).toString(), 'setUint256', 'SUM']);
+    });
+
+    it('should store a simple number with 18 decimals without uint256 type', async () => {
+      const input = '(123e18) setUint256 SUM';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(['uint256', parseUnits('123', 18).toString(), 'setUint256', 'SUM']);
+    });
+
+    it('should store a simple number with 36 decimals', async () => {
+      const input = '(uint256 1e36) setUint256 SUM';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql([
+        'uint256',
+        parseUnits('1', 36).toString(), // ex. 1000000000000000000 ETH
+        'setUint256',
+        'SUM',
+      ]);
+    });
+
+    it('should store a long number with 18 decimals', async () => {
+      const input = '(uint256 1000000000000000e18) setUint256 SUM';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql([
+        'uint256',
+        parseUnits('1000000000000000', 18).toString(),
+        'setUint256',
+        'SUM',
+      ]);
+    });
+
+    it('should store a simple number with 10 decimals', async () => {
+      const input = '(uint256 146e10) setUint256 SUM';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(['uint256', parseUnits('146', 10).toString(), 'setUint256', 'SUM']);
+    });
+
+    it('should store a long number with 10 decimals', async () => {
+      const input = '(uint256 1000000000000000e10) setUint256 SUM';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(['uint256', parseUnits('1', 25).toString(), 'setUint256', 'SUM']);
+    });
+
+    it('should store a simple number without decimals even using simplified method', async () => {
+      const input = '(uint256 123e0) setUint256 SUM';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(['uint256', parseUnits('123', 0).toString(), 'setUint256', 'SUM']);
+    });
+
+    it('should store a long number without decimals even using simplified method', async () => {
+      const input = '(uint256 1000000000000000e0) setUint256 SUM';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql(['uint256', parseUnits('1', 15).toString(), 'setUint256', 'SUM']);
+    });
+
+    it('should revert if tried to put several `e` symbol', async () => {
+      const input = '(uint256 10000000e00000000e18) setUint256 SUM';
+      await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
+        'StringUtils: invalid format'
+      );
+    });
+
+    it('should revert if tried to put not `e` symbol', async () => {
+      const input = '(uint256 10000000a18) setUint256 SUM';
+      await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
+        'StringUtils: invalid format'
+      );
+    });
+
+    it('should revert if tried to put Upper `E` symbol', async () => {
+      const input = '(uint256 10000000E18) setUint256 SUM';
+      await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
+        'StringUtils: invalid format'
+      );
+    });
+
+    it('should revert if tried to put `0x65` symbol', async () => {
+      const input = '(uint256 100000000x6518) setUint256 SUM';
+      await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
+        'StringUtils: invalid format'
+      );
+    });
+
+    it.skip('should not revert in preprocessor if base does not exist, set base as 1', async () => {
+      const input = '(uint256 e18) setUint256 SUM';
+      await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
+        'Parser: delegatecall to asmSelector failed'
+      );
+    });
+
+    it('should revert if decimals does not exist', async () => {
+      const input = '(uint256 45e) setUint256 SUM';
+      await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
+        'StringUtils: decimals were not provided'
+      );
+    });
+
+    it('should revert if two `e` were provided', async () => {
+      const input = '(uint256 45ee6) setUint256 SUM';
+      await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
+        'StringUtils: invalid format'
+      );
+    });
+
+    it.only('should transform correctly if sendEth is in the code', async () => {
+      const input = `
+      loadRemote bool BOOL_V ${appAddrHex}
+      sendEth RECEIVER 2e2
+      10000000
+      `;
+
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = [
+        'loadRemote',
+        'bool',
+        'BOOL_V',
+        appAddrHex,
+        'sendEth',
+        'RECEIVER',
+        '200',
+        'uint256',
+        '10000000',
+      ];
+      expect(cmds).to.eql(expected);
     });
   });
 });
