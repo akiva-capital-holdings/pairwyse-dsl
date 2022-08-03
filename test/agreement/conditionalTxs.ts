@@ -2,18 +2,20 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
 import { ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
-import { Context, Context__factory, Parser } from '../../typechain-types';
+import { Context, Context__factory, ParserMock } from '../../typechain-types';
 import { hex4Bytes } from '../utils/utils';
+import { deployConditionalTxs } from '../../scripts/data/deploy.utils';
 
 describe('Conditional transactions', () => {
   let app: ConditionalTxsMock;
-  let parser: Parser;
+  let parser: ParserMock;
   let ContextCont: Context__factory;
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
   let anybody: SignerWithAddress;
   let NEXT_MONTH: number;
   let snapshotId: number;
+  let LAST_BLOCK_TIMESTAMP: number;
 
   const ONE_MONTH = 60 * 60 * 24 * 30;
   const anyone = '0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF';
@@ -31,78 +33,18 @@ describe('Conditional transactions', () => {
   let txs: Txs[] = [];
 
   before(async () => {
-    const lastBlockTimestamp = (
-      await ethers.provider.getBlock(
-        // eslint-disable-next-line no-underscore-dangle
-        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
-      )
-    ).timestamp;
-
-    NEXT_MONTH = lastBlockTimestamp + 60 * 60 * 24 * 30;
+    LAST_BLOCK_TIMESTAMP = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+      .timestamp;
+    NEXT_MONTH = LAST_BLOCK_TIMESTAMP + 60 * 60 * 24 * 30;
 
     [alice, bob, anybody] = await ethers.getSigners();
 
-    // Deploy libraries
-    const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const comparisonOpcodesLib = await (
-      await ethers.getContractFactory('ComparisonOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const branchingOpcodesLib = await (
-      await ethers.getContractFactory('BranchingOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const logicalOpcodesLib = await (
-      await ethers.getContractFactory('LogicalOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const otherOpcodesLib = await (
-      await ethers.getContractFactory('OtherOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
-    const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
-    const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
-
     // Deploy contracts
+    let appAddr, parserAddr;
+    [appAddr, parserAddr] = await deployConditionalTxs();
+    app = await ethers.getContractAt('ConditionalTxsMock', appAddr);
+    parser = await ethers.getContractAt('ParserMock', parserAddr);
     ContextCont = await ethers.getContractFactory('Context');
-    const preprocessor = await (
-      await ethers.getContractFactory('Preprocessor', {
-        libraries: { StringUtils: stringLib.address },
-      })
-    ).deploy();
-    app = (await (
-      await ethers.getContractFactory('ConditionalTxs', {
-        libraries: {
-          ComparisonOpcodes: comparisonOpcodesLib.address,
-          BranchingOpcodes: branchingOpcodesLib.address,
-          LogicalOpcodes: logicalOpcodesLib.address,
-          OtherOpcodes: otherOpcodesLib.address,
-          Executor: executorLib.address,
-        },
-      })
-    ).deploy()) as ConditionalTxsMock;
-    parser = await (
-      await ethers.getContractFactory('Parser', {
-        libraries: {
-          StringUtils: stringLib.address,
-          ByteUtils: byteLib.address,
-        },
-      })
-    ).deploy(preprocessor.address);
-
     // Make a snapshot
     snapshotId = await network.provider.send('evm_snapshot');
   });
