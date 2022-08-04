@@ -32,7 +32,7 @@ contract Parser is IParser, Storage {
     uint256 internal cmdIdx; // Current parsing index of DSL code
 
     mapping(string => uint256) public labelPos;
-    mapping(string => bytes) public savedProgram; 
+    mapping(string => bytes) public savedProgram;
     mapping(string => bool) public isVariable;
 
     constructor(address _preprAddr) {

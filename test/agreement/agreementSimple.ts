@@ -16,7 +16,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-describe.only('Agreement: Alice, Bob, Carl', () => {
+describe('Agreement: Alice, Bob, Carl', () => {
   let agreement: AgreementMock;
   let agreementAddr: string;
   let alice: SignerWithAddress;
@@ -50,13 +50,8 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
     [alice, bob, carl, anybody] = await ethers.getSigners();
     ContextCont = await ethers.getContractFactory('Context');
 
-    LAST_BLOCK_TIMESTAMP = (
-      await ethers.provider.getBlock(
-        // eslint-disable-next-line no-underscore-dangle
-        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
-      )
-    ).timestamp;
-
+    LAST_BLOCK_TIMESTAMP = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+      .timestamp;
     NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
 
     txsAddr = await agreement.txs();
@@ -160,9 +155,6 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
     await token.connect(alice).approve(txsAddr, tenTokens);
     await expect(await agreement.connect(alice).execute(23)).to.changeEtherBalance(alice, oneEthBN);
     expect(await token.balanceOf(alice.address)).to.equal(0);
-
-    // clean transaction history inside of the contracts
-    // await txs.cleanTx([21, 22, 23], [alice.address, bob.address]);
   });
 
   it('Alice (borrower), Bob (lender), and Carl (insurer)', async () => {
@@ -239,12 +231,9 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
       carl,
       tenTokens
     );
-
-    // clean transaction history inside of the contracts
-    // await txs.cleanTx([31, 32, 33, 34, 35, 36], [alice.address, bob.address, carl.address]);
   });
 
-  it.only(
+  it(
     '`anyone` as signatory can execute withdraw DAI and then return the ' +
       'same amount of DAI in Agreement conditional tx',
     async () => {
