@@ -20,6 +20,8 @@ contract ConditionalTxs is Storage {
         string transactionStr;
     }
 
+    address public constant anyone = 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF;
+
     mapping(uint256 => Tx) public txs; // txId => Tx struct
     mapping(uint256 => IContext[]) public conditionCtxs; // txId => condition Context
     mapping(uint256 => string[]) public conditionStrs; // txId => DSL condition as string
@@ -41,10 +43,25 @@ contract ConditionalTxs is Storage {
         uint256[] memory _requiredTxs,
         address[] memory _signatories
     ) external {
+        _checkSignatories(_signatories);
+
         Tx memory txn = Tx(_requiredTxs, IContext(address(0)), false, '');
         signatories[_txId] = _signatories;
         signatoriesLen[_txId] = _signatories.length;
         txs[_txId] = txn;
+    }
+
+    /**
+     * @dev Checks input _signatures that only one  'anyone' address exists in the
+     * list or that 'anyone' address does not exist in signatures at all
+     * @param _signatories the list of addresses
+     */
+    function _checkSignatories(address[] memory _signatories) internal pure {
+        if (_signatories.length > 1) {
+            for (uint256 i = 0; i < _signatories.length; i++) {
+                require(_signatories[i] != anyone, 'ConditionalTxs: signatures are invalid');
+            }
+        }
     }
 
     function addTxCondition(
