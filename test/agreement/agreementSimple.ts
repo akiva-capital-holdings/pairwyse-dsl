@@ -16,7 +16,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-describe.only('Agreement: Alice, Bob, Carl', () => {
+describe.skip('Agreement: Alice, Bob, Carl', () => {
   let agreement: AgreementMock;
   let agreementAddr: string;
   let alice: SignerWithAddress;
@@ -244,7 +244,7 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
     // await txs.cleanTx([31, 32, 33, 34, 35, 36], [alice.address, bob.address, carl.address]);
   });
 
-  it.only(
+  it(
     '`anyone` as signatory can execute withdraw DAI and then return the ' +
       'same amount of DAI in Agreement conditional tx',
     async () => {
