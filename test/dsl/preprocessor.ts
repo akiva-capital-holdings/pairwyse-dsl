@@ -692,9 +692,7 @@ describe('Preprocessor', () => {
     });
 
     it('revert if the text `opCode` used with uint256', async () => {
-      await expect(app.callStatic.transform(ctxAddr, '1 and 2-test')).to.be.revertedWith(
-        'StringUtils: invalid format'
-      );
+      await expect(app.callStatic.transform(ctxAddr, '1 and 2-test')).to.be.revertedWith('SUT5');
     });
   });
 
@@ -877,9 +875,7 @@ describe('Preprocessor', () => {
         }
         `;
 
-      await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-        'Preprocessor: amount of parameters can not be 0'
-      );
+      await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('PRP1');
     });
 
     it('returns error if amount of parameters is less then provided for the function', async () => {
@@ -893,9 +889,7 @@ describe('Preprocessor', () => {
         }
         `;
 
-      await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-        'Preprocessor: invalid parameters for the function'
-      );
+      await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('PRP2');
     });
   });
 });

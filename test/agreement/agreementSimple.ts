@@ -83,23 +83,17 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await anybody.sendTransaction({ to: txsAddr, value: oneEthBN });
 
     // Bad signatory
-    await expect(agreement.connect(anybody).execute(txId)).to.be.revertedWith(
-      'Agreement: bad tx signatory'
-    );
+    await expect(agreement.connect(anybody).execute(txId)).to.be.revertedWith('AGR1');
 
     // Condition isn't satisfied
-    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith(
-      'Agreement: tx condition is not satisfied'
-    );
+    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('AGR2');
 
     // Execute transaction
     await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
     await expect(await agreement.connect(alice).execute(txId)).to.changeEtherBalance(bob, oneEthBN);
 
     // Tx already executed
-    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith(
-      'ConditionalTxs: txn already was executed'
-    );
+    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('CNT4');
 
     // clean transaction history inside of the contracts
     // await txs.cleanTx([1], [alice.address]);
@@ -122,12 +116,10 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await txs.setStorageAddress(hex4Bytes('BOB'), bob.address);
 
     // Alice deposits 1 ETH to SC
-    await expect(agreement.connect(alice).execute(21, { value: 0 })).to.be.revertedWith(
-      'Agreement: tx fulfilment error'
-    );
+    await expect(agreement.connect(alice).execute(21, { value: 0 })).to.be.revertedWith('AGR3');
     await expect(
       agreement.connect(alice).execute(21, { value: parseEther('2') })
-    ).to.be.revertedWith('Agreement: tx fulfilment error');
+    ).to.be.revertedWith('AGR3');
     await expect(agreement.connect(bob).execute(22)).to.be.revertedWith(
       'ConditionalTxs: required tx #21 was not executed'
     );
@@ -139,7 +131,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
 
     expect(await ethers.provider.getBalance(txsAddr)).to.equal(oneEthBN);
     await expect(agreement.connect(alice).execute(21, { value: oneEthBN })).to.be.revertedWith(
-      'ConditionalTxs: txn already was executed'
+      'CNT4'
     );
 
     // Bob lends 10 tokens to Alice

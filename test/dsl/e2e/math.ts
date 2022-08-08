@@ -72,28 +72,28 @@ describe('DSL: math', () => {
   describe('division case', () => {
     it('division by zero error', async () => {
       await app.parse('5 / 0');
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
       await app.parse('uint256 5 / uint256 0');
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
       await app.setStorageUint256(hex4Bytes('NUM1'), 10);
       await app.setStorageUint256(hex4Bytes('NUM2'), 0);
       await app.parse('loadLocal uint256 NUM1 / loadLocal uint256 NUM2');
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
     });
 
     it('division zero by zero error', async () => {
       await app.parse('0 / 0');
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
       await app.parse('uint256 0 / uint256 0');
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
       await app.setStorageUint256(hex4Bytes('NUM1'), 0);
       await app.setStorageUint256(hex4Bytes('NUM2'), 0);
       await app.parse('loadLocal uint256 NUM1 / loadLocal uint256 NUM2');
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
     });
 
     it('should divide zero by number', async () => {
@@ -113,25 +113,25 @@ describe('DSL: math', () => {
   describe('underflow case', () => {
     it('negative number error', async () => {
       await app.parse('uint256 5 - uint256 6');
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
       await app.setStorageUint256(hex4Bytes('NUM1'), 10);
       await app.setStorageUint256(hex4Bytes('NUM2'), 1000);
       await app.parse('loadLocal uint256 NUM1 - loadLocal uint256 NUM2');
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
     });
 
     it('returns error if the first number is 0', async () => {
       await app.parse('0 - 1');
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
       await app.parse('uint256 0 - uint256 1');
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
       await app.setStorageUint256(hex4Bytes('NUM1'), 0);
       await app.setStorageUint256(hex4Bytes('NUM2'), 1);
       await app.parse('loadLocal uint256 NUM1 - loadLocal uint256 NUM2');
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
     });
 
     it('no errors if both numbers are 0', async () => {
@@ -154,26 +154,26 @@ describe('DSL: math', () => {
 
     it('can not be added a maximum uint256 value to a simple one', async () => {
       await app.parse(`${MAX_UINT256} + 1`);
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
       await app.parse(`uint256 ${MAX_UINT256} + uint256 1`);
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
     });
 
     it('can not to be added a simple uint256 value to a maximum one', async () => {
       await app.parse(`1 + ${MAX_UINT256}`);
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
       await app.parse(`uint256 1 + uint256 ${MAX_UINT256}`);
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
     });
 
     it('can not to be added a maximum uint256 value to the maximum one', async () => {
       await app.parse(`${MAX_UINT256} + ${MAX_UINT256}`);
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
       await app.parse(`uint256 ${MAX_UINT256} + uint256 ${MAX_UINT256}`);
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
     });
 
     it('can be added a pre maximum uint256 value to the simple one', async () => {
@@ -196,10 +196,10 @@ describe('DSL: math', () => {
     it('reverts if add a pre maximum uint256 value to the simple one that is bigger then \
 uint256', async () => {
       await app.parse(`${PRE_MAX_UINT256} + 2`);
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
       await app.parse(`uint256 ${PRE_MAX_UINT256} + uint256 2`);
-      await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
     });
 
     it('no errors if both numbers are 0', async () => {

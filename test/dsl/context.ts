@@ -67,7 +67,7 @@ describe('Context', () => {
     it('error: empty opcode selector', async () => {
       await expect(
         app.addOpcode('+', '0x01', '0x00000000', '0x00000000', OpcodeLibNames.ComparisonOpcodes)
-      ).to.be.revertedWith('Context: empty opcode selector');
+      ).to.be.revertedWith('CTX2');
     });
     it('error: duplicate opcode', async () => {
       await app.addOpcode(
@@ -79,10 +79,10 @@ describe('Context', () => {
       );
       await expect(
         app.addOpcode('+', '0x02', '0x00000001', '0x00000000', OpcodeLibNames.ComparisonOpcodes)
-      ).to.be.revertedWith('Context: duplicate opcode name or code');
+      ).to.be.revertedWith('CTX3');
       await expect(
         app.addOpcode('*', '0x01', '0x00000001', '0x00000000', OpcodeLibNames.ComparisonOpcodes)
-      ).to.be.revertedWith('Context: duplicate opcode name or code');
+      ).to.be.revertedWith('CTX3');
     });
     it('success', async () => {
       const name = '+';
@@ -100,16 +100,16 @@ describe('Context', () => {
     it('error: empty opcode selector', async () => {
       await expect(
         app.addOpcodeBranchExt('loadLocal', 'uint256', '0x01', '0x00000000')
-      ).to.be.revertedWith('Context: empty opcode selector');
+      ).to.be.revertedWith('CTX2');
     });
     it('error: duplicate opcode', async () => {
       await app.addOpcodeBranchExt('loadLocal', 'uint256', '0x01', '0x00000001');
       await expect(
         app.addOpcodeBranchExt('loadLocal', 'bool', '0x01', '0x00000002')
-      ).to.be.revertedWith('Context: duplicate opcode branch');
+      ).to.be.revertedWith('CTX5');
       await expect(
         app.addOpcodeBranchExt('loadLocal', 'uint256', '0x02', '0x00000002')
-      ).to.be.revertedWith('Context: duplicate opcode branch');
+      ).to.be.revertedWith('CTX5');
     });
     it('success', async () => {
       const baseOpName = 'loadLocal';
@@ -134,7 +134,7 @@ describe('Context', () => {
 
     it('overflow', async () => {
       await app.setProgram('0x01020304');
-      await expect(app.programAt(4, 1)).to.be.revertedWith('Context: slicing out of range');
+      await expect(app.programAt(4, 1)).to.be.revertedWith('CTX4');
     });
   });
 
@@ -166,18 +166,14 @@ describe('Context', () => {
   });
 
   it('setAppAddress', async () => {
-    await expect(app.setAppAddress(ethers.constants.AddressZero)).to.be.revertedWith(
-      'Context: address is zero'
-    );
+    await expect(app.setAppAddress(ethers.constants.AddressZero)).to.be.revertedWith('CTX1');
     const [addr] = await ethers.getSigners();
     await app.setAppAddress(addr.address);
     expect(await app.appAddress()).to.equal(addr.address);
   });
 
   it('setMsgSender', async () => {
-    await expect(app.setMsgSender(ethers.constants.AddressZero)).to.be.revertedWith(
-      'Context: address is zero'
-    );
+    await expect(app.setMsgSender(ethers.constants.AddressZero)).to.be.revertedWith('CTX1');
     const [addr] = await ethers.getSigners();
     await app.setMsgSender(addr.address);
     expect(await app.msgSender()).to.equal(addr.address);

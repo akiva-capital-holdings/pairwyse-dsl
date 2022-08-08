@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import { ErrorsStringUtils } from './Errors.sol';
+
 // import 'hardhat/console.sol';
 
 library StringUtils {
     function char(string memory s, uint256 index) public pure returns (string memory) {
-        require(index < length(s), 'String: index out of range');
+        require(index < length(s), ErrorsStringUtils.SUT1);
         bytes memory sBytes = new bytes(1);
         sBytes[0] = bytes(s)[index];
         return string(sBytes);
@@ -26,7 +28,7 @@ library StringUtils {
     // Convert an hexadecimal string (without "0x" prefix) to raw bytes
     function fromHex(string memory s) public pure returns (bytes memory) {
         bytes memory ss = bytes(s);
-        require(ss.length % 2 == 0, 'String: hex lenght not even'); // length must be even
+        require(ss.length % 2 == 0, ErrorsStringUtils.SUT2); // length must be even
         bytes memory r = new bytes(ss.length / 2);
         for (uint256 i = 0; i < ss.length / 2; ++i) {
             r[i] = bytes1(fromHexChar(ss[2 * i]) * 16 + fromHexChar(ss[2 * i + 1]));
@@ -65,7 +67,7 @@ library StringUtils {
         uint256 tmp;
         for (uint256 i = 0; i < b.length; i++) {
             tmp = uint8(b[i]);
-            require(tmp >= 0x30 && tmp <= 0x39, 'String: non-decimal character');
+            require(tmp >= 0x30 && tmp <= 0x39, ErrorsStringUtils.SUT3);
             value = value * 10 + (tmp - 0x30); // 0x30 ascii is '0'
         }
     }
@@ -87,15 +89,15 @@ library StringUtils {
                     decimals = concat(decimals, string(abi.encodePacked(b[i])));
                 }
             } else if (tmp == 0x65 && !isFound) {
-                require(!equal(base, ''), 'StringUtils: base was not provided');
+                require(!equal(base, ''), ErrorsStringUtils.SUT4);
                 isFound = true;
             } else {
                 // use only one `e` sympol between values without spaces; example: 1e18 or 456e10
-                revert('StringUtils: invalid format');
+                revert(ErrorsStringUtils.SUT5);
             }
         }
 
-        require(!equal(decimals, ''), 'StringUtils: decimals were not provided');
+        require(!equal(decimals, ''), ErrorsStringUtils.SUT6);
         result = toString(toUint256(base) * (10**toUint256(decimals)));
     }
 
@@ -105,7 +107,7 @@ library StringUtils {
      * @return isNumber that is true if the string starts with a number, otherwise is false
      */
     function mayBeNumber(string memory _string) public pure returns (bool isNumber) {
-        require(!equal(_string, ''), 'StringUtils: a string was not provided');
+        require(!equal(_string, ''), ErrorsStringUtils.SUT7);
         bytes1 _firstByte = bytes(_string)[0];
         if (uint8(_firstByte) >= 48 && uint8(_firstByte) <= 57) {
             isNumber = true;
@@ -123,6 +125,6 @@ library StringUtils {
         if (c >= bytes1('A') && c <= bytes1('F')) {
             return 10 + uint8(c) - uint8(bytes1('A'));
         }
-        revert('StringUtils: a hex value not from the range 0-9, a-f, A-F');
+        revert(ErrorsStringUtils.SUT8);
     }
 }

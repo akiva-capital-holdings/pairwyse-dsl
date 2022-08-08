@@ -72,7 +72,7 @@ describe('Stack', () => {
     await svUint256.setUint256(1);
     await stack.pop();
     expect(await stack.length()).to.equal(0);
-    expect(stack.seeLast()).to.be.revertedWith('Stack: stack is empty');
+    expect(stack.seeLast()).to.be.revertedWith('STK4');
   });
 
   it('stack in not empty if pushed a zero value', async () => {
