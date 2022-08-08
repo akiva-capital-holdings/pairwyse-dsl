@@ -6,6 +6,7 @@ import { ComparisonOpcodes } from '../dsl/libs/opcodes/ComparisonOpcodes.sol';
 import { BranchingOpcodes } from '../dsl/libs/opcodes/BranchingOpcodes.sol';
 import { LogicalOpcodes } from '../dsl/libs/opcodes/LogicalOpcodes.sol';
 import { OtherOpcodes } from '../dsl/libs/opcodes/OtherOpcodes.sol';
+import { ErrorsConditionalTxs } from '../dsl/libs/Errors.sol';
 import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { Storage } from '../dsl/helpers/Storage.sol';
@@ -59,7 +60,7 @@ contract ConditionalTxs is Storage {
     function _checkSignatories(address[] memory _signatories) internal pure {
         if (_signatories.length > 1) {
             for (uint256 i = 0; i < _signatories.length; i++) {
-                require(_signatories[i] != anyone, 'ConditionalTxs: signatures are invalid');
+                require(_signatories[i] != anyone, ErrorsConditionalTxs.CNT1);
             }
         }
     }
@@ -83,10 +84,7 @@ contract ConditionalTxs is Storage {
         string memory _transactionStr,
         IContext _transactionCtx
     ) external {
-        require(
-            conditionStrs[_txId].length > 0,
-            'The transaction should have at least one condition'
-        );
+        require(conditionStrs[_txId].length > 0, ErrorsConditionalTxs.CNT2);
         _transactionCtx.setComparisonOpcodesAddr(address(ComparisonOpcodes));
         _transactionCtx.setBranchingOpcodesAddr(address(BranchingOpcodes));
         _transactionCtx.setLogicalOpcodesAddr(address(LogicalOpcodes));
@@ -107,14 +105,8 @@ contract ConditionalTxs is Storage {
         address _signatory
     ) external {
         Tx memory txn = txs[_txId];
-        require(
-            checkConditions(_txId, _msgValue),
-            'ConditionalTxs: txn condition is not satisfied'
-        );
-        require(
-            !isExecutedBySignatory[_txId][_signatory],
-            'ConditionalTxs: txn already was executed by this signatory'
-        );
+        require(checkConditions(_txId, _msgValue), ErrorsConditionalTxs.CNT3);
+        require(!isExecutedBySignatory[_txId][_signatory], ErrorsConditionalTxs.CNT4);
 
         txn.transactionCtx.setMsgValue(_msgValue);
         Executor.execute(address(txn.transactionCtx));

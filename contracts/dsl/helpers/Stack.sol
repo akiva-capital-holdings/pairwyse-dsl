@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import { ErrorsStack } from '../libs/Errors.sol';
+
 contract StackValue {
     enum StackType {
         // NONE in an OpSpec shows that the op pops or yields nothing
@@ -18,7 +20,7 @@ contract StackValue {
     address private _address;
 
     function getUint256() public view returns (uint256) {
-        require(_type == StackType.UINT256, 'Stack: uint256 type mismatch');
+        require(_type == StackType.UINT256, ErrorsStack.STK1);
         return _uint256;
     }
 
@@ -28,7 +30,7 @@ contract StackValue {
     }
 
     function getString() public view returns (string memory) {
-        require(_type == StackType.STRING, 'Stack: string type mismatch');
+        require(_type == StackType.STRING, ErrorsStack.STK2);
         return _string;
     }
 
@@ -38,7 +40,7 @@ contract StackValue {
     }
 
     function getAddress() public view returns (address) {
-        require(_type == StackType.ADDRESS, 'Stack: address type mismatch');
+        require(_type == StackType.ADDRESS, ErrorsStack.STK3);
         return _address;
     }
 
@@ -83,7 +85,7 @@ contract Stack {
     }
 
     function _seeLast() internal view returns (StackValue) {
-        require(_length() > 0, 'Stack: stack is empty');
+        require(_length() > 0, ErrorsStack.STK4);
         return stack[_length() - 1];
     }
 }

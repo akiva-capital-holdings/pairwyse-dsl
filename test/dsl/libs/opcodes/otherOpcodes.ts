@@ -68,24 +68,18 @@ describe('Other opcodes', () => {
 
   it('opLoadLocalAny', async () => {
     await ctx.setProgram('0x1a');
-    await expect(app.opLoadLocalAny(ctxAddr)).to.be.revertedWith(
-      'Opcodes: mustCall call not success'
-    );
+    await expect(app.opLoadLocalAny(ctxAddr)).to.be.revertedWith('OPH1');
   });
 
   it('opLoadLocalGet', async () => {
     await ctx.setProgram('0x1a000000');
-    await expect(app.opLoadLocalGet(ctxAddr, 'hey()')).to.be.revertedWith(
-      'Opcodes: opLoadLocal call not success'
-    );
+    await expect(app.opLoadLocalGet(ctxAddr, 'hey()')).to.be.revertedWith('OP5');
   });
 
   it('opLoadRemote', async () => {
     const ctxAddrCut = ctxAddr.substring(2);
     await ctx.setProgram(`0x1a000000${ctxAddrCut}`);
-    await expect(app.opLoadRemote(ctxAddr, 'hey()')).to.be.revertedWith(
-      'Opcodes: opLoadRemote call not success'
-    );
+    await expect(app.opLoadRemote(ctxAddr, 'hey()')).to.be.revertedWith('OP3');
   });
 
   it('opLoadRemoteAny', async () => {});

@@ -82,19 +82,17 @@ describe('Executor', () => {
 
   describe('execute()', async () => {
     it('error: empty program', async () => {
-      await expect(app.execute(ctxAddr)).to.be.revertedWith('Executor: empty program');
+      await expect(app.execute(ctxAddr)).to.be.revertedWith('EXC1');
     });
 
     it('error: did not find selector for opcode', async () => {
       await ctx.setProgram('0x99');
-      await expect(app.execute(ctxAddr)).to.be.revertedWith(
-        'Executor: did not find selector for opcode'
-      );
+      await expect(app.execute(ctxAddr)).to.be.revertedWith('EXC2');
     });
 
     it('error: call not success', async () => {
       await ctx.setProgram('0x05');
-      await expect(app.execute(ctxAddr)).to.be.revertedWith('Executor: call not success');
+      await expect(app.execute(ctxAddr)).to.be.revertedWith('EXC3');
     });
 
     describe('if', () => {

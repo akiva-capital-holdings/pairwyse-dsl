@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { IContext } from '../interfaces/IContext.sol';
+import { ErrorsExecutor } from './Errors.sol';
 
 // import 'hardhat/console.sol';
 
@@ -10,7 +11,7 @@ library Executor {
         // console.log('Executor.execute()');
         IContext _ctx = IContext(_ctxAddr);
         // console.logBytes(_ctx.program());
-        require(_ctx.program().length > 0, 'Executor: empty program');
+        require(_ctx.program().length > 0, ErrorsExecutor.EXC1);
 
         while (_ctx.pc() < _ctx.program().length) {
             bytes memory opcodeBytes = _ctx.programAt(_ctx.pc(), 1);
@@ -18,7 +19,7 @@ library Executor {
             // console.logBytes1(opcodeByte1);
 
             bytes4 _selector = _ctx.selectorByOpcode(opcodeByte1);
-            require(_selector != 0x0, 'Executor: did not find selector for opcode');
+            require(_selector != 0x0, ErrorsExecutor.EXC2);
             IContext.OpcodeLibNames _libName = _ctx.opcodeLibNameByOpcode(opcodeByte1);
             _ctx.incPc(1);
 
@@ -37,7 +38,7 @@ library Executor {
             // console.log('lib addr =', _lib);
 
             (bool success, ) = _lib.delegatecall(abi.encodeWithSelector(_selector, address(_ctx)));
-            require(success, 'Executor: call not success');
+            require(success, ErrorsExecutor.EXC3);
         }
         _ctx.setPc(0);
     }

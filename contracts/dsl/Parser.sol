@@ -9,6 +9,7 @@ import { StringUtils } from './libs/StringUtils.sol';
 import { ByteUtils } from './libs/ByteUtils.sol';
 import { Storage } from './helpers/Storage.sol';
 import { Preprocessor } from './Preprocessor.sol';
+import { ErrorsParser } from './libs/Errors.sol';
 
 // import 'hardhat/console.sol';
 
@@ -367,7 +368,7 @@ contract Parser is IParser, Storage {
                 (bool success, ) = address(this).delegatecall(
                     abi.encodeWithSelector(_selector, IContext(_ctxAddr))
                 );
-                require(success, 'Parser: delegatecall to asmSelector failed');
+                require(success, ErrorsParser.PRS1);
             }
         }
         // if no selector then opcode without params
@@ -431,7 +432,7 @@ contract Parser is IParser, Storage {
         string memory _name,
         string memory _type
     ) internal {
-        require(!_name.equal(''), 'Parse: the name of variable can not be empty');
+        require(!_name.equal(''), ErrorsParser.PRS2);
         isVariable[_name] = true;
 
         string memory _loadType = 'loadLocal';

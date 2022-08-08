@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import { ErrorsByteUtils } from './Errors.sol';
+
 // import "hardhat/console.sol";
 
 library ByteUtils {
@@ -9,8 +11,8 @@ library ByteUtils {
         uint256 _start,
         uint256 _end
     ) public pure returns (bytes memory) {
-        require(_start < _end, "ByteUtils: 'end' index must be greater than 'start'");
-        require(_end <= _data.length, "ByteUtils: 'end' is greater than the length of the array");
+        require(_start < _end, ErrorsByteUtils.BUT1);
+        require(_end <= _data.length, ErrorsByteUtils.BUT2);
         return _data[_start:_end];
     }
 }

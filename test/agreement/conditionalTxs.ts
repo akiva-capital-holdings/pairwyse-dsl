@@ -114,14 +114,10 @@ describe('Conditional transactions', () => {
       await anybody.sendTransaction({ to: app.address, value: oneEthBN });
 
       // Execute transaction
-      await expect(app.execTx(txId, 0, alice.address)).to.be.revertedWith(
-        'ConditionalTxs: txn condition is not satisfied'
-      );
+      await expect(app.execTx(txId, 0, alice.address)).to.be.revertedWith('CNT3');
       await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
       await expect(await app.execTx(txId, 0, alice.address)).to.changeEtherBalance(bob, oneEthBN);
-      await expect(app.execTx(txId, 0, alice.address)).to.be.revertedWith(
-        'ConditionalTxs: txn already was executed'
-      );
+      await expect(app.execTx(txId, 0, alice.address)).to.be.revertedWith('CNT4');
     }
   });
 
@@ -229,37 +225,29 @@ describe('Conditional transactions', () => {
     it('should revert if `anyone` address is the last address in the list', async () => {
       // it not possible to update transaction with alice, bobo and 0xFfFF address
       const signatories = [alice.address, bob.address, anyone];
-      await expect(app.addTxBlueprint(1, [], signatories)).to.be.revertedWith(
-        'ConditionalTxs: signatures are invalid'
-      );
+      await expect(app.addTxBlueprint(1, [], signatories)).to.be.revertedWith('CNT1');
     });
 
     it('should revert if `anyone` address is the first address in the list', async () => {
       const signatories = [anyone, bob.address, alice.address];
-      await expect(app.addTxBlueprint(1, [], signatories)).to.be.revertedWith(
-        'ConditionalTxs: signatures are invalid'
-      );
+      await expect(app.addTxBlueprint(1, [], signatories)).to.be.revertedWith('CNT1');
     });
 
     it('should revert if `anyone` and zero addresses in the list', async () => {
       const signatories = [zeroAddress, anyone];
-      await expect(app.addTxBlueprint(1, [], signatories)).to.be.revertedWith(
-        'ConditionalTxs: signatures are invalid'
-      );
+      await expect(app.addTxBlueprint(1, [], signatories)).to.be.revertedWith('CNT1');
     });
 
     it('should revert if `anyone` was provided twice', async () => {
       const signatories = [anyone, anyone];
-      await expect(app.addTxBlueprint(1, [], signatories)).to.be.revertedWith(
-        'ConditionalTxs: signatures are invalid'
-      );
+      await expect(app.addTxBlueprint(1, [], signatories)).to.be.revertedWith('CNT1');
     });
 
     // TODO: (by Yevheniia) check specification with Misha
     // it('should revert if signatories was not provided',
     //   async () => {
     //     await expect(app.addTxBlueprint(1, [], [])).to.be.revertedWith(
-    //       'ConditionalTxs: signatures are invalid'
+    //       'CNT1'
     //     );
     //   }
     // );

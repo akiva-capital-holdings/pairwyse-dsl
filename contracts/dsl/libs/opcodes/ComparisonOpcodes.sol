@@ -7,6 +7,7 @@ import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
+import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
 // import 'hardhat/console.sol';
 
@@ -25,8 +26,8 @@ library ComparisonOpcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
-        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
+        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
 
         bool result = last.getUint256() == prev.getUint256();
 
@@ -40,8 +41,8 @@ library ComparisonOpcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
-        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
+        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
 
         bool result = last.getUint256() != prev.getUint256();
 
@@ -55,8 +56,8 @@ library ComparisonOpcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
-        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
+        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
 
         bool result = prev.getUint256() < last.getUint256();
 
@@ -93,7 +94,7 @@ library ComparisonOpcodes {
     function opNot(IContext _ctx) public {
         StackValue last = _ctx.stack().pop();
 
-        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
 
         bool result = last.getUint256() == 0;
 

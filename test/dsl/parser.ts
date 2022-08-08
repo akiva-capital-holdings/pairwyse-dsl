@@ -4,7 +4,7 @@ import { ethers, network } from 'hardhat';
 import { Context, ParserMock } from '../../typechain-types';
 import { hex4Bytes } from '../utils/utils';
 
-describe('Parser', () => {
+describe.only('Parser', () => {
   let sender: SignerWithAddress;
   let app: ParserMock;
   let ctx: Context;
@@ -50,10 +50,8 @@ describe('Parser', () => {
   });
 
   describe('parse', () => {
-    it('error: delegatecall to asmSelector failed', async () => {
-      await expect(app.parse(ctxAddr, 'uint256')).to.be.revertedWith(
-        'delegatecall to asmSelector failed'
-      );
+    it('error: PRS1', async () => {
+      await expect(app.parse(ctxAddr, 'uint256')).to.be.revertedWith('PRS1');
     });
 
     it('error: if adding number with a string', async () => {
@@ -66,17 +64,15 @@ describe('Parser', () => {
     });
 
     it('error: if adding number with a number that contains string', async () => {
-      await expect(app.parse(ctxAddr, '10d + 1')).to.be.revertedWith('StringUtils: invalid format');
+      await expect(app.parse(ctxAddr, '10d + 1')).to.be.revertedWith('SUT5');
     });
 
     it('error: if adding number with a number that can be hex', async () => {
-      await expect(app.parse(ctxAddr, '1 + 0x1')).to.be.revertedWith('StringUtils: invalid format');
+      await expect(app.parse(ctxAddr, '1 + 0x1')).to.be.revertedWith('SUT5');
     });
 
     it('error: if adding uint256 with string value with a number', async () => {
-      await expect(app.parse(ctxAddr, 'uint256 a + 1000')).to.be.revertedWith(
-        'Parser: delegatecall to asmSelector failed'
-      );
+      await expect(app.parse(ctxAddr, 'uint256 a + 1000')).to.be.revertedWith('PRS1');
     });
 
     it('uint256 1122334433', async () => {
@@ -220,9 +216,7 @@ describe('Parser', () => {
       const name = 'TEST_NUMBER';
       expect(await app.isVariable('')).to.be.equal(false);
       expect(await app.savedProgram('')).to.be.equal('0x');
-      await expect(app.setVariableExt(ctxAddr, '', 'uint256')).to.be.revertedWith(
-        'Parse: the name of variable can not be empty'
-      );
+      await expect(app.setVariableExt(ctxAddr, '', 'uint256')).to.be.revertedWith('PRS2');
       expect(await app.isVariable('')).to.be.equal(false);
       expect(await app.savedProgram('')).to.be.equal('0x');
     });

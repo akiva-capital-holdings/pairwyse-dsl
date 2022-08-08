@@ -7,6 +7,7 @@ import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
+import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
 // import 'hardhat/console.sol';
 
@@ -57,7 +58,7 @@ library OtherOpcodes {
         (bool success, ) = _ctx.appAddress().call(
             abi.encodeWithSignature('setStorageBool(bytes32,bool)', _varNameB32, _boolVal)
         );
-        require(success, 'Opcodes: opSetLocal call not success');
+        require(success, ErrorsGeneralOpcodes.OP1);
         OpcodeHelpers.putToStack(_ctx, 1);
     }
 
@@ -65,14 +66,14 @@ library OtherOpcodes {
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
 
         StackValue _last = _ctx.stack().pop();
-        require(_last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+        require(_last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
         uint256 _val = _last.getUint256();
 
         // Set local variable by it's hex
         (bool success, ) = _ctx.appAddress().call(
             abi.encodeWithSignature('setStorageUint256(bytes32,uint256)', _varNameB32, _val)
         );
-        require(success, 'Opcodes: opSetLocal call not success');
+        require(success, ErrorsGeneralOpcodes.OP1);
 
         OpcodeHelpers.putToStack(_ctx, 1);
     }
@@ -234,7 +235,7 @@ library OtherOpcodes {
         (bool success, bytes memory data) = _ctx.appAddress().call(
             abi.encodeWithSignature(funcSignature, varNameB32)
         );
-        require(success, 'Opcodes: opLoadLocal call not success');
+        require(success, ErrorsGeneralOpcodes.OP5);
 
         // Convert bytes to bytes32
         assembly {
@@ -294,7 +295,7 @@ library OtherOpcodes {
         (bool success, bytes memory data) = contractAddr.call(
             abi.encodeWithSignature(funcSignature, varNameB32)
         );
-        require(success, 'Opcodes: opLoadRemote call not success');
+        require(success, ErrorsGeneralOpcodes.OP3);
 
         // Convert bytes to bytes32
         bytes32 result;
