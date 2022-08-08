@@ -4,7 +4,7 @@ import { ethers, network } from 'hardhat';
 import { Context, ParserMock } from '../../typechain-types';
 import { hex4Bytes } from '../utils/utils';
 
-describe.only('Parser', () => {
+describe('Parser', () => {
   let sender: SignerWithAddress;
   let app: ParserMock;
   let ctx: Context;
