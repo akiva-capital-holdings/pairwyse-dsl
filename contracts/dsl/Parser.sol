@@ -7,7 +7,6 @@ import { IParser } from './interfaces/IParser.sol';
 import { IPreprocessor } from './interfaces/IPreprocessor.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 import { ByteUtils } from './libs/ByteUtils.sol';
-import { Storage } from './helpers/Storage.sol';
 import { Preprocessor } from './Preprocessor.sol';
 import { ErrorsParser } from './libs/Errors.sol';
 
@@ -22,7 +21,7 @@ import { ErrorsParser } from './libs/Errors.sol';
  *
  * DSL code in postfix notation as string -> Parser -> raw bytecode
  */
-contract Parser is IParser, Storage {
+contract Parser is IParser {
     using StringUtils for string;
     using ByteUtils for bytes;
 

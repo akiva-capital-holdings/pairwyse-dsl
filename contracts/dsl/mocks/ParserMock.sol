@@ -2,9 +2,10 @@
 pragma solidity ^0.8.0;
 
 import { IContext } from '../interfaces/IContext.sol';
+import { Storage } from '../helpers/Storage.sol';
 import { Parser } from '../Parser.sol';
 
-contract ParserMock is Parser {
+contract ParserMock is Parser, Storage {
     // solhint-disable-next-line no-empty-blocks
     constructor(address _preprAddr) Parser(_preprAddr) {}
 
