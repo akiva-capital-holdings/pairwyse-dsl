@@ -80,6 +80,7 @@ library StringUtils {
 
         for (uint256 i = 0; i < b.length; i++) {
             tmp = uint8(b[i]);
+
             if (tmp >= 0x30 && tmp <= 0x39) {
                 if (!isFound) {
                     base = concat(base, string(abi.encodePacked(b[i])));
@@ -87,7 +88,6 @@ library StringUtils {
                     decimals = concat(decimals, string(abi.encodePacked(b[i])));
                 }
             } else if (tmp == 0x65 && !isFound) {
-                require(!equal(base, ''), 'StringUtils: base was not provided');
                 isFound = true;
             } else {
                 // use only one `e` sympol between values without spaces; example: 1e18 or 456e10
@@ -95,6 +95,7 @@ library StringUtils {
             }
         }
 
+        require(!equal(base, ''), 'StringUtils: base was not provided');
         require(!equal(decimals, ''), 'StringUtils: decimals were not provided');
         result = toString(toUint256(base) * (10**toUint256(decimals)));
     }
@@ -104,12 +105,10 @@ library StringUtils {
      * @param _string is a current string for checking
      * @return isNumber that is true if the string starts with a number, otherwise is false
      */
-    function mayBeNumber(string memory _string) public pure returns (bool isNumber) {
+    function mayBeNumber(string memory _string) public pure returns (bool) {
         require(!equal(_string, ''), 'StringUtils: a string was not provided');
-        bytes1 _firstByte = bytes(_string)[0];
-        if (uint8(_firstByte) >= 48 && uint8(_firstByte) <= 57) {
-            isNumber = true;
-        }
+        bytes1 _byte = bytes(_string)[0];
+        return uint8(_byte) >= 48 && uint8(_byte) <= 57;
     }
 
     // Convert an hexadecimal character to their value

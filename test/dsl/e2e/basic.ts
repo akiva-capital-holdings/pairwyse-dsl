@@ -1184,7 +1184,7 @@ describe('DSL: basic', () => {
     });
   });
 
-  describe('Simplified writing number in wei', () => {
+  describe('Simplified writing number in wei (setUint256)', () => {
     it('should store a simple number with 18 decimals', async () => {
       const input = '(uint256 1e18) setUint256 SUM';
       await app.parse(input);
@@ -1265,7 +1265,7 @@ describe('DSL: basic', () => {
       await expect(app.parse(input)).to.be.revertedWith('StringUtils: invalid format');
     });
 
-    it('should revert if base does not exist', async () => {
+    it('should revert if base was not provided', async () => {
       const input = '(uint256 e18) setUint256 SUM';
       await expect(app.parse(input)).to.be.revertedWith(
         'Parser: delegatecall to asmSelector failed'

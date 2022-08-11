@@ -113,10 +113,16 @@ describe('StringUtils', () => {
 
   it('mayBeNumber', async () => {
     await expect(app.mayBeNumber('')).to.be.revertedWith('StringUtils: a string was not provided');
+    expect(await app.mayBeNumber('1')).to.be.equal(true);
+    expect(await app.mayBeNumber('ee')).to.be.equal(false);
+    expect(await app.mayBeNumber('1e')).to.be.equal(true);
+    expect(await app.mayBeNumber('e3')).to.be.equal(false);
+    expect(await app.mayBeNumber(' e')).to.be.equal(false);
     expect(await app.mayBeNumber('}34')).to.be.equal(false);
     expect(await app.mayBeNumber('12345')).to.be.equal(true);
     expect(await app.mayBeNumber(' !')).to.be.equal(false);
     expect(await app.mayBeNumber('e')).to.be.equal(false);
     expect(await app.mayBeNumber('F543')).to.be.equal(false);
+    expect(await app.mayBeNumber('2-test')).to.be.equal(true);
   });
 });
