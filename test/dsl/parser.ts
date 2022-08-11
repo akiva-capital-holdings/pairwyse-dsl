@@ -50,7 +50,7 @@ describe('Parser', () => {
   });
 
   describe('parse', () => {
-    it('error: PRS1', async () => {
+    it('error: delegatecall to asmSelector fail', async () => {
       await expect(app.parse(ctxAddr, 'uint256')).to.be.revertedWith('PRS1');
     });
 
