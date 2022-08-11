@@ -12,9 +12,10 @@ import { ErrorsPreprocessor } from './libs/Errors.sol';
 /**
  * @dev Preprocessor of DSL code
  *
- * A single contract of the project. It can remove comments that were
- * created by user in the DSL code string. It transforms the users DSL code string
- * to the list of commands that can be used in a Parser contract.
+ * TODO: add description about Preprocessor as a single contract of the project
+ * It can remove comments that were created by user in the DSL code string. It
+ * transforms the users DSL code string to the list of commands that can be used
+ * in a Parser contract.
  *
  * DSL code in postfix notation as
  * user's string code -> Preprocessor -> each command is separated in the commands list
