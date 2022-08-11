@@ -6,7 +6,7 @@ import { IPreprocessor } from './interfaces/IPreprocessor.sol';
 import { Stack, StackValue } from './helpers/Stack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 /**
  * @dev Preprocessor of DSL code
