@@ -8,6 +8,7 @@ import { ComparisonOpcodes } from './libs/opcodes/ComparisonOpcodes.sol';
 import { BranchingOpcodes } from './libs/opcodes/BranchingOpcodes.sol';
 import { LogicalOpcodes } from './libs/opcodes/LogicalOpcodes.sol';
 import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
+import { ErrorsContext } from './libs/Errors.sol';
 
 // import 'hardhat/console.sol';
 
@@ -56,7 +57,6 @@ contract Context is IContext {
     mapping(string => bytes4) public asmSelectors; // command => selector
     mapping(string => uint256) public opsPriors; // stores the priority for operators
     string[] public operators;
-
     // baseOpName -> branchCode -> selector
     mapping(string => mapping(bytes1 => bytes4)) public branchSelectors;
 
@@ -67,7 +67,7 @@ contract Context is IContext {
     mapping(string => string) public aliases;
 
     modifier nonZeroAddress(address _addr) {
-        require(_addr != address(0), 'Context: address is zero');
+        require(_addr != address(0), ErrorsContext.CTX1);
         _;
     }
 
@@ -449,10 +449,10 @@ contract Context is IContext {
         bytes4 _asmSelector,
         OpcodeLibNames _libName
     ) public {
-        require(_opSelector != bytes4(0), 'Context: empty opcode selector');
+        require(_opSelector != bytes4(0), ErrorsContext.CTX2);
         require(
             opCodeByName[_name] == bytes1(0) && selectorByOpcode[_opcode] == bytes4(0),
-            'Context: duplicate opcode name or code'
+            ErrorsContext.CTX3
         );
         opCodeByName[_name] = _opcode;
         selectorByOpcode[_opcode] = _opSelector;
@@ -496,7 +496,7 @@ contract Context is IContext {
         uint256 _index,
         uint256 _step
     ) public pure returns (bytes memory) {
-        require(_payload.length > _index, 'Context: slicing out of range');
+        require(_payload.length > _index, ErrorsContext.CTX4);
         return _payload[_index:_index + _step];
     }
 
@@ -590,11 +590,11 @@ contract Context is IContext {
         bytes1 _branchCode,
         bytes4 _selector
     ) internal {
-        require(_selector != bytes4(0), 'Context: empty opcode selector');
+        require(_selector != bytes4(0), ErrorsContext.CTX2);
         require(
             branchSelectors[_baseOpName][_branchCode] == bytes4(0) &&
                 branchCodes[_baseOpName][_branchName] == bytes1(0),
-            'Context: duplicate opcode branch'
+            ErrorsContext.CTX5
         );
         branchSelectors[_baseOpName][_branchCode] = _selector;
         branchCodes[_baseOpName][_branchName] = _branchCode;

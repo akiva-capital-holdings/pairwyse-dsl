@@ -7,6 +7,7 @@ import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
+import { ErrorsOpcodeHelpers } from '../Errors.sol';
 
 // import 'hardhat/console.sol';
 
@@ -41,7 +42,7 @@ library OpcodeHelpers {
 
     function mustCall(address addr, bytes memory data) public {
         (bool success, ) = addr.delegatecall(data);
-        require(success, 'Opcodes: mustCall call not success');
+        require(success, ErrorsOpcodeHelpers.OPH1);
     }
 
     function getNextBytes(IContext _ctx, uint256 _bytesNum) public returns (bytes32 varNameB32) {

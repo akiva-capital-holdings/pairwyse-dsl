@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import { IParser } from '../dsl/interfaces/IParser.sol';
 import { IContext } from '../dsl/interfaces/IContext.sol';
 import { Context } from '../dsl/Context.sol';
+import { ErrorsAgreement } from '../dsl/libs/Errors.sol';
 import { ConditionalTxs } from './ConditionalTxs.sol';
 
 //  import 'hardhat/console.sol';
@@ -52,12 +53,15 @@ contract Agreement {
 
     function execute(uint256 _txId) external payable {
         payable(txs).transfer(msg.value);
-        require(verify(_txId), 'Agreement: bad tx signatory');
-        require(validate(_txId, msg.value), 'Agreement: tx condition is not satisfied');
-        require(fulfil(_txId, msg.value, msg.sender), 'Agreement: tx fulfilment error');
+        require(verify(_txId), ErrorsAgreement.AGR1);
+        require(validate(_txId, msg.value), ErrorsAgreement.AGR2);
+        require(fulfil(_txId, msg.value, msg.sender), ErrorsAgreement.AGR3);
     }
 
     function verify(uint256 _txId) internal view returns (bool) {
+        if (txs.signatoriesLen(_txId) == 1 && txs.signatories(_txId, 0) == txs.anyone()) {
+            return true;
+        }
         for (uint256 i = 0; i < txs.signatoriesLen(_txId); i++) {
             if (txs.signatories(_txId, i) == msg.sender) {
                 return true;

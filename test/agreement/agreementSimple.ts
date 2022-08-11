@@ -4,14 +4,19 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
 import { hex4Bytes } from '../utils/utils';
 import { AgreementMock, ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
+import { Context, Context__factory } from '../../typechain-types';
 import { deployAgreement, addSteps } from '../../scripts/data/deploy.utils';
-import { aliceAndBobSteps, aliceBobAndCarl } from '../../scripts/data/agreement';
+import {
+  aliceAndBobSteps,
+  aliceBobAndCarl,
+  aliceAndAnybodySteps,
+} from '../../scripts/data/agreement';
 
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-describe.skip('Agreement: Alice, Bob, Carl', () => {
+describe('Agreement: Alice, Bob, Carl', () => {
   let agreement: AgreementMock;
   let agreementAddr: string;
   let alice: SignerWithAddress;
@@ -23,11 +28,14 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
   let NEXT_MONTH: number;
   let LAST_BLOCK_TIMESTAMP: number;
   let snapshotId: number;
+  let ContextCont: Context__factory;
 
   const ONE_DAY = 60 * 60 * 24;
   const ONE_MONTH = ONE_DAY * 30;
   const oneEthBN = parseEther('1');
   const tenTokens = parseEther('10');
+  const anyone = '0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF';
+  const requiredTxs: number[] = [];
 
   before(async () => {
     // TODO: need more simplifications for all tests
@@ -40,37 +48,10 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
     agreement = await ethers.getContractAt('AgreementMock', agreementAddr);
 
     [alice, bob, carl, anybody] = await ethers.getSigners();
+    ContextCont = await ethers.getContractFactory('Context');
 
-    const txId = 1;
-    const requiredTxs: number[] = [];
-    const signatories = [alice.address];
-    const conditions = ['blockTimestamp > loadLocal uint256 LOCK_TIME'];
-    const transaction = 'sendEth RECEIVER 1000000000000000000';
-    const ContextCont = await ethers.getContractFactory('Context');
-
-    await addSteps(
-      [{ txId, requiredTxs, signatories, conditions, transaction }],
-      ContextCont,
-      agreement.address
-    );
-    await addSteps(
-      aliceAndBobSteps(alice, bob, oneEthBN, tenTokens),
-      ContextCont,
-      agreement.address
-    );
-    await addSteps(
-      aliceBobAndCarl(alice, bob, carl, oneEthBN, tenTokens),
-      ContextCont,
-      agreement.address
-    );
-
-    LAST_BLOCK_TIMESTAMP = (
-      await ethers.provider.getBlock(
-        // eslint-disable-next-line no-underscore-dangle
-        ethers.provider._lastBlockNumber /* it's -2 but the resulting block number is correct */
-      )
-    ).timestamp;
-
+    LAST_BLOCK_TIMESTAMP = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+      .timestamp;
     NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
 
     txsAddr = await agreement.txs();
@@ -88,28 +69,31 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
     await txs.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
     const txId = 1;
+    const signatories = [alice.address];
+    const conditions = ['blockTimestamp > loadLocal uint256 LOCK_TIME'];
+    const transaction = 'sendEth RECEIVER 1000000000000000000';
+
+    await addSteps(
+      [{ txId, requiredTxs, signatories, conditions, transaction }],
+      ContextCont,
+      agreement.address
+    );
 
     // Top up contract
     await anybody.sendTransaction({ to: txsAddr, value: oneEthBN });
 
     // Bad signatory
-    await expect(agreement.connect(anybody).execute(txId)).to.be.revertedWith(
-      'Agreement: bad tx signatory'
-    );
+    await expect(agreement.connect(anybody).execute(txId)).to.be.revertedWith('AGR1');
 
     // Condition isn't satisfied
-    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith(
-      'Agreement: tx condition is not satisfied'
-    );
+    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('AGR2');
 
     // Execute transaction
     await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
     await expect(await agreement.connect(alice).execute(txId)).to.changeEtherBalance(bob, oneEthBN);
 
     // Tx already executed
-    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith(
-      'ConditionalTxs: txn already was executed'
-    );
+    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('CNT4');
 
     // clean transaction history inside of the contracts
     // await txs.cleanTx([1], [alice.address]);
@@ -120,18 +104,22 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
       .connect(bob)
       .deploy(parseEther('1000'));
 
+    await addSteps(
+      aliceAndBobSteps(alice, bob, oneEthBN, tenTokens),
+      ContextCont,
+      agreement.address
+    );
+
     // Set variables
     await txs.setStorageAddress(hex4Bytes('TOKEN_ADDR'), token.address);
     await txs.setStorageAddress(hex4Bytes('ALICE'), alice.address);
     await txs.setStorageAddress(hex4Bytes('BOB'), bob.address);
 
     // Alice deposits 1 ETH to SC
-    await expect(agreement.connect(alice).execute(21, { value: 0 })).to.be.revertedWith(
-      'Agreement: tx fulfilment error'
-    );
+    await expect(agreement.connect(alice).execute(21, { value: 0 })).to.be.revertedWith('AGR3');
     await expect(
       agreement.connect(alice).execute(21, { value: parseEther('2') })
-    ).to.be.revertedWith('Agreement: tx fulfilment error');
+    ).to.be.revertedWith('AGR3');
     await expect(agreement.connect(bob).execute(22)).to.be.revertedWith(
       'ConditionalTxs: required tx #21 was not executed'
     );
@@ -143,7 +131,7 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
 
     expect(await ethers.provider.getBalance(txsAddr)).to.equal(oneEthBN);
     await expect(agreement.connect(alice).execute(21, { value: oneEthBN })).to.be.revertedWith(
-      'ConditionalTxs: txn already was executed'
+      'CNT4'
     );
 
     // Bob lends 10 tokens to Alice
@@ -159,9 +147,6 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
     await token.connect(alice).approve(txsAddr, tenTokens);
     await expect(await agreement.connect(alice).execute(23)).to.changeEtherBalance(alice, oneEthBN);
     expect(await token.balanceOf(alice.address)).to.equal(0);
-
-    // clean transaction history inside of the contracts
-    // await txs.cleanTx([21, 22, 23], [alice.address, bob.address]);
   });
 
   it('Alice (borrower), Bob (lender), and Carl (insurer)', async () => {
@@ -169,6 +154,12 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
       .connect(bob)
       .deploy(parseEther('1000'));
     await token.connect(bob).transfer(carl.address, tenTokens);
+
+    await addSteps(
+      aliceBobAndCarl(alice, bob, carl, oneEthBN, tenTokens),
+      ContextCont,
+      agreement.address
+    );
 
     // Set variables
     await txs.setStorageAddress(hex4Bytes('TOKEN_ADDR'), token.address);
@@ -232,8 +223,57 @@ describe.skip('Agreement: Alice, Bob, Carl', () => {
       carl,
       tenTokens
     );
-
-    // clean transaction history inside of the contracts
-    // await txs.cleanTx([31, 32, 33, 34, 35, 36], [alice.address, bob.address, carl.address]);
   });
+
+  it(
+    '`anyone` as signatory can execute withdraw DAI and then return the ' +
+      'same amount of DAI in Agreement conditional tx',
+    async () => {
+      // Deploy Token contract
+      const daiToken = await (await ethers.getContractFactory('Token'))
+        .connect(alice)
+        .deploy(parseEther('100'));
+
+      const PURCHASE_PERCENT = 10; // as an example
+      // Set variables
+      await txs.setStorageAddress(hex4Bytes('GP'), carl.address);
+      await txs.setStorageAddress(hex4Bytes('DAI'), daiToken.address);
+      await txs.setStorageUint256(hex4Bytes('PURCHASE_PERCENT'), PURCHASE_PERCENT);
+      await txs.setStorageUint256(hex4Bytes('TRANSACTIONS_CONT'), txsAddr);
+
+      const index = 4;
+      const signatories = [anyone];
+      await addSteps(
+        aliceAndAnybodySteps(alice, signatories, index),
+        ContextCont,
+        agreement.address
+      );
+
+      // Alice deposits 10 dai tokens to SC
+      await daiToken.connect(alice).transfer(txsAddr, tenTokens);
+
+      // get total amount of dai tokens on the conditional transaction contract
+      const TOKEN_BAL_OF_TXS = await daiToken.balanceOf(txsAddr);
+      // check that contract has that amount of tokens
+      expect(TOKEN_BAL_OF_TXS).to.equal(tenTokens);
+
+      // calculate the purchase amount from the total stored value
+      const PURCHASE_AMOUNT = TOKEN_BAL_OF_TXS.mul(PURCHASE_PERCENT).div(100);
+      // check that PURCHASE_AMOUNT is an a 10% of TOKEN_BAL_OF_TXS
+      expect(PURCHASE_AMOUNT).to.equal(oneEthBN);
+      // get future time
+      const FUND_INVESTMENT_DATE = NEXT_MONTH + 7 * ONE_DAY;
+
+      await txs.setStorageUint256(hex4Bytes('PURCHASE_AMOUNT'), PURCHASE_AMOUNT);
+      await txs.setStorageUint256(hex4Bytes('FUND_INVESTMENT_DATE'), FUND_INVESTMENT_DATE);
+      // setup the certain date in the future for transaction execution
+      await ethers.provider.send('evm_setNextBlockTimestamp', [FUND_INVESTMENT_DATE]);
+
+      await expect(() => agreement.connect(anybody).execute(41)).to.changeTokenBalance(
+        daiToken,
+        carl,
+        oneEthBN
+      );
+    }
+  );
 });

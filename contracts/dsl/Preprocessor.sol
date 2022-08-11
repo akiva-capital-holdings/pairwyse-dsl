@@ -5,6 +5,7 @@ import { IContext } from './interfaces/IContext.sol';
 import { IPreprocessor } from './interfaces/IPreprocessor.sol';
 import { Stack, StackValue } from './helpers/Stack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
+import { ErrorsPreprocessor } from './libs/Errors.sol';
 
 // import 'hardhat/console.sol';
 
@@ -395,10 +396,10 @@ contract Preprocessor is IPreprocessor {
         */
 
         uint256 _totalParams = _paramsCount * 2;
-        require(_paramsCount > 0, 'Preprocessor: amount of parameters can not be 0');
+        require(_paramsCount > 0, ErrorsPreprocessor.PRP1);
         string[] memory chunks = new string[](_totalParams);
 
-        require(result.length >= _totalParams, 'Preprocessor: invalid parameters for the function');
+        require(result.length >= _totalParams, ErrorsPreprocessor.PRP2);
         uint256 indexFirst = result.length - _totalParams;
 
         // store paramerets that were already pushed to results

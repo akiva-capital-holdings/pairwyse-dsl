@@ -359,3 +359,27 @@ export const businessCaseSteps = (
     },
   ];
 };
+
+export const aliceAndAnybodySteps = (
+  alice: SignerWithAddress,
+  OtherSigners: string[],
+  index: number
+) => {
+  const base = '' + index;
+  return [
+    // `anyone` as signatory can execute withdraw DAI and then return the
+    // same amount of DAI in Agreement conditional tx
+    {
+      txId: Number(base + 1),
+      requiredTxs: [],
+      signatories: OtherSigners,
+      transaction: 'transferVar DAI GP PURCHASE_AMOUNT',
+      conditions: [
+        `(TIME >= loadLocal uint256 FUND_INVESTMENT_DATE)
+             and
+       (100 * loadLocal uint256 PURCHASE_AMOUNT
+        <= loadLocal uint256 PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,
+      ],
+    },
+  ];
+};

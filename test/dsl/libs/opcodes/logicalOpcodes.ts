@@ -59,10 +59,10 @@ describe('Logical opcodes', () => {
   describe('opAnd', () => {
     it('errors', async () => {
       await pushToStack(StackValue, ctx, StackCont, [1, '5']);
-      await expect(app.opAnd(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
+      await expect(app.opAnd(ctxAddr)).to.be.revertedWith('OP4');
 
       await pushToStack(StackValue, ctx, StackCont, ['5', '5']);
-      await expect(app.opAnd(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
+      await expect(app.opAnd(ctxAddr)).to.be.revertedWith('OP2');
     });
 
     it('success', async () => {
@@ -96,10 +96,10 @@ describe('Logical opcodes', () => {
   describe('opOr', () => {
     it('errors', async () => {
       await pushToStack(StackValue, ctx, StackCont, [1, '5']);
-      await expect(app.opOr(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
+      await expect(app.opOr(ctxAddr)).to.be.revertedWith('OP4');
 
       await pushToStack(StackValue, ctx, StackCont, ['5', '5']);
-      await expect(app.opOr(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
+      await expect(app.opOr(ctxAddr)).to.be.revertedWith('OP2');
     });
 
     it('success', async () => {
@@ -133,10 +133,10 @@ describe('Logical opcodes', () => {
   describe('opXor', () => {
     it('errors', async () => {
       await pushToStack(StackValue, ctx, StackCont, [1, '5']);
-      await expect(app.opXor(ctxAddr)).to.be.revertedWith('Opcodes: type mismatch');
+      await expect(app.opXor(ctxAddr)).to.be.revertedWith('OP4');
 
       await pushToStack(StackValue, ctx, StackCont, ['5', '5']);
-      await expect(app.opXor(ctxAddr)).to.be.revertedWith('Opcodes: bad type');
+      await expect(app.opXor(ctxAddr)).to.be.revertedWith('OP2');
     });
 
     it('success', async () => {

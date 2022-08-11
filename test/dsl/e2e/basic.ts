@@ -743,7 +743,7 @@ describe('DSL: basic', () => {
         await app.parse(
           `loadRemote bytes32 BYTES ${appAddrHex} - loadRemote bytes32 BYTES2 ${appAddrHex}`
         );
-        await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+        await expect(app.execute()).to.be.revertedWith('EXC3');
       });
 
       it('bytes32 should revert if max bytes + 1 ', async () => {
@@ -759,7 +759,7 @@ describe('DSL: basic', () => {
         await app.parse(
           `loadRemote bytes32 BYTES ${appAddrHex} + loadRemote bytes32 BYTES2 ${appAddrHex}`
         );
-        await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+        await expect(app.execute()).to.be.revertedWith('EXC3');
       });
     });
   });
@@ -787,7 +787,7 @@ describe('DSL: basic', () => {
     await app.parse(`sendEth RECEIVER ${twoEth.toString()}`);
 
     // No ETH on the contract
-    await expect(app.execute()).to.be.revertedWith('Executor: call not success');
+    await expect(app.execute()).to.be.revertedWith('EXC3');
 
     // Enough ETH on the contract
     await vault.sendTransaction({ to: app.address, value: twoEth });
@@ -1150,9 +1150,7 @@ describe('DSL: basic', () => {
           (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
         }
         `;
-      await expect(app.parse(input)).to.be.revertedWith(
-        'Preprocessor: invalid parameters for the function'
-      );
+      await expect(app.parse(input)).to.be.revertedWith('PRP2');
     });
 
     it('should revert if func SUM_OF_NUMBERS provides zero parameters', async () => {
@@ -1165,9 +1163,7 @@ describe('DSL: basic', () => {
           (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
         }
         `;
-      await expect(app.parse(input)).to.be.revertedWith(
-        'Preprocessor: amount of parameters can not be 0'
-      );
+      await expect(app.parse(input)).to.be.revertedWith('PRP1');
     });
 
     it('should revert if func SUM provides string instead of number for parameters', async () => {
@@ -1180,7 +1176,7 @@ describe('DSL: basic', () => {
           (loadLocal uint256 SUM_1 + loadLocal uint256 SUM_2) setUint256 SUM
         }
         `;
-      await expect(app.parse(input)).to.be.revertedWith('String: non-decimal character');
+      await expect(app.parse(input)).to.be.revertedWith('SUT3');
     });
   });
 
@@ -1247,39 +1243,37 @@ describe('DSL: basic', () => {
 
     it('should revert if tried to put several `e` symbol', async () => {
       const input = '(uint256 10000000e00000000e18) setUint256 SUM';
-      await expect(app.parse(input)).to.be.revertedWith('StringUtils: invalid format');
+      await expect(app.parse(input)).to.be.revertedWith('SUT5');
     });
 
     it('should revert if tried to put not `e` symbol', async () => {
       const input = '(uint256 10000000a18) setUint256 SUM';
-      await expect(app.parse(input)).to.be.revertedWith('StringUtils: invalid format');
+      await expect(app.parse(input)).to.be.revertedWith('SUT5');
     });
 
     it('should revert if tried to put Upper `E` symbol', async () => {
       const input = '(uint256 10000000E18) setUint256 SUM';
-      await expect(app.parse(input)).to.be.revertedWith('StringUtils: invalid format');
+      await expect(app.parse(input)).to.be.revertedWith('SUT5');
     });
 
     it('should revert if tried to put `0x65` symbol', async () => {
       const input = '(uint256 100000000x6518) setUint256 SUM';
-      await expect(app.parse(input)).to.be.revertedWith('StringUtils: invalid format');
+      await expect(app.parse(input)).to.be.revertedWith('SUT5');
     });
 
     it('should revert if base was not provided', async () => {
       const input = '(uint256 e18) setUint256 SUM';
-      await expect(app.parse(input)).to.be.revertedWith(
-        'Parser: delegatecall to asmSelector failed'
-      );
+      await expect(app.parse(input)).to.be.revertedWith('PRS1');
     });
 
     it('should revert if decimals does not exist', async () => {
       const input = '(uint256 45e) setUint256 SUM';
-      await expect(app.parse(input)).to.be.revertedWith('StringUtils: decimals were not provided');
+      await expect(app.parse(input)).to.be.revertedWith('SUT6');
     });
 
     it('should revert if two `e` were provided', async () => {
       const input = '(uint256 45ee6) setUint256 SUM';
-      await expect(app.parse(input)).to.be.revertedWith('StringUtils: invalid format');
+      await expect(app.parse(input)).to.be.revertedWith('SUT5');
     });
   });
 });

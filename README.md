@@ -1,6 +1,15 @@
 # Solidity DSL
 
-Run: `yarn hardhat compile` to compile contracts
+### Install Dependencies
+
+Execute: `yarn install`
+
+### Compile contracts
+
+Execute: `yarn hardhat compile`
+
+### Localnodes
+
 Run: `yarn hardhat node --network hardhat` to start a local node (in the separate terminal). Or use `yarn hardhat node --hostname 127.0.0.1 --port 7545` directly.
 
 ### Deploy the contracts
@@ -29,3 +38,8 @@ All tests marked as agreement (example: `test/agreement/agreement<*>.ts`) must b
 
 Use `yarn test` if it needs to run tests that not include agreement contract testing. All tests marked as agreement must be skipped.
 Use `yarn test --network localhost` if it needs to run tests that include agreement contract testing. Be sure that the local node is ran on the separate terminal window. All tests marked as agreement must not be skipped. Example: `describe('Agreement: business case'...`
+
+### Tests coverage
+
+Use `yarn coverage` if it needs to check tests coverage that not include agreement contract testing.
+Check the `coverage/` directory to see detailed HTML reports that were covered by tests.

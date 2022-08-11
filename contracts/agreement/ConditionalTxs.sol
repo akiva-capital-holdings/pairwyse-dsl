@@ -6,6 +6,7 @@ import { ComparisonOpcodes } from '../dsl/libs/opcodes/ComparisonOpcodes.sol';
 import { BranchingOpcodes } from '../dsl/libs/opcodes/BranchingOpcodes.sol';
 import { LogicalOpcodes } from '../dsl/libs/opcodes/LogicalOpcodes.sol';
 import { OtherOpcodes } from '../dsl/libs/opcodes/OtherOpcodes.sol';
+import { ErrorsConditionalTxs } from '../dsl/libs/Errors.sol';
 import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { Storage } from '../dsl/helpers/Storage.sol';
@@ -19,6 +20,8 @@ contract ConditionalTxs is Storage {
         bool isExecuted;
         string transactionStr;
     }
+
+    address public constant anyone = 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF;
 
     mapping(uint256 => Tx) public txs; // txId => Tx struct
     mapping(uint256 => IContext[]) public conditionCtxs; // txId => condition Context
@@ -41,10 +44,25 @@ contract ConditionalTxs is Storage {
         uint256[] memory _requiredTxs,
         address[] memory _signatories
     ) external {
+        _checkSignatories(_signatories);
+
         Tx memory txn = Tx(_requiredTxs, IContext(address(0)), false, '');
         signatories[_txId] = _signatories;
         signatoriesLen[_txId] = _signatories.length;
         txs[_txId] = txn;
+    }
+
+    /**
+     * @dev Checks input _signatures that only one  'anyone' address exists in the
+     * list or that 'anyone' address does not exist in signatures at all
+     * @param _signatories the list of addresses
+     */
+    function _checkSignatories(address[] memory _signatories) internal pure {
+        if (_signatories.length > 1) {
+            for (uint256 i = 0; i < _signatories.length; i++) {
+                require(_signatories[i] != anyone, ErrorsConditionalTxs.CNT1);
+            }
+        }
     }
 
     function addTxCondition(
@@ -66,10 +84,7 @@ contract ConditionalTxs is Storage {
         string memory _transactionStr,
         IContext _transactionCtx
     ) external {
-        require(
-            conditionStrs[_txId].length > 0,
-            'The transaction should have at least one condition'
-        );
+        require(conditionStrs[_txId].length > 0, ErrorsConditionalTxs.CNT2);
         _transactionCtx.setComparisonOpcodesAddr(address(ComparisonOpcodes));
         _transactionCtx.setBranchingOpcodesAddr(address(BranchingOpcodes));
         _transactionCtx.setLogicalOpcodesAddr(address(LogicalOpcodes));
@@ -90,14 +105,8 @@ contract ConditionalTxs is Storage {
         address _signatory
     ) external {
         Tx memory txn = txs[_txId];
-        require(
-            checkConditions(_txId, _msgValue),
-            'ConditionalTxs: txn condition is not satisfied'
-        );
-        require(
-            !isExecutedBySignatory[_txId][_signatory],
-            'ConditionalTxs: txn already was executed by this signatory'
-        );
+        require(checkConditions(_txId, _msgValue), ErrorsConditionalTxs.CNT3);
+        require(!isExecutedBySignatory[_txId][_signatory], ErrorsConditionalTxs.CNT4);
 
         txn.transactionCtx.setMsgValue(_msgValue);
         Executor.execute(address(txn.transactionCtx));

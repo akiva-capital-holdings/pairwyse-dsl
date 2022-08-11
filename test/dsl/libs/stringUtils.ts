@@ -19,7 +19,7 @@ describe('StringUtils', () => {
   it('char', async () => {
     expect(await app.char('abcdef', 0)).to.equal('a');
     expect(await app.char('abcdef', 5)).to.equal('f');
-    await expect(app.char('abcdef', 6)).to.be.revertedWith('String: index out of range');
+    await expect(app.char('abcdef', 6)).to.be.revertedWith('SUT1');
   });
 
   it('equal', async () => {
@@ -46,7 +46,7 @@ describe('StringUtils', () => {
     const [addrFull] = await ethers.getSigners();
     const addr = addrFull.address.substring(2);
 
-    await expect(app.fromHex('1')).to.be.revertedWith('String: hex lenght not even');
+    await expect(app.fromHex('1')).to.be.revertedWith('SUT2');
     expect(await app.fromHex('')).to.equal('0x');
     expect(await app.fromHex('01')).to.equal('0x01');
     expect(await app.fromHex('1234')).to.equal('0x1234');
@@ -56,9 +56,9 @@ describe('StringUtils', () => {
   it('toUint256', async () => {
     const num = '123456789012345678901234567890';
     // hex 0x29
-    await expect(app.toUint256('/')).to.be.revertedWith('String: non-decimal character');
+    await expect(app.toUint256('/')).to.be.revertedWith('SUT3');
     // hex 0x3A
-    await expect(app.toUint256(':')).to.be.revertedWith('String: non-decimal character');
+    await expect(app.toUint256(':')).to.be.revertedWith('SUT3');
     expect(await app.toUint256('')).to.equal('0');
     expect(await app.toUint256('0')).to.equal('0');
     expect(await app.toUint256('9')).to.equal('9');
@@ -80,15 +80,9 @@ describe('StringUtils', () => {
     expect(await app.fromHexChar(Buffer.from('f'))).to.equal(15);
     expect(await app.fromHexChar(Buffer.from('A'))).to.equal(10);
     expect(await app.fromHexChar(Buffer.from('F'))).to.equal(15);
-    await expect(app.fromHexChar(Buffer.from('k'))).to.be.revertedWith(
-      'StringUtils: a hex value not from the range 0-9, a-f, A-F'
-    );
-    await expect(app.fromHexChar(Buffer.from('Z'))).to.be.revertedWith(
-      'StringUtils: a hex value not from the range 0-9, a-f, A-F'
-    );
-    await expect(app.fromHexChar(Buffer.from('K'))).to.be.revertedWith(
-      'StringUtils: a hex value not from the range 0-9, a-f, A-F'
-    );
+    await expect(app.fromHexChar(Buffer.from('k'))).to.be.revertedWith('SUT8');
+    await expect(app.fromHexChar(Buffer.from('Z'))).to.be.revertedWith('SUT8');
+    await expect(app.fromHexChar(Buffer.from('K'))).to.be.revertedWith('SUT8');
   });
 
   it('getWei', async () => {
@@ -100,19 +94,16 @@ describe('StringUtils', () => {
     expect(await app.getWei('1000000000000000e10')).to.equal(parseUnits('1000000000000000', 10));
     expect(await app.getWei('123e0')).to.equal('123');
     expect(await app.getWei('1000000000000000e0')).to.equal('1000000000000000');
-    await expect(app.getWei('10000000e00000000e18')).to.be.revertedWith(
-      'StringUtils: invalid format'
-    );
-    await expect(app.getWei('10000000a18')).to.be.revertedWith('StringUtils: invalid format');
-    await expect(app.getWei('10000000E18')).to.be.revertedWith('StringUtils: invalid format');
-    await expect(app.getWei('45e')).to.be.revertedWith('StringUtils: decimals were not provided');
-    await expect(app.getWei('45eb6')).to.be.revertedWith('StringUtils: invalid format');
-    await expect(app.getWei('45ee6')).to.be.revertedWith('StringUtils: invalid format');
-    await expect(app.getWei('e18')).to.be.revertedWith('StringUtils: base was not provided');
+    await expect(app.getWei('10000000e00000000e18')).to.be.revertedWith('SUT5');
+    await expect(app.getWei('10000000a18')).to.be.revertedWith('SUT5');
+    await expect(app.getWei('10000000E18')).to.be.revertedWith('SUT5');
+    await expect(app.getWei('45e')).to.be.revertedWith('SUT6');
+    await expect(app.getWei('45eb6')).to.be.revertedWith('SUT5');
+    await expect(app.getWei('45ee6')).to.be.revertedWith('SUT5');
+    await expect(app.getWei('e18')).to.be.revertedWith('SUT4');
   });
 
   it('mayBeNumber', async () => {
-    await expect(app.mayBeNumber('')).to.be.revertedWith('StringUtils: a string was not provided');
     expect(await app.mayBeNumber('1')).to.be.equal(true);
     expect(await app.mayBeNumber('ee')).to.be.equal(false);
     expect(await app.mayBeNumber('1e')).to.be.equal(true);
@@ -124,5 +115,6 @@ describe('StringUtils', () => {
     expect(await app.mayBeNumber('e')).to.be.equal(false);
     expect(await app.mayBeNumber('F543')).to.be.equal(false);
     expect(await app.mayBeNumber('2-test')).to.be.equal(true);
+    await expect(app.mayBeNumber('')).to.be.revertedWith('SUT7');
   });
 });

@@ -7,6 +7,7 @@ import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
+import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
 // import 'hardhat/console.sol';
 
@@ -26,8 +27,8 @@ library LogicalOpcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
-        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
+        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
 
         bool result = (prev.getUint256() > 0) && (last.getUint256() > 0);
 
@@ -42,8 +43,8 @@ library LogicalOpcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
-        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
+        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
 
         bool result = (prev.getUint256() > 0) || (last.getUint256() > 0);
 
@@ -54,8 +55,8 @@ library LogicalOpcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
-        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
+        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
 
         bool result = ((prev.getUint256() > 0) && (last.getUint256() == 0)) ||
             ((prev.getUint256() == 0) && (last.getUint256() > 0));
@@ -67,8 +68,8 @@ library LogicalOpcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
-        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
+        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
 
         uint256 result = prev.getUint256() + last.getUint256();
 
@@ -79,8 +80,8 @@ library LogicalOpcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
-        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
+        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
 
         uint256 result = prev.getUint256() - last.getUint256();
 
@@ -91,8 +92,8 @@ library LogicalOpcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
-        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
+        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
 
         uint256 result = prev.getUint256() * last.getUint256();
 
@@ -104,8 +105,8 @@ library LogicalOpcodes {
         StackValue last = _ctx.stack().pop();
         StackValue prev = _ctx.stack().pop();
 
-        require(last.getType() == prev.getType(), 'Opcodes: type mismatch');
-        require(last.getType() == StackValue.StackType.UINT256, 'Opcodes: bad type');
+        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
+        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
 
         uint256 result = prev.getUint256() / last.getUint256();
 
