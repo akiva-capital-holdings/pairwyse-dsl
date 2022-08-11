@@ -100,7 +100,7 @@ describe('StringUtils', () => {
     await expect(app.getWei('45e')).to.be.revertedWith('SUT6');
     await expect(app.getWei('45eb6')).to.be.revertedWith('SUT5');
     await expect(app.getWei('45ee6')).to.be.revertedWith('SUT5');
-    await expect(app.getWei('e18')).to.be.revertedWith('SUT4');
+    await expect(app.getWei('e18')).to.be.revertedWith('SUT9');
   });
 
   it('mayBeNumber', async () => {

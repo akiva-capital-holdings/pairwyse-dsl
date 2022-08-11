@@ -957,30 +957,22 @@ describe('Preprocessor', () => {
 
       it('should revert if tried to put several `e` symbol', async () => {
         const input = '(uint256 10000000e00000000e18) setUint256 SUM';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should revert if tried to put not `e` symbol', async () => {
         const input = '(uint256 10000000a18) setUint256 SUM';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should revert if tried to put Upper `E` symbol', async () => {
         const input = '(uint256 10000000E18) setUint256 SUM';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should revert if tried to put `0x65` symbol', async () => {
         const input = '(uint256 100000000x6518) setUint256 SUM';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should not revert in preprocessor if the number starts with symbol', async () => {
@@ -991,16 +983,12 @@ describe('Preprocessor', () => {
 
       it('should revert if decimals does not exist', async () => {
         const input = '(uint256 45e) setUint256 SUM';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: decimals were not provided'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT6');
       });
 
       it('should revert if two `e` were provided', async () => {
         const input = '(uint256 45ee6) setUint256 SUM';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
     });
 
@@ -1080,30 +1068,22 @@ describe('Preprocessor', () => {
 
       it('should revert if tried to put several `e` symbol', async () => {
         const input = 'sendEth RECEIVER 10000000e00000000e18';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should revert if tried to put not `e` symbol', async () => {
         const input = 'sendEth RECEIVER 10000000a18';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should revert if tried to put Upper `E` symbol', async () => {
         const input = 'sendEth RECEIVER 10000000E18';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should revert if tried to put `0x65` symbol', async () => {
         const input = 'sendEth RECEIVER 100000000x6518';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should not revert in preprocessor if first symbol is not a number', async () => {
@@ -1115,16 +1095,12 @@ describe('Preprocessor', () => {
 
       it('should revert if decimals does not exist', async () => {
         const input = 'sendEth RECEIVER 45e';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: decimals were not provided'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT6');
       });
 
       it('should revert if two `e` were provided', async () => {
         const input = 'sendEth RECEIVER 45ee6';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
     });
 
@@ -1189,44 +1165,32 @@ describe('Preprocessor', () => {
 
       it('should revert if tried to put several `e` symbol', async () => {
         const input = 'transferFrom DAI OWNER RECEIVER 10000000e00000000e18';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should revert if tried to put not `e` symbol', async () => {
         const input = 'transferFrom DAI OWNER RECEIVER 10000000a18';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should revert if tried to put Upper `E` symbol', async () => {
         const input = 'transferFrom DAI OWNER RECEIVER 10000000E18';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should revert if tried to put `0x65` symbol', async () => {
         const input = 'transferFrom DAI OWNER RECEIVER 100000000x6518';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should revert if decimals does not exist', async () => {
         const input = 'transferFrom DAI OWNER RECEIVER 45e';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: decimals were not provided'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT6');
       });
 
       it('should revert if two `e` were provided', async () => {
         const input = 'transferFrom DAI OWNER RECEIVER 45ee6';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
     });
 
@@ -1291,44 +1255,32 @@ describe('Preprocessor', () => {
 
       it('should revert if tried to put several `e` symbol', async () => {
         const input = 'transfer DAI RECEIVER 10000000e00000000e18';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should revert if tried to put not `e` symbol', async () => {
         const input = 'transfer DAI RECEIVER 10000000a18';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should revert if tried to put Upper `E` symbol', async () => {
         const input = 'transfer DAI RECEIVER 10000000E18';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should revert if tried to put `0x65` symbol', async () => {
         const input = 'transfer DAI RECEIVER 100000000x6518';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
 
       it('should revert if decimals does not exist', async () => {
         const input = 'transfer DAI RECEIVER 45e';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: decimals were not provided'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT6');
       });
 
       it('should revert if two `e` were provided', async () => {
         const input = 'transfer DAI RECEIVER 45ee6';
-        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith(
-          'StringUtils: invalid format'
-        );
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
       });
     });
   });
