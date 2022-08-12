@@ -58,8 +58,10 @@ contract ConditionalTxs is Storage {
      * @param _signatories the list of addresses
      */
     function _checkSignatories(address[] memory _signatories) internal pure {
+        require(_signatories.length != 0, ErrorsConditionalTxs.CNT1);
         if (_signatories.length > 1) {
             for (uint256 i = 0; i < _signatories.length; i++) {
+                require(_signatories[i] != address(0), ErrorsConditionalTxs.CNT1);
                 require(_signatories[i] != anyone, ErrorsConditionalTxs.CNT1);
             }
         }
@@ -85,6 +87,8 @@ contract ConditionalTxs is Storage {
         IContext _transactionCtx
     ) external {
         require(conditionStrs[_txId].length > 0, ErrorsConditionalTxs.CNT2);
+        +// require(conditionStrs[_txId].length > 0, ErrorsConditionalTxs.CNT2);
+        +// TypeError: Cannot read properties of undefined (reading 'length')
         _transactionCtx.setComparisonOpcodesAddr(address(ComparisonOpcodes));
         _transactionCtx.setBranchingOpcodesAddr(address(BranchingOpcodes));
         _transactionCtx.setLogicalOpcodesAddr(address(LogicalOpcodes));

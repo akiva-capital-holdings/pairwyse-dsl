@@ -17,6 +17,8 @@ describe('Conditional transactions', () => {
   let snapshotId: number;
   let LAST_BLOCK_TIMESTAMP: number;
 
+  const oneEthBN = ethers.utils.parseEther('1');
+  const tenTokens = ethers.utils.parseEther('10');
   const ONE_MONTH = 60 * 60 * 24 * 30;
   const anyone = '0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF';
 
@@ -40,7 +42,8 @@ describe('Conditional transactions', () => {
     [alice, bob, anybody] = await ethers.getSigners();
 
     // Deploy contracts
-    let appAddr, parserAddr;
+    let appAddr;
+    let parserAddr;
     [appAddr, parserAddr] = await deployConditionalTxs();
     app = await ethers.getContractAt('ConditionalTxsMock', appAddr);
     parser = await ethers.getContractAt('ParserMock', parserAddr);
@@ -104,13 +107,14 @@ describe('Conditional transactions', () => {
       // Parse all conditions and a transaction
       const condCtxLen = (await app.conditionCtxsLen(txId)).toNumber();
       expect(condCtxLen).to.equal(1);
+      const condStrLen = (await app.conditionStrsLen(txId)).toNumber();
+      expect(condStrLen).to.equal(1);
       for (let j = 0; j < condCtxLen; j++) {
         await parser.parse(await app.conditionCtxs(txId, j), await app.conditionStrs(txId, j));
       }
       await parser.parse(transactionCtx.address, transactionStr);
 
       // Top up contract
-      const oneEthBN = ethers.utils.parseEther('1');
       await anybody.sendTransaction({ to: app.address, value: oneEthBN });
 
       // Execute transaction
@@ -118,6 +122,111 @@ describe('Conditional transactions', () => {
       await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
       await expect(await app.execTx(txId, 0, alice.address)).to.changeEtherBalance(bob, oneEthBN);
       await expect(app.execTx(txId, 0, alice.address)).to.be.revertedWith('CNT4');
+    }
+  });
+  it('more then one condition', async () => {
+    txs.push({
+      txId: 9,
+      requiredTxs: [],
+      signatories: [alice.address],
+      transactionStr: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAINING',
+      conditionStrs: [
+        `loadLocal uint256 GP_INITIAL +
+        loadLocal uint256 LP_TOTAL >= loadLocal uint256 INITIAL_FUNDS_TARGET`,
+        `(loadLocal uint256 DEPOSIT_MIN_PERCENT * loadLocal uint256 LP_TOTAL
+            / loadLocal uint256 P1) setUint256 TWO_PERCENT`,
+        `
+        (loadLocal uint256 TWO_PERCENT > loadLocal uint256 GP_INITIAL)
+        ifelse POS NEG
+        end
+
+        POS {
+          (loadLocal uint256 TWO_PERCENT - loadLocal uint256 GP_INITIAL
+          ) setUint256 GP_REMAINING
+        }
+
+        NEG {
+          0 setUint256 GP_REMAINING
+        }`,
+        'TIME >= loadLocal uint256 LOW_LIM',
+        'TIME <= loadLocal uint256 UP_LIM',
+        `(balanceOf DAI TRANSACTIONS_CONT) >=
+            ((loadLocal uint256 INITIAL_FUNDS_TARGET * loadLocal uint256 P1) / 100)`,
+      ],
+      transactionCtx: await ContextCont.deploy(),
+      conditionCtxs: [
+        await ContextCont.deploy(),
+        await ContextCont.deploy(),
+        await ContextCont.deploy(),
+        await ContextCont.deploy(),
+        await ContextCont.deploy(),
+        await ContextCont.deploy(),
+      ],
+    });
+    // Set conditional transaction
+    for (let i = 0; i < txs.length; i++) {
+      const {
+        txId,
+        requiredTxs,
+        signatories,
+        conditionCtxs,
+        conditionStrs,
+        transactionCtx,
+        transactionStr,
+      } = txs[i];
+
+      // Set conditional transaction
+      await app.addTxBlueprint(txId, requiredTxs, signatories);
+      for (let j = 0; j < conditionCtxs.length; j++) {
+        await app.addTxCondition(txId, conditionStrs[j], conditionCtxs[j].address);
+      }
+      await app.addTxTransaction(txId, transactionStr, transactionCtx.address);
+      const condStrLen = (await app.conditionStrsLen(txId)).toNumber();
+      expect(condStrLen).to.equal(6);
+    }
+  });
+  it('check conditions', async () => {
+    txs.push({
+      txId: 2,
+      requiredTxs: [1],
+      signatories: [bob.address],
+      transactionStr: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
+      conditionStrs: ['bool true'],
+      transactionCtx: await ContextCont.deploy(),
+      conditionCtxs: [await ContextCont.deploy()],
+    });
+    // Set conditional transaction
+    for (let i = 0; i < txs.length; i++) {
+      const {
+        txId,
+        requiredTxs,
+        signatories,
+        conditionCtxs,
+        conditionStrs,
+        transactionCtx,
+        transactionStr,
+      } = txs[i];
+
+      // Set conditional transaction
+      await app.addTxBlueprint(txId, requiredTxs, signatories);
+      for (let j = 0; j < conditionCtxs.length; j++) {
+        await app.addTxCondition(txId, conditionStrs[j], conditionCtxs[j].address);
+      }
+      await app.addTxTransaction(txId, transactionStr, transactionCtx.address);
+
+      // Init all opcodes
+      await transactionCtx.initOpcodes();
+      await conditionCtxs[0].initOpcodes();
+
+      // Set app addresses & msg senders
+      await transactionCtx.setAppAddress(app.address);
+      await transactionCtx.setMsgSender(alice.address);
+      await conditionCtxs[0].setAppAddress(app.address);
+      await conditionCtxs[0].setMsgSender(alice.address);
+
+      await expect(app.execTx(txId, 0, alice.address)).to.be.revertedWith(
+        'ConditionalTxs: required tx #1 was not executed'
+      );
     }
   });
 
@@ -129,8 +238,6 @@ describe('Conditional transactions', () => {
         .deploy(ethers.utils.parseEther('1000'));
 
       // Set variables
-      const oneEth = ethers.utils.parseEther('1');
-      const tenTokens = ethers.utils.parseEther('10');
       await app.setStorageAddress(hex4Bytes('ETH_RECEIVER'), bob.address);
       await app.setStorageAddress(hex4Bytes('TOKEN_RECEIVER'), alice.address);
       await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
@@ -202,14 +309,14 @@ describe('Conditional transactions', () => {
       await parser.parse(txs[1].transactionCtx.address, txs[1].transactionStr);
 
       // Top up contract (ETH)
-      await anybody.sendTransaction({ to: app.address, value: oneEth });
+      await anybody.sendTransaction({ to: app.address, value: oneEthBN });
 
       // Top up contract (tokens)
       await token.transfer(app.address, tenTokens);
       expect(await token.balanceOf(app.address)).to.equal(tenTokens);
 
       // Execute transactions
-      await expect(await app.execTx(txId0, 0, alice.address)).to.changeEtherBalance(bob, oneEth);
+      await expect(await app.execTx(txId0, 0, alice.address)).to.changeEtherBalance(bob, oneEthBN);
       await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
       await expect(() => app.execTx(txId1, 0, bob.address)).to.changeTokenBalance(
         token,
@@ -220,7 +327,7 @@ describe('Conditional transactions', () => {
   });
 
   describe('`anyone` address in the signatories', () => {
-    const zeroAddress = '0x0000000000000000000000000000000000000000';
+    const zeroAddress = ethers.constants.AddressZero;
 
     it('should revert if `anyone` address is the last address in the list', async () => {
       // it not possible to update transaction with alice, bobo and 0xFfFF address
@@ -238,18 +345,18 @@ describe('Conditional transactions', () => {
       await expect(app.addTxBlueprint(1, [], signatories)).to.be.revertedWith('CNT1');
     });
 
+    it('should revert if only zero addresses in the list', async () => {
+      const signatories = [zeroAddress];
+      await expect(app.addTxBlueprint(1, [], signatories)).to.be.revertedWith('CNT1');
+    });
+
     it('should revert if `anyone` was provided twice', async () => {
       const signatories = [anyone, anyone];
       await expect(app.addTxBlueprint(1, [], signatories)).to.be.revertedWith('CNT1');
     });
 
-    // TODO: (by Yevheniia) check specification with Misha
-    // it('should revert if signatories was not provided',
-    //   async () => {
-    //     await expect(app.addTxBlueprint(1, [], [])).to.be.revertedWith(
-    //       'CNT1'
-    //     );
-    //   }
-    // );
+    it('should revert if signatories was not provided', async () => {
+      await expect(app.addTxBlueprint(1, [], [])).to.be.revertedWith('CNT1');
+    });
   });
 });

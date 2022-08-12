@@ -259,8 +259,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
 
       // calculate the purchase amount from the total stored value
       const PURCHASE_AMOUNT = TOKEN_BAL_OF_TXS.mul(PURCHASE_PERCENT).div(100);
-      // check that PURCHASE_AMOUNT is an a 10% of TOKEN_BAL_OF_TXS
-      expect(PURCHASE_AMOUNT).to.equal(oneEthBN);
+
       // get future time
       const FUND_INVESTMENT_DATE = NEXT_MONTH + 7 * ONE_DAY;
 

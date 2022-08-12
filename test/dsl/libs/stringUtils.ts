@@ -1,11 +1,12 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { parseUnits } from 'ethers/lib/utils';
-import { StringUtilsMock } from '../../../typechain-types';
 import { BigNumber } from 'ethers';
+import { StringUtilsMock } from '../../../typechain-types';
 
 describe('StringUtils', () => {
   let app: StringUtilsMock;
+  const num = '123456789012345678901234567890';
 
   before(async () => {
     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
@@ -54,7 +55,6 @@ describe('StringUtils', () => {
   });
 
   it('toUint256', async () => {
-    const num = '123456789012345678901234567890';
     // hex 0x29
     await expect(app.toUint256('/')).to.be.revertedWith('SUT3');
     // hex 0x3A
@@ -66,7 +66,6 @@ describe('StringUtils', () => {
   });
 
   it('toString', async () => {
-    const num = '123456789012345678901234567890';
     expect(await app.fromUint256toString(5)).to.equal('5');
     expect(await app.fromUint256toString(0)).to.equal('0');
     expect(await app.fromUint256toString(0xdfd9)).to.equal('57305');
