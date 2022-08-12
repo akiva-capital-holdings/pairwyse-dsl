@@ -336,6 +336,8 @@ contract Parser is IParser {
         }
 
         // console.logBytes(program);
+        // TODO: Parser: IContext(_ctxAddr).delegateCall('setProgram', program) to pass owner's
+        //       address to the Context contract
         IContext(_ctxAddr).setProgram(program);
     }
 

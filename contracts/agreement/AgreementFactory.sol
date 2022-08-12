@@ -8,6 +8,7 @@ import { Agreement } from './Agreement.sol';
  */
 contract AgreementFactory {
     address[] public deployedAgreements;
+    // TODO: event NewAgreement(address creator, address owner, address agreement);
     event NewAgreement(address agreement);
 
     /**

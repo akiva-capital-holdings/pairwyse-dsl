@@ -31,8 +31,8 @@ contract Agreement {
         string memory _code,
         Context _ctx
     ) external {
-        _ctx.initOpcodes();
-        _ctx.setAppAddress(address(txs));
+        _ctx.initOpcodes(); // TODO: make sure this call happens only once
+        _ctx.setAppAddress(address(txs)); // TODO: make sure this call happens only once
         parser.parse(_preprAddr, address(_ctx), _code);
     }
 

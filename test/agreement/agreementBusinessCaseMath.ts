@@ -213,11 +213,9 @@ describe.skip('Agreement: business case tests math', () => {
 
         // Note: we give GP 2 days time to obtain P1 - MAX_PERCENT, P2 = DEPOSIT_MIN_PERCENT:
         // a P1% / P2% ratio of LP / GP deposits
-        console.log(1);
         await txs.setStorageUint256(hex4Bytes('LOW_LIM'), GP_GAP_DEPOSIT_LOWER_TIME);
         await txs.setStorageUint256(hex4Bytes('UP_LIM'), GP_GAP_DEPOSIT_UPPER_TIME);
         await txs.setStorageUint256(hex4Bytes('P1'), MAX_PERCENT);
-        console.log(2);
 
         const txn3Hash = await changeTokenBalanceAndGetTxHash(
           () => agreement.connect(GP).execute(txId),
