@@ -10,7 +10,7 @@ contract ParserMock is Parser, Storage {
     constructor(address _preprAddr) {}
 
     function parseCodeExt(address _ctxAddr, string[] memory _code) external {
-        _parseCode(_ctxAddr, _code);
+        // _parseCode(_ctxAddr, _code);
     }
 
     function setVariableExt(
