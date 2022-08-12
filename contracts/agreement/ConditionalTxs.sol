@@ -87,8 +87,8 @@ contract ConditionalTxs is Storage {
         IContext _transactionCtx
     ) external {
         require(conditionStrs[_txId].length > 0, ErrorsConditionalTxs.CNT2);
-        +// require(conditionStrs[_txId].length > 0, ErrorsConditionalTxs.CNT2);
-        +// TypeError: Cannot read properties of undefined (reading 'length')
+        // require(conditionStrs[_txId].length > 0, ErrorsConditionalTxs.CNT2);
+        // TypeError: Cannot read properties of undefined (reading 'length')
         _transactionCtx.setComparisonOpcodesAddr(address(ComparisonOpcodes));
         _transactionCtx.setBranchingOpcodesAddr(address(BranchingOpcodes));
         _transactionCtx.setLogicalOpcodesAddr(address(LogicalOpcodes));
