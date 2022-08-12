@@ -12,9 +12,10 @@ import { ErrorsPreprocessor } from './libs/Errors.sol';
 /**
  * @dev Preprocessor of DSL code
  *
- * One of the core contracts of the project. It can remove comments that were
- * created by user in the DSL code string. It transforms the users DSL code string
- * to the list of commands that can be used in a Parser contract.
+ * TODO: add description about Preprocessor as a single contract of the project
+ * It can remove comments that were created by user in the DSL code string. It
+ * transforms the users DSL code string to the list of commands that can be used
+ * in a Parser contract.
  *
  * DSL code in postfix notation as
  * user's string code -> Preprocessor -> each command is separated in the commands list
@@ -243,7 +244,7 @@ contract Preprocessor is IPreprocessor {
                 result.push(_parseNumber(chunk));
             } else if (chunk.mayBeNumber() && !isFunc && directUseUint256) {
                 directUseUint256 = false;
-                result.push(chunk);
+                result.push(_parseNumber(chunk));
             } else if (chunk.equal('func')) {
                 // if the chunk is 'func' then `Functions block` will occur
                 isFunc = true;
@@ -281,7 +282,7 @@ contract Preprocessor is IPreprocessor {
      * @param _chunk provided number by the user
      * @return updatedChunk amount in Wei of provided _chunk value
      */
-    function _parseNumber(string memory _chunk) internal pure returns (string memory updatedChunk) {
+    function _parseNumber(string memory _chunk) internal view returns (string memory updatedChunk) {
         try _chunk.toUint256() {
             updatedChunk = _chunk;
         } catch {
@@ -481,7 +482,7 @@ contract Preprocessor is IPreprocessor {
     ) internal {
         result.push(_type);
         result.push(_value);
-        result.push('setUint256');
+        result.push(rebuildParamTypes[_type]);
         result.push(_variableName);
     }
 

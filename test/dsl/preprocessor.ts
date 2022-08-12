@@ -1,5 +1,7 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
+import { parseUnits } from 'ethers/lib/utils';
+
 import { Preprocessor } from '../../typechain-types';
 import { Testcase } from '../types';
 
@@ -890,6 +892,396 @@ describe('Preprocessor', () => {
         `;
 
       await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('PRP2');
+    });
+  });
+
+  describe('Simplified writing number in wei', () => {
+    describe('setUint256', () => {
+      it('should return a simple number with 18 decimals', async () => {
+        const input = '(uint256 1e18) setUint256 SUM';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql(['uint256', parseUnits('1', 18).toString(), 'setUint256', 'SUM']);
+      });
+
+      it('should return a simple number with 18 decimals without uint256 type', async () => {
+        const input = '(123e18) setUint256 SUM';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql(['uint256', parseUnits('123', 18).toString(), 'setUint256', 'SUM']);
+      });
+
+      it('should return a simple number with 36 decimals', async () => {
+        const input = '(uint256 1e36) setUint256 SUM';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql([
+          'uint256',
+          parseUnits('1', 36).toString(), // ex. 1000000000000000000 ETH
+          'setUint256',
+          'SUM',
+        ]);
+      });
+
+      it('should return a long number with 18 decimals', async () => {
+        const input = '(uint256 1000000000000000e18) setUint256 SUM';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql([
+          'uint256',
+          parseUnits('1000000000000000', 18).toString(),
+          'setUint256',
+          'SUM',
+        ]);
+      });
+
+      it('should return a simple number with 10 decimals', async () => {
+        const input = '(uint256 146e10) setUint256 SUM';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql(['uint256', parseUnits('146', 10).toString(), 'setUint256', 'SUM']);
+      });
+
+      it('should return a long number with 10 decimals', async () => {
+        const input = '(uint256 1000000000000000e10) setUint256 SUM';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql(['uint256', parseUnits('1', 25).toString(), 'setUint256', 'SUM']);
+      });
+
+      it('should return a simple number without decimals even using simplified method', async () => {
+        const input = '(uint256 123e0) setUint256 SUM';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql(['uint256', parseUnits('123', 0).toString(), 'setUint256', 'SUM']);
+      });
+
+      it('should return a long number without decimals even using simplified method', async () => {
+        const input = '(uint256 1000000000000000e0) setUint256 SUM';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql(['uint256', parseUnits('1', 15).toString(), 'setUint256', 'SUM']);
+      });
+
+      it('should revert if tried to put several `e` symbol', async () => {
+        const input = '(uint256 10000000e00000000e18) setUint256 SUM';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should revert if tried to put not `e` symbol', async () => {
+        const input = '(uint256 10000000a18) setUint256 SUM';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should revert if tried to put Upper `E` symbol', async () => {
+        const input = '(uint256 10000000E18) setUint256 SUM';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should revert if tried to put `0x65` symbol', async () => {
+        const input = '(uint256 100000000x6518) setUint256 SUM';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should not revert in preprocessor if the number starts with symbol', async () => {
+        const input = '(uint256 e18) setUint256 SUM';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql(['uint256', 'e18', 'setUint256', 'SUM']);
+      });
+
+      it('should revert if decimals does not exist', async () => {
+        const input = '(uint256 45e) setUint256 SUM';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT6');
+      });
+
+      it('should revert if two `e` were provided', async () => {
+        const input = '(uint256 45ee6) setUint256 SUM';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+    });
+
+    describe('sendEth', () => {
+      let sendEthBase = ['sendEth', 'RECEIVER'];
+
+      it('should transform correctly if sendEth is in the code', async () => {
+        const input = `
+        loadRemote bool BOOL_V ${appAddrHex}
+        sendEth RECEIVER 2e2
+        10000000
+        `;
+
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        const expected = [
+          'loadRemote',
+          'bool',
+          'BOOL_V',
+          appAddrHex,
+          'sendEth',
+          'RECEIVER',
+          '200',
+          'uint256',
+          '10000000',
+        ];
+        expect(cmds).to.eql(expected);
+      });
+
+      it('simple number with 18 decimals', async () => {
+        const input = 'sendEth RECEIVER 2e18';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        sendEthBase[2] = parseUnits('2', 18).toString();
+        expect(cmds).to.eql(sendEthBase);
+      });
+
+      it('a simple number with 36 decimals', async () => {
+        const input = 'sendEth RECEIVER 20e36';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        sendEthBase[2] = parseUnits('20', 36).toString();
+        expect(cmds).to.eql(sendEthBase);
+      });
+
+      it('a long number with 18 decimals', async () => {
+        const input = 'sendEth RECEIVER 1000000000000000e18';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        sendEthBase[2] = parseUnits('1000000000000000', 18).toString();
+        expect(cmds).to.eql(sendEthBase);
+      });
+
+      it('a simple number with 10 decimals', async () => {
+        const input = 'sendEth RECEIVER 146e10';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        sendEthBase[2] = parseUnits('146', 10).toString();
+        expect(cmds).to.eql(sendEthBase);
+      });
+
+      it('a long number with 10 decimals', async () => {
+        const input = 'sendEth RECEIVER 1000000000000000e10';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        sendEthBase[2] = parseUnits('1', 25).toString();
+        expect(cmds).to.eql(sendEthBase);
+      });
+
+      it('a simple number without decimals even using simplified method', async () => {
+        const input = 'sendEth RECEIVER 123e0';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        sendEthBase[2] = parseUnits('123', 0).toString();
+        expect(cmds).to.eql(sendEthBase);
+      });
+
+      it('a long number without decimals even using simplified method', async () => {
+        const input = 'sendEth RECEIVER 1000000000000000e0';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        sendEthBase[2] = parseUnits('1', 15).toString();
+        expect(cmds).to.eql(sendEthBase);
+      });
+
+      it('should revert if tried to put several `e` symbol', async () => {
+        const input = 'sendEth RECEIVER 10000000e00000000e18';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should revert if tried to put not `e` symbol', async () => {
+        const input = 'sendEth RECEIVER 10000000a18';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should revert if tried to put Upper `E` symbol', async () => {
+        const input = 'sendEth RECEIVER 10000000E18';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should revert if tried to put `0x65` symbol', async () => {
+        const input = 'sendEth RECEIVER 100000000x6518';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should not revert in preprocessor if first symbol is not a number', async () => {
+        const input = 'sendEth RECEIVER e18';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        sendEthBase[2] = 'e18';
+        expect(cmds).to.eql(sendEthBase);
+      });
+
+      it('should revert if decimals does not exist', async () => {
+        const input = 'sendEth RECEIVER 45e';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT6');
+      });
+
+      it('should revert if two `e` were provided', async () => {
+        const input = 'sendEth RECEIVER 45ee6';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+    });
+
+    describe('transferFrom', () => {
+      let transferFromBase = ['transferFrom', 'DAI', 'OWNER', 'RECEIVER'];
+
+      it('should return a simple number with 18 decimals', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 1e18';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferFromBase[4] = parseUnits('1', 18).toString();
+        expect(cmds).to.eql(transferFromBase);
+      });
+
+      it('should return a simple number with 36 decimals', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 1e36';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferFromBase[4] = parseUnits('1', 36).toString();
+        expect(cmds).to.eql(transferFromBase);
+      });
+
+      it('should return a long number with 18 decimals', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 1000000000000000e18';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferFromBase[4] = parseUnits('1000000000000000', 18).toString();
+        expect(cmds).to.eql(transferFromBase);
+      });
+
+      it('should return a simple number with 10 decimals', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 146e10';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferFromBase[4] = parseUnits('146', 10).toString();
+        expect(cmds).to.eql(transferFromBase);
+      });
+
+      it('should return a long number with 10 decimals', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 1000000000000000e10';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferFromBase[4] = parseUnits('1', 25).toString();
+        expect(cmds).to.eql(transferFromBase);
+      });
+
+      it('should return a simple number without decimals even using simplified method', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 123e0';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferFromBase[4] = parseUnits('123', 0).toString();
+        expect(cmds).to.eql(transferFromBase);
+      });
+
+      it('should return a long number without decimals even using simplified method', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 1000000000000000e0';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferFromBase[4] = parseUnits('1', 15).toString();
+        expect(cmds).to.eql(transferFromBase);
+      });
+
+      it('should not revert in preprocessor if first symbol is not a number', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER e18';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferFromBase[4] = 'e18';
+        expect(cmds).to.eql(transferFromBase);
+      });
+
+      it('should revert if tried to put several `e` symbol', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 10000000e00000000e18';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should revert if tried to put not `e` symbol', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 10000000a18';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should revert if tried to put Upper `E` symbol', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 10000000E18';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should revert if tried to put `0x65` symbol', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 100000000x6518';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should revert if decimals does not exist', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 45e';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT6');
+      });
+
+      it('should revert if two `e` were provided', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 45ee6';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+    });
+
+    describe('transfer', () => {
+      let transferBase = ['transfer', 'DAI', 'RECEIVER'];
+
+      it('should return a simple number with 18 decimals', async () => {
+        const input = 'transfer DAI RECEIVER 1e18';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferBase[3] = parseUnits('1', 18).toString();
+        expect(cmds).to.eql(transferBase);
+      });
+
+      it('should return a simple number with 36 decimals', async () => {
+        const input = 'transfer DAI RECEIVER 1e36';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferBase[3] = parseUnits('1', 36).toString();
+        expect(cmds).to.eql(transferBase);
+      });
+
+      it('should return a long number with 18 decimals', async () => {
+        const input = 'transfer DAI RECEIVER 1000000000000000e18';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferBase[3] = parseUnits('1000000000000000', 18).toString();
+        expect(cmds).to.eql(transferBase);
+      });
+
+      it('should return a simple number with 10 decimals', async () => {
+        const input = 'transfer DAI RECEIVER 146e10';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferBase[3] = parseUnits('146', 10).toString();
+        expect(cmds).to.eql(transferBase);
+      });
+
+      it('should return a long number with 10 decimals', async () => {
+        const input = 'transfer DAI RECEIVER 1000000000000000e10';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferBase[3] = parseUnits('1', 25).toString();
+        expect(cmds).to.eql(transferBase);
+      });
+
+      it('should return a simple number without decimals even using simplified method', async () => {
+        const input = 'transfer DAI RECEIVER 123e0';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferBase[3] = parseUnits('123', 0).toString();
+        expect(cmds).to.eql(transferBase);
+      });
+
+      it('should return a long number without decimals even using simplified method', async () => {
+        const input = 'transfer DAI RECEIVER 1000000000000000e0';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferBase[3] = parseUnits('1', 15).toString();
+        expect(cmds).to.eql(transferBase);
+      });
+
+      it('should not revert in preprocessor if first symbol is not a number', async () => {
+        const input = 'transfer DAI RECEIVER e18';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferBase[3] = 'e18';
+        expect(cmds).to.eql(transferBase);
+      });
+
+      it('should revert if tried to put several `e` symbol', async () => {
+        const input = 'transfer DAI RECEIVER 10000000e00000000e18';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should revert if tried to put not `e` symbol', async () => {
+        const input = 'transfer DAI RECEIVER 10000000a18';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should revert if tried to put Upper `E` symbol', async () => {
+        const input = 'transfer DAI RECEIVER 10000000E18';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should revert if tried to put `0x65` symbol', async () => {
+        const input = 'transfer DAI RECEIVER 100000000x6518';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
+
+      it('should revert if decimals does not exist', async () => {
+        const input = 'transfer DAI RECEIVER 45e';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT6');
+      });
+
+      it('should revert if two `e` were provided', async () => {
+        const input = 'transfer DAI RECEIVER 45ee6';
+        await expect(app.callStatic.transform(ctxAddr, input)).to.be.revertedWith('SUT5');
+      });
     });
   });
 });
