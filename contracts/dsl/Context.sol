@@ -43,13 +43,11 @@ contract Context is IContext {
 
     mapping(string => bytes1) public opCodeByName; // name => opcode (hex)
     mapping(bytes1 => bytes4) public selectorByOpcode; // opcode (hex) => selector (hex)
-
     // emun OpcodeLibNames {...} from IContext
     // Depending on the hex value, it will take the proper
     // library from the OpcodeLibNames enum check the library for each opcode
     // where the opcode adds to the Context contract
     mapping(bytes1 => OpcodeLibNames) public opcodeLibNameByOpcode;
-
     // if the command is complex and uses `asm functions` then it will store
     // the selector of the usage function from the Parser for that opcode.
     // Each opcode that was added to the context should contain the selector otherwise
@@ -59,10 +57,8 @@ contract Context is IContext {
     string[] public operators;
     // baseOpName -> branchCode -> selector
     mapping(string => mapping(bytes1 => bytes4)) public branchSelectors;
-
     // baseOpName -> branchName -> branchCode
     mapping(string => mapping(string => bytes1)) public branchCodes;
-
     // alias -> base command
     mapping(string => string) public aliases;
 
