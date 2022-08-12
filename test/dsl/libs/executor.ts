@@ -17,7 +17,7 @@ describe('Executor', () => {
     [sender] = await ethers.getSigners();
 
     // Create StackValue Factory instance
-    StackValue = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
+    StackValue = await ethers.getContractFactory('StackValue');
 
     // Deploy libraries
     const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();

@@ -1,19 +1,19 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { parseUnits } from 'ethers/lib/utils';
-import { StringUtilsMock } from '../../../typechain-types';
 import { BigNumber } from 'ethers';
+import { StringUtilsMock } from '../../../typechain-types';
 
 describe('StringUtils', () => {
   let app: StringUtilsMock;
 
   before(async () => {
     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
-    app = (await (
+    app = await (
       await ethers.getContractFactory('StringUtilsMock', {
         libraries: { StringUtils: stringLib.address },
       })
-    ).deploy()) as StringUtilsMock;
+    ).deploy();
   });
 
   it('char', async () => {

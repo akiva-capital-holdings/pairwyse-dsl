@@ -10,26 +10,26 @@ import { Storage } from '../helpers/Storage.sol';
 // import "hardhat/console.sol";
 
 contract E2EApp is Storage {
-    Preprocessor public preprocessor;
     ParserMock public parser;
     IContext public ctx;
+    address public preprAddr;
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
     constructor(
-        Preprocessor _preprocessor,
+        address _preprAddr,
         ParserMock _parser,
         IContext _ctx
     ) {
-        preprocessor = _preprocessor;
+        preprAddr = _preprAddr;
         parser = _parser;
         ctx = _ctx;
         setupContext();
     }
 
     function parse(string memory _program) external {
-        parser.parse(address(ctx), _program);
+        parser.parse(preprAddr, address(ctx), _program);
     }
 
     function parseCode(string[] memory _code) external {

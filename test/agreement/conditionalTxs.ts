@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
 import { ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
-import { Context, Context__factory, ParserMock } from '../../typechain-types';
+import { Context, Context__factory, ParserMock, Preprocessor } from '../../typechain-types';
 import { hex4Bytes } from '../utils/utils';
 import { deployConditionalTxs } from '../../scripts/data/deploy.utils';
 
@@ -16,6 +16,7 @@ describe('Conditional transactions', () => {
   let NEXT_MONTH: number;
   let snapshotId: number;
   let LAST_BLOCK_TIMESTAMP: number;
+  let preprAddr: string;
 
   const ONE_MONTH = 60 * 60 * 24 * 30;
   const anyone = '0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF';
@@ -40,8 +41,8 @@ describe('Conditional transactions', () => {
     [alice, bob, anybody] = await ethers.getSigners();
 
     // Deploy contracts
-    let appAddr, parserAddr;
-    [appAddr, parserAddr] = await deployConditionalTxs();
+    const [appAddr, parserAddr, preprocessorAddr] = await deployConditionalTxs();
+    preprAddr = preprocessorAddr;
     app = await ethers.getContractAt('ConditionalTxsMock', appAddr);
     parser = await ethers.getContractAt('ParserMock', parserAddr);
     ContextCont = await ethers.getContractFactory('Context');
@@ -57,8 +58,10 @@ describe('Conditional transactions', () => {
 
   it('test one transaction', async () => {
     // Set variables
+    console.log(1);
     await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
     await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
+    console.log(2);
 
     txs.push({
       txId: 1,
@@ -105,9 +108,13 @@ describe('Conditional transactions', () => {
       const condCtxLen = (await app.conditionCtxsLen(txId)).toNumber();
       expect(condCtxLen).to.equal(1);
       for (let j = 0; j < condCtxLen; j++) {
-        await parser.parse(await app.conditionCtxs(txId, j), await app.conditionStrs(txId, j));
+        await parser.parse(
+          preprAddr,
+          await app.conditionCtxs(txId, j),
+          await app.conditionStrs(txId, j)
+        );
       }
-      await parser.parse(transactionCtx.address, transactionStr);
+      await parser.parse(preprAddr, transactionCtx.address, transactionStr);
 
       // Top up contract
       const oneEthBN = ethers.utils.parseEther('1');
@@ -190,16 +197,24 @@ describe('Conditional transactions', () => {
       // Parse all conditions and a transaction #1
       const condCtxLen0 = (await app.conditionCtxsLen(txId0)).toNumber();
       for (let i = 0; i < condCtxLen0; i++) {
-        await parser.parse(await app.conditionCtxs(txId0, i), await app.conditionStrs(txId0, i));
+        await parser.parse(
+          preprAddr,
+          await app.conditionCtxs(txId0, i),
+          await app.conditionStrs(txId0, i)
+        );
       }
-      await parser.parse(txs[0].transactionCtx.address, txs[0].transactionStr);
+      await parser.parse(preprAddr, txs[0].transactionCtx.address, txs[0].transactionStr);
 
       // Parse all conditions and a transaction #2
       const condCtxLen1 = (await app.conditionCtxsLen(txId1)).toNumber();
       for (let i = 0; i < condCtxLen1; i++) {
-        await parser.parse(await app.conditionCtxs(txId1, i), await app.conditionStrs(txId1, i));
+        await parser.parse(
+          preprAddr,
+          await app.conditionCtxs(txId1, i),
+          await app.conditionStrs(txId1, i)
+        );
       }
-      await parser.parse(txs[1].transactionCtx.address, txs[1].transactionStr);
+      await parser.parse(preprAddr, txs[1].transactionCtx.address, txs[1].transactionStr);
 
       // Top up contract (ETH)
       await anybody.sendTransaction({ to: app.address, value: oneEth });

@@ -30,7 +30,7 @@ describe.skip('Agreement: business case tests math', () => {
   const BASE = 4;
 
   // Add tx objects to Agreement
-  const addSteps = async (steps: TxObject[], Ctx: Context__factory) => {
+  const addSteps = async (preprocessorAddr: string, steps: TxObject[], Ctx: Context__factory) => {
     let txCtx;
 
     for await (const step of steps) {
@@ -43,14 +43,14 @@ describe.skip('Agreement: business case tests math', () => {
       for (let j = 0; j < step.conditions.length; j++) {
         const cond = await Ctx.deploy();
         cdCtxsAddrs.push(cond.address);
-        await agreement.parse(step.conditions[j], cond.address);
+        await agreement.parse(preprocessorAddr, step.conditions[j], cond.address);
         console.log(
           `\n\taddress: \x1b[35m${cond.address}\x1b[0m\n\tcondition ${j + 1}:\n\t\x1b[33m${
             step.conditions[j]
           }\x1b[0m`
         );
       }
-      await agreement.parse(step.transaction, txCtx.address);
+      await agreement.parse(preprocessorAddr, step.transaction, txCtx.address);
       console.log('\nTerm transaction');
       console.log(`\n\taddress: \x1b[35m${txCtx.address}\x1b[0m`);
       console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);

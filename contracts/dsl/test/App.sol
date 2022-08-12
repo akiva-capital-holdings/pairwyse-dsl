@@ -14,18 +14,24 @@ contract App is Storage {
 
     IParser public parser;
     IContext public ctx;
+    address public preprAddr;
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    constructor(IParser _parser, IContext _ctx) {
+    constructor(
+        address _preprAddr,
+        IParser _parser,
+        IContext _ctx
+    ) {
+        preprAddr = _preprAddr;
         parser = _parser;
         ctx = _ctx;
         _setupContext();
     }
 
     function parse(string memory _program) external {
-        parser.parse(address(ctx), _program);
+        parser.parse(preprAddr, address(ctx), _program);
     }
 
     function execute() external payable {

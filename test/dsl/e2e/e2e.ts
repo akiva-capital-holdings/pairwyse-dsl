@@ -8,6 +8,7 @@ import {
   StackValue__factory,
 } from '../../../typechain-types';
 import { checkStack, checkStackTailv2, hex4Bytes, hex4BytesShort } from '../../utils/utils';
+import { deployBase, deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
 
 async function getChainId() {
   return ethers.provider.getNetwork().then((network) => network.chainId);
@@ -23,6 +24,7 @@ describe('End-to-end', () => {
   let NEXT_MONTH: number;
   let PREV_MONTH: number;
   let lastBlockTimestamp: number;
+  let preprAddr: string;
 
   before(async () => {
     lastBlockTimestamp = (
@@ -39,60 +41,24 @@ describe('End-to-end', () => {
     StackValue = await ethers.getContractFactory('StackValue');
 
     // Deploy libraries
-    const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const comparisonOpcodesLib = await (
-      await ethers.getContractFactory('ComparisonOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const branchingOpcodesLib = await (
-      await ethers.getContractFactory('BranchingOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const logicalOpcodesLib = await (
-      await ethers.getContractFactory('LogicalOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const otherOpcodesLib = await (
-      await ethers.getContractFactory('OtherOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
-    const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
-    const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
+    const [
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr,
+    ] = await deployOpcodeLibs();
 
-    // Deploy Preprocessor
-    preprocessor = await (
-      await ethers.getContractFactory('Preprocessor', {
-        libraries: { StringUtils: stringLib.address },
-      })
-    ).deploy();
-
-    // Deploy ParserMock
-    const parser = await (
-      await ethers.getContractFactory('ParserMock', {
-        libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
-      })
-    ).deploy(preprocessor.address);
+    const [parserAddr, executorLibAddr, preprocessorAddr] = await deployBase();
+    preprocessor = await ethers.getContractAt('Preprocessor', preprocessorAddr);
+    preprAddr = preprocessorAddr;
 
     // Deploy Context & setup
     ctx = await (await ethers.getContractFactory('Context')).deploy();
     ctxAddr = ctx.address;
-    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLib.address);
-    await ctx.setBranchingOpcodesAddr(branchingOpcodesLib.address);
-    await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
-    await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
+    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLibAddr);
+    await ctx.setBranchingOpcodesAddr(branchingOpcodesLibAddr);
+    await ctx.setLogicalOpcodesAddr(logicalOpcodesLibAddr);
+    await ctx.setOtherOpcodesAddr(otherOpcodesLibAddr);
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
@@ -100,9 +66,10 @@ describe('End-to-end', () => {
     stack = StackCont.attach(contextStackAddress);
 
     // Deploy Application
+    console.log('Deploy Application');
     app = await (
-      await ethers.getContractFactory('E2EApp', { libraries: { Executor: executorLib.address } })
-    ).deploy(preprocessor.address, parser.address, ctxAddr);
+      await ethers.getContractFactory('E2EApp', { libraries: { Executor: executorLibAddr } })
+    ).deploy(preprAddr, parserAddr, ctxAddr);
   });
 
   describe('blockChainId < loadLocal uint256 VAR', () => {

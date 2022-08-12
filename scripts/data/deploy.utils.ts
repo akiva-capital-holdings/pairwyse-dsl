@@ -9,6 +9,7 @@ import { Context__factory } from '../../typechain-types';
 const { ethers } = hre;
 
 export const addSteps = async (
+  preprocessorAddr: string,
   steps: TxObject[],
   Ctx: Context__factory,
   agreementAddress: string
@@ -25,14 +26,14 @@ export const addSteps = async (
     for (let j = 0; j < step.conditions.length; j++) {
       const cond = await Ctx.deploy();
       cdCtxsAddrs.push(cond.address);
-      await agreement.parse(step.conditions[j], cond.address);
+      await agreement.parse(preprocessorAddr, step.conditions[j], cond.address);
       console.log(
         `\n\taddress: \x1b[35m${cond.address}\x1b[0m\n\tcondition ${j + 1}:\n\t\x1b[33m${
           step.conditions[j]
         }\x1b[0m`
       );
     }
-    await agreement.parse(step.transaction, txCtx.address);
+    await agreement.parse(preprocessorAddr, step.transaction, txCtx.address);
     console.log('\nTerm transaction');
     console.log(`\n\taddress: \x1b[35m${txCtx.address}\x1b[0m`);
     console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
@@ -91,18 +92,15 @@ export const deployOpcodeLibs = async () => {
 };
 
 export const deployParser = async () => {
+  // Deploy libraries
   const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
   const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
-  const preprocessor = await (
-    await ethers.getContractFactory('Preprocessor', {
-      libraries: { StringUtils: stringLib.address },
-    })
-  ).deploy();
 
+  // Deploy the main contract
   const ParserCont = await ethers.getContractFactory('Parser', {
     libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
   });
-  const parser = await ParserCont.deploy(preprocessor.address);
+  const parser = await ParserCont.deploy();
   return parser.address;
 };
 
@@ -111,25 +109,33 @@ export const deployExecutor = async () => {
   return executorLib.address;
 };
 
-export const deployBase = async () => {
-  let parserAddr = await deployParser();
-  let executorLibAddr = await deployExecutor();
+export const deployPreprocessor = async () => {
+  const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
+  const preprocessor = await (
+    await ethers.getContractFactory('Preprocessor', {
+      libraries: { StringUtils: stringLib.address },
+    })
+  ).deploy();
+  return preprocessor.address;
+};
 
-  return [parserAddr, executorLibAddr];
+export const deployBase = async () => {
+  const parserAddr = await deployParser();
+  const executorLibAddr = await deployExecutor();
+  const preprocessorAddr = await deployPreprocessor();
+
+  return [parserAddr, executorLibAddr, preprocessorAddr];
 };
 
 export const deployAgreement = async () => {
-  let comparisonOpcodesLibAddr: string;
-  let branchingOpcodesLibAddr: string;
-  let logicalOpcodesLibAddr: string;
-  let otherOpcodesLibAddr: string;
-  let executorLibAddr: string;
-  let parserAddr: string;
+  const [
+    comparisonOpcodesLibAddr,
+    branchingOpcodesLibAddr,
+    logicalOpcodesLibAddr,
+    otherOpcodesLibAddr,
+  ] = await deployOpcodeLibs();
 
-  [comparisonOpcodesLibAddr, branchingOpcodesLibAddr, logicalOpcodesLibAddr, otherOpcodesLibAddr] =
-    await deployOpcodeLibs();
-
-  [parserAddr, executorLibAddr] = await deployBase();
+  const [parserAddr, executorLibAddr] = await deployBase();
 
   const AgreementContract = await ethers.getContractFactory('Agreement', {
     libraries: {
@@ -154,24 +160,21 @@ export const deployAgreement = async () => {
       to check multiple LPs
     */
   // ---> steps for businessCases with multiple LPs <---
-  // await addSteps(businessCaseSteps(GP, [LPs[0], LPs[1]], 4), ContextCont, agreement.address);
-  // await addSteps(businessCaseSteps(GP, [LPs[0], LPs[1]], 5), ContextCont, agreement.address);
+  // await addSteps(preprocessorAddr, businessCaseSteps(GP, [LPs[0], LPs[1]], 4), ContextCont, agreement.address);
+  // await addSteps(preprocessorAddr, businessCaseSteps(GP, [LPs[0], LPs[1]], 5), ContextCont, agreement.address);
 
   return agreement.address;
 };
 
 export const deployAgreementFactory = async () => {
-  let comparisonOpcodesLibAddr: string;
-  let branchingOpcodesLibAddr: string;
-  let logicalOpcodesLibAddr: string;
-  let otherOpcodesLibAddr: string;
-  let executorLibAddr: string;
-  let parserAddr: string;
+  const [
+    comparisonOpcodesLibAddr,
+    branchingOpcodesLibAddr,
+    logicalOpcodesLibAddr,
+    otherOpcodesLibAddr,
+  ] = await deployOpcodeLibs();
 
-  [comparisonOpcodesLibAddr, branchingOpcodesLibAddr, logicalOpcodesLibAddr, otherOpcodesLibAddr] =
-    await deployOpcodeLibs();
-
-  executorLibAddr = await deployExecutor();
+  const executorLibAddr = await deployExecutor();
 
   // Deploy AgreementFactory
   const factory = await (
@@ -192,17 +195,13 @@ export const deployAgreementFactory = async () => {
 
 export const deployConditionalTxs = async () => {
   // Deploy libraries
-  let comparisonOpcodesLibAddr: string;
-  let branchingOpcodesLibAddr: string;
-  let logicalOpcodesLibAddr: string;
-  let otherOpcodesLibAddr: string;
-  let executorLibAddr: string;
-  let parserAddr: string;
-
-  [comparisonOpcodesLibAddr, branchingOpcodesLibAddr, logicalOpcodesLibAddr, otherOpcodesLibAddr] =
-    await deployOpcodeLibs();
-
-  [parserAddr, executorLibAddr] = await deployBase();
+  const [
+    comparisonOpcodesLibAddr,
+    branchingOpcodesLibAddr,
+    logicalOpcodesLibAddr,
+    otherOpcodesLibAddr,
+  ] = await deployOpcodeLibs();
+  const [parserAddr, executorLibAddr, preprAddr] = await deployBase();
 
   const app = await (
     await ethers.getContractFactory('ConditionalTxs', {
@@ -216,5 +215,5 @@ export const deployConditionalTxs = async () => {
     })
   ).deploy();
 
-  return [app.address, parserAddr];
+  return [app.address, parserAddr, preprAddr];
 };

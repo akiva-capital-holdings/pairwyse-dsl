@@ -10,11 +10,11 @@ describe('byteUtils', () => {
 
   before(async () => {
     const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
-    app = (await (
+    app = await (
       await ethers.getContractFactory('ByteUtilsMock', {
         libraries: { ByteUtils: byteLib.address },
       })
-    ).deploy()) as ByteUtilsMock;
+    ).deploy();
   });
 
   it('should slice if start index are valid', async () => {

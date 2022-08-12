@@ -26,10 +26,14 @@ contract Agreement {
         txs = new ConditionalTxs(); // TODO: provide as an input param
     }
 
-    function parse(string memory _code, Context _ctx) external {
+    function parse(
+        address _preprAddr,
+        string memory _code,
+        Context _ctx
+    ) external {
         _ctx.initOpcodes();
         _ctx.setAppAddress(address(txs));
-        parser.parse(address(_ctx), _code);
+        parser.parse(_preprAddr, address(_ctx), _code);
     }
 
     function update(

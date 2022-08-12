@@ -14,6 +14,7 @@ import { ErrorsParser } from './libs/Errors.sol';
 
 /**
  * @dev Parser of DSL code
+ * @dev This contract is a singleton and should not be deployed more than once
  *
  * One of the core contracts of the project. It parses DSL expression
  * that comes from user. After parsing code in Parser
@@ -25,27 +26,27 @@ contract Parser is IParser {
     using StringUtils for string;
     using ByteUtils for bytes;
 
-    address public preprAddr; // Preprocessor contract address
-
+    // Note: temporary variables block
     bytes internal program; // raw bytecode of the program that preprocessor is generating
     string[] internal cmds; // DSL code in postfix form (input from Preprocessor)
     uint256 internal cmdIdx; // Current parsing index of DSL code
-
     mapping(string => uint256) public labelPos;
     mapping(string => bytes) public savedProgram;
     mapping(string => bool) public isVariable;
 
-    constructor(address _preprAddr) {
-        preprAddr = _preprAddr;
-    }
+    // Note: end of temporary variables block
 
     /**
      * @dev Transform DSL code from array in infix notation to raw bytecode
      * @param _ctxAddr Context contract interface address
      * @param _codeRaw Input code as a string in infix notation
      */
-    function parse(address _ctxAddr, string memory _codeRaw) external {
-        string[] memory _code = IPreprocessor(preprAddr).transform(_ctxAddr, _codeRaw);
+    function parse(
+        address _preprAddr,
+        address _ctxAddr,
+        string memory _codeRaw
+    ) external {
+        string[] memory _code = IPreprocessor(_preprAddr).transform(_ctxAddr, _codeRaw);
         _parseCode(_ctxAddr, _code);
     }
 
@@ -326,6 +327,7 @@ contract Parser is IParser {
         delete program;
         cmdIdx = 0;
         cmds = code;
+
         IContext(_ctxAddr).setPc(0);
         IContext(_ctxAddr).stack().clear();
 

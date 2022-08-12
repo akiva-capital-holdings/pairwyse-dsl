@@ -1,72 +1,35 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
-import { App, Context, Parser } from '../../../typechain-types';
+import { App, Context } from '../../../typechain-types';
 import { hex4Bytes } from '../../utils/utils';
+import { deployBase, deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
 
 describe('DSL: math', () => {
   let ctx: Context;
   let app: App;
-  let parser: Parser;
 
   before(async () => {
     // Deploy libraries
-    const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const comparisonOpcodesLib = await (
-      await ethers.getContractFactory('ComparisonOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const branchingOpcodesLib = await (
-      await ethers.getContractFactory('BranchingOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const logicalOpcodesLib = await (
-      await ethers.getContractFactory('LogicalOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const otherOpcodesLib = await (
-      await ethers.getContractFactory('OtherOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
-    const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
-    const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
+    const [
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr,
+    ] = await deployOpcodeLibs();
 
-    // Deploy Preprocessor
-    const preprocessor = await (
-      await ethers.getContractFactory('Preprocessor', {
-        libraries: { StringUtils: stringLib.address },
-      })
-    ).deploy();
-
-    // Deploy Parser
-    const ParserCont = await ethers.getContractFactory('Parser', {
-      libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
-    });
-    parser = await ParserCont.deploy(preprocessor.address);
+    const [parserAddr, executorLibAddr, preprAddr] = await deployBase();
 
     // Deploy Context & setup
     ctx = await (await ethers.getContractFactory('Context')).deploy();
-    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLib.address);
-    await ctx.setBranchingOpcodesAddr(branchingOpcodesLib.address);
-    await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
-    await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
+    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLibAddr);
+    await ctx.setBranchingOpcodesAddr(branchingOpcodesLibAddr);
+    await ctx.setLogicalOpcodesAddr(logicalOpcodesLibAddr);
+    await ctx.setOtherOpcodesAddr(otherOpcodesLibAddr);
 
     // Deploy Application
     app = await (
-      await ethers.getContractFactory('App', { libraries: { Executor: executorLib.address } })
-    ).deploy(parser.address, ctx.address);
+      await ethers.getContractFactory('App', { libraries: { Executor: executorLibAddr } })
+    ).deploy(preprAddr, parserAddr, ctx.address);
   });
 
   describe('division case', () => {

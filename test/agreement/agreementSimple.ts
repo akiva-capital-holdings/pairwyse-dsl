@@ -5,7 +5,7 @@ import { parseEther } from 'ethers/lib/utils';
 import { hex4Bytes } from '../utils/utils';
 import { AgreementMock, ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
 import { Context, Context__factory } from '../../typechain-types';
-import { deployAgreement, addSteps } from '../../scripts/data/deploy.utils';
+import { deployAgreement, addSteps, deployPreprocessor } from '../../scripts/data/deploy.utils';
 import {
   aliceAndBobSteps,
   aliceBobAndCarl,
@@ -19,6 +19,7 @@ dotenv.config();
 describe('Agreement: Alice, Bob, Carl', () => {
   let agreement: AgreementMock;
   let agreementAddr: string;
+  let preprocessorAddr: string;
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
   let carl: SignerWithAddress;
@@ -45,6 +46,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
       - gather module
     */
     agreementAddr = await deployAgreement();
+    preprocessorAddr = await deployPreprocessor();
     agreement = await ethers.getContractAt('AgreementMock', agreementAddr);
 
     [alice, bob, carl, anybody] = await ethers.getSigners();
@@ -74,6 +76,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
     const transaction = 'sendEth RECEIVER 1000000000000000000';
 
     await addSteps(
+      preprocessorAddr,
       [{ txId, requiredTxs, signatories, conditions, transaction }],
       ContextCont,
       agreement.address
@@ -105,6 +108,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
       .deploy(parseEther('1000'));
 
     await addSteps(
+      preprocessorAddr,
       aliceAndBobSteps(alice, bob, oneEthBN, tenTokens),
       ContextCont,
       agreement.address
@@ -156,6 +160,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await token.connect(bob).transfer(carl.address, tenTokens);
 
     await addSteps(
+      preprocessorAddr,
       aliceBobAndCarl(alice, bob, carl, oneEthBN, tenTokens),
       ContextCont,
       agreement.address
@@ -244,6 +249,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
       const index = 4;
       const signatories = [anyone];
       await addSteps(
+        preprocessorAddr,
         aliceAndAnybodySteps(alice, signatories, index),
         ContextCont,
         agreement.address

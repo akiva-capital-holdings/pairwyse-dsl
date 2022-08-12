@@ -13,7 +13,7 @@ describe('StackValue', () => {
   });
 
   beforeEach(async () => {
-    stackValue = (await (await ethers.getContractFactory('StackValue')).deploy()) as StackValue;
+    stackValue = await (await ethers.getContractFactory('StackValue')).deploy();
   });
 
   it('get/set Uint256', async () => {
