@@ -79,21 +79,29 @@ describe('Branching opcodes', () => {
     expect(pc).to.be.equal(testBranchFalse);
   });
 
-  it.only('opIfelse errors branch', async () => {
+  it('opIfelse errors branch', async () => {
+    const testBranchTrue = '0001';
+    const testBranchFalse = '0002';
+
+    await ctx.setProgram(`0x${testBranchTrue}${testBranchFalse}`);
+    const func = await app.opIfelse(ctxAddr);
+    await func.wait();
+
+    await ctx.setPc(0);
+    await stack.clear();
+
+    await ctx.setProgram(`0x${testBranchTrue}${testBranchFalse}`);
+    await pushToStack(StackValue, ctx, StackCont, ['2121']);
+    await expect(app.opIfelse(ctxAddr)).to.be.revertedWith('BOP1');
+  });
+
+  it('opIf errors branch', async () => {
     const testBranchTrue = '0001';
     const testBranchFalse = '0002';
 
     await ctx.setProgram(`0x${testBranchTrue}${testBranchFalse}`);
     await pushToStack(StackValue, ctx, StackCont, ['2121']);
-    await expect(app.opIfelse(ctxAddr)).to.be.revertedWith('BOP1');
-    await stack.clear();
-    const stacklength = await stack.length();
-    await expect(stacklength).to.equal('0');
-    app.opIfelse(ctxAddr);
-    const func = await app.opIfelse(ctxAddr);
-    await func.wait();
-    const stacklength2 = await stack.length();
-    await expect(stacklength2).to.equal('1');
+    await expect(app.opIf(ctxAddr)).to.be.revertedWith('BOP1');
   });
 
   it('opIf', async () => {

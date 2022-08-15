@@ -11,7 +11,7 @@ import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { Storage } from '../dsl/helpers/Storage.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 contract ConditionalTxs is Storage {
     struct Tx {
@@ -59,6 +59,9 @@ contract ConditionalTxs is Storage {
      */
     function _checkSignatories(address[] memory _signatories) internal pure {
         require(_signatories.length != 0, ErrorsConditionalTxs.CNT1);
+        if (_signatories.length == 1) {
+            require(_signatories[0] != address(0), ErrorsConditionalTxs.CNT1);
+        }
         if (_signatories.length > 1) {
             for (uint256 i = 0; i < _signatories.length; i++) {
                 require(_signatories[i] != address(0), ErrorsConditionalTxs.CNT1);
@@ -72,6 +75,11 @@ contract ConditionalTxs is Storage {
         string memory _conditionStr,
         IContext _conditionCtx
     ) external {
+        console.log('running');
+        require(
+            keccak256(abi.encode(_conditionStr)) != keccak256(abi.encode('')),
+            ErrorsConditionalTxs.CNT2
+        );
         _conditionCtx.setComparisonOpcodesAddr(address(ComparisonOpcodes));
         _conditionCtx.setBranchingOpcodesAddr(address(BranchingOpcodes));
         _conditionCtx.setLogicalOpcodesAddr(address(LogicalOpcodes));
@@ -87,8 +95,6 @@ contract ConditionalTxs is Storage {
         IContext _transactionCtx
     ) external {
         require(conditionStrs[_txId].length > 0, ErrorsConditionalTxs.CNT2);
-        // require(conditionStrs[_txId].length > 0, ErrorsConditionalTxs.CNT2);
-        // TypeError: Cannot read properties of undefined (reading 'length')
         _transactionCtx.setComparisonOpcodesAddr(address(ComparisonOpcodes));
         _transactionCtx.setBranchingOpcodesAddr(address(BranchingOpcodes));
         _transactionCtx.setLogicalOpcodesAddr(address(LogicalOpcodes));

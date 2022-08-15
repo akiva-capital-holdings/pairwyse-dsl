@@ -9,7 +9,7 @@ import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
@@ -18,6 +18,7 @@ library OtherOpcodes {
     function opLoadLocalAny(IContext _ctx) public {
         address libAddr = _ctx.otherOpcodes();
         bytes4 selector = OpcodeHelpers.nextBranchSelector(_ctx, 'loadLocal');
+        console.logBytes4(selector);
         OpcodeHelpers.mustCall(libAddr, abi.encodeWithSelector(selector, _ctx));
     }
 

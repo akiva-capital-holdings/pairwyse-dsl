@@ -230,6 +230,41 @@ describe('Conditional transactions', () => {
     }
   });
 
+  it('check 0 conditions', async () => {
+    txs.push({
+      txId: 3,
+      requiredTxs: [2],
+      signatories: [bob.address],
+      transactionStr: '',
+      conditionStrs: [''],
+      transactionCtx: await ContextCont.deploy(),
+      conditionCtxs: [await ContextCont.deploy()],
+    });
+    // Set conditional transaction
+    for (let i = 0; i < txs.length; i++) {
+      const {
+        txId,
+        requiredTxs,
+        signatories,
+        conditionCtxs,
+        conditionStrs,
+        transactionCtx,
+        transactionStr,
+      } = txs[i];
+
+      // Set conditional transaction
+      await app.addTxBlueprint(txId, requiredTxs, signatories);
+      for (let j = 0; j < conditionCtxs.length; j++) {
+        await expect(
+          app.addTxCondition(txId, conditionStrs[j], conditionCtxs[j].address)
+        ).to.be.revertedWith('CNT2');
+      }
+      await expect(
+        app.addTxTransaction(txId, transactionStr, transactionCtx.address)
+      ).to.be.revertedWith('CNT2');
+    }
+  });
+
   describe('Scenarios', () => {
     it('borrower/lender scenario', async () => {
       // Deploy Token contract
@@ -350,7 +385,12 @@ describe('Conditional transactions', () => {
       await expect(app.addTxBlueprint(1, [], signatories)).to.be.revertedWith('CNT1');
     });
 
-    it('should revert if `anyone` was provided twice', async () => {
+    it('should satisfy if one `anyone` was provided', async () => {
+      const signatories = [anyone];
+      await expect(app.addTxBlueprint(1, [], signatories)).to.be.satisfy;
+    });
+
+    it('should revert if two `anyone` were provided', async () => {
       const signatories = [anyone, anyone];
       await expect(app.addTxBlueprint(1, [], signatories)).to.be.revertedWith('CNT1');
     });

@@ -8,8 +8,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
 import { ErrorsBranchingOpcodes } from '../Errors.sol';
-
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @title Logical operator opcodes
@@ -23,8 +22,8 @@ library BranchingOpcodes {
         if (_ctx.stack().length() == 0) {
             OpcodeHelpers.putToStack(_ctx, 0); // for if-else condition to work all the time
         }
-
         StackValue last = _getLast(_ctx);
+        // console.log(last.getUint256());
         require(last.getType() == StackValue.StackType.UINT256, ErrorsBranchingOpcodes.BOP1);
 
         uint16 _posTrueBranch = getUint16(_ctx);
