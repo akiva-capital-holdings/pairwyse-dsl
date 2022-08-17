@@ -4,38 +4,41 @@ import * as hre from 'hardhat';
 import { parseEther } from 'ethers/lib/utils';
 import { TxObject } from '../../test/types';
 import { AgreementMock } from '../../typechain-types/agreement/mocks';
-import { Context__factory } from '../../typechain-types';
+import { ContextMock } from '../../typechain-types/dsl/mocks';
 
 const { ethers } = hre;
 
 export const addSteps = async (
   preprocessorAddr: string,
   steps: TxObject[],
-  Ctx: Context__factory,
+  // Context: ContextMock,
   agreementAddress: string
 ) => {
-  let txCtx;
+  let transactionContext;
   const agreement = await ethers.getContractAt('AgreementMock', agreementAddress);
   for await (const step of steps) {
     console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
-    txCtx = await Ctx.deploy();
-    const cdCtxsAddrs = [];
+    let ContextMock = await ethers.getContractFactory('ContextMock');
+    transactionContext = await ContextMock.deploy(agreement.address);
+    await transactionContext.deployed();
+    const cdCtxsAddrs = []; // conditional context Addresses
 
     console.log('\nTerm Conditions');
 
     for (let j = 0; j < step.conditions.length; j++) {
-      const cond = await Ctx.deploy();
-      cdCtxsAddrs.push(cond.address);
-      await agreement.parse(preprocessorAddr, step.conditions[j], cond.address);
+      const conditionContract = await ContextMock.deploy(agreement.address);
+      await conditionContract.deployed();
+      cdCtxsAddrs.push(conditionContract.address);
+      await agreement.parse(step.conditions[j], conditionContract.address, preprocessorAddr);
       console.log(
-        `\n\taddress: \x1b[35m${cond.address}\x1b[0m\n\tcondition ${j + 1}:\n\t\x1b[33m${
-          step.conditions[j]
-        }\x1b[0m`
+        `\n\taddress: \x1b[35m${conditionContract.address}\x1b[0m\n\tcondition ${
+          j + 1
+        }:\n\t\x1b[33m${step.conditions[j]}\x1b[0m`
       );
     }
-    await agreement.parse(preprocessorAddr, step.transaction, txCtx.address);
+    await agreement.parse(step.transaction, transactionContext.address, preprocessorAddr);
     console.log('\nTerm transaction');
-    console.log(`\n\taddress: \x1b[35m${txCtx.address}\x1b[0m`);
+    console.log(`\n\taddress: \x1b[35m${transactionContext.address}\x1b[0m`);
     console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
     const { hash } = await agreement.update(
       step.txId,
@@ -43,7 +46,7 @@ export const addSteps = async (
       step.signatories,
       step.transaction,
       step.conditions,
-      txCtx.address,
+      transactionContext.address,
       cdCtxsAddrs
     );
     console.log(`\nAgreement update transaction hash: \n\t\x1b[35m${hash}\x1b[0m`);
@@ -137,7 +140,7 @@ export const deployAgreement = async () => {
 
   const [parserAddr, executorLibAddr] = await deployBase();
 
-  const AgreementContract = await ethers.getContractFactory('Agreement', {
+  const AgreementContract = await ethers.getContractFactory('AgreementMock', {
     libraries: {
       ComparisonOpcodes: comparisonOpcodesLibAddr,
       BranchingOpcodes: branchingOpcodesLibAddr,
@@ -178,7 +181,7 @@ export const deployAgreementFactory = async () => {
 
   // Deploy AgreementFactory
   const factory = await (
-    await ethers.getContractFactory('AgreementFactory', {
+    await ethers.getContractFactory('AgreementFactoryMock', {
       libraries: {
         ComparisonOpcodes: comparisonOpcodesLibAddr,
         BranchingOpcodes: branchingOpcodesLibAddr,
