@@ -20,7 +20,7 @@ interface IContext {
 
     function nextpc() external view returns (uint256);
 
-    function appAddress() external view returns (address);
+    function appAddr() external view returns (address);
 
     function msgSender() external view returns (address);
 

@@ -29,7 +29,8 @@ contract Agreement {
 
     constructor(address _parser) {
         parser = IParser(_parser);
-        context = new Context(address(this));
+        context = new Context();
+        context.setAppAddress(address(this));
     }
 
     event NewTransaction(

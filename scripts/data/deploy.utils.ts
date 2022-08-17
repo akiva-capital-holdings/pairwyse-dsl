@@ -1,11 +1,6 @@
 import '@nomiclabs/hardhat-ethers';
 import * as hre from 'hardhat';
-// TODO: would it be better to store types both in the test directory?
-import { parseEther } from 'ethers/lib/utils';
 import { TxObject } from '../../test/types';
-import { AgreementMock } from '../../typechain-types/agreement/mocks';
-import { ContextMock, ParserMock, ExecutorMock } from '../../typechain-types/dsl/mocks';
-import { OpcodeHelpersMock } from '../../typechain-types/dsl/mocks/opcodes';
 
 const { ethers } = hre;
 
@@ -15,17 +10,19 @@ export const addSteps = async (
   agreementAddress: string
 ) => {
   let transactionContext;
-  const agreement = await ethers.getContractAt('AgreementMock', agreementAddress);
+  const agreement = await ethers.getContractAt('Agreement', agreementAddress);
   for await (const step of steps) {
     console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
-    let ContextMock = await ethers.getContractFactory('ContextMock');
-    transactionContext = await ContextMock.deploy(agreementAddress);
+    const Context = await ethers.getContractFactory('Context');
+    transactionContext = await Context.deploy();
+    await transactionContext.setAppAddress(agreementAddress);
     const cdCtxsAddrs = []; // conditional context Addresses
 
     console.log('\nTerm Conditions');
 
     for (let j = 0; j < step.conditions.length; j++) {
-      const conditionContract = await ContextMock.deploy(agreementAddress);
+      const conditionContract = await Context.deploy();
+      await conditionContract.setAppAddress(agreementAddress);
       cdCtxsAddrs.push(conditionContract.address);
       await agreement.parse(step.conditions[j], conditionContract.address, preprocessorAddr);
       console.log(
@@ -97,10 +94,11 @@ export const deployParser = async () => {
   const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
   const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
 
-  const ParserMockContract = await ethers.getContractFactory('ParserMock', {
-    libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
-  });
-  const parser = await ParserMockContract.deploy();
+  const parser = await (
+    await ethers.getContractFactory('Parser', {
+      libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
+    })
+  ).deploy();
   return parser.address;
 };
 
@@ -137,7 +135,7 @@ export const deployAgreement = async () => {
 
   const [parserAddr, executorLibAddr] = await deployBase();
 
-  const AgreementContract = await ethers.getContractFactory('AgreementMock', {
+  const AgreementContract = await ethers.getContractFactory('Agreement', {
     libraries: {
       ComparisonOpcodes: comparisonOpcodesLibAddr,
       BranchingOpcodes: branchingOpcodesLibAddr,
@@ -164,56 +162,4 @@ export const deployAgreement = async () => {
   // await addSteps(preprocessorAddr, businessCaseSteps(GP, [LPs[0], LPs[1]], 5), ContextCont, agreement.address);
 
   return agreement.address;
-};
-
-export const deployAgreementFactory = async () => {
-  const [
-    comparisonOpcodesLibAddr,
-    branchingOpcodesLibAddr,
-    logicalOpcodesLibAddr,
-    otherOpcodesLibAddr,
-  ] = await deployOpcodeLibs();
-
-  const executorLibAddr = await deployExecutor();
-
-  // Deploy AgreementFactory
-  const factory = await (
-    await ethers.getContractFactory('AgreementFactoryMock', {
-      libraries: {
-        ComparisonOpcodes: comparisonOpcodesLibAddr,
-        BranchingOpcodes: branchingOpcodesLibAddr,
-        LogicalOpcodes: logicalOpcodesLibAddr,
-        OtherOpcodes: otherOpcodesLibAddr,
-        Executor: executorLibAddr,
-      },
-    })
-  ).deploy();
-  await factory.deployed();
-
-  return factory.address;
-};
-
-export const deployConditionalTxs = async (agreementAddress: string) => {
-  // TODO: Deploy only ConditionalTxs without libraries
-  const [
-    comparisonOpcodesLibAddr,
-    branchingOpcodesLibAddr,
-    logicalOpcodesLibAddr,
-    otherOpcodesLibAddr,
-  ] = await deployOpcodeLibs();
-
-  const executorLibAddr = await deployExecutor();
-  const app = await (
-    await ethers.getContractFactory('ContextMock', {
-      libraries: {
-        ComparisonOpcodes: comparisonOpcodesLibAddr,
-        BranchingOpcodes: branchingOpcodesLibAddr,
-        LogicalOpcodes: logicalOpcodesLibAddr,
-        OtherOpcodes: otherOpcodesLibAddr,
-        Executor: executorLibAddr,
-      },
-    })
-  ).deploy(agreementAddress);
-
-  return app.address;
 };

@@ -21,12 +21,13 @@ contract App {
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    constructor(address _parser, address _preprocessor) {
+    constructor(
+        address _parser,
+        address _preprocessor,
+        address _ctx
+    ) {
         parser = _parser;
         preprocessor = _preprocessor;
-    }
-
-    function setContextAddr(address _ctx) external {
         ctx = _ctx;
         _setupContext();
     }

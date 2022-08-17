@@ -993,7 +993,7 @@
 //     });
 
 //     describe('sendEth', () => {
-//       let sendEthBase = ['sendEth', 'RECEIVER'];
+//       const sendEthBase = ['sendEth', 'RECEIVER'];
 
 //       it('should transform correctly if sendEth is in the code', async () => {
 //         const input = `
@@ -1105,7 +1105,7 @@
 //     });
 
 //     describe('transferFrom', () => {
-//       let transferFromBase = ['transferFrom', 'DAI', 'OWNER', 'RECEIVER'];
+//       const transferFromBase = ['transferFrom', 'DAI', 'OWNER', 'RECEIVER'];
 
 //       it('should return a simple number with 18 decimals', async () => {
 //         const input = 'transferFrom DAI OWNER RECEIVER 1e18';
@@ -1195,7 +1195,7 @@
 //     });
 
 //     describe('transfer', () => {
-//       let transferBase = ['transfer', 'DAI', 'RECEIVER'];
+//       const transferBase = ['transfer', 'DAI', 'RECEIVER'];
 
 //       it('should return a simple number with 18 decimals', async () => {
 //         const input = 'transfer DAI RECEIVER 1e18';

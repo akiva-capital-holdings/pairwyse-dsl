@@ -17,14 +17,7 @@ import { ErrorsContext } from './libs/Errors.sol';
  *
  * One of the core contracts of the project. It contains opcodes and aliases for commands.
  * It provides additional information about program state and point counter (pc).
- * Each of command that is provided by the Parser contract is processed in the Context contract.
- *
- * TODO:
- * 1. may be wise to split Context into:
- *      contract A (holds opCodeByName, selectorByOpcode, and asmSelectors)
- *      contract B (holds particular state variables: stack, program, pc, appAddress, msgSender)
- * 2. addOpcode => should be internal `_addOpcode` and have a separated protected function
- *   (addOpcode) that has public or external modifier
+ * Each of command that is provided by the Parser contract is processed in the Context contract
  */
 contract Context is IContext {
     // stack is used by Opcode libraries like `libs/opcodes/*`
@@ -33,7 +26,7 @@ contract Context is IContext {
     bytes public program; // the bytecode of a program that is provided by Parser (will be removed)
     uint256 public pc; // point counter shows what the part of command are in proccess now
     uint256 public nextpc;
-    address public appAddress;
+    address public appAddr; // address of end application. Is used to get variables stored in end application contract
     address public msgSender;
     address public comparisonOpcodes; // an address for ComparisonOpcodes library, can be changed
     address public branchingOpcodes; // an address for BranchingOpcodes library, can be changed
@@ -67,10 +60,9 @@ contract Context is IContext {
         _;
     }
 
-    constructor(address _app) {
+    constructor() {
         stack = new Stack();
         initOpcodes();
-        setAppAddress(_app);
     }
 
     function initOpcodes() internal {
@@ -528,10 +520,10 @@ contract Context is IContext {
     /**
      * @dev Sets/Updates application Address by the provided value
      *
-     * @param _addr is the new application Address, can not be a zero address
+     * @param _appAddr is the new application Address, can not be a zero address
      */
-    function setAppAddress(address _addr) public nonZeroAddress(_addr) {
-        appAddress = _addr;
+    function setAppAddress(address _appAddr) external nonZeroAddress(_appAddr) {
+        appAddr = _appAddr;
     }
 
     /**

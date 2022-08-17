@@ -2,17 +2,17 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
 import { ContextMock, ParserMock } from '../../typechain-types/dsl/mocks';
-import { AgreementMock } from '../../typechain-types/agreement/mocks';
 import { hex4Bytes } from '../utils/utils';
 import {
-  deployAgreement,
-  deployPreprocessor,
-  deployConditionalTxs,
-  deployParser,
-} from '../../scripts/data/deploy.utils';
+  deployPreprocessorMock,
+  deployConditionalTxsMock,
+  deployParserMock,
+} from '../../scripts/data/deploy.utils.mock';
+import { deployAgreement } from '../../scripts/data/deploy.utils';
+import { Agreement } from '../../typechain-types';
 
 describe('Simple conditional transactions in Agreement', () => {
-  let agreement: AgreementMock;
+  let agreement: Agreement;
   let agreementAddr: string;
   let conditionalTx: ContextMock;
   let parser: ParserMock;
@@ -49,13 +49,13 @@ describe('Simple conditional transactions in Agreement', () => {
 
     // Deploy contracts
     agreementAddr = await deployAgreement();
-    preprocessorAddr = await deployPreprocessor();
-    agreement = await ethers.getContractAt('AgreementMock', agreementAddr);
+    preprocessorAddr = await deployPreprocessorMock();
+    agreement = await ethers.getContractAt('Agreement', agreementAddr);
 
-    // const conditionalAddr = await deployConditionalTxs(agreementAddr);
+    // const conditionalAddr = await deployConditionalTxsMock(agreementAddr);
 
     // conditionalTx = await ethers.getContractAt('ContextMock', conditionalAddr);
-    const parserAddr = await deployParser();
+    const parserAddr = await deployParserMock();
     parser = await ethers.getContractAt('ParserMock', parserAddr);
     // // Make a snapshot
     snapshotId = await network.provider.send('evm_snapshot');
@@ -72,9 +72,11 @@ describe('Simple conditional transactions in Agreement', () => {
     await agreement.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
     await agreement.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
-    let ContextMock = await ethers.getContractFactory('ContextMock');
-    const transactionContext = await ContextMock.deploy(agreementAddr);
-    const conditionContext = await ContextMock.deploy(agreementAddr);
+    const ContextMock = await ethers.getContractFactory('ContextMock');
+    const transactionContext = await ContextMock.deploy();
+    await transactionContext.setAppAddress(agreementAddr);
+    const conditionContext = await ContextMock.deploy();
+    await conditionContext.setAppAddress(agreementAddr);
 
     txs.push({
       txId: 1,

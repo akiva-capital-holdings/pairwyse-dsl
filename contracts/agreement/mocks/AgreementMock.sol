@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import { Agreement } from '../Agreement.sol';
 
-contract AgreementMock is Agreement {
-    constructor(address _parser) Agreement(_parser) {}
+// This is just an empty contract
+// TODO: delete this contract
+contract AgreementMock {
+    constructor(address _parser) {}
 }

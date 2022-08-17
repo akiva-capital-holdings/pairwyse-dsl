@@ -6,8 +6,6 @@ describe('Context', () => {
   let app: ContextMock;
   let snapshotId: number;
 
-  const agreementAddr = '0xc5a5C42992dECbae36851359345FE25997F5C42d'; // just example
-
   enum OpcodeLibNames {
     ComparisonOpcodes,
     BranchingOpcodes,
@@ -16,8 +14,10 @@ describe('Context', () => {
   }
 
   before(async () => {
+    const [random] = await ethers.getSigners();
     const ContextCont = await ethers.getContractFactory('ContextMock');
-    app = await ContextCont.deploy(agreementAddr);
+    app = await ContextCont.deploy();
+    await app.setAppAddress(random.address);
   });
 
   beforeEach(async () => {
@@ -170,7 +170,7 @@ describe('Context', () => {
       await expect(app.setAppAddress(ethers.constants.AddressZero)).to.be.revertedWith('CTX1');
       const [addr] = await ethers.getSigners();
       await app.setAppAddress(addr.address);
-      expect(await app.appAddress()).to.equal(addr.address);
+      expect(await app.appAddr()).to.equal(addr.address);
     });
 
     it('setMsgSender', async () => {

@@ -55,7 +55,7 @@ library OtherOpcodes {
         bool _boolVal = uint8(data[0]) == 1;
 
         // Set local variable by it's hex
-        (bool success, ) = IContext(_ctx).appAddress().call(
+        (bool success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature('setStorageBool(bytes32,bool)', _varNameB32, _boolVal)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
@@ -70,7 +70,7 @@ library OtherOpcodes {
         uint256 _val = _last.getUint256();
 
         // Set local variable by it's hex
-        (bool success, ) = IContext(_ctx).appAddress().call(
+        (bool success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature('setStorageUint256(bytes32,uint256)', _varNameB32, _val)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
@@ -232,7 +232,7 @@ library OtherOpcodes {
         bytes32 varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
 
         // Load local variable by it's hex
-        (bool success, bytes memory data) = IContext(_ctx).appAddress().call(
+        (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(funcSignature, varNameB32)
         );
         require(success, ErrorsGeneralOpcodes.OP5);

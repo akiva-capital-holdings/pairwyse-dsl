@@ -2,10 +2,11 @@ import { ethers, network } from 'hardhat';
 import { expect } from 'chai';
 import { App } from '../../../typechain-types';
 import { hex4Bytes } from '../../utils/utils';
-import { deployBase, deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
+import { deployBaseMock } from '../../../scripts/data/deploy.utils.mock';
 import { ContextMock } from '../../../typechain-types/dsl/mocks';
+import { deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
 
-describe.only('DSL: math', () => {
+describe('DSL: math', () => {
   let ctx: ContextMock;
   let app: App;
   let snapshotId: number;
@@ -19,22 +20,21 @@ describe.only('DSL: math', () => {
       otherOpcodesLibAddr,
     ] = await deployOpcodeLibs();
 
-    const [parserAddr, executorLibAddr, preprAddr] = await deployBase();
-
-    // Deploy Application
-    app = await (
-      await ethers.getContractFactory('App', { libraries: { Executor: executorLibAddr } })
-    ).deploy(parserAddr, preprAddr);
+    const [parserAddr, executorLibAddr, preprAddr] = await deployBaseMock();
 
     // Deploy Context & setup
-    ctx = await (await ethers.getContractFactory('ContextMock')).deploy(app.address);
+    ctx = await (await ethers.getContractFactory('ContextMock')).deploy();
     await ctx.setComparisonOpcodesAddr(comparisonOpcodesLibAddr);
     await ctx.setBranchingOpcodesAddr(branchingOpcodesLibAddr);
     await ctx.setLogicalOpcodesAddr(logicalOpcodesLibAddr);
     await ctx.setOtherOpcodesAddr(otherOpcodesLibAddr);
 
-    // Set context address in Application
-    await app.setContextAddr(ctx.address);
+    // Deploy Application
+    app = await (
+      await ethers.getContractFactory('App', { libraries: { Executor: executorLibAddr } })
+    ).deploy(parserAddr, preprAddr, ctx.address);
+
+    await ctx.setAppAddress(app.address);
 
     snapshotId = await network.provider.send('evm_snapshot');
   });
