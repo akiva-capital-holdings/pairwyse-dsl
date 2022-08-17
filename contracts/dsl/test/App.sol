@@ -5,13 +5,12 @@ import { IParser } from '../interfaces/IParser.sol';
 import { IContext } from '../interfaces/IContext.sol';
 import { Executor } from '../libs/Executor.sol';
 import { StringUtils } from '../libs/StringUtils.sol';
-import { UnstructuredStorage } from '../../dsl/libs/UnstructuredStorage.sol';
+import { UnstructuredStorageMock } from '../mocks/UnstructuredStorageMock.sol';
 
-// import "hardhat/console.sol";
+// import 'hardhat/console.sol';
 
 // TODO: do we need this contract actually? Will it be usable after making Roles?
-contract App {
-    using UnstructuredStorage for bytes32;
+contract App is UnstructuredStorageMock {
     using StringUtils for string;
 
     address public parser;
@@ -30,14 +29,6 @@ contract App {
         preprocessor = _preprocessor;
         ctx = _ctx;
         _setupContext();
-    }
-
-    function getStorageUint256(bytes32 position) public view returns (uint256) {
-        return position.getStorageUint256();
-    }
-
-    function setStorageUint256(bytes32 position, uint256 data) public {
-        position.setStorageUint256(data);
     }
 
     function parse(string memory _program) external {
