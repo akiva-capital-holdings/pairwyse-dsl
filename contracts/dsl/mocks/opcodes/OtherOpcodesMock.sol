@@ -32,6 +32,30 @@ contract OtherOpcodesMock is Storage {
         OtherOpcodes.opMsgSender(_ctx);
     }
 
+    function opMsgValue(IContext _ctx) public {
+        OtherOpcodes.opMsgValue(_ctx);
+    }
+
+    function opSetLocalBool(IContext _ctx) public {
+        OtherOpcodes.opSetLocalBool(_ctx);
+    }
+
+    function opSetUint256(IContext _ctx) public {
+        OtherOpcodes.opSetUint256(_ctx);
+    }
+
+    function opTransferVar(IContext _ctx) public {
+        OtherOpcodes.opTransferVar(_ctx);
+    }
+
+    function opBalanceOf(IContext _ctx) public {
+        OtherOpcodes.opBalanceOf(_ctx);
+    }
+
+    function opTransferFromVar(IContext _ctx) public {
+        OtherOpcodes.opTransferFromVar(_ctx);
+    }
+
     function opLoadLocalUint256(IContext _ctx) public {
         OtherOpcodes.opLoadLocalUint256(_ctx);
     }

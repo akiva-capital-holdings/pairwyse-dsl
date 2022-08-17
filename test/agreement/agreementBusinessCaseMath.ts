@@ -9,7 +9,7 @@ import { Context__factory } from '../../typechain-types';
 import { TxObject } from '../types';
 import { ERC20 } from '../../typechain-types/dsl/test/ERC20Mintable.sol';
 import { AgreementMock, ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
-import { businessCaseSteps } from '../../scripts/data/agreement';
+// import { businessCaseSteps } from '../../scripts/data/agreement';
 
 describe.skip('Agreement: business case tests math', () => {
   // let ContextCont: Context__factory;
@@ -30,6 +30,7 @@ describe.skip('Agreement: business case tests math', () => {
   const BASE = 4;
 
   // Add tx objects to Agreement
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const addSteps = async (steps: TxObject[], Ctx: Context__factory) => {
     let txCtx;
 

@@ -44,6 +44,7 @@ describe('Conditional transactions', () => {
     // Deploy contracts
     let appAddr;
     let parserAddr;
+    // eslint-disable-next-line prefer-const
     [appAddr, parserAddr] = await deployConditionalTxs();
     app = await ethers.getContractAt('ConditionalTxsMock', appAddr);
     parser = await ethers.getContractAt('ParserMock', parserAddr);

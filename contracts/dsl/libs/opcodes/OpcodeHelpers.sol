@@ -9,7 +9,7 @@ import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
 import { ErrorsOpcodeHelpers } from '../Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 /**
  * @title Opcode helper functions

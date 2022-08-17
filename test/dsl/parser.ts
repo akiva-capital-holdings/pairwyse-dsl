@@ -213,7 +213,7 @@ describe('Parser', () => {
     });
 
     it('reverts if try to set empty global variable name', async () => {
-      const name = 'TEST_NUMBER';
+      // const name = 'TEST_NUMBER';
       expect(await app.isVariable('')).to.be.equal(false);
       expect(await app.savedProgram('')).to.be.equal('0x');
       await expect(app.setVariableExt(ctxAddr, '', 'uint256')).to.be.revertedWith('PRS2');
@@ -306,10 +306,7 @@ describe('Parser', () => {
         '0x' +
           '1c' + // loadRemote
           '02' + // bool
-          `f11f9a5d${
-            // bytecode for a `BOOL_VALUE` name
-            appAddrHex.toLowerCase()
-          }`
+          'f11f9a5d' // bytecode for a `BOOL_VALUE` name appAddrHex.toLowerCase()
       );
     });
     // TODO: add for other types

@@ -84,10 +84,10 @@ describe('Comparison opcodes', () => {
   describe('opNotEq', () => {
     it('errors', async () => {
       await pushToStack(StackValue, ctx, StackCont, [1, '1']);
-      await expect(app.opEq(ctxAddr)).to.be.revertedWith('OP4');
+      await expect(app.opNotEq(ctxAddr)).to.be.revertedWith('OP4');
 
       await pushToStack(StackValue, ctx, StackCont, ['1', '1']);
-      await expect(app.opEq(ctxAddr)).to.be.revertedWith('OP2');
+      await expect(app.opNotEq(ctxAddr)).to.be.revertedWith('OP2');
     });
 
     it('success', async () => {

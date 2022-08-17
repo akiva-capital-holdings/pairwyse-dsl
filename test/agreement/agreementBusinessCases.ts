@@ -6,7 +6,7 @@ import { BigNumber } from 'ethers';
 import { changeTokenBalanceAndGetTxHash, hex4Bytes } from '../utils/utils';
 import { businessCaseSteps } from '../../scripts/data/agreement';
 import { Token, Context__factory } from '../../typechain-types';
-import { TxObject } from '../types';
+// import { TxObject } from '../types';
 import { AgreementMock, ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
 import { deployAgreement, addSteps } from '../../scripts/data/deploy.utils';
 
@@ -86,7 +86,8 @@ describe.skip('Agreement: business case', () => {
         await expect(agreement.connect(GP).execute(41)).to.be.revertedWith('AGR2');
         console.log(`\x1b[33m
       Condition is not satisfied.
-      GP must deposit a minimum ${DEPOSIT_MIN_PERCENT}% of the initial DAI funds target amount\x1b[0m
+      GP must deposit a minimum ${DEPOSIT_MIN_PERCENT}% of the
+      initial DAI funds target amount\x1b[0m
       `);
       }
       // Other tests have no sense if result is false
@@ -168,6 +169,7 @@ describe.skip('Agreement: business case', () => {
           console.log(`LP withdraws LP Initial Deposit = ${formatEther(LP_INITIAL)} DAI`);
           console.log(`GP withdraws GP Initial Deposit = ${formatEther(GP_INITIAL)} DAI`);
           const txn4Hash = await changeTokenBalanceAndGetTxHash(
+            // eslint-disable-next-line @typescript-eslint/no-loop-func
             () => agreement.connect(LP).execute(44),
             dai,
             [GP, LP],
@@ -234,9 +236,9 @@ initiating funds\x1b[0m
         await dai.connect(whale).approve(txsAddr, GP_PURCHASE_RETURN);
         console.log(`Fund Investment Return = ${formatEther(GP_PURCHASE_RETURN)} DAI`);
 
-        const cashBalanceBefore = await dai.balanceOf(txsAddr);
+        // const cashBalanceBefore = await dai.balanceOf(txsAddr);
         const txn6 = await agreement.connect(GP).execute(46);
-        const cashBalanceAfter = await dai.balanceOf(txsAddr);
+        // const cashBalanceAfter = await dai.balanceOf(txsAddr);
 
         // TODO: balances should be equal
         // console.log(cashBalanceBefore.toString());
@@ -334,6 +336,7 @@ initiating funds\x1b[0m
           console.log(`LP Investment Profit = ${formatEther(LP_PROFIT)} DAI`);
 
           const txn81Hash = await changeTokenBalanceAndGetTxHash(
+            // eslint-disable-next-line @typescript-eslint/no-loop-func
             () => agreement.connect(LP).execute(481),
             dai,
             [LP],
@@ -364,6 +367,7 @@ initiating funds\x1b[0m
           console.log(`LP Principal = ${formatEther(LP_PRINCIPAL)} DAI`);
 
           const txn82Hash = await changeTokenBalanceAndGetTxHash(
+            // eslint-disable-next-line @typescript-eslint/no-loop-func
             () => agreement.connect(LP).execute(482),
             dai,
             [LP],
@@ -645,10 +649,12 @@ initiating funds\x1b[0m
 
     // // used the 34% / 66% percentage, as in the third agreement we have dividing values by 66 %
     // // P1 = 100 - 34
-    // // ex. loadLocal uint256 DEPOSIT_MIN_PERCENT * loadLocal uint256 LP_INITIAL / loadLocal uint256
+    // // ex. loadLocal uint256 DEPOSIT_MIN_PERCENT * loadLocal uint25
+    // 6 LP_INITIAL / loadLocal uint256
     // // P1
     // businessCaseTest(
-    //   'Scenario 15: Should be non zero value in the end of contract. Correct LP investment profit',
+    //   'Scenario 15: Should be non zero value in the end of
+    // contract.Correct LP investment profit',
     //   parseUnits('340000', 0), // GP_INITIAL
     //   [parseUnits('900000', 0)], // LP_INITIAL
     //   parseUnits('1000000', 0), // INITIAL_FUNDS_TARGET

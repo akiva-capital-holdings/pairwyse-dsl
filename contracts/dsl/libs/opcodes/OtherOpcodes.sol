@@ -9,7 +9,7 @@ import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
@@ -18,7 +18,6 @@ library OtherOpcodes {
     function opLoadLocalAny(IContext _ctx) public {
         address libAddr = _ctx.otherOpcodes();
         bytes4 selector = OpcodeHelpers.nextBranchSelector(_ctx, 'loadLocal');
-        console.logBytes4(selector);
         OpcodeHelpers.mustCall(libAddr, abi.encodeWithSelector(selector, _ctx));
     }
 
@@ -51,8 +50,8 @@ library OtherOpcodes {
 
     function opSetLocalBool(IContext _ctx) public {
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
-
         bytes memory data = OpcodeHelpers.nextBytes(_ctx, 1);
+
         bool _boolVal = uint8(data[0]) == 1;
 
         // Set local variable by it's hex
@@ -140,7 +139,12 @@ library OtherOpcodes {
         );
         // console.log('recipient', recipient);
         uint256 amount = opUint256Get(_ctx);
+        // console.log('balance contract before', IERC20(token).balanceOf(address(this)));
+        // console.log('balance recipient before', IERC20(token).balanceOf(recipient));
+        // console.log('amount', amount);
         IERC20(token).transfer(recipient, amount);
+        // console.log('balance contract after', IERC20(token).balanceOf(address(this)));
+        // console.log('balance recipient after', IERC20(token).balanceOf(recipient));
         OpcodeHelpers.putToStack(_ctx, 1);
     }
 

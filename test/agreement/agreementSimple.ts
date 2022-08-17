@@ -4,7 +4,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
 import { hex4Bytes } from '../utils/utils';
 import { AgreementMock, ConditionalTxsMock } from '../../typechain-types/agreement/mocks';
-import { Context, Context__factory } from '../../typechain-types';
+import { Context__factory } from '../../typechain-types';
 import { deployAgreement, addSteps } from '../../scripts/data/deploy.utils';
 import {
   aliceAndBobSteps,

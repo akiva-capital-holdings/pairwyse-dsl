@@ -11,7 +11,7 @@ import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { Storage } from '../dsl/helpers/Storage.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 contract ConditionalTxs is Storage {
     struct Tx {
@@ -75,7 +75,7 @@ contract ConditionalTxs is Storage {
         string memory _conditionStr,
         IContext _conditionCtx
     ) external {
-        console.log('running');
+        // console.log('running');
         require(
             keccak256(abi.encode(_conditionStr)) != keccak256(abi.encode('')),
             ErrorsConditionalTxs.CNT2
