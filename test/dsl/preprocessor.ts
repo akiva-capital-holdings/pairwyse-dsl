@@ -5,7 +5,7 @@ import { parseUnits } from 'ethers/lib/utils';
 import { Preprocessor } from '../../typechain-types';
 import { Testcase } from '../types';
 
-describe.only('Preprocessor', () => {
+describe('Preprocessor', () => {
   let app: Preprocessor;
   let ctxAddr: string;
   let appAddrHex: string;
@@ -118,11 +118,8 @@ describe.only('Preprocessor', () => {
     const infixToPostfixTest = ({ name, expr, expected }: Testcase) => {
       it(name, async () => {
         const stack = await (await ethers.getContractFactory('Stack')).deploy();
-        console.log(1);
         const inputArr = jsTransform(expr);
-        console.log(2);
         const res = await app.callStatic.infixToPostfix(ctxAddr, inputArr, stack.address);
-        console.log(3);
         expect(res).to.eql(expected);
       });
     };
