@@ -18,7 +18,7 @@ import {
   pushToStack,
 } from '../../../utils/utils';
 
-describe.only('Other opcodes', () => {
+describe('Other opcodes', () => {
   let StackCont: Stack__factory;
   let StackValue: StackValue__factory;
   /* eslint-enable camelcase */
