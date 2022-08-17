@@ -2,8 +2,9 @@
 pragma solidity ^0.8.0;
 
 import { OtherOpcodes } from '../../libs/opcodes/OtherOpcodes.sol';
+import { UnstructuredStorageMock } from '../UnstructuredStorageMock.sol';
 
-contract OtherOpcodesMock {
+contract OtherOpcodesMock is UnstructuredStorageMock {
     receive() external payable {}
 
     function opLoadLocalAny(address _ctx) public {
