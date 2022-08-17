@@ -21,15 +21,18 @@ contract App {
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    constructor(
-        address _parser,
-        address _ctx,
-        address _preprocessor
-    ) {
+    constructor(address _parser, address _preprocessor) {
         parser = _parser;
-        ctx = _ctx;
         preprocessor = _preprocessor;
+    }
+
+    function setContextAddr(address _ctx) external {
+        ctx = _ctx;
         _setupContext();
+    }
+
+    function getStorageUint256(bytes32 position) public view returns (uint256) {
+        return position.getStorageUint256();
     }
 
     function setStorageUint256(bytes32 position, uint256 data) public {

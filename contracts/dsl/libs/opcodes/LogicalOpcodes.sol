@@ -100,7 +100,11 @@ library LogicalOpcodes {
         OpcodeHelpers.putToStack(_ctx, result);
     }
 
-    // Note: integer division. Example: 5 / 2 = 2
+    /**
+     * Divide two numbers from the top of the stack
+     * @dev This is an integer division. Example: 5 / 2 = 2
+     * @param _ctx Context address
+     */
     function opDiv(address _ctx) public {
         StackValue last = IContext(_ctx).stack().pop();
         StackValue prev = IContext(_ctx).stack().pop();

@@ -9,7 +9,6 @@ import { ErrorsExecutor } from './Errors.sol';
 library Executor {
     function execute(address _ctx) public {
         // console.log('Executor.execute()');
-        // address _ctx = IContext(_ctxAddr);
         // console.logBytes(IContext(_ctx).program());
         require(IContext(_ctx).program().length > 0, ErrorsExecutor.EXC1);
 

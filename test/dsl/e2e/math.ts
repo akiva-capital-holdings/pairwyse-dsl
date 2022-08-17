@@ -2,14 +2,12 @@ import { ethers, network } from 'hardhat';
 import { expect } from 'chai';
 import { App } from '../../../typechain-types';
 import { hex4Bytes } from '../../utils/utils';
-import { deployBase, deployOpcodeLibs, deployAgreement } from '../../../scripts/data/deploy.utils';
+import { deployBase, deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
 import { ContextMock } from '../../../typechain-types/dsl/mocks';
 
 describe.only('DSL: math', () => {
   let ctx: ContextMock;
   let app: App;
-  let preprAddr: string;
-  let agreementAddr: string;
   let snapshotId: number;
 
   before(async () => {
@@ -21,20 +19,22 @@ describe.only('DSL: math', () => {
       otherOpcodesLibAddr,
     ] = await deployOpcodeLibs();
 
-    agreementAddr = await deployAgreement();
     const [parserAddr, executorLibAddr, preprAddr] = await deployBase();
 
+    // Deploy Application
+    app = await (
+      await ethers.getContractFactory('App', { libraries: { Executor: executorLibAddr } })
+    ).deploy(parserAddr, preprAddr);
+
     // Deploy Context & setup
-    ctx = await (await ethers.getContractFactory('ContextMock')).deploy(agreementAddr);
+    ctx = await (await ethers.getContractFactory('ContextMock')).deploy(app.address);
     await ctx.setComparisonOpcodesAddr(comparisonOpcodesLibAddr);
     await ctx.setBranchingOpcodesAddr(branchingOpcodesLibAddr);
     await ctx.setLogicalOpcodesAddr(logicalOpcodesLibAddr);
     await ctx.setOtherOpcodesAddr(otherOpcodesLibAddr);
 
-    // Deploy Application
-    app = await (
-      await ethers.getContractFactory('App', { libraries: { Executor: executorLibAddr } })
-    ).deploy(parserAddr, ctx.address, preprAddr);
+    // Set context address in Application
+    await app.setContextAddr(ctx.address);
 
     snapshotId = await network.provider.send('evm_snapshot');
   });
@@ -84,8 +84,7 @@ describe.only('DSL: math', () => {
       await app.execute();
     });
 
-    // TODO: check why it's failed
-    it.only('should divide zero by number from loadLocal', async () => {
+    it('should divide zero by number from loadLocal', async () => {
       await app.setStorageUint256(hex4Bytes('NUM1'), 0);
       await app.setStorageUint256(hex4Bytes('NUM2'), 1);
       await app.parse('loadLocal uint256 NUM1 / loadLocal uint256 NUM2');
@@ -93,109 +92,109 @@ describe.only('DSL: math', () => {
     });
   });
 
-  // describe.only('underflow case', () => {
-  //   it('negative number error', async () => {
-  //     await app.parse('uint256 5 - uint256 6');
-  //     await expect(app.execute()).to.be.revertedWith('EXC3');
+  describe('underflow case', () => {
+    it('negative number error', async () => {
+      await app.parse('uint256 5 - uint256 6');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
-  //     await app.setStorageUint256(hex4Bytes('NUM1'), 10);
-  //     await app.setStorageUint256(hex4Bytes('NUM2'), 1000);
-  //     await app.parse('loadLocal uint256 NUM1 - loadLocal uint256 NUM2');
-  //     await expect(app.execute()).to.be.revertedWith('EXC3');
-  //   });
+      await app.setStorageUint256(hex4Bytes('NUM1'), 10);
+      await app.setStorageUint256(hex4Bytes('NUM2'), 1000);
+      await app.parse('loadLocal uint256 NUM1 - loadLocal uint256 NUM2');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
+    });
 
-  //     it('returns error if the first number is 0', async () => {
-  //       await app.parse('0 - 1');
-  //       await expect(app.execute()).to.be.revertedWith('EXC3');
+    it('returns error if the first number is 0', async () => {
+      await app.parse('0 - 1');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
-  //       await app.parse('uint256 0 - uint256 1');
-  //       await expect(app.execute()).to.be.revertedWith('EXC3');
+      await app.parse('uint256 0 - uint256 1');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
-  //       await app.setStorageUint256(hex4Bytes('NUM1'), 0);
-  //       await app.setStorageUint256(hex4Bytes('NUM2'), 1);
-  //       await app.parse('loadLocal uint256 NUM1 - loadLocal uint256 NUM2');
-  //       await expect(app.execute()).to.be.revertedWith('EXC3');
-  //     });
+      await app.setStorageUint256(hex4Bytes('NUM1'), 0);
+      await app.setStorageUint256(hex4Bytes('NUM2'), 1);
+      await app.parse('loadLocal uint256 NUM1 - loadLocal uint256 NUM2');
+      await expect(app.execute()).to.be.revertedWith('EXC3');
+    });
 
-  //     it('no errors if both numbers are 0', async () => {
-  //       await app.parse('0 - 0');
-  //       await app.execute();
+    it('no errors if both numbers are 0', async () => {
+      await app.parse('0 - 0');
+      await app.execute();
 
-  //       await app.parse('uint256 0 - uint256 0');
-  //       await app.execute();
+      await app.parse('uint256 0 - uint256 0');
+      await app.execute();
 
-  //       await app.setStorageUint256(hex4Bytes('NUM1'), 0);
-  //       await app.setStorageUint256(hex4Bytes('NUM2'), 0);
-  //       await app.parse('loadLocal uint256 NUM1 - loadLocal uint256 NUM2');
-  //       await app.execute();
-  //     });
-  // });
+      await app.setStorageUint256(hex4Bytes('NUM1'), 0);
+      await app.setStorageUint256(hex4Bytes('NUM2'), 0);
+      await app.parse('loadLocal uint256 NUM1 - loadLocal uint256 NUM2');
+      await app.execute();
+    });
+  });
 
-  //   describe('overflow case', () => {
-  //     const MAX_UINT256 = ethers.constants.MaxUint256;
-  //     const PRE_MAX_UINT256 = MAX_UINT256.sub(1);
+  describe('overflow case', () => {
+    const MAX_UINT256 = ethers.constants.MaxUint256;
+    const PRE_MAX_UINT256 = MAX_UINT256.sub(1);
 
-  //     it('can not be added a maximum uint256 value to a simple one', async () => {
-  //       await app.parse(`${MAX_UINT256} + 1`);
-  //       await expect(app.execute()).to.be.revertedWith('EXC3');
+    it('can not be added a maximum uint256 value to a simple one', async () => {
+      await app.parse(`${MAX_UINT256} + 1`);
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
-  //       await app.parse(`uint256 ${MAX_UINT256} + uint256 1`);
-  //       await expect(app.execute()).to.be.revertedWith('EXC3');
-  //     });
+      await app.parse(`uint256 ${MAX_UINT256} + uint256 1`);
+      await expect(app.execute()).to.be.revertedWith('EXC3');
+    });
 
-  //     it('can not to be added a simple uint256 value to a maximum one', async () => {
-  //       await app.parse(`1 + ${MAX_UINT256}`);
-  //       await expect(app.execute()).to.be.revertedWith('EXC3');
+    it('can not to be added a simple uint256 value to a maximum one', async () => {
+      await app.parse(`1 + ${MAX_UINT256}`);
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
-  //       await app.parse(`uint256 1 + uint256 ${MAX_UINT256}`);
-  //       await expect(app.execute()).to.be.revertedWith('EXC3');
-  //     });
+      await app.parse(`uint256 1 + uint256 ${MAX_UINT256}`);
+      await expect(app.execute()).to.be.revertedWith('EXC3');
+    });
 
-  //     it('can not to be added a maximum uint256 value to the maximum one', async () => {
-  //       await app.parse(`${MAX_UINT256} + ${MAX_UINT256}`);
-  //       await expect(app.execute()).to.be.revertedWith('EXC3');
+    it('can not to be added a maximum uint256 value to the maximum one', async () => {
+      await app.parse(`${MAX_UINT256} + ${MAX_UINT256}`);
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
-  //       await app.parse(`uint256 ${MAX_UINT256} + uint256 ${MAX_UINT256}`);
-  //       await expect(app.execute()).to.be.revertedWith('EXC3');
-  //     });
+      await app.parse(`uint256 ${MAX_UINT256} + uint256 ${MAX_UINT256}`);
+      await expect(app.execute()).to.be.revertedWith('EXC3');
+    });
 
-  //     it('can be added a pre maximum uint256 value to the simple one', async () => {
-  //       await app.parse(`${PRE_MAX_UINT256} + 1`);
-  //       await app.execute();
+    it('can be added a pre maximum uint256 value to the simple one', async () => {
+      await app.parse(`${PRE_MAX_UINT256} + 1`);
+      await app.execute();
 
-  //       await app.parse(`uint256 ${PRE_MAX_UINT256} + uint256 1`);
-  //       await app.execute();
-  //     });
+      await app.parse(`uint256 ${PRE_MAX_UINT256} + uint256 1`);
+      await app.execute();
+    });
 
-  //     it('can be added a simple uint256 value to pre maximum one', async () => {
-  //       await app.parse(`1 + ${PRE_MAX_UINT256}`);
-  //       await app.execute();
+    it('can be added a simple uint256 value to pre maximum one', async () => {
+      await app.parse(`1 + ${PRE_MAX_UINT256}`);
+      await app.execute();
 
-  //       await app.parse(`uint256 1 + uint256 ${PRE_MAX_UINT256}`);
-  //       await app.execute();
-  //     });
+      await app.parse(`uint256 1 + uint256 ${PRE_MAX_UINT256}`);
+      await app.execute();
+    });
 
-  //     // eslint-disable-next-line no-multi-str
-  //     it('reverts if add a pre maximum uint256 value to the simple one that is bigger then \
-  // uint256', async () => {
-  //       await app.parse(`${PRE_MAX_UINT256} + 2`);
-  //       await expect(app.execute()).to.be.revertedWith('EXC3');
+    // eslint-disable-next-line no-multi-str
+    it('reverts if add a pre maximum uint256 value to the simple one that is bigger then \
+  uint256', async () => {
+      await app.parse(`${PRE_MAX_UINT256} + 2`);
+      await expect(app.execute()).to.be.revertedWith('EXC3');
 
-  //       await app.parse(`uint256 ${PRE_MAX_UINT256} + uint256 2`);
-  //       await expect(app.execute()).to.be.revertedWith('EXC3');
-  //     });
+      await app.parse(`uint256 ${PRE_MAX_UINT256} + uint256 2`);
+      await expect(app.execute()).to.be.revertedWith('EXC3');
+    });
 
-  //     it('no errors if both numbers are 0', async () => {
-  //       await app.parse('0 + 0');
-  //       await app.execute();
+    it('no errors if both numbers are 0', async () => {
+      await app.parse('0 + 0');
+      await app.execute();
 
-  //       await app.parse('uint256 0 + uint256 0');
-  //       await app.execute();
+      await app.parse('uint256 0 + uint256 0');
+      await app.execute();
 
-  //       await app.setStorageUint256(hex4Bytes('NUM1'), 0);
-  //       await app.setStorageUint256(hex4Bytes('NUM2'), 0);
-  //       await app.parse('loadLocal uint256 NUM1 + loadLocal uint256 NUM2');
-  //       await app.execute();
-  //     });
-  //   });
+      await app.setStorageUint256(hex4Bytes('NUM1'), 0);
+      await app.setStorageUint256(hex4Bytes('NUM2'), 0);
+      await app.parse('loadLocal uint256 NUM1 + loadLocal uint256 NUM2');
+      await app.execute();
+    });
+  });
 });
