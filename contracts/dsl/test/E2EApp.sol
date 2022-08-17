@@ -2,17 +2,19 @@
 pragma solidity ^0.8.0;
 
 import { Preprocessor } from '../Preprocessor.sol';
-import { ParserMock } from '../mocks/ParserMock.sol';
+import { IParserMock } from '../interfaces/IParserMock.sol';
 import { IContext } from '../interfaces/IContext.sol';
 import { Executor } from '../libs/Executor.sol';
-import { Storage } from '../helpers/Storage.sol';
+
+// import { Storage } from '../helpers/Storage.sol';
 
 // import "hardhat/console.sol";
 
-contract E2EApp is Storage {
-    address public preprAddr;
-    address public parserAddr;
-    IContext public ctx;
+// TODO: do we need this contract actually? Will it be usable after making Roles?
+contract E2EApp {
+    address public preprocessor;
+    address public parser;
+    address public context;
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
@@ -20,33 +22,28 @@ contract E2EApp is Storage {
     constructor(
         address _preprAddr,
         address _parserAddr,
-        IContext _ctx
+        address _ctx
     ) {
-        preprAddr = _preprAddr;
-        parserAddr = _parserAddr;
-        ctx = _ctx;
+        preprocessor = _preprAddr;
+        parser = _parserAddr;
+        context = _ctx;
         setupContext();
     }
 
     function parse(string memory _program) external {
-        ParserMock(parserAddr).parse(preprAddr, address(ctx), _program);
+        IParserMock(parser).parse(preprocessor, context, _program);
     }
 
     function parseCode(string[] memory _code) external {
-        // parseCodeExt(address _ctxAddr, string[] memory _code)
-        ParserMock(parserAddr).parseCodeExt(address(ctx), _code);
-        // ParserMock(parserAddr).parseCodeExt(address(0), _code);
-        // ParserMock(parserAddr).labelPos('');
+        IParserMock(parser).parseCodeExt(context, _code);
     }
 
     function execute() external payable {
-        ctx.setMsgValue(msg.value);
-        Executor.execute(address(ctx));
+        IContext(context).setMsgValue(msg.value);
+        Executor.execute(context);
     }
 
     function setupContext() internal {
-        ctx.initOpcodes();
-        ctx.setAppAddress(address(this));
-        ctx.setMsgSender(msg.sender);
+        IContext(context).setMsgSender(msg.sender);
     }
 }

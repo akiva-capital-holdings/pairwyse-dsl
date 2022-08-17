@@ -4,44 +4,48 @@ pragma solidity ^0.8.0;
 import { IParser } from '../interfaces/IParser.sol';
 import { IContext } from '../interfaces/IContext.sol';
 import { Executor } from '../libs/Executor.sol';
-import { Storage } from '../helpers/Storage.sol';
 import { StringUtils } from '../libs/StringUtils.sol';
+import { UnstructuredStorage } from '../../dsl/libs/UnstructuredStorage.sol';
 
 // import "hardhat/console.sol";
 
-contract App is Storage {
+// TODO: do we need this contract actually? Will it be usable after making Roles?
+contract App {
+    using UnstructuredStorage for bytes32;
     using StringUtils for string;
 
-    IParser public parser;
-    IContext public ctx;
-    address public preprAddr;
+    address public parser;
+    address public ctx;
+    address public preprocessor;
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
     constructor(
-        address _preprAddr,
-        IParser _parser,
-        IContext _ctx
+        address _parser,
+        address _ctx,
+        address _preprocessor
     ) {
-        preprAddr = _preprAddr;
         parser = _parser;
         ctx = _ctx;
+        preprocessor = _preprocessor;
         _setupContext();
     }
 
+    function setStorageUint256(bytes32 position, uint256 data) public {
+        position.setStorageUint256(data);
+    }
+
     function parse(string memory _program) external {
-        parser.parse(preprAddr, address(ctx), _program);
+        IParser(parser).parse(preprocessor, ctx, _program);
     }
 
     function execute() external payable {
-        ctx.setMsgValue(msg.value);
-        Executor.execute(address(ctx));
+        IContext(ctx).setMsgValue(msg.value);
+        Executor.execute(ctx);
     }
 
     function _setupContext() internal {
-        ctx.initOpcodes();
-        ctx.setAppAddress(address(this));
-        ctx.setMsgSender(msg.sender);
+        IContext(ctx).setMsgSender(msg.sender);
     }
 }
