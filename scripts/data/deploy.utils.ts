@@ -4,14 +4,14 @@ import * as hre from 'hardhat';
 import { parseEther } from 'ethers/lib/utils';
 import { TxObject } from '../../test/types';
 import { AgreementMock } from '../../typechain-types/agreement/mocks';
-import { ContextMock } from '../../typechain-types/dsl/mocks';
+import { ContextMock, ParserMock, ExecutorMock } from '../../typechain-types/dsl/mocks';
+import { OpcodeHelpersMock } from '../../typechain-types/dsl/mocks/opcodes';
 
 const { ethers } = hre;
 
 export const addSteps = async (
   preprocessorAddr: string,
   steps: TxObject[],
-  // Context: ContextMock,
   agreementAddress: string
 ) => {
   let transactionContext;
@@ -19,15 +19,13 @@ export const addSteps = async (
   for await (const step of steps) {
     console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
     let ContextMock = await ethers.getContractFactory('ContextMock');
-    transactionContext = await ContextMock.deploy(agreement.address);
-    await transactionContext.deployed();
+    transactionContext = await ContextMock.deploy(agreementAddress);
     const cdCtxsAddrs = []; // conditional context Addresses
 
     console.log('\nTerm Conditions');
 
     for (let j = 0; j < step.conditions.length; j++) {
-      const conditionContract = await ContextMock.deploy(agreement.address);
-      await conditionContract.deployed();
+      const conditionContract = await ContextMock.deploy(agreementAddress);
       cdCtxsAddrs.push(conditionContract.address);
       await agreement.parse(step.conditions[j], conditionContract.address, preprocessorAddr);
       console.log(
@@ -99,11 +97,10 @@ export const deployParser = async () => {
   const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
   const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
 
-  // Deploy the main contract
-  const ParserCont = await ethers.getContractFactory('Parser', {
+  const ParserMockContract = await ethers.getContractFactory('ParserMock', {
     libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
   });
-  const parser = await ParserCont.deploy();
+  const parser = await ParserMockContract.deploy();
   return parser.address;
 };
 
@@ -196,18 +193,18 @@ export const deployAgreementFactory = async () => {
   return factory.address;
 };
 
-export const deployConditionalTxs = async () => {
-  // Deploy libraries
+export const deployConditionalTxs = async (agreementAddress: string) => {
+  // TODO: Deploy only ConditionalTxs without libraries
   const [
     comparisonOpcodesLibAddr,
     branchingOpcodesLibAddr,
     logicalOpcodesLibAddr,
     otherOpcodesLibAddr,
   ] = await deployOpcodeLibs();
-  const [parserAddr, executorLibAddr, preprAddr] = await deployBase();
 
+  const executorLibAddr = await deployExecutor();
   const app = await (
-    await ethers.getContractFactory('ConditionalTxs', {
+    await ethers.getContractFactory('ContextMock', {
       libraries: {
         ComparisonOpcodes: comparisonOpcodesLibAddr,
         BranchingOpcodes: branchingOpcodesLibAddr,
@@ -216,7 +213,7 @@ export const deployConditionalTxs = async () => {
         Executor: executorLibAddr,
       },
     })
-  ).deploy();
+  ).deploy(agreementAddress);
 
-  return [app.address, parserAddr, preprAddr];
+  return app.address;
 };

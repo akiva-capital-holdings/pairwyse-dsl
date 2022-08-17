@@ -60,8 +60,6 @@ interface IContext {
 
     // Functions
 
-    function initOpcodes() external;
-
     function operatorsLen() external view returns (uint256);
 
     function setComparisonOpcodesAddr(address _opcodes) external;

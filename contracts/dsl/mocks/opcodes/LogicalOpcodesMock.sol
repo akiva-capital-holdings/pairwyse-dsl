@@ -1,23 +1,34 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IContext } from '../../interfaces/IContext.sol';
-import { BranchingOpcodes } from '../../libs/opcodes/BranchingOpcodes.sol';
+import { LogicalOpcodes } from '../../libs/opcodes/LogicalOpcodes.sol';
 
-contract BranchingOpcodesMock {
-    function opIfelse(IContext _ctx) public {
-        BranchingOpcodes.opIfelse(_ctx);
+contract LogicalOpcodesMock {
+    function opAnd(address _ctx) public {
+        LogicalOpcodes.opAnd(_ctx);
     }
 
-    function opIf(IContext _ctx) public {
-        BranchingOpcodes.opIf(_ctx);
+    function opOr(address _ctx) public {
+        LogicalOpcodes.opOr(_ctx);
     }
 
-    function opEnd(IContext _ctx) public {
-        BranchingOpcodes.opEnd(_ctx);
+    function opXor(address _ctx) public {
+        LogicalOpcodes.opXor(_ctx);
     }
 
-    function getUint16(IContext _ctx) public returns (uint16) {
-        return BranchingOpcodes.getUint16(_ctx);
+    function opAdd(address _ctx) public {
+        LogicalOpcodes.opAdd(_ctx);
+    }
+
+    function opSub(address _ctx) public {
+        LogicalOpcodes.opSub(_ctx);
+    }
+
+    function opMul(address _ctx) public {
+        LogicalOpcodes.opMul(_ctx);
+    }
+
+    function opDiv(address _ctx) public {
+        LogicalOpcodes.opDiv(_ctx);
     }
 }

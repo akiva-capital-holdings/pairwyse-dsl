@@ -23,9 +23,9 @@ library LogicalOpcodes {
      * @dev Compares two values in the stack. Put 1 if both of them are 1, put
      *      0 otherwise
      */
-    function opAnd(IContext _ctx) public {
-        StackValue last = _ctx.stack().pop();
-        StackValue prev = _ctx.stack().pop();
+    function opAnd(address _ctx) public {
+        StackValue last = IContext(_ctx).stack().pop();
+        StackValue prev = IContext(_ctx).stack().pop();
 
         require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
         require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
@@ -39,9 +39,9 @@ library LogicalOpcodes {
      * @dev Compares two values in the stack. Put 1 if either one of them is 1,
      *      put 0 otherwise
      */
-    function opOr(IContext _ctx) public {
-        StackValue last = _ctx.stack().pop();
-        StackValue prev = _ctx.stack().pop();
+    function opOr(address _ctx) public {
+        StackValue last = IContext(_ctx).stack().pop();
+        StackValue prev = IContext(_ctx).stack().pop();
 
         require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
         require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
@@ -51,9 +51,9 @@ library LogicalOpcodes {
         OpcodeHelpers.putToStack(_ctx, result ? 1 : 0);
     }
 
-    function opXor(IContext _ctx) public {
-        StackValue last = _ctx.stack().pop();
-        StackValue prev = _ctx.stack().pop();
+    function opXor(address _ctx) public {
+        StackValue last = IContext(_ctx).stack().pop();
+        StackValue prev = IContext(_ctx).stack().pop();
 
         require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
         require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
@@ -64,9 +64,9 @@ library LogicalOpcodes {
         OpcodeHelpers.putToStack(_ctx, result ? 1 : 0);
     }
 
-    function opAdd(IContext _ctx) public {
-        StackValue last = _ctx.stack().pop();
-        StackValue prev = _ctx.stack().pop();
+    function opAdd(address _ctx) public {
+        StackValue last = IContext(_ctx).stack().pop();
+        StackValue prev = IContext(_ctx).stack().pop();
 
         require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
         require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
@@ -76,9 +76,9 @@ library LogicalOpcodes {
         OpcodeHelpers.putToStack(_ctx, result);
     }
 
-    function opSub(IContext _ctx) public {
-        StackValue last = _ctx.stack().pop();
-        StackValue prev = _ctx.stack().pop();
+    function opSub(address _ctx) public {
+        StackValue last = IContext(_ctx).stack().pop();
+        StackValue prev = IContext(_ctx).stack().pop();
 
         require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
         require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
@@ -88,9 +88,9 @@ library LogicalOpcodes {
         OpcodeHelpers.putToStack(_ctx, result);
     }
 
-    function opMul(IContext _ctx) public {
-        StackValue last = _ctx.stack().pop();
-        StackValue prev = _ctx.stack().pop();
+    function opMul(address _ctx) public {
+        StackValue last = IContext(_ctx).stack().pop();
+        StackValue prev = IContext(_ctx).stack().pop();
 
         require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
         require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
@@ -101,9 +101,9 @@ library LogicalOpcodes {
     }
 
     // Note: integer division. Example: 5 / 2 = 2
-    function opDiv(IContext _ctx) public {
-        StackValue last = _ctx.stack().pop();
-        StackValue prev = _ctx.stack().pop();
+    function opDiv(address _ctx) public {
+        StackValue last = IContext(_ctx).stack().pop();
+        StackValue prev = IContext(_ctx).stack().pop();
 
         require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
         require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);

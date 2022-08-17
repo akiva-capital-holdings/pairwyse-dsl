@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 import { Executor } from '../libs/Executor.sol';
-import { Storage } from '../helpers/Storage.sol';
+import { UnstructuredStorage } from '../../dsl/libs/UnstructuredStorage.sol';
 
-contract ExecutorMock is Storage {
+contract ExecutorMock {
     function execute(address _ctxAddr) public {
         Executor.execute(_ctxAddr);
     }

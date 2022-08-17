@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import { Context } from '../Context.sol';
 
 contract ContextMock is Context {
+    constructor(address _agreement) Context(_agreement) {}
+
     function addOpcodeBranchExt(
         string memory _baseOpName,
         string memory _branchName,

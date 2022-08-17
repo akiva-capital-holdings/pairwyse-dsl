@@ -67,11 +67,13 @@ contract Context is IContext {
         _;
     }
 
-    constructor() {
+    constructor(address _agreement) {
         stack = new Stack();
+        initOpcodes();
+        setAppAddress(_agreement);
     }
 
-    function initOpcodes() external {
+    function initOpcodes() internal {
         // Opcodes for operators
         _addOpcodeForOperator(
             '==',
