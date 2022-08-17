@@ -15,7 +15,7 @@ async function getChainId() {
   return ethers.provider.getNetwork().then((network) => network.chainId);
 }
 
-describe.only('End-to-end', () => {
+describe('End-to-end', () => {
   let stack: Stack;
   let preprocessor: Preprocessor;
   let ctx: Context;
@@ -68,6 +68,7 @@ describe.only('End-to-end', () => {
     app = await (
       await ethers.getContractFactory('E2EApp', { libraries: { Executor: executorLibAddr } })
     ).deploy(parserAddr, preprAddr, ctxAddr);
+
     await ctx.setAppAddress(app.address);
   });
 
