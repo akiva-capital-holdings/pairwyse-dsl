@@ -303,10 +303,12 @@ describe('Parser', () => {
 
       await app.parseCodeExt(ctxAddr, ['loadRemote', 'bool', 'BOOL_VALUE', appAddrHex]);
       expect(await ctx.program()).to.equal(
+        // eslint-disable-next-line prefer-template
         '0x' +
           '1c' + // loadRemote
           '02' + // bool
-          'f11f9a5d' // bytecode for a `BOOL_VALUE` name appAddrHex.toLowerCase()
+          'f11f9a5d' + // bytecode for a `BOOL_VALUE` name
+          appAddrHex.toLowerCase()
       );
     });
     // TODO: add for other types
