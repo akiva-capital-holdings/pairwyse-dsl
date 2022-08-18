@@ -129,7 +129,7 @@ library OtherOpcodes {
         );
         uint256 amount = opUint256Get(_ctx);
         recipient.transfer(amount);
-        OpcodeHelpers.putToStack(_ctx, 1);
+        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     function opTransfer(IContext _ctx) public {
@@ -149,7 +149,7 @@ library OtherOpcodes {
         IERC20(token).transfer(recipient, amount);
         // console.log('balance contract after', IERC20(token).balanceOf(address(this)));
         // console.log('balance recipient after', IERC20(token).balanceOf(recipient));
-        OpcodeHelpers.putToStack(_ctx, 1);
+        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     function opTransferVar(IContext _ctx) public {
@@ -169,7 +169,7 @@ library OtherOpcodes {
         IERC20(token).transfer(recipient, amount);
         // console.log('balance contract after', IERC20(token).balanceOf(address(this)));
         // console.log('balance recipient after', IERC20(token).balanceOf(recipient));
-        OpcodeHelpers.putToStack(_ctx, 1);
+        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     function opTransferFrom(IContext _ctx) public {
@@ -188,7 +188,7 @@ library OtherOpcodes {
         // console.log('from', from);
         // console.log('to', to);
         IERC20(token).transferFrom(from, to, amount);
-        OpcodeHelpers.putToStack(_ctx, 1);
+        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     function opBalanceOf(IContext _ctx) public {
@@ -219,7 +219,7 @@ library OtherOpcodes {
         // console.log('to', to);
         // console.log('amount', amount);
         IERC20(token).transferFrom(from, to, amount);
-        OpcodeHelpers.putToStack(_ctx, 1);
+        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     function opUint256Get(IContext _ctx) public returns (uint256) {
