@@ -2,6 +2,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
+import { deployBase, deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
 import { Context, StackValue__factory, Stack, ExecutorMock } from '../../../typechain-types';
 import { checkStack, checkStackTail, hex4Bytes } from '../../utils/utils';
 
@@ -17,62 +18,38 @@ describe('Executor', () => {
     [sender] = await ethers.getSigners();
 
     // Create StackValue Factory instance
-    StackValue = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
+    StackValue = await ethers.getContractFactory('StackValue');
 
     // Deploy libraries
-    const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const comparisonOpcodesLib = await (
-      await ethers.getContractFactory('ComparisonOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const branchingOpcodesLib = await (
-      await ethers.getContractFactory('BranchingOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const logicalOpcodesLib = await (
-      await ethers.getContractFactory('LogicalOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const otherOpcodesLib = await (
-      await ethers.getContractFactory('OtherOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
+    const [
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr,
+    ] = await deployOpcodeLibs();
+    const [, executorLibAddr] = await deployBase();
 
     // Deploy ExecutorMock
-    app = (await (
+    app = await (
       await ethers.getContractFactory('ExecutorMock', {
-        libraries: { Executor: executorLib.address },
+        libraries: { Executor: executorLibAddr },
       })
-    ).deploy()) as ExecutorMock;
+    ).deploy();
 
     // Deploy & setup Context
-    ctx = (await (await ethers.getContractFactory('Context')).deploy()) as Context;
+    ctx = await (await ethers.getContractFactory('Context')).deploy();
     ctxAddr = ctx.address;
-    await ctx.initOpcodes();
     await ctx.setAppAddress(app.address);
     await ctx.setMsgSender(sender.address);
-    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLib.address);
-    await ctx.setBranchingOpcodesAddr(branchingOpcodesLib.address);
-    await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
-    await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
+    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLibAddr);
+    await ctx.setBranchingOpcodesAddr(branchingOpcodesLibAddr);
+    await ctx.setLogicalOpcodesAddr(logicalOpcodesLibAddr);
+    await ctx.setOtherOpcodesAddr(otherOpcodesLibAddr);
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
     const contextStackAddress = await ctx.stack();
-    stack = StackCont.attach(contextStackAddress) as Stack;
+    stack = StackCont.attach(contextStackAddress);
   });
 
   afterEach(async () => {

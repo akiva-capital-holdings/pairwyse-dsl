@@ -76,12 +76,12 @@ describe('Preprocessor', () => {
         (loadLocal bool RISK != bool true)
       `,
         expected: [
-          'blockTimestamp',
+          'TIME',
           'loadLocal',
           'uint256',
           'INIT',
           '>', // A
-          'blockTimestamp',
+          'TIME',
           'loadLocal',
           'uint256',
           'EXPIRY',
@@ -345,7 +345,7 @@ describe('Preprocessor', () => {
           ${ONE}
           ${TWO}
         }
-        
+
         bad {
           ${THREE}
         }
@@ -993,7 +993,7 @@ describe('Preprocessor', () => {
     });
 
     describe('sendEth', () => {
-      let sendEthBase = ['sendEth', 'RECEIVER'];
+      const sendEthBase = ['sendEth', 'RECEIVER'];
 
       it('should transform correctly if sendEth is in the code', async () => {
         const input = `
@@ -1105,7 +1105,7 @@ describe('Preprocessor', () => {
     });
 
     describe('transferFrom', () => {
-      let transferFromBase = ['transferFrom', 'DAI', 'OWNER', 'RECEIVER'];
+      const transferFromBase = ['transferFrom', 'DAI', 'OWNER', 'RECEIVER'];
 
       it('should return a simple number with 18 decimals', async () => {
         const input = 'transferFrom DAI OWNER RECEIVER 1e18';
@@ -1195,7 +1195,7 @@ describe('Preprocessor', () => {
     });
 
     describe('transfer', () => {
-      let transferBase = ['transfer', 'DAI', 'RECEIVER'];
+      const transferBase = ['transfer', 'DAI', 'RECEIVER'];
 
       it('should return a simple number with 18 decimals', async () => {
         const input = 'transfer DAI RECEIVER 1e18';

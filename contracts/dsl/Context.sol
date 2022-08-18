@@ -17,14 +17,7 @@ import { ErrorsContext } from './libs/Errors.sol';
  *
  * One of the core contracts of the project. It contains opcodes and aliases for commands.
  * It provides additional information about program state and point counter (pc).
- * Each of command that is provided by the Parser contract is processed in the Context contract.
- *
- * TODO:
- * 1. may be wise to split Context into:
- *      contract A (holds opCodeByName, selectorByOpcode, and asmSelectors)
- *      contract B (holds particular state variables: stack, program, pc, appAddress, msgSender)
- * 2. addOpcode => should be internal `_addOpcode` and have a separated protected function
- *   (addOpcode) that has public or external modifier
+ * Each of command that is provided by the Parser contract is processed in the Context contract
  */
 contract Context is IContext {
     // stack is used by Opcode libraries like `libs/opcodes/*`
@@ -33,7 +26,7 @@ contract Context is IContext {
     bytes public program; // the bytecode of a program that is provided by Parser (will be removed)
     uint256 public pc; // point counter shows what the part of command are in proccess now
     uint256 public nextpc;
-    address public appAddress;
+    address public appAddr; // address of end application. Is used to get variables stored in end application contract
     address public msgSender;
     address public comparisonOpcodes; // an address for ComparisonOpcodes library, can be changed
     address public branchingOpcodes; // an address for BranchingOpcodes library, can be changed
@@ -43,13 +36,11 @@ contract Context is IContext {
 
     mapping(string => bytes1) public opCodeByName; // name => opcode (hex)
     mapping(bytes1 => bytes4) public selectorByOpcode; // opcode (hex) => selector (hex)
-
     // emun OpcodeLibNames {...} from IContext
     // Depending on the hex value, it will take the proper
     // library from the OpcodeLibNames enum check the library for each opcode
     // where the opcode adds to the Context contract
     mapping(bytes1 => OpcodeLibNames) public opcodeLibNameByOpcode;
-
     // if the command is complex and uses `asm functions` then it will store
     // the selector of the usage function from the Parser for that opcode.
     // Each opcode that was added to the context should contain the selector otherwise
@@ -59,10 +50,8 @@ contract Context is IContext {
     string[] public operators;
     // baseOpName -> branchCode -> selector
     mapping(string => mapping(bytes1 => bytes4)) public branchSelectors;
-
     // baseOpName -> branchName -> branchCode
     mapping(string => mapping(string => bytes1)) public branchCodes;
-
     // alias -> base command
     mapping(string => string) public aliases;
 
@@ -73,9 +62,10 @@ contract Context is IContext {
 
     constructor() {
         stack = new Stack();
+        initOpcodes();
     }
 
-    function initOpcodes() external {
+    function initOpcodes() internal {
         // Opcodes for operators
         _addOpcodeForOperator(
             '==',
@@ -530,10 +520,10 @@ contract Context is IContext {
     /**
      * @dev Sets/Updates application Address by the provided value
      *
-     * @param _addr is the new application Address, can not be a zero address
+     * @param _appAddr is the new application Address, can not be a zero address
      */
-    function setAppAddress(address _addr) public nonZeroAddress(_addr) {
-        appAddress = _addr;
+    function setAppAddress(address _appAddr) external nonZeroAddress(_appAddr) {
+        appAddr = _appAddr;
     }
 
     /**

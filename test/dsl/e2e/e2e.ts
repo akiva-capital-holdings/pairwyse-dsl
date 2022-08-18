@@ -8,6 +8,8 @@ import {
   StackValue__factory,
 } from '../../../typechain-types';
 import { checkStack, checkStackTailv2, hex4Bytes, hex4BytesShort } from '../../utils/utils';
+import { deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
+import { deployBaseMock } from '../../../scripts/data/deploy.utils.mock';
 
 async function getChainId() {
   return ethers.provider.getNetwork().then((network) => network.chainId);
@@ -39,60 +41,23 @@ describe('End-to-end', () => {
     StackValue = await ethers.getContractFactory('StackValue');
 
     // Deploy libraries
-    const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const comparisonOpcodesLib = await (
-      await ethers.getContractFactory('ComparisonOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const branchingOpcodesLib = await (
-      await ethers.getContractFactory('BranchingOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const logicalOpcodesLib = await (
-      await ethers.getContractFactory('LogicalOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const otherOpcodesLib = await (
-      await ethers.getContractFactory('OtherOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
-    const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
-    const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
+    const [
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr,
+    ] = await deployOpcodeLibs();
 
-    // Deploy Preprocessor
-    preprocessor = await (
-      await ethers.getContractFactory('Preprocessor', {
-        libraries: { StringUtils: stringLib.address },
-      })
-    ).deploy();
-
-    // Deploy ParserMock
-    const parser = await (
-      await ethers.getContractFactory('ParserMock', {
-        libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
-      })
-    ).deploy(preprocessor.address);
+    const [parserAddr, executorLibAddr, preprAddr] = await deployBaseMock();
+    preprocessor = await ethers.getContractAt('Preprocessor', preprAddr);
 
     // Deploy Context & setup
     ctx = await (await ethers.getContractFactory('Context')).deploy();
     ctxAddr = ctx.address;
-    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLib.address);
-    await ctx.setBranchingOpcodesAddr(branchingOpcodesLib.address);
-    await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
-    await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
+    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLibAddr);
+    await ctx.setBranchingOpcodesAddr(branchingOpcodesLibAddr);
+    await ctx.setLogicalOpcodesAddr(logicalOpcodesLibAddr);
+    await ctx.setOtherOpcodesAddr(otherOpcodesLibAddr);
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
@@ -101,8 +66,10 @@ describe('End-to-end', () => {
 
     // Deploy Application
     app = await (
-      await ethers.getContractFactory('E2EApp', { libraries: { Executor: executorLib.address } })
-    ).deploy(preprocessor.address, parser.address, ctxAddr);
+      await ethers.getContractFactory('E2EApp', { libraries: { Executor: executorLibAddr } })
+    ).deploy(parserAddr, preprAddr, ctxAddr);
+
+    await ctx.setAppAddress(app.address);
   });
 
   describe('blockChainId < loadLocal uint256 VAR', () => {
@@ -138,14 +105,14 @@ describe('End-to-end', () => {
     });
 
     const code = `
-      ((loadLocal uint256 NOW > loadLocal uint256 INIT)
-      and
-      (loadLocal uint256 NOW < loadLocal uint256 EXPIRY))
-      or
-      ((loadLocal bool RISK == bool true)
-      ==
-      (bool false))
-    `;
+    ((loadLocal uint256 NOW > loadLocal uint256 INIT)
+    and
+    (loadLocal uint256 NOW < loadLocal uint256 EXPIRY))
+    or
+    ((loadLocal bool RISK == bool true)
+    ==
+    (bool false))
+  `;
 
     const bytecode = [
       /* eslint-disable no-multi-spaces */
@@ -220,20 +187,20 @@ describe('End-to-end', () => {
 
     // to Preprocessor (input)
     const input = `
-      bool true
-      ifelse good bad
+  bool true
+  ifelse good bad
 
-      ${FOUR}
+  ${FOUR}
 
-      branch good {
-        ${ONE}
-        ${TWO}
-      }
+  branch good {
+    ${ONE}
+    ${TWO}
+  }
 
-      branch bad {
-        ${THREE}
-      }
-      `;
+  branch bad {
+    ${THREE}
+  }
+  `;
     const code = await preprocessor.callStatic.transform(ctxAddr, input);
     const expectedCode = [
       'bool',
@@ -285,16 +252,16 @@ describe('End-to-end', () => {
   });
 
   describe('functions', async () => {
-    it('func SUM_OF_NUMBERS (get uint256 variables from storage) ', async () => {
+    it('func SUM_OF_NUMBERS (get uint256 variables from storage)', async () => {
       const input = `
-        6 8
-        func SUM_OF_NUMBERS 2 endf
-        end
+      6 8
+      func SUM_OF_NUMBERS 2 endf
+      end
 
-        SUM_OF_NUMBERS {
-          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
-        }
-        `;
+      SUM_OF_NUMBERS {
+        (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+      }
+      `;
 
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
       const expectedCode = [
@@ -356,13 +323,13 @@ describe('End-to-end', () => {
 
     it('func SUM_OF_NUMBERS without parameters', async () => {
       const input = `
-        func SUM_OF_NUMBERS endf
-        end
+      func SUM_OF_NUMBERS endf
+      end
 
-        SUM_OF_NUMBERS {
-          (8 + 6) setUint256 SUM
-        }
-        `;
+      SUM_OF_NUMBERS {
+        (8 + 6) setUint256 SUM
+      }
+      `;
 
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
       const expectedCode = [
@@ -406,9 +373,9 @@ describe('End-to-end', () => {
   describe('Load local variables without loadLocal opcode', async () => {
     it('set two local variables, one of them using in the next command', async () => {
       const input = `
-        uint256 6 setUint256 A
-        (A + 2) setUint256 SUM
-        `;
+      uint256 6 setUint256 A
+      (A + 2) setUint256 SUM
+      `;
       const SIX = new Array(64).join('0') + 6;
       const TWO = new Array(64).join('0') + 2;
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
@@ -447,9 +414,9 @@ describe('End-to-end', () => {
 
     it('updates A variable', async () => {
       const input = `
-        uint256 6 setUint256 A
-        (A + 2) setUint256 A
-        `;
+      uint256 6 setUint256 A
+      (A + 2) setUint256 A
+      `;
       const SIX = new Array(64).join('0') + 6;
       const TWO = new Array(64).join('0') + 2;
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
@@ -488,9 +455,9 @@ describe('End-to-end', () => {
 
     it('reverts if try to set bool value instead of a number', async () => {
       const input = `
-        true setUint256 A
-        (A + 2) setUint256 SUM
-        `;
+      true setUint256 A
+      (A + 2) setUint256 SUM
+      `;
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
       const expectedCode = [
         'true',
@@ -511,9 +478,9 @@ describe('End-to-end', () => {
 
     it('reverts if try to get A value before if was stored', async () => {
       const input = `
-        A setUint256 B
-        (B + 2) setUint256 SUM
-        `;
+      A setUint256 B
+      (B + 2) setUint256 SUM
+      `;
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
       const expectedCode = ['A', 'setUint256', 'B', 'B', 'uint256', '2', '+', 'setUint256', 'SUM'];
       expect(code).to.eql(expectedCode);

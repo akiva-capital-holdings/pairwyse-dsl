@@ -7,14 +7,16 @@ import { Preprocessor } from '../Preprocessor.sol';
 interface IParser {
     // Variables
 
-    // function preprAddr() external returns (address);
-
     event ExecRes(bool result);
     event NewConditionalTx(address txObj);
 
     // Functions
 
-    function parse(address _ctxAddr, string memory _codeRaw) external;
+    function parse(
+        address _preprAddr,
+        address _ctxAddr,
+        string memory _codeRaw
+    ) external;
 
     function asmSetLocalBool() external;
 

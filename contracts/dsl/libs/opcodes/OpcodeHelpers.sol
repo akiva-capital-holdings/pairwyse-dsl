@@ -2,10 +2,8 @@
 pragma solidity ^0.8.0;
 
 import { IContext } from '../../interfaces/IContext.sol';
-import { IERC20 } from '../../interfaces/IERC20.sol';
 import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
-import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
 import { ErrorsOpcodeHelpers } from '../Errors.sol';
 
@@ -20,24 +18,24 @@ library OpcodeHelpers {
     using UnstructuredStorage for bytes32;
     using StringUtils for string;
 
-    function putToStack(IContext _ctx, uint256 _value) public {
+    function putToStack(address _ctx, uint256 _value) public {
         StackValue resultValue = new StackValue();
         resultValue.setUint256(_value);
-        _ctx.stack().push(resultValue);
+        IContext(_ctx).stack().push(resultValue);
     }
 
-    function nextBytes(IContext _ctx, uint256 size) public returns (bytes memory out) {
-        out = _ctx.programAt(_ctx.pc(), size);
-        _ctx.incPc(size);
+    function nextBytes(address _ctx, uint256 size) public returns (bytes memory out) {
+        out = IContext(_ctx).programAt(IContext(_ctx).pc(), size);
+        IContext(_ctx).incPc(size);
     }
 
-    function nextBytes1(IContext _ctx) public returns (bytes1) {
+    function nextBytes1(address _ctx) public returns (bytes1) {
         return nextBytes(_ctx, 1)[0];
     }
 
-    function nextBranchSelector(IContext _ctx, string memory baseOpName) public returns (bytes4) {
+    function nextBranchSelector(address _ctx, string memory baseOpName) public returns (bytes4) {
         bytes1 branchCode = nextBytes1(_ctx);
-        return _ctx.branchSelectors(baseOpName, branchCode);
+        return IContext(_ctx).branchSelectors(baseOpName, branchCode);
     }
 
     function mustCall(address addr, bytes memory data) public {
@@ -45,7 +43,7 @@ library OpcodeHelpers {
         require(success, ErrorsOpcodeHelpers.OPH1);
     }
 
-    function getNextBytes(IContext _ctx, uint256 _bytesNum) public returns (bytes32 varNameB32) {
+    function getNextBytes(address _ctx, uint256 _bytesNum) public returns (bytes32 varNameB32) {
         bytes memory varName = nextBytes(_ctx, _bytesNum);
 
         // Convert bytes to bytes32

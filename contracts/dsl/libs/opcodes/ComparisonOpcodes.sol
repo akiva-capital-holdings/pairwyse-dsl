@@ -22,9 +22,9 @@ library ComparisonOpcodes {
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if they are equal.
      */
-    function opEq(IContext _ctx) public {
-        StackValue last = _ctx.stack().pop();
-        StackValue prev = _ctx.stack().pop();
+    function opEq(address _ctx) public {
+        StackValue last = IContext(_ctx).stack().pop();
+        StackValue prev = IContext(_ctx).stack().pop();
 
         require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
         require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
@@ -37,9 +37,9 @@ library ComparisonOpcodes {
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if they are not equal.
      */
-    function opNotEq(IContext _ctx) public {
-        StackValue last = _ctx.stack().pop();
-        StackValue prev = _ctx.stack().pop();
+    function opNotEq(address _ctx) public {
+        StackValue last = IContext(_ctx).stack().pop();
+        StackValue prev = IContext(_ctx).stack().pop();
 
         require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
         require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
@@ -52,9 +52,9 @@ library ComparisonOpcodes {
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if value1 < value2
      */
-    function opLt(IContext _ctx) public {
-        StackValue last = _ctx.stack().pop();
-        StackValue prev = _ctx.stack().pop();
+    function opLt(address _ctx) public {
+        StackValue last = IContext(_ctx).stack().pop();
+        StackValue prev = IContext(_ctx).stack().pop();
 
         require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
         require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
@@ -67,7 +67,7 @@ library ComparisonOpcodes {
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if value1 > value2
      */
-    function opGt(IContext _ctx) public {
+    function opGt(address _ctx) public {
         opSwap(_ctx);
         opLt(_ctx);
     }
@@ -75,7 +75,7 @@ library ComparisonOpcodes {
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if value1 <= value2
      */
-    function opLe(IContext _ctx) public {
+    function opLe(address _ctx) public {
         opGt(_ctx);
         opNot(_ctx);
     }
@@ -83,7 +83,7 @@ library ComparisonOpcodes {
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if value1 >= value2
      */
-    function opGe(IContext _ctx) public {
+    function opGe(address _ctx) public {
         opLt(_ctx);
         opNot(_ctx);
     }
@@ -91,8 +91,8 @@ library ComparisonOpcodes {
     /**
      * @dev Revert last value in the stack
      */
-    function opNot(IContext _ctx) public {
-        StackValue last = _ctx.stack().pop();
+    function opNot(address _ctx) public {
+        StackValue last = IContext(_ctx).stack().pop();
 
         require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
 
@@ -104,10 +104,10 @@ library ComparisonOpcodes {
     /**
      * @dev Swaps two last element in the stack
      */
-    function opSwap(IContext _ctx) public {
-        StackValue last = _ctx.stack().pop();
-        StackValue prev = _ctx.stack().pop();
-        _ctx.stack().push(last);
-        _ctx.stack().push(prev);
+    function opSwap(address _ctx) public {
+        StackValue last = IContext(_ctx).stack().pop();
+        StackValue prev = IContext(_ctx).stack().pop();
+        IContext(_ctx).stack().push(last);
+        IContext(_ctx).stack().push(prev);
     }
 }

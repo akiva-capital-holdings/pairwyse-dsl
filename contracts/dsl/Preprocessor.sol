@@ -11,6 +11,7 @@ import { ErrorsPreprocessor } from './libs/Errors.sol';
 
 /**
  * @dev Preprocessor of DSL code
+ * @dev This contract is a singleton and should not be deployed more than once
  *
  * TODO: add description about Preprocessor as a single contract of the project
  * It can remove comments that were created by user in the DSL code string. It
@@ -23,15 +24,11 @@ import { ErrorsPreprocessor } from './libs/Errors.sol';
 contract Preprocessor is IPreprocessor {
     using StringUtils for string;
 
+    // Note: temporary variable
+    // param positional number -> parameter itself
     mapping(uint256 => FuncParameter) internal parameters;
-    // type -> function name. maps DSL type (like `uint256`, `address`, `string`, or `bytes32`) to function name that
-    // can put value of this type into stack
-    mapping(string => string) internal rebuildParamTypes;
+    // Note: temporary variable
     string[] internal result; // stores the list of commands after infixToPostfix transformation
-
-    constructor() {
-        rebuildParamTypes['uint256'] = 'setUint256';
-    }
 
     /**
      * @dev The main function that transforms the user's DSL code string to the list of commands.
@@ -480,9 +477,11 @@ contract Preprocessor is IPreprocessor {
         string memory _value,
         string memory _variableName
     ) internal {
+        // TODO: '_type' - should be used in the future for other types
         result.push(_type);
         result.push(_value);
-        result.push(rebuildParamTypes[_type]);
+        // TODO: setUint256 - update for other types in dependence on '_type'
+        result.push('setUint256');
         result.push(_variableName);
     }
 

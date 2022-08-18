@@ -20,7 +20,7 @@ interface IContext {
 
     function nextpc() external view returns (uint256);
 
-    function appAddress() external view returns (address);
+    function appAddr() external view returns (address);
 
     function msgSender() external view returns (address);
 
@@ -59,8 +59,6 @@ interface IContext {
     function aliases(string memory _alias) external view returns (string memory _baseCmd);
 
     // Functions
-
-    function initOpcodes() external;
 
     function operatorsLen() external view returns (uint256);
 

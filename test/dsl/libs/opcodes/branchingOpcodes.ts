@@ -46,7 +46,6 @@ describe('Branching opcodes', () => {
     stack = await ethers.getContractAt('Stack', stackAddr);
 
     // Setup
-    await ctx.initOpcodes();
     await ctx.setAppAddress(ctx.address);
     await ctx.setOtherOpcodesAddr(branchingOpcodesLib.address);
   });

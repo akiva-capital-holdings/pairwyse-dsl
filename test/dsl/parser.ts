@@ -1,43 +1,31 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
+import { deployBaseMock } from '../../scripts/data/deploy.utils.mock';
 import { Context, ParserMock } from '../../typechain-types';
 import { hex4Bytes } from '../utils/utils';
 
 describe('Parser', () => {
   let sender: SignerWithAddress;
   let app: ParserMock;
+  let preprocessorAddr: string;
   let ctx: Context;
   let ctxAddr: string;
   let snapshotId: number;
+  let appAddr: string;
   let appAddrHex: string;
 
   before(async () => {
     [sender] = await ethers.getSigners();
 
-    // Deploy StringUtils library
-    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
-    const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
-
-    // Deploy Preprocessor
-    const preprocessor = await (
-      await ethers.getContractFactory('Preprocessor', {
-        libraries: { StringUtils: stringLib.address },
-      })
-    ).deploy();
-
-    // Deploy Parser
-    const ParserCont = await ethers.getContractFactory('ParserMock', {
-      libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
-    });
-    app = await ParserCont.deploy(preprocessor.address);
-    appAddrHex = app.address.slice(2);
+    [appAddr /* parser address */, , preprocessorAddr] = await deployBaseMock();
+    app = await ethers.getContractAt('ParserMock', appAddr);
+    appAddrHex = appAddr.slice(2);
 
     // Deploy & setup Context
     ctx = await (await ethers.getContractFactory('Context')).deploy();
     ctxAddr = ctx.address;
-    await ctx.initOpcodes();
-    await ctx.setAppAddress(app.address);
+    await ctx.setAppAddress(appAddr);
     await ctx.setMsgSender(sender.address);
 
     // Make a snapshot
@@ -51,44 +39,51 @@ describe('Parser', () => {
 
   describe('parse', () => {
     it('error: delegatecall to asmSelector fail', async () => {
-      await expect(app.parse(ctxAddr, 'uint256')).to.be.revertedWith('PRS1');
+      await expect(app.parse(preprocessorAddr, ctxAddr, 'uint256')).to.be.revertedWith('PRS1');
     });
 
     it('error: if adding number with a string', async () => {
-      await expect(app.parse(ctxAddr, '0 + a')).to.be.revertedWith(
+      await expect(app.parse(preprocessorAddr, ctxAddr, '0 + a')).to.be.revertedWith(
         'Parser: "a" command is unknown'
       );
-      await expect(app.parse(ctxAddr, 'dd + 1')).to.be.revertedWith(
+      await expect(app.parse(preprocessorAddr, ctxAddr, 'dd + 1')).to.be.revertedWith(
         'Parser: "dd" command is unknown'
       );
     });
 
     it('error: if adding number with a number that contains string', async () => {
-      await expect(app.parse(ctxAddr, '10d + 1')).to.be.revertedWith('SUT5');
+      await expect(app.parse(preprocessorAddr, ctxAddr, '10d + 1')).to.be.revertedWith('SUT5');
     });
 
     it('error: if adding number with a number that can be hex', async () => {
-      await expect(app.parse(ctxAddr, '1 + 0x1')).to.be.revertedWith('SUT5');
+      await expect(app.parse(preprocessorAddr, ctxAddr, '1 + 0x1')).to.be.revertedWith('SUT5');
     });
 
     it('error: if adding uint256 with string value with a number', async () => {
-      await expect(app.parse(ctxAddr, 'uint256 a + 1000')).to.be.revertedWith('PRS1');
+      await expect(app.parse(preprocessorAddr, ctxAddr, 'uint256 a + 1000')).to.be.revertedWith(
+        'PRS1'
+      );
     });
 
     it('uint256 1122334433', async () => {
-      await app.parse(ctxAddr, 'uint256 1122334433');
+      await app.parse(preprocessorAddr, ctxAddr, 'uint256 1122334433');
       const expected = '0x1a0000000000000000000000000000000000000000000000000000000042e576e1';
       expect(await ctx.program()).to.equal(expected);
     });
 
     it('loadLocal uint256 TIMESTAMP < loadLocal uint256 NEXT_MONTH', async () => {
-      await app.parse(ctxAddr, 'loadLocal uint256 TIMESTAMP < loadLocal uint256 NEXT_MONTH');
+      await app.parse(
+        preprocessorAddr,
+        ctxAddr,
+        'loadLocal uint256 TIMESTAMP < loadLocal uint256 NEXT_MONTH'
+      );
       const expected = '0x1b011b7b16d41b01a75b67d703';
       expect(await ctx.program()).to.equal(expected);
     });
 
     it('((time > init) and (time < expiry)) or (risk != true)', async () => {
       await app.parse(
+        preprocessorAddr,
         ctxAddr,
         `
           (loadLocal uint256 TIMESTAMP > loadLocal uint256 INIT)
@@ -104,10 +99,12 @@ describe('Parser', () => {
     });
 
     it('should throw at unknownExpr', async () => {
-      await expect(app.parse(ctxAddr, 'unknownExpr')).to.be.revertedWith(
+      await expect(app.parse(preprocessorAddr, ctxAddr, 'unknownExpr')).to.be.revertedWith(
         'Parser: "unknownExpr" command is unknown'
       );
-      await expect(app.parse(ctxAddr, '?!')).to.be.revertedWith('Parser: "?!" command is unknown');
+      await expect(app.parse(preprocessorAddr, ctxAddr, '?!')).to.be.revertedWith(
+        'Parser: "?!" command is unknown'
+      );
     });
 
     it('if condition', async () => {
@@ -213,7 +210,6 @@ describe('Parser', () => {
     });
 
     it('reverts if try to set empty global variable name', async () => {
-      const name = 'TEST_NUMBER';
       expect(await app.isVariable('')).to.be.equal(false);
       expect(await app.savedProgram('')).to.be.equal('0x');
       await expect(app.setVariableExt(ctxAddr, '', 'uint256')).to.be.revertedWith('PRS2');
@@ -289,8 +285,10 @@ describe('Parser', () => {
         '0x' +
           '1c' + // loadRemote
           '01' + // uint256
-          '545cbf77' + // bytecode for a `NUMBER` name
-          appAddrHex.toLowerCase()
+          `545cbf77${
+            // bytecode for a `NUMBER` name
+            appAddrHex.toLowerCase()
+          }`
       );
     });
 
@@ -304,8 +302,10 @@ describe('Parser', () => {
         '0x' +
           '1c' + // loadRemote
           '02' + // bool
-          'f11f9a5d' + // bytecode for a `BOOL_VALUE` name
-          appAddrHex.toLowerCase()
+          `f11f9a5d${
+            // bytecode for a `BOOL_VALUE` name
+            appAddrHex.toLowerCase()
+          }`
       );
     });
     // TODO: add for other types

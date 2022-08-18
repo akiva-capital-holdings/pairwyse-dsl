@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { UnstructuredStorage } from '../libs/UnstructuredStorage.sol';
+import { UnstructuredStorage } from '../../dsl/libs/UnstructuredStorage.sol';
 
-contract Storage {
+contract UnstructuredStorageMock {
     using UnstructuredStorage for bytes32;
 
     function getStorageBool(bytes32 position) public view returns (bool data) {

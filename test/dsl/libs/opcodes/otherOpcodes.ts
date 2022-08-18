@@ -8,7 +8,7 @@ import {
   Stack,
   OtherOpcodesMock,
   ERC20Mintable,
-  Storage,
+  UnstructuredStorageMock,
 } from '../../../../typechain-types';
 import { checkStack, checkStackTailv2, hex4Bytes, uint256StrToHex } from '../../../utils/utils';
 
@@ -17,7 +17,7 @@ describe('Other opcodes', () => {
   let StackValue: StackValue__factory;
   /* eslint-enable camelcase */
   let app: OtherOpcodesMock;
-  let anotherApp: Storage;
+  let anotherApp: UnstructuredStorageMock;
   let ctx: Context;
   let ctxAddr: string;
   let stack: Stack;
@@ -50,10 +50,9 @@ describe('Other opcodes', () => {
     stack = await ethers.getContractAt('Stack', stackAddr);
 
     // Deploy Storage contract to simulate another app (needed for testing loadRemove opcodes)
-    anotherApp = await (await ethers.getContractFactory('Storage')).deploy();
+    anotherApp = await (await ethers.getContractFactory('UnstructuredStorageMock')).deploy();
 
     // Setup
-    await ctx.initOpcodes();
     await ctx.setAppAddress(app.address);
     await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
 

@@ -1,15 +1,13 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { AgreementFactoryMock } from '../../typechain-types/agreement/mocks/AgreementFactoryMock';
-import { deployAgreementFactory } from '../../scripts/data/deploy.utils';
+import { AgreementFactory } from '../../typechain-types';
 
-describe('AgreementFactory', () => {
-  let factory: AgreementFactoryMock;
+describe('Agreement Factory', () => {
+  let factory: AgreementFactory;
 
   beforeEach(async () => {
     // Deploy AgreementFactory
-    const factoryAddr = await deployAgreementFactory();
-    factory = await ethers.getContractAt('AgreementFactoryMock', factoryAddr);
+    factory = await (await ethers.getContractFactory('AgreementFactoryMock')).deploy();
   });
 
   it('deploy agreement', async () => {
