@@ -3,8 +3,7 @@ import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
 import { hex4Bytes } from '../utils/utils';
-import { deployPreprocessorMock } from '../../scripts/data/deploy.utils.mock';
-import { addSteps, deployAgreement } from '../../scripts/data/deploy.utils';
+import { addSteps, deployAgreement, deployPreprocessor } from '../../scripts/data/deploy.utils';
 import {
   aliceAndBobSteps,
   aliceBobAndCarl,
@@ -37,7 +36,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
       - tests module templates
     */
     agreementAddr = await deployAgreement();
-    preprocessorAddr = await deployPreprocessorMock();
+    preprocessorAddr = await deployPreprocessor();
     agreement = await ethers.getContractAt('Agreement', agreementAddr);
 
     [alice, bob, carl, anybody] = await ethers.getSigners();

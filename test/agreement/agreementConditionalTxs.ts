@@ -3,8 +3,8 @@ import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
 import { ContextMock as ContextMockType, ParserMock } from '../../typechain-types/dsl/mocks';
 import { hex4Bytes } from '../utils/utils';
-import { deployPreprocessorMock, deployParserMock } from '../../scripts/data/deploy.utils.mock';
-import { deployAgreement } from '../../scripts/data/deploy.utils';
+import { deployParserMock } from '../../scripts/data/deploy.utils.mock';
+import { deployAgreement, deployPreprocessor } from '../../scripts/data/deploy.utils';
 import { Agreement } from '../../typechain-types';
 
 describe('Simple conditional transactions in Agreement', () => {
@@ -44,7 +44,7 @@ describe('Simple conditional transactions in Agreement', () => {
 
     // Deploy contracts
     agreementAddr = await deployAgreement();
-    preprAddr = await deployPreprocessorMock();
+    preprAddr = await deployPreprocessor();
     agreement = await ethers.getContractAt('Agreement', agreementAddr);
 
     const parserAddr = await deployParserMock();
