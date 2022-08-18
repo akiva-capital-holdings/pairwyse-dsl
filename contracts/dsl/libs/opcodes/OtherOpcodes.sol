@@ -48,6 +48,10 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctx, uint256(uint160(_ctx.msgValue())));
     }
 
+    /**
+     * @dev Sets boolean variable in the application contract.
+     * The value of bool variable is taken from DSL code itself
+     */
     function opSetLocalBool(IContext _ctx) public {
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
         bytes memory data = OpcodeHelpers.nextBytes(_ctx, 1);
@@ -59,9 +63,11 @@ library OtherOpcodes {
             abi.encodeWithSignature('setStorageBool(bytes32,bool)', _varNameB32, _boolVal)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
-        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
+    /**
+     * @dev Sets uint256 variable in the application contract. The value of the variable is taken from stack
+     */
     function opSetUint256(IContext _ctx) public {
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
 
@@ -74,8 +80,6 @@ library OtherOpcodes {
             abi.encodeWithSignature('setStorageUint256(bytes32,uint256)', _varNameB32, _val)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
-
-        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     function opLoadLocalUint256(IContext _ctx) public {

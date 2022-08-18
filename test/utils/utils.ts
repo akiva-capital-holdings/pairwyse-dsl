@@ -41,7 +41,7 @@ export const pushToStack = async (
   SV: StackValue__factory,
   context: Context,
   ST: Stack__factory,
-  arr: (string | number)[]
+  arr: (string | number | BigNumber)[]
 ) => {
   const stackValues: StackValue[] = [];
 
@@ -58,6 +58,9 @@ export const pushToStack = async (
       await stackValues[i].setUint256(arr[i] as number);
     } else if (typeof arr[i] === 'string') {
       await stackValues[i].setString(arr[i] as string);
+    } else if (typeof arr[i] === 'object') {
+      // this is BigNumber type
+      await stackValues[i].setUint256(arr[i] as BigNumber);
     }
     await stack.push(stackValues[i].address);
   }

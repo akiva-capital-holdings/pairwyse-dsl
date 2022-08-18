@@ -23,7 +23,7 @@ describe('Other opcodes', () => {
   let StackValue: StackValue__factory;
   /* eslint-enable camelcase */
   let app: OtherOpcodesMock;
-  let anotherApp: Storage;
+  let clientApp: Storage;
   let ctx: Context;
   let ctxAddr: string;
   let stack: Stack;
@@ -56,12 +56,12 @@ describe('Other opcodes', () => {
     const stackAddr = await ctx.stack();
     stack = await ethers.getContractAt('Stack', stackAddr);
 
-    // Deploy Storage contract to simulate another app (needed for testing loadRemove opcodes)
-    anotherApp = await (await ethers.getContractFactory('Storage')).deploy();
+    // Deploy Storage contract to simulate another app (needed for testing loadRemote opcodes)
+    clientApp = await (await ethers.getContractFactory('Storage')).deploy();
 
     // Setup
     await ctx.initOpcodes();
-    await ctx.setAppAddress(app.address);
+    await ctx.setAppAddress(clientApp.address);
     await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
 
     // Deploy test ERC20 and mint some to ctx
@@ -227,39 +227,76 @@ describe('Other opcodes', () => {
     await checkStack(StackValue, stack, 1, 25);
   });
 
-  it('opSetLocalBool', async () => {
-    const testValue = hex4Bytes('123456');
-    const bytes32TestValueName = hex4Bytes('BYTES');
+  describe('opSetLocalBool', async () => {
+    const bytes32VarName = hex4Bytes('BOOL_VAR');
+    const bytesVarName = bytes32VarName.substring(2, 10);
 
-    await anotherApp.setStorageBytes32(bytes32TestValueName, testValue);
+    afterEach(async () => {
+      await ctx.setPc(0);
+      await stack.clear();
+      await checkStackTailv2(StackValue, stack, []);
+    });
 
-    const bytes = bytes32TestValueName.substring(2, 10);
-    // console.log('bytes',bytes)
-    await ctx.setProgram(`0x${bytes}${anotherApp.address.substring(2)}`);
-    await app.opSetLocalBool(ctxAddr);
-    await checkStackTailv2(StackValue, stack, [1]);
+    it('error: opSetLocal call not success', async () => {
+      await ctx.setProgram(`0x${bytesVarName}01`);
+      const badContract = await (await ethers.getContractFactory('StorageWithRevert')).deploy();
+      await ctx.setAppAddress(badContract.address);
+      await expect(app.opSetLocalBool(ctxAddr)).to.be.revertedWith('OP1');
+      await ctx.setAppAddress(clientApp.address);
+    });
+
+    it('success', async () => {
+      await ctx.setProgram(`0x${bytesVarName}01`);
+      await app.opSetLocalBool(ctxAddr);
+      expect(await clientApp.getStorageBool(bytes32VarName)).to.equal(true);
+
+      await ctx.setProgram(`0x${bytesVarName}00`);
+      await app.opSetLocalBool(ctxAddr);
+      expect(await clientApp.getStorageBool(bytes32VarName)).to.equal(false);
+    });
   });
 
-  it('opSetUint256', async () => {
-    const testValue = hex4Bytes('123456');
-    const bytes32TestValueName = hex4Bytes('BYTES');
+  describe('opSetUint256', async () => {
+    const bytes32VarName = hex4Bytes('UINT256_VAR');
+    const bytesVarName = bytes32VarName.substring(2, 10);
 
-    await pushToStack(StackValue, ctx, StackCont, ['1']);
-    await anotherApp.setStorageBytes32(bytes32TestValueName, testValue);
+    afterEach(async () => {
+      await ctx.setPc(0);
+      await stack.clear();
+      await checkStackTailv2(StackValue, stack, []);
+    });
 
-    const bytes = bytes32TestValueName.substring(2, 10);
-    await ctx.setProgram(`0x${bytes}${anotherApp.address.substring(2)}`);
-    await expect(app.opSetUint256(ctxAddr)).to.be.revertedWith('OP2');
+    it('error: bad type in the stack', async () => {
+      await pushToStack(StackValue, ctx, StackCont, ['15']);
+      await ctx.setProgram(`0x${bytesVarName}`);
+      await expect(app.opSetUint256(ctxAddr)).to.be.revertedWith('OP2');
+    });
 
-    await ctx.setPc(0);
-    await stack.clear();
+    it('error: opSetLocal call not success', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [15]);
+      await ctx.setProgram(`0x${bytesVarName}`);
 
-    await pushToStack(StackValue, ctx, StackCont, [1]);
-    await anotherApp.setStorageBytes32(bytes32TestValueName, testValue);
+      const badContract = await (await ethers.getContractFactory('StorageWithRevert')).deploy();
+      await ctx.setAppAddress(badContract.address);
+      await expect(app.opSetUint256(ctxAddr)).to.be.revertedWith('OP1');
+      await ctx.setAppAddress(clientApp.address);
+    });
 
-    await ctx.setProgram(`0x${bytes}${anotherApp.address.substring(2)}`);
-    await app.opSetUint256(ctxAddr);
-    await checkStackTailv2(StackValue, stack, [1]);
+    it('success: regular number', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [15]);
+      await ctx.setProgram(`0x${bytesVarName}`);
+      await app.opSetUint256(ctxAddr);
+      expect(await clientApp.getStorageUint256(bytes32VarName)).to.equal(15);
+    });
+
+    it('success: big number', async () => {
+      await pushToStack(StackValue, ctx, StackCont, [ethers.utils.parseEther('100')]);
+      await ctx.setProgram(`0x${bytesVarName}`);
+      await app.opSetUint256(ctxAddr);
+      expect(await clientApp.getStorageUint256(bytes32VarName)).to.equal(
+        ethers.utils.parseEther('100')
+      );
+    });
   });
 
   it('opLoadLocalUint256', async () => {
@@ -319,11 +356,11 @@ describe('Other opcodes', () => {
     const testValue = 1;
     const bytes32TestValueName = hex4Bytes('NUMBER');
 
-    await anotherApp.setStorageUint256(bytes32TestValueName, testValue);
+    await clientApp.setStorageUint256(bytes32TestValueName, testValue);
 
     const number = bytes32TestValueName.substring(2, 10);
 
-    await ctx.setProgram(`0x${number}${anotherApp.address.substring(2)}`);
+    await ctx.setProgram(`0x${number}${clientApp.address.substring(2)}`);
     await app.opLoadRemoteUint256(ctxAddr);
     await checkStackTailv2(StackValue, stack, [testValue]);
   });
@@ -332,10 +369,10 @@ describe('Other opcodes', () => {
     const testValue = hex4Bytes('123456');
     const bytes32TestValueName = hex4Bytes('BYTES');
 
-    await anotherApp.setStorageBytes32(bytes32TestValueName, testValue);
+    await clientApp.setStorageBytes32(bytes32TestValueName, testValue);
 
     const bytes = bytes32TestValueName.substring(2, 10);
-    await ctx.setProgram(`0x${bytes}${anotherApp.address.substring(2)}`);
+    await ctx.setProgram(`0x${bytes}${clientApp.address.substring(2)}`);
     await app.opLoadRemoteBytes32(ctxAddr);
     await checkStackTailv2(StackValue, stack, [testValue]);
   });
@@ -344,10 +381,10 @@ describe('Other opcodes', () => {
     const testValue = true;
     const bytes32TestValueName = hex4Bytes('BOOLEAN');
 
-    await anotherApp.setStorageBool(bytes32TestValueName, testValue);
+    await clientApp.setStorageBool(bytes32TestValueName, testValue);
 
     const bool = bytes32TestValueName.substring(2, 10);
-    await ctx.setProgram(`0x${bool}${anotherApp.address.substring(2)}`);
+    await ctx.setProgram(`0x${bool}${clientApp.address.substring(2)}`);
     await app.opLoadRemoteBool(ctxAddr);
     await checkStackTailv2(StackValue, stack, [+testValue]);
   });
@@ -357,10 +394,10 @@ describe('Other opcodes', () => {
     const testValue = addr1.address;
     const bytes32TestValueName = hex4Bytes('ADDRESS');
 
-    await anotherApp.setStorageAddress(bytes32TestValueName, testValue);
+    await clientApp.setStorageAddress(bytes32TestValueName, testValue);
 
     const addr = bytes32TestValueName.substring(2, 10);
-    await ctx.setProgram(`0x${addr}${anotherApp.address.substring(2)}`);
+    await ctx.setProgram(`0x${addr}${clientApp.address.substring(2)}`);
     await app.opLoadRemoteAddress(ctxAddr);
     await checkStackTailv2(StackValue, stack, [testValue]);
   });
@@ -584,10 +621,10 @@ describe('Other opcodes', () => {
     const bytes32TestValueName = hex4Bytes('BYTES');
     const testSignature = 'getStorageBytes32(bytes32)';
 
-    await anotherApp.setStorageBytes32(bytes32TestValueName, testValue);
+    await clientApp.setStorageBytes32(bytes32TestValueName, testValue);
 
     const bytes = bytes32TestValueName.substring(2, 10);
-    await ctx.setProgram(`0x${bytes}${anotherApp.address.substring(2)}`);
+    await ctx.setProgram(`0x${bytes}${clientApp.address.substring(2)}`);
     await app.opLoadRemote(ctxAddr, testSignature);
     await checkStackTailv2(StackValue, stack, [testValue]);
   });
