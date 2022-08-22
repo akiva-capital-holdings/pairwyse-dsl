@@ -14,7 +14,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-describe.only('Agreement: business case', () => {
+describe('Agreement: business case', () => {
   let agreement: Agreement;
   let agreementAddr: string;
   let preprocessorAddr: string;
