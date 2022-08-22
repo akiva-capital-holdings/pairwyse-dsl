@@ -32,7 +32,7 @@ library OtherOpcodes {
     }
 
     function opBlockTimestamp(address _ctx) public {
-        // console.log('block.timestamp', block.timestamp);
+        // console.log(block.timestamp);
         OpcodeHelpers.putToStack(_ctx, block.timestamp);
     }
 

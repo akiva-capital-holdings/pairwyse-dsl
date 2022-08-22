@@ -75,7 +75,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
     // await expect(agreement.connect(anybody).execute(txId)).to.be.revertedWith('AGR1');
 
     // Condition isn't satisfied
-    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('AGR2');
+    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('CNT3');
 
     // Execute transaction
     await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
@@ -185,8 +185,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await expect(await agreement.connect(alice).execute(34)).to.changeEtherBalance(alice, oneEthBN);
     expect(await token.balanceOf(alice.address)).to.equal(0);
 
-    // TODO: Why was it commented? - To speed up the test. It may be enabled
-
+    // To speed up the test. It may be enabled
     // // If Alice didn't return 10 tokens to Bob before EXPIRY
     // // then Bob can collect 10 tokens from Carl
     // await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
@@ -194,7 +193,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
     //   'If Alice didn not return 10 tokens to Bob before EXPIRY then ' +
     //     'Bob can collect 10 tokens from Carl'
     // );
-    // await expect(() => agreement.connect(bob).execute(5)).to.changeTokenBalance(
+    // await expect(() => agreement.connect(bob).execute(35)).to.changeTokenBalance(
     //   token,
     //   bob,
     //   tenTokens
