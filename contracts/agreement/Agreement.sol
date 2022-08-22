@@ -187,12 +187,11 @@ contract Agreement {
      * @dev Checks conditions for the certain transaction
      * @param _txId is the ID of a transaction
      * @param _msgValue passed amount of native tokens for conditional
-     * @return bool true if conditionals were executed successfully
      */
     function checkConditions(
         uint256 _txId,
         uint256 _msgValue /*onlyOwner*/
-    ) public returns (bool) {
+    ) public {
         Tx memory txn = txs[_txId];
         Tx memory requiredTx;
         for (uint256 i = 0; i < txn.requiredTransactions.length; i++) {
@@ -218,7 +217,6 @@ contract Agreement {
                 (IContext(conditionContexts[_txId][i]).stack().seeLast().getUint256() > 0);
         }
         require(_res, ErrorsConditionalTxs.CNT3);
-        return _res;
     }
 
     function parse(

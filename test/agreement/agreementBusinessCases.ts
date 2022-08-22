@@ -5,8 +5,7 @@ import { formatEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
 import { changeTokenBalanceAndGetTxHash, hex4Bytes } from '../utils/utils';
 import { businessCaseSteps } from '../../scripts/data/agreement';
-import { Token, Context__factory } from '../../typechain-types';
-import { TxObject } from '../types';
+import { Token } from '../../typechain-types';
 import { Agreement } from '../../typechain-types/agreement';
 import { deployAgreement, deployPreprocessor, addSteps } from '../../scripts/data/deploy.utils';
 
@@ -27,7 +26,6 @@ describe('Agreement: business case', () => {
   let MAX_PERCENT: number;
   let dai: Token;
   let snapshotId: number;
-  let base: number;
 
   const ONE_DAY = 60 * 60 * 24;
   const ONE_MONTH = ONE_DAY * 30;
