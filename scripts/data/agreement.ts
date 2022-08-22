@@ -159,12 +159,10 @@ export const businessCaseSteps = (
         (loadLocal uint256 TWO_PERCENT > loadLocal uint256 GP_INITIAL)
         ifelse POS NEG
         end
-
         POS {
           (loadLocal uint256 TWO_PERCENT - loadLocal uint256 GP_INITIAL
           ) setUint256 GP_REMAINING
         }
-
         NEG {
           0 setUint256 GP_REMAINING
         }`,
@@ -195,168 +193,168 @@ export const businessCaseSteps = (
         'TIME < loadLocal uint256 FUND_INVESTMENT_DATE',
       ],
     },
-    // {
-    //   // Note: here we don't return ETH to the contract but just withdraw DAI and then return the
-    //   //       same amount of DAI
-    //   txId: Number(base + 5),
-    //   requiredTxs: [Number(base + 3)],
-    //   signatories: [GP.address],
-    //   transaction: 'transferVar DAI GP PURCHASE_AMOUNT',
-    //   conditions: [
-    //     `(TIME >= loadLocal uint256 FUND_INVESTMENT_DATE)
-    //        and
-    //      (100 * loadLocal uint256 PURCHASE_AMOUNT
-    //        <= loadLocal uint256 PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,
-    //   ],
-    // },
-    // {
-    //   // Note: as we've skipped transferring ETH in the previous step (step 5) then by
-    //   //       transferring some additional DAI to the contract is equal to swapping ETH that
-    //   //       should be on the contract to DAI. So at the end of the day the result is still the
-    //   //       same: there is more DAI on the contract that it were initially deposited by GP & LP
-    //   txId: Number(base + 6),
-    //   requiredTxs: [],
-    //   signatories: [GP.address], // TODO: make `anyone`
-    //   // TODO: swap ETH for DAI
-    //   transaction: 'transferFromVar DAI WHALE TRANSACTIONS_CONT GP_PURCHASE_RETURN',
-    //   conditions: ['TIME >= loadLocal uint256 FUND_INVESTMENT_DATE + loadLocal uint256 ONE_YEAR'],
-    // },
-    // {
-    //   txId: Number(base + 71),
-    //   requiredTxs: [Number(base + 6)],
-    //   signatories: [GP.address],
-    //   transaction: 'transferVar DAI GP MANAGEMENT_FEE',
-    //   conditions: [
-    //     '(loadLocal uint256 LP_TOTAL * loadLocal uint256 MANAGEMENT_PERCENT / 100) setUint256 MANAGEMENT_FEE',
-    //     `(100 * loadLocal uint256 MANAGEMENT_FEE
-    //        <= loadLocal uint256 MANAGEMENT_PERCENT * loadLocal uint256 LP_TOTAL)`,
-    //   ],
-    // },
-    // {
-    //   txId: Number(base + 72),
-    //   requiredTxs: [Number(base + 6)],
-    //   signatories: [GP.address],
-    //   transaction: 'transferVar DAI GP CARRY',
-    //   conditions: [
-    //     `(loadLocal uint256 GP_INITIAL +
-    //         loadLocal uint256 LP_TOTAL +
-    //         loadLocal uint256 GP_REMAINING
-    //       ) setUint256 INITIAL_DEPOSIT`,
-    //     `(balanceOf DAI TRANSACTIONS_CONT > (
-    //         loadLocal uint256 INITIAL_DEPOSIT - loadLocal uint256 MANAGEMENT_FEE))
-    //       ifelse HAS_PROFIT NO_PROFIT
-    //       end
+    {
+      // Note: here we don't return ETH to the contract but just withdraw DAI and then return the
+      //       same amount of DAI
+      txId: Number(base + 5),
+      requiredTxs: [Number(base + 3)],
+      signatories: [GP.address],
+      transaction: 'transferVar DAI GP PURCHASE_AMOUNT',
+      conditions: [
+        `(TIME >= loadLocal uint256 FUND_INVESTMENT_DATE)
+           and
+         (100 * loadLocal uint256 PURCHASE_AMOUNT
+           <= loadLocal uint256 PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,
+      ],
+    },
+    {
+      // Note: as we've skipped transferring ETH in the previous step (step 5) then by
+      //       transferring some additional DAI to the contract is equal to swapping ETH that
+      //       should be on the contract to DAI. So at the end of the day the result is still the
+      //       same: there is more DAI on the contract that it were initially deposited by GP & LP
+      txId: Number(base + 6),
+      requiredTxs: [],
+      signatories: [GP.address], // TODO: make `anyone`
+      // TODO: swap ETH for DAI
+      transaction: 'transferFromVar DAI WHALE TRANSACTIONS_CONT GP_PURCHASE_RETURN',
+      conditions: ['TIME >= loadLocal uint256 FUND_INVESTMENT_DATE + loadLocal uint256 ONE_YEAR'],
+    },
+    {
+      txId: Number(base + 71),
+      requiredTxs: [Number(base + 6)],
+      signatories: [GP.address],
+      transaction: 'transferVar DAI GP MANAGEMENT_FEE',
+      conditions: [
+        '(loadLocal uint256 LP_TOTAL * loadLocal uint256 MANAGEMENT_PERCENT / 100) setUint256 MANAGEMENT_FEE',
+        `(100 * loadLocal uint256 MANAGEMENT_FEE
+           <= loadLocal uint256 MANAGEMENT_PERCENT * loadLocal uint256 LP_TOTAL)`,
+      ],
+    },
+    {
+      txId: Number(base + 72),
+      requiredTxs: [Number(base + 6)],
+      signatories: [GP.address],
+      transaction: 'transferVar DAI GP CARRY',
+      conditions: [
+        `(loadLocal uint256 GP_INITIAL +
+            loadLocal uint256 LP_TOTAL +
+            loadLocal uint256 GP_REMAINING
+          ) setUint256 INITIAL_DEPOSIT`,
+        `(balanceOf DAI TRANSACTIONS_CONT > (
+            loadLocal uint256 INITIAL_DEPOSIT - loadLocal uint256 MANAGEMENT_FEE))
+          ifelse HAS_PROFIT NO_PROFIT
+          end
 
-    //       HAS_PROFIT {
-    //         (balanceOf DAI TRANSACTIONS_CONT +
-    //           loadLocal uint256 MANAGEMENT_FEE -
-    //           loadLocal uint256 INITIAL_DEPOSIT
-    //         ) setUint256 PROFIT
-    //       }
+          HAS_PROFIT {
+            (balanceOf DAI TRANSACTIONS_CONT +
+              loadLocal uint256 MANAGEMENT_FEE -
+              loadLocal uint256 INITIAL_DEPOSIT
+            ) setUint256 PROFIT
+          }
 
-    //       NO_PROFIT {
-    //         0 setUint256 PROFIT
-    //       }
-    //     `,
-    //     '(loadLocal uint256 LP_TOTAL * loadLocal uint256 HURDLE / 100) setUint256 THRESHOLD',
-    //     `(loadLocal uint256 PROFIT > loadLocal uint256 THRESHOLD)
-    //       ifelse NONZERO_DELTA ZERO_DELTA
-    //       end
+          NO_PROFIT {
+            0 setUint256 PROFIT
+          }
+        `,
+        '(loadLocal uint256 LP_TOTAL * loadLocal uint256 HURDLE / 100) setUint256 THRESHOLD',
+        `(loadLocal uint256 PROFIT > loadLocal uint256 THRESHOLD)
+          ifelse NONZERO_DELTA ZERO_DELTA
+          end
 
-    //       NONZERO_DELTA {
-    //         (loadLocal uint256 PROFIT - loadLocal uint256 THRESHOLD) setUint256 DELTA
-    //       }
+          NONZERO_DELTA {
+            (loadLocal uint256 PROFIT - loadLocal uint256 THRESHOLD) setUint256 DELTA
+          }
 
-    //       ZERO_DELTA {
-    //         0 setUint256 DELTA
-    //       }`,
-    //     '(loadLocal uint256 DELTA * loadLocal uint256 PROFIT_PART / 100) setUint256 CARRY',
-    //   ],
-    // },
-    // {
-    //   txId: Number(base + 73),
-    //   requiredTxs: [Number(base + 6)],
-    //   signatories: [GP.address],
-    //   transaction: 'transferVar DAI GP GP_PRINICIPAL',
-    //   conditions: [
-    //     `
-    //           (loadLocal uint256 PROFIT > 0)
-    //           ifelse ZERO_LOSS NONZERO_LOSS
-    //           end
-    //           ZERO_LOSS {
-    //             0 setUint256 LOSS
-    //           }
-    //           NONZERO_LOSS {
-    //             (loadLocal uint256 GP_INITIAL +
-    //               loadLocal uint256 LP_TOTAL +
-    //               loadLocal uint256 GP_REMAINING -
-    //               (balanceOf DAI TRANSACTIONS_CONT) -
-    //               loadLocal uint256 MANAGEMENT_FEE
-    //             ) setUint256 LOSS
-    //           }
-    //       `,
-    //     `
-    //         (loadLocal uint256 LOSS > (loadLocal uint256 GP_INITIAL + loadLocal uint256 GP_REMAINING))
-    //         ifelse WITHDRAW_ZERO WITHDRAW_NONZERO
-    //         end
-    //         WITHDRAW_ZERO {
-    //           0 setUint256 GP_PRINICIPAL
-    //         }
-    //         WITHDRAW_NONZERO {
-    //           (loadLocal uint256 GP_INITIAL +
-    //             loadLocal uint256 GP_REMAINING -
-    //             loadLocal uint256 LOSS
-    //           ) setUint256 GP_PRINICIPAL
-    //         }
-    //       `,
-    //   ],
-    // },
-    // {
-    //   txId: Number(base + 81),
-    //   requiredTxs: [Number(base + 6)],
-    //   signatories: LPs,
-    //   transaction: 'transferVar DAI LP LP_PROFIT',
-    //   conditions: [
-    //     '(loadLocal uint256 PROFIT - loadLocal uint256 CARRY) setUint256 ALL_LPs_PROFIT',
-    //     `(loadLocal uint256 ALL_LPs_PROFIT *
-    //         loadLocal uint256 LP_INITIAL /
-    //         loadLocal uint256 LP_TOTAL
-    //        ) setUint256 LP_PROFIT`,
-    //   ],
-    // },
-    // {
-    //   txId: Number(base + 82),
-    //   requiredTxs: [Number(base + 6)],
-    //   signatories: LPs,
-    //   transaction: 'transferVar DAI LP LP_PRINCIPAL',
-    //   conditions: [
-    //     `(
-    //          loadLocal uint256 MANAGEMENT_FEE *
-    //          loadLocal uint256 LP_INITIAL /
-    //          loadLocal uint256 LP_TOTAL
-    //        ) setUint256 MANAGEMENT_FEE_LP`,
-    //     `(
-    //          (loadLocal uint256 GP_INITIAL + loadLocal uint256 GP_REMAINING) >
-    //          loadLocal uint256 LOSS
-    //        )
-    //        ifelse ZERO NONZERO
-    //        end
-    //        ZERO {
-    //          0 setUint256 UNCOVERED_NET_LOSSES
-    //        }
-    //        NONZERO {
-    //          (loadLocal uint256 LOSS -
-    //            loadLocal uint256 GP_INITIAL -
-    //            loadLocal uint256 GP_REMAINING
-    //          ) setUint256 UNCOVERED_NET_LOSSES
-    //        }
-    //       `,
-    //     `(loadLocal uint256 LP_INITIAL -
-    //          loadLocal uint256 MANAGEMENT_FEE_LP -
-    //          loadLocal uint256 UNCOVERED_NET_LOSSES
-    //        ) setUint256 LP_PRINCIPAL`,
-    //   ],
-    // },
+          ZERO_DELTA {
+            0 setUint256 DELTA
+          }`,
+        '(loadLocal uint256 DELTA * loadLocal uint256 PROFIT_PART / 100) setUint256 CARRY',
+      ],
+    },
+    {
+      txId: Number(base + 73),
+      requiredTxs: [Number(base + 6)],
+      signatories: [GP.address],
+      transaction: 'transferVar DAI GP GP_PRINICIPAL',
+      conditions: [
+        `
+              (loadLocal uint256 PROFIT > 0)
+              ifelse ZERO_LOSS NONZERO_LOSS
+              end
+              ZERO_LOSS {
+                0 setUint256 LOSS
+              }
+              NONZERO_LOSS {
+                (loadLocal uint256 GP_INITIAL +
+                  loadLocal uint256 LP_TOTAL +
+                  loadLocal uint256 GP_REMAINING -
+                  (balanceOf DAI TRANSACTIONS_CONT) -
+                  loadLocal uint256 MANAGEMENT_FEE
+                ) setUint256 LOSS
+              }
+          `,
+        `
+            (loadLocal uint256 LOSS > (loadLocal uint256 GP_INITIAL + loadLocal uint256 GP_REMAINING))
+            ifelse WITHDRAW_ZERO WITHDRAW_NONZERO
+            end
+            WITHDRAW_ZERO {
+              0 setUint256 GP_PRINICIPAL
+            }
+            WITHDRAW_NONZERO {
+              (loadLocal uint256 GP_INITIAL +
+                loadLocal uint256 GP_REMAINING -
+                loadLocal uint256 LOSS
+              ) setUint256 GP_PRINICIPAL
+            }
+          `,
+      ],
+    },
+    {
+      txId: Number(base + 81),
+      requiredTxs: [Number(base + 6)],
+      signatories: LPs,
+      transaction: 'transferVar DAI LP LP_PROFIT',
+      conditions: [
+        '(loadLocal uint256 PROFIT - loadLocal uint256 CARRY) setUint256 ALL_LPs_PROFIT',
+        `(loadLocal uint256 ALL_LPs_PROFIT *
+            loadLocal uint256 LP_INITIAL /
+            loadLocal uint256 LP_TOTAL
+           ) setUint256 LP_PROFIT`,
+      ],
+    },
+    {
+      txId: Number(base + 82),
+      requiredTxs: [Number(base + 6)],
+      signatories: LPs,
+      transaction: 'transferVar DAI LP LP_PRINCIPAL',
+      conditions: [
+        `(
+             loadLocal uint256 MANAGEMENT_FEE *
+             loadLocal uint256 LP_INITIAL /
+             loadLocal uint256 LP_TOTAL
+           ) setUint256 MANAGEMENT_FEE_LP`,
+        `(
+             (loadLocal uint256 GP_INITIAL + loadLocal uint256 GP_REMAINING) >
+             loadLocal uint256 LOSS
+           )
+           ifelse ZERO NONZERO
+           end
+           ZERO {
+             0 setUint256 UNCOVERED_NET_LOSSES
+           }
+           NONZERO {
+             (loadLocal uint256 LOSS -
+               loadLocal uint256 GP_INITIAL -
+               loadLocal uint256 GP_REMAINING
+             ) setUint256 UNCOVERED_NET_LOSSES
+           }
+          `,
+        `(loadLocal uint256 LP_INITIAL -
+             loadLocal uint256 MANAGEMENT_FEE_LP -
+             loadLocal uint256 UNCOVERED_NET_LOSSES
+           ) setUint256 LP_PRINCIPAL`,
+      ],
+    },
   ];
 };
 
