@@ -1,52 +1,7 @@
 import '@nomiclabs/hardhat-ethers';
 import * as hre from 'hardhat';
-import { TxObject } from '../../test/types';
 
 const { ethers } = hre;
-
-export const addSteps = async (
-  preprocessorAddr: string,
-  steps: TxObject[],
-  agreementAddress: string
-) => {
-  let transactionContext;
-  const agreement = await ethers.getContractAt('Agreement', agreementAddress);
-  for await (const step of steps) {
-    console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
-    const Context = await ethers.getContractFactory('Context');
-    transactionContext = await Context.deploy();
-    await transactionContext.setAppAddress(agreementAddress);
-    const cdCtxsAddrs = []; // conditional context Addresses
-
-    console.log('\nTerm Conditions');
-
-    for (let j = 0; j < step.conditions.length; j++) {
-      const conditionContract = await Context.deploy();
-      await conditionContract.setAppAddress(agreementAddress);
-      cdCtxsAddrs.push(conditionContract.address);
-      await agreement.parse(step.conditions[j], conditionContract.address, preprocessorAddr);
-      console.log(
-        `\n\taddress: \x1b[35m${conditionContract.address}\x1b[0m\n\tcondition ${
-          j + 1
-        }:\n\t\x1b[33m${step.conditions[j]}\x1b[0m`
-      );
-    }
-    await agreement.parse(step.transaction, transactionContext.address, preprocessorAddr);
-    console.log('\nTerm transaction');
-    console.log(`\n\taddress: \x1b[35m${transactionContext.address}\x1b[0m`);
-    console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
-    const { hash } = await agreement.update(
-      step.txId,
-      step.requiredTxs,
-      step.signatories,
-      step.transaction,
-      step.conditions,
-      transactionContext.address,
-      cdCtxsAddrs
-    );
-    console.log(`\nAgreement update transaction hash: \n\t\x1b[35m${hash}\x1b[0m`);
-  }
-};
 
 export const deployOpcodeLibs = async () => {
   const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
@@ -148,18 +103,6 @@ export const deployAgreement = async () => {
   await agreement.deployed();
 
   console.log(`\x1b[32m Agreement address \x1b[0m\x1b[32m ${agreement.address}\x1b[0m`);
-
-  // TODO: comments below will be used only to fix tests for busines cases
-  // then it shoul be removed
-  /*
-      TODO: pay attention, that the agreement.ts and agreementBusinessCase.ts has
-      only one LP signature in the required list!
-      It has to be used another test, like `Lifecycle Test Multiple LPs`
-      to check multiple LPs
-    */
-  // ---> steps for businessCases with multiple LPs <---
-  // await addSteps(preprocessorAddr, businessCaseSteps(GP, [LPs[0], LPs[1]], 4), ContextCont, agreement.address);
-  // await addSteps(preprocessorAddr, businessCaseSteps(GP, [LPs[0], LPs[1]], 5), ContextCont, agreement.address);
 
   return agreement.address;
 };

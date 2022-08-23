@@ -3,11 +3,16 @@ import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { formatEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
-import { changeTokenBalanceAndGetTxHash, hex4Bytes } from '../utils/utils';
+import {
+  addSteps,
+  changeTokenBalanceAndGetTxHash,
+  getTimestampInSec,
+  hex4Bytes,
+} from '../utils/utils';
 import { businessCaseSteps } from '../../scripts/data/agreement';
 import { Token } from '../../typechain-types';
 import { Agreement } from '../../typechain-types/agreement';
-import { deployAgreement, deployPreprocessor, addSteps } from '../../scripts/data/deploy.utils';
+import { deployAgreement, deployPreprocessor } from '../../scripts/data/deploy.utils';
 
 const dotenv = require('dotenv');
 
@@ -552,7 +557,11 @@ describe('Agreement: business case tests math', () => {
     [alice, GP, ...LPs] = await ethers.getSigners();
 
     // `base = 6` - steps for businessCases with multiple LPs
-    await addSteps(preprocessorAddr, businessCaseSteps(GP, [LPs[0], LPs[1]], 6), agreementAddr);
+    await addSteps(
+      preprocessorAddr,
+      businessCaseSteps(GP.address, [LPs[0].address, LPs[1].address], '6'),
+      agreementAddr
+    );
 
     LAST_BLOCK_TIMESTAMP = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
       .timestamp;
@@ -563,14 +572,13 @@ describe('Agreement: business case tests math', () => {
     dai = await (await ethers.getContractFactory('Token'))
       .connect(alice)
       .deploy(parseUnits('100000000', 18));
-  });
 
-  beforeEach(async () => {
     snapshotId = await network.provider.send('evm_snapshot');
   });
 
   afterEach(async () => {
     await network.provider.send('evm_revert', [snapshotId]);
+    await ethers.provider.send('evm_setNextBlockTimestamp', [getTimestampInSec() + 1000]);
   });
 
   describe('Lifecycle Test', () => {
