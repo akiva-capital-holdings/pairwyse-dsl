@@ -62,6 +62,7 @@ library OtherOpcodes {
             abi.encodeWithSignature('setStorageBool(bytes32,bool)', _varNameB32, _boolVal)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
+        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     /**
@@ -152,13 +153,7 @@ library OtherOpcodes {
         );
         uint256 amount = uint256(opLoadLocalGet(_ctx, 'getStorageUint256(bytes32)'));
         IERC20(token).transfer(recipient, amount);
-<<<<<<< HEAD
-        // console.log('balance contract after', IERC20(token).balanceOf(address(this)));
-        // console.log('balance recipient after', IERC20(token).balanceOf(recipient));
-        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
-=======
         OpcodeHelpers.putToStack(_ctx, 1);
->>>>>>> d7f4713 (fixed failed tests)
     }
 
     function opTransferFrom(IContext _ctx) public {

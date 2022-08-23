@@ -16,7 +16,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-describe.only('Agreement: Alice, Bob, Carl', () => {
+describe('Agreement: Alice, Bob, Carl', () => {
   let agreement: AgreementMock;
   let agreementAddr: string;
   let alice: SignerWithAddress;
@@ -149,7 +149,7 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
     expect(await token.balanceOf(alice.address)).to.equal(0);
   });
 
-  it.only('Alice (borrower), Bob (lender), and Carl (insurer)', async () => {
+  it('Alice (borrower), Bob (lender), and Carl (insurer)', async () => {
     const token = await (await ethers.getContractFactory('Token'))
       .connect(bob)
       .deploy(parseEther('1000'));
