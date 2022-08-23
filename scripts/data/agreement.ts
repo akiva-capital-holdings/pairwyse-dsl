@@ -117,7 +117,7 @@ export const businessCaseSteps = (
   index: number
 ) => {
   const LPs = LPsSigners.map((LP) => LP.address);
-  const base = '' + index;
+  const base = `${index}`;
   return [
     {
       txId: Number(base + 1),
@@ -159,12 +159,10 @@ export const businessCaseSteps = (
         (loadLocal uint256 TWO_PERCENT > loadLocal uint256 GP_INITIAL)
         ifelse POS NEG
         end
-
         POS {
           (loadLocal uint256 TWO_PERCENT - loadLocal uint256 GP_INITIAL
           ) setUint256 GP_REMAINING
         }
-
         NEG {
           0 setUint256 GP_REMAINING
         }`,
@@ -258,7 +256,7 @@ export const businessCaseSteps = (
             0 setUint256 PROFIT
           }
         `,
-        `(loadLocal uint256 LP_TOTAL * loadLocal uint256 HURDLE / 100) setUint256 THRESHOLD`,
+        '(loadLocal uint256 LP_TOTAL * loadLocal uint256 HURDLE / 100) setUint256 THRESHOLD',
         `(loadLocal uint256 PROFIT > loadLocal uint256 THRESHOLD)
           ifelse NONZERO_DELTA ZERO_DELTA
           end
@@ -365,7 +363,7 @@ export const aliceAndAnybodySteps = (
   OtherSigners: string[],
   index: number
 ) => {
-  const base = '' + index;
+  const base = `${index}`;
   return [
     // `anyone` as signatory can execute withdraw DAI and then return the
     // same amount of DAI in Agreement conditional tx

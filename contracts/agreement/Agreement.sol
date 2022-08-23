@@ -165,7 +165,6 @@ contract Agreement {
         address _signatory
     ) public {
         Tx memory txn = txs[_txId];
-        require(checkConditions(_txId, _msgValue), ErrorsConditionalTxs.CNT3);
         require(!isExecutedBySignatory[_txId][_signatory], ErrorsConditionalTxs.CNT4);
 
         IContext(txn.transactionContext).setMsgValue(_msgValue);
@@ -195,7 +194,6 @@ contract Agreement {
         uint256 _msgValue /*onlyOwner*/
     ) public returns (bool) {
         Tx memory txn = txs[_txId];
-
         Tx memory requiredTx;
         for (uint256 i = 0; i < txn.requiredTransactions.length; i++) {
             requiredTx = txs[txn.requiredTransactions[i]];
@@ -219,6 +217,7 @@ contract Agreement {
                 _res &&
                 (IContext(conditionContexts[_txId][i]).stack().seeLast().getUint256() > 0);
         }
+        require(_res, ErrorsConditionalTxs.CNT3);
         return _res;
     }
 
@@ -256,7 +255,7 @@ contract Agreement {
     }
 
     function execute(uint256 _txId) external payable {
-        // payable(txs).transfer(msg.value);
+        // console.log(payable(address(this)).balance);
         require(verify(_txId), ErrorsAgreement.AGR1);
         require(validate(_txId, msg.value), ErrorsAgreement.AGR2);
         require(fulfil(_txId, msg.value, msg.sender), ErrorsAgreement.AGR3);

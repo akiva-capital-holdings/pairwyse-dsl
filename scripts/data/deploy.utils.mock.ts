@@ -1,8 +1,6 @@
 import '@nomiclabs/hardhat-ethers';
 import * as hre from 'hardhat';
-// TODO: would it be better to store types both in the test directory?
-import { TxObject } from '../../test/types';
-import { deployExecutor, deployOpcodeLibs } from './deploy.utils';
+import { deployExecutor, deployOpcodeLibs, deployPreprocessor } from './deploy.utils';
 
 const { ethers } = hre;
 
@@ -18,20 +16,10 @@ export const deployParserMock = async () => {
   return parser.address;
 };
 
-export const deployPreprocessorMock = async () => {
-  const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
-  const preprocessor = await (
-    await ethers.getContractFactory('Preprocessor', {
-      libraries: { StringUtils: stringLib.address },
-    })
-  ).deploy();
-  return preprocessor.address;
-};
-
 export const deployBaseMock = async () => {
   const parserAddr = await deployParserMock();
   const executorLibAddr = await deployExecutor();
-  const preprocessorAddr = await deployPreprocessorMock();
+  const preprocessorAddr = await deployPreprocessor();
 
   return [parserAddr, executorLibAddr, preprocessorAddr];
 };
