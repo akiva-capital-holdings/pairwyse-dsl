@@ -333,6 +333,13 @@ describe('Logical opcodes', () => {
       await pushToStack(StackValue, ctx, StackCont, [3333, 3]);
       await app.opDiv(ctxAddr);
       await checkStack(StackValue, stack, 1, 1111);
+
+      await stack.clear();
+      await ctx.setPc(0);
+
+      await pushToStack(StackValue, ctx, StackCont, [5, 2]);
+      await app.opDiv(ctxAddr);
+      await checkStack(StackValue, stack, 1, 2);
     });
   });
 });

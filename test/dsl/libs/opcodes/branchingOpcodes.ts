@@ -79,7 +79,7 @@ describe('Branching opcodes', () => {
     expect(pc).to.be.equal(testBranchFalse);
   });
 
-  it('opIfelse errors branch', async () => {
+  it('errors in opIfelse', async () => {
     const testBranchTrue = '0001';
     const testBranchFalse = '0002';
 
@@ -95,7 +95,7 @@ describe('Branching opcodes', () => {
     await expect(app.opIfelse(ctxAddr)).to.be.revertedWith('BOP1');
   });
 
-  it('opIf errors branch', async () => {
+  it('errors in opIf', async () => {
     const testBranchTrue = '0001';
     const testBranchFalse = '0002';
 
@@ -164,7 +164,7 @@ describe('Branching opcodes', () => {
     expect(result).to.be.equal(testValueUint256);
   });
 
-  it('opFunc errors branch', async () => {
+  it('errors in opFunc', async () => {
     const testBranchTrue = '0001';
     const testBranchFalse = '0002';
 

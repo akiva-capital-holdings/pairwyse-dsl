@@ -41,11 +41,8 @@ describe('Conditional transactions', () => {
 
     [alice, bob, anybody] = await ethers.getSigners();
 
-    // Deploy contracts
-    let appAddr;
-    let parserAddr;
     // eslint-disable-next-line prefer-const
-    [appAddr, parserAddr] = await deployConditionalTxs();
+    const [appAddr, parserAddr] = await deployConditionalTxs();
     app = await ethers.getContractAt('ConditionalTxsMock', appAddr);
     parser = await ethers.getContractAt('ParserMock', parserAddr);
     ContextCont = await ethers.getContractFactory('Context');
@@ -125,7 +122,8 @@ describe('Conditional transactions', () => {
       await expect(app.execTx(txId, 0, alice.address)).to.be.revertedWith('CNT4');
     }
   });
-  it('more then one condition', async () => {
+
+  it('more than one condition', async () => {
     txs.push({
       txId: 9,
       requiredTxs: [],
@@ -186,10 +184,11 @@ describe('Conditional transactions', () => {
       expect(condStrLen).to.equal(6);
     }
   });
+
   it('check conditions', async () => {
     txs.push({
       txId: 2,
-      requiredTxs: [1],
+      requiredTxs: [3],
       signatories: [bob.address],
       transactionStr: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
       conditionStrs: ['bool true'],
@@ -226,7 +225,7 @@ describe('Conditional transactions', () => {
       await conditionCtxs[0].setMsgSender(alice.address);
 
       await expect(app.execTx(txId, 0, alice.address)).to.be.revertedWith(
-        'ConditionalTxs: required tx #1 was not executed'
+        'ConditionalTxs: required tx #3 was not executed'
       );
     }
   });
@@ -234,7 +233,7 @@ describe('Conditional transactions', () => {
   it('check 0 conditions', async () => {
     txs.push({
       txId: 3,
-      requiredTxs: [2],
+      requiredTxs: [],
       signatories: [bob.address],
       transactionStr: '',
       conditionStrs: [''],
@@ -266,6 +265,78 @@ describe('Conditional transactions', () => {
     }
   });
 
+  it('test more than one signatories', async () => {
+    // Set variables
+    await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
+    await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
+
+    txs.push({
+      txId: 12,
+      requiredTxs: [],
+      signatories: [alice.address, anybody.address],
+      transactionStr: 'sendEth RECEIVER 1000000000000000000',
+      conditionStrs: ['bool true'],
+      transactionCtx: await ContextCont.deploy(),
+      conditionCtxs: [await ContextCont.deploy()],
+    });
+
+    // Set conditional transaction
+    for (let i = 0; i < txs.length; i++) {
+      const {
+        txId,
+        requiredTxs,
+        signatories,
+        conditionCtxs,
+        conditionStrs,
+        transactionCtx,
+        transactionStr,
+      } = txs[i];
+
+      // Set conditional transaction
+      await app.addTxBlueprint(txId, requiredTxs, signatories);
+      for (let j = 0; j < conditionCtxs.length; j++) {
+        await app.addTxCondition(txId, conditionStrs[j], conditionCtxs[j].address);
+      }
+      await app.addTxTransaction(txId, transactionStr, transactionCtx.address);
+
+      // Setup
+
+      // Init all opcodes
+      await transactionCtx.initOpcodes();
+      await conditionCtxs[0].initOpcodes();
+
+      // Set app addresses & msg senders
+      await transactionCtx.setAppAddress(app.address);
+      await transactionCtx.setMsgSender(alice.address);
+      await transactionCtx.setMsgSender(anybody.address);
+      await conditionCtxs[0].setAppAddress(app.address);
+      await conditionCtxs[0].setMsgSender(alice.address);
+      await conditionCtxs[0].setMsgSender(anybody.address);
+
+      // Parse all conditions and a transaction
+      const condCtxLen = (await app.conditionCtxsLen(txId)).toNumber();
+      expect(condCtxLen).to.equal(1);
+      const condStrLen = (await app.conditionStrsLen(txId)).toNumber();
+      expect(condStrLen).to.equal(1);
+      for (let j = 0; j < condCtxLen; j++) {
+        await parser.parse(await app.conditionCtxs(txId, j), await app.conditionStrs(txId, j));
+      }
+      await parser.parse(transactionCtx.address, transactionStr);
+
+      // Top up contract
+      await anybody.sendTransaction({ to: app.address, value: oneEthBN });
+
+      // Execute first transaction
+      await expect(await app.execTx(txId, 0, alice.address)).to.changeEtherBalance(bob, oneEthBN);
+
+      // Top up contract
+      await anybody.sendTransaction({ to: app.address, value: oneEthBN });
+
+      // Execute second transaction
+      await expect(await app.execTx(txId, 0, anybody.address)).to.changeEtherBalance(bob, oneEthBN);
+    }
+  });
+
   describe('Scenarios', () => {
     it('borrower/lender scenario', async () => {
       // Deploy Token contract
@@ -281,7 +352,7 @@ describe('Conditional transactions', () => {
 
       // Define Conditional Transactions
       txs.push({
-        txId: 1,
+        txId: 13,
         requiredTxs: [],
         signatories: [alice.address],
         transactionStr: 'sendEth ETH_RECEIVER 1000000000000000000',
@@ -290,8 +361,8 @@ describe('Conditional transactions', () => {
         conditionCtxs: [await ContextCont.deploy()],
       });
       txs.push({
-        txId: 2,
-        requiredTxs: [],
+        txId: 14,
+        requiredTxs: [13],
         signatories: [bob.address],
         transactionStr: `transfer TOKEN_ADDR TOKEN_RECEIVER ${tenTokens}`,
         conditionStrs: ['blockTimestamp > loadLocal uint256 LOCK_TIME'],
@@ -310,8 +381,6 @@ describe('Conditional transactions', () => {
       await app.addTxBlueprint(txId1, txs[1].requiredTxs, txs[1].signatories);
       await app.addTxCondition(txId1, txs[1].conditionStrs[0], txs[1].conditionCtxs[0].address);
       await app.addTxTransaction(txId1, txs[1].transactionStr, txs[1].transactionCtx.address);
-
-      // Setup
 
       // Init all opcodes
       await txs[0].transactionCtx.initOpcodes();
@@ -398,6 +467,11 @@ describe('Conditional transactions', () => {
 
     it('should revert if signatories was not provided', async () => {
       await expect(app.addTxBlueprint(1, [], [])).to.be.revertedWith('CNT1');
+    });
+
+    it('should revert if `zeroAddress` address is the in the list', async () => {
+      const signatories = [bob.address, alice.address, zeroAddress];
+      await expect(app.addTxBlueprint(1, [], signatories)).to.be.revertedWith('CNT1');
     });
   });
 });

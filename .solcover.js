@@ -9,6 +9,7 @@ module.exports = {
     "dsl/test/Token.sol",
     "dsl/test/E2EApp.sol",
     "dsl/test/ERC20Mintable.sol",
+    "dsl/test/StorageWithRevert.sol",
     "dsl/mocks/opcodes/ComparisonOpcodesMock.sol",
     "dsl/mocks/opcodes/BranchingOpcodesMock.sol",
     "dsl/mocks/opcodes/LogicalOpcodesMock.sol",

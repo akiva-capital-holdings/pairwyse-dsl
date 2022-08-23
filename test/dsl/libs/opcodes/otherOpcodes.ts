@@ -303,7 +303,7 @@ describe('Other opcodes', () => {
     const testValue = 1;
     const bytes32TestValueName = hex4Bytes('NUMBER');
 
-    await app.setStorageUint256(bytes32TestValueName, testValue);
+    await clientApp.setStorageUint256(bytes32TestValueName, testValue);
 
     const number = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${number}`);
@@ -316,7 +316,7 @@ describe('Other opcodes', () => {
     const testValue = hex4Bytes('123456');
     const bytes32TestValueName = hex4Bytes('BYTES');
 
-    await app.setStorageBytes32(bytes32TestValueName, testValue);
+    await clientApp.setStorageBytes32(bytes32TestValueName, testValue);
 
     const bytes = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${bytes}`);
@@ -329,7 +329,7 @@ describe('Other opcodes', () => {
     const testValue = true;
     const bytes32TestValueName = hex4Bytes('BOOL');
 
-    await app.setStorageBool(bytes32TestValueName, testValue);
+    await clientApp.setStorageBool(bytes32TestValueName, testValue);
 
     const bool = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${bool}`);
@@ -343,7 +343,7 @@ describe('Other opcodes', () => {
     const testValue = addr.address;
     const bytes32TestValueName = hex4Bytes('ADDRESS');
 
-    await app.setStorageAddress(bytes32TestValueName, testValue);
+    await clientApp.setStorageAddress(bytes32TestValueName, testValue);
 
     const address = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${address}`);
@@ -446,15 +446,15 @@ describe('Other opcodes', () => {
 
     await testERC20.mint(app.address, testAmount);
 
-    const bytes32TestAddressName1 = hex4Bytes('ADDRESS1');
-    const bytes32TestAddressName2 = hex4Bytes('ADDRESS2');
+    const bytes32TokenAddr = hex4Bytes('TOKEN_ADDR');
+    const bytes32ReceiverAddr = hex4Bytes('RECEIVER');
 
-    await app.setStorageAddress(bytes32TestAddressName1, testERC20.address);
-    await app.setStorageAddress(bytes32TestAddressName2, receiver.address);
+    await clientApp.setStorageAddress(bytes32TokenAddr, testERC20.address);
+    await clientApp.setStorageAddress(bytes32ReceiverAddr, receiver.address);
 
-    const address1 = bytes32TestAddressName1.substring(2, 10);
-    const address2 = bytes32TestAddressName2.substring(2, 10);
-    await ctx.setProgram(`0x${address1}${address2}${uint256StrToHex(testAmount)}`);
+    const tokenAddress = bytes32TokenAddr.substring(2, 10);
+    const receiverAddress = bytes32ReceiverAddr.substring(2, 10);
+    await ctx.setProgram(`0x${tokenAddress}${receiverAddress}${uint256StrToHex(testAmount)}`);
 
     await app.opTransfer(ctxAddr);
     await checkStackTailv2(StackValue, stack, ['1']);
@@ -469,18 +469,18 @@ describe('Other opcodes', () => {
     await testERC20.burn(receiver.address, testAmount);
     await testERC20.mint(app.address, testAmount);
 
-    const bytes32TestAddressName1 = hex4Bytes('ADDRESS1');
-    const bytes32TestAddressName2 = hex4Bytes('ADDRESS2');
-    const bytes32TestAmount = hex4Bytes('1000');
+    const bytes32TokenAddr = hex4Bytes('TOKEN_ADDR');
+    const bytes32ReceiverAddr = hex4Bytes('RECEIVER');
+    const bytes32TestAmount = hex4Bytes(testAmount);
 
-    await app.setStorageAddress(bytes32TestAddressName1, testERC20.address);
-    await app.setStorageAddress(bytes32TestAddressName2, receiver.address);
-    await app.setStorageUint256(bytes32TestAmount, 1000);
+    await clientApp.setStorageAddress(bytes32TokenAddr, testERC20.address);
+    await clientApp.setStorageAddress(bytes32ReceiverAddr, receiver.address);
+    await clientApp.setStorageUint256(bytes32TestAmount, 1000);
 
-    const address1 = bytes32TestAddressName1.substring(2, 10);
-    const address2 = bytes32TestAddressName2.substring(2, 10);
+    const tokenAddress = bytes32TokenAddr.substring(2, 10);
+    const receiverAddress = bytes32ReceiverAddr.substring(2, 10);
     const amount = bytes32TestAmount.substring(2, 10);
-    await ctx.setProgram(`0x${address1}${address2}${amount}`);
+    await ctx.setProgram(`0x${tokenAddress}${receiverAddress}${amount}`);
 
     await app.opTransferVar(ctxAddr);
     await checkStackTailv2(StackValue, stack, ['1']);
@@ -496,19 +496,21 @@ describe('Other opcodes', () => {
     await testERC20.mint(sender.address, testAmount);
     await testERC20.approve(app.address, testAmount, { from: sender.address });
 
-    const bytes32TestAddressName1 = hex4Bytes('ADDRESS1');
-    const bytes32TestAddressName2 = hex4Bytes('ADDRESS2');
-    const bytes32TestAddressName3 = hex4Bytes('ADDRESS3');
+    const bytes32TokenAddr = hex4Bytes('TOKEN_ADDR');
+    const bytes32SenderAddr = hex4Bytes('SENDER');
+    const bytes32ReceiverAddr = hex4Bytes('RECEIVER');
 
-    await app.setStorageAddress(bytes32TestAddressName1, testERC20.address);
-    await app.setStorageAddress(bytes32TestAddressName2, sender.address);
-    await app.setStorageAddress(bytes32TestAddressName3, receiver.address);
+    await clientApp.setStorageAddress(bytes32TokenAddr, testERC20.address);
+    await clientApp.setStorageAddress(bytes32SenderAddr, sender.address);
+    await clientApp.setStorageAddress(bytes32ReceiverAddr, receiver.address);
 
-    const address1 = bytes32TestAddressName1.substring(2, 10);
-    const address2 = bytes32TestAddressName2.substring(2, 10);
-    const address3 = bytes32TestAddressName3.substring(2, 10);
+    const tokenAddress = bytes32TokenAddr.substring(2, 10);
+    const senderAddress = bytes32SenderAddr.substring(2, 10);
+    const receiverAddress = bytes32ReceiverAddr.substring(2, 10);
 
-    await ctx.setProgram(`0x${address1}${address2}${address3}${uint256StrToHex(testAmount)}`);
+    await ctx.setProgram(
+      `0x${tokenAddress}${senderAddress}` + `${receiverAddress}${uint256StrToHex(testAmount)}`
+    );
 
     await app.opTransferFrom(ctxAddr);
     await checkStackTailv2(StackValue, stack, ['1']);
@@ -524,21 +526,21 @@ describe('Other opcodes', () => {
     await testERC20.mint(sender.address, testAmount);
     await testERC20.approve(app.address, testAmount, { from: sender.address });
 
-    const bytes32TestAddressName1 = hex4Bytes('ADDRESS1');
-    const bytes32TestAddressName2 = hex4Bytes('ADDRESS2');
-    const bytes32TestAddressName3 = hex4Bytes('ADDRESS3');
-    const bytes32TestAmount = hex4Bytes('1000');
+    const bytes32TokenAddr = hex4Bytes('TOKEN_ADDR');
+    const bytes32SenderAddr = hex4Bytes('SENDER');
+    const bytes32ReceiverAddr = hex4Bytes('RECEIVER');
+    const bytes32TestAmount = hex4Bytes(testAmount);
 
-    await app.setStorageAddress(bytes32TestAddressName1, testERC20.address);
-    await app.setStorageAddress(bytes32TestAddressName2, sender.address);
-    await app.setStorageAddress(bytes32TestAddressName3, receiver.address);
+    await clientApp.setStorageAddress(bytes32TokenAddr, testERC20.address);
+    await clientApp.setStorageAddress(bytes32SenderAddr, sender.address);
+    await clientApp.setStorageAddress(bytes32ReceiverAddr, receiver.address);
 
-    const address1 = bytes32TestAddressName1.substring(2, 10);
-    const address2 = bytes32TestAddressName2.substring(2, 10);
-    const address3 = bytes32TestAddressName3.substring(2, 10);
+    const tokenAddress = bytes32TokenAddr.substring(2, 10);
+    const senderAddress = bytes32SenderAddr.substring(2, 10);
+    const receiverAddress = bytes32ReceiverAddr.substring(2, 10);
     const amount = bytes32TestAmount.substring(2, 10);
 
-    await ctx.setProgram(`0x${address1}${address2}${address3}${amount}`);
+    await ctx.setProgram(`0x${tokenAddress}${senderAddress}${receiverAddress}${amount}`);
 
     await app.opTransferFromVar(ctxAddr);
     await checkStackTailv2(StackValue, stack, ['1']);
@@ -553,19 +555,20 @@ describe('Other opcodes', () => {
 
     await testERC20.mint(receiver.address, testAmount);
 
-    const bytes32TestAddressName1 = hex4Bytes('ADDRESS1');
-    const bytes32TestAddressName2 = hex4Bytes('ADDRESS2');
+    const bytes32TokenAddr = hex4Bytes('TOKEN_ADDR');
+    const bytes32ReceiverAddr = hex4Bytes('RECEIVER');
 
-    await app.setStorageAddress(bytes32TestAddressName1, testERC20.address);
-    await app.setStorageAddress(bytes32TestAddressName2, receiver.address);
+    await clientApp.setStorageAddress(bytes32TokenAddr, testERC20.address);
+    await clientApp.setStorageAddress(bytes32ReceiverAddr, receiver.address);
 
-    const address1 = bytes32TestAddressName1.substring(2, 10);
-    const address2 = bytes32TestAddressName2.substring(2, 10);
+    const tokenAddress = bytes32TokenAddr.substring(2, 10);
+    const receiverAddress = bytes32ReceiverAddr.substring(2, 10);
 
-    await ctx.setProgram(`0x${address1}${address2}`);
+    await ctx.setProgram(`0x${tokenAddress}${receiverAddress}`);
 
     await app.opBalanceOf(ctxAddr);
-    await checkStackTailv2(StackValue, stack, ['1000']);
+    await checkStackTailv2(StackValue, stack, [testAmount]);
+    await testERC20.burn(receiver.address, testAmount);
   });
 
   it('opUint256Get', async () => {
@@ -581,7 +584,7 @@ describe('Other opcodes', () => {
     const bytes32TestValueName = hex4Bytes('BYTES32');
     const testSignature = 'getStorageBytes32(bytes32)';
 
-    await app.setStorageBytes32(bytes32TestValueName, testValue);
+    await clientApp.setStorageBytes32(bytes32TestValueName, testValue);
 
     const bytes = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${bytes}`);

@@ -16,7 +16,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-describe('Agreement: Alice, Bob, Carl', () => {
+describe.only('Agreement: Alice, Bob, Carl', () => {
   let agreement: AgreementMock;
   let agreementAddr: string;
   let alice: SignerWithAddress;
@@ -149,7 +149,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
     expect(await token.balanceOf(alice.address)).to.equal(0);
   });
 
-  it('Alice (borrower), Bob (lender), and Carl (insurer)', async () => {
+  it.only('Alice (borrower), Bob (lender), and Carl (insurer)', async () => {
     const token = await (await ethers.getContractFactory('Token'))
       .connect(bob)
       .deploy(parseEther('1000'));
@@ -195,7 +195,8 @@ describe('Agreement: Alice, Bob, Carl', () => {
 
     // Alice returns 10 tokens to Bob and collects 1 ETH
     console.log('Alice returns 10 tokens to Bob and collects 1 ETH');
-    expect(await token.balanceOf(alice.address)).to.equal(tenTokens);
+    const balance = await token.balanceOf(alice.address);
+    expect(balance).to.equal(tenTokens);
     await token.connect(alice).approve(txsAddr, tenTokens);
     await expect(await agreement.connect(alice).execute(34)).to.changeEtherBalance(alice, oneEthBN);
     expect(await token.balanceOf(alice.address)).to.equal(0);

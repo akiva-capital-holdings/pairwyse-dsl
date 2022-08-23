@@ -59,7 +59,7 @@ contract Agreement {
     }
 
     function verify(uint256 _txId) internal view returns (bool) {
-        if (txs.signatoriesLen(_txId) == 1 && txs.signatories(_txId, 0) == txs.anyone()) {
+        if (txs.signatoriesLen(_txId) == 1 && txs.signatories(_txId, 0) == txs.ANYONE()) {
             return true;
         }
         for (uint256 i = 0; i < txs.signatoriesLen(_txId); i++) {
@@ -87,7 +87,6 @@ contract Agreement {
         uint256 _msgValue,
         address _signatory
     ) internal returns (bool) {
-        // console.log('fulfil');
         (IContext transactionCtx, , ) = txs.txs(_txId);
         txs.execTx(_txId, _msgValue, _signatory);
         return transactionCtx.stack().seeLast().getUint256() == 0 ? false : true;
