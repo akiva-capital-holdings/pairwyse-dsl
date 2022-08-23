@@ -1,4 +1,6 @@
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { Contract, ContractTransaction } from 'ethers';
+import { Agreement, Token } from '../../typechain-types';
 
 export type OpConditionalTxFunc = (
   opcodes: Contract
@@ -28,4 +30,14 @@ export type TxObject = {
   signatories: string[];
   conditions: string[];
   transaction: string;
+};
+
+export type DynamicTestData = {
+  GP: SignerWithAddress;
+  LPs: SignerWithAddress[];
+  whale: SignerWithAddress;
+  agreement: Agreement;
+  dai: Token;
+  PLACEMENT_DATE: number;
+  CLOSING_DATE: number;
 };

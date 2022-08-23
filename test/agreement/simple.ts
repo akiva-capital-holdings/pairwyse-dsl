@@ -2,7 +2,7 @@ import { ethers, network } from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
-import { addSteps, getTimestampInSec, hex4Bytes } from '../utils/utils';
+import { addSteps, hex4Bytes } from '../utils/utils';
 import { deployAgreement, deployPreprocessor } from '../../scripts/data/deploy.utils';
 import {
   aliceAndBobSteps,
@@ -12,7 +12,7 @@ import {
 import { Agreement } from '../../typechain-types';
 import { ANYONE, ONE_DAY, ONE_MONTH } from '../utils/constants';
 
-describe.only('Agreement: Alice, Bob, Carl', () => {
+describe('Agreement: Alice, Bob, Carl', () => {
   let agreement: Agreement;
   let agreementAddr: string;
   let preprocessorAddr: string;
@@ -37,8 +37,10 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
 
     [alice, bob, carl, anybody] = await ethers.getSigners();
 
-    const NOW = getTimestampInSec();
-    NEXT_MONTH = NOW + ONE_MONTH;
+    const LAST_BLOCK_TIMESTAMP = (
+      await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
+    ).timestamp;
+    NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
 
     snapshotId = await network.provider.send('evm_snapshot');
   });
@@ -78,8 +80,6 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
 
     // Tx already executed
     await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('CNT4');
-
-    await ethers.provider.send('evm_setNextBlockTimestamp', [getTimestampInSec()]);
   });
 
   it('Alice (borrower) and Bob (lender)', async () => {
@@ -204,7 +204,6 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
       carl,
       tenTokens
     );
-    await ethers.provider.send('evm_setNextBlockTimestamp', [getTimestampInSec()]);
   });
 
   it(
@@ -252,7 +251,6 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
         carl,
         oneEthBN
       );
-      await ethers.provider.send('evm_setNextBlockTimestamp', [getTimestampInSec()]);
     }
   );
 });

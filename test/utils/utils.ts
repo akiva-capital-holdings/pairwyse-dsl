@@ -13,10 +13,8 @@ import {
   Context,
   StackValue,
   ERC20,
-  Token,
-  Agreement,
 } from '../../typechain-types';
-import { OpConditionalTxFunc, TxObject } from '../types';
+import { DynamicTestData, OpConditionalTxFunc, TxObject } from '../types';
 import { ONE_DAY, ONE_MONTH, ONE_YEAR } from './constants';
 
 /**
@@ -34,11 +32,11 @@ export const hex4Bytes = (str: string) =>
 
 export const hex4BytesShort = (str: string) => hex4Bytes(str).slice(2, 2 + 8);
 
-/**
- * Get current timestamp in seconds
- * @returns Timestamp in seconds
- */
-export const getTimestampInSec = () => Math.floor(Date.now() / 1000);
+// /**
+//  * Get current timestamp in seconds
+//  * @returns Timestamp in seconds
+//  */
+// export const getTimestampInSec = () => Math.floor(Date.now() / 1000);
 
 /**
  * Push values to stack
@@ -296,21 +294,12 @@ export const businessCaseTest = ({
   MANAGEMENT_FEE_PERCENTAGE,
   HURDLE,
   PROFIT_PART,
-  PLACEMENT_DATE,
-  CLOSING_DATE,
   GP_FAILS_TO_DO_GAP_DEPOSIT,
   base,
   suiteInstance,
 }: {
   name: string;
-  dynamicTestData: {
-    GP: SignerWithAddress;
-    LPs: SignerWithAddress[];
-    whale: SignerWithAddress;
-    agreement: Agreement;
-    dai: Token;
-  };
-
+  dynamicTestData: DynamicTestData;
   GP_INITIAL: BigNumber;
   LP_INITIAL_ARR: BigNumber[];
   INITIAL_FUNDS_TARGET: BigNumber;
@@ -321,8 +310,6 @@ export const businessCaseTest = ({
   MANAGEMENT_FEE_PERCENTAGE: number;
   HURDLE: number;
   PROFIT_PART: number;
-  PLACEMENT_DATE: number;
-  CLOSING_DATE: number;
   GP_FAILS_TO_DO_GAP_DEPOSIT: boolean;
   base: string;
   suiteInstance: Suite;
@@ -330,7 +317,7 @@ export const businessCaseTest = ({
   suiteInstance.addTest(
     new Test(name, async () => {
       let txId = base.concat('1');
-      const { GP, LPs, whale, agreement, dai } = dynamicTestData;
+      const { GP, LPs, whale, agreement, dai, PLACEMENT_DATE, CLOSING_DATE } = dynamicTestData;
       const MAX_PERCENT = 100 - DEPOSIT_MIN_PERCENT;
 
       // Start the test
@@ -381,7 +368,7 @@ of the initial DAI funds target amount\x1b[0m
         `);
       }
       // Other tests have no sense if result is false
-      if (!result) return;
+      if (!result) return; // TODO: fail the test if result ==  false
 
       // Step 2
       txId = base.concat('2');

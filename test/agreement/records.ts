@@ -2,11 +2,13 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
 import { ContextMock as ContextMockType, ParserMock } from '../../typechain-types/dsl/mocks';
-import { getTimestampInSec, hex4Bytes } from '../utils/utils';
+import { hex4Bytes } from '../utils/utils';
 import { deployParserMock } from '../../scripts/data/deploy.utils.mock';
 import { deployAgreement, deployPreprocessor } from '../../scripts/data/deploy.utils';
 import { Agreement } from '../../typechain-types';
 import { ANYONE, ONE_MONTH } from '../utils/constants';
+
+// TODO: rename everywhere in the project 'Conditional Transactions' to 'Records'
 
 describe('Simple Records in Agreement', () => {
   let agreement: Agreement;
@@ -32,8 +34,10 @@ describe('Simple Records in Agreement', () => {
   let txs: Txs[] = [];
 
   before(async () => {
-    const NOW = getTimestampInSec();
-    NEXT_MONTH = NOW + ONE_MONTH;
+    const LAST_BLOCK_TIMESTAMP = (
+      await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
+    ).timestamp;
+    NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
 
     [alice, bob, anybody] = await ethers.getSigners();
 
@@ -52,7 +56,6 @@ describe('Simple Records in Agreement', () => {
     txs = [];
     // Return to the snapshot
     await network.provider.send('evm_revert', [snapshotId]);
-    await ethers.provider.send('evm_setNextBlockTimestamp', [getTimestampInSec() + 1000]);
   });
 
   it('test one transaction', async () => {

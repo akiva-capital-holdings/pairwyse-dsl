@@ -3,22 +3,17 @@ import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { formatEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
-import {
-  addSteps,
-  changeTokenBalanceAndGetTxHash,
-  getTimestampInSec,
-  hex4Bytes,
-} from '../utils/utils';
-import { businessCaseSteps } from '../../scripts/data/agreement';
-import { Token } from '../../typechain-types';
-import { Agreement } from '../../typechain-types/agreement';
-import { deployAgreement, deployPreprocessor } from '../../scripts/data/deploy.utils';
-
-const dotenv = require('dotenv');
+import dotenv from 'dotenv';
+import { addSteps, changeTokenBalanceAndGetTxHash, hex4Bytes } from '../../utils/utils';
+import { businessCaseSteps } from '../../../scripts/data/agreement';
+import { Token } from '../../../typechain-types';
+import { Agreement } from '../../../typechain-types/agreement';
+import { deployAgreement, deployPreprocessor } from '../../../scripts/data/deploy.utils';
+import { ONE_DAY, ONE_MONTH, ONE_YEAR } from '../../utils/constants';
 
 dotenv.config();
 
-describe('Agreement: business case tests math', () => {
+describe('Agreement: Investment Fund tests math', () => {
   let agreement: Agreement;
   let agreementAddr: string;
   let preprocessorAddr: string;
@@ -27,15 +22,11 @@ describe('Agreement: business case tests math', () => {
   let LPs: SignerWithAddress[];
   let NEXT_MONTH: number;
   let NEXT_TWO_MONTH: number;
-  let LAST_BLOCK_TIMESTAMP: number;
   let MAX_PERCENT: number;
   let dai: Token;
   let snapshotId: number;
 
-  const ONE_DAY = 60 * 60 * 24;
-  const ONE_MONTH = ONE_DAY * 30;
-  const ONE_YEAR = ONE_DAY * 365;
-
+  // TODO: merge with test/utils/utils/businessCaseTest()
   const businessCaseTestDivisionErrors = (
     name: string,
     base: string,
@@ -563,9 +554,9 @@ describe('Agreement: business case tests math', () => {
       agreementAddr
     );
 
-    LAST_BLOCK_TIMESTAMP = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
-      .timestamp;
-
+    const LAST_BLOCK_TIMESTAMP = (
+      await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
+    ).timestamp;
     NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
     NEXT_TWO_MONTH = LAST_BLOCK_TIMESTAMP + 2 * ONE_MONTH;
 
@@ -578,7 +569,6 @@ describe('Agreement: business case tests math', () => {
 
   afterEach(async () => {
     await network.provider.send('evm_revert', [snapshotId]);
-    await ethers.provider.send('evm_setNextBlockTimestamp', [getTimestampInSec() + 1000]);
   });
 
   describe('Lifecycle Test', () => {
