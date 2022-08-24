@@ -32,12 +32,6 @@ export const hex4Bytes = (str: string) =>
 
 export const hex4BytesShort = (str: string) => hex4Bytes(str).slice(2, 2 + 8);
 
-// /**
-//  * Get current timestamp in seconds
-//  * @returns Timestamp in seconds
-//  */
-// export const getTimestampInSec = () => Math.floor(Date.now() / 1000);
-
 /**
  * Push values to stack
  * @param SV StackValue: StackValue__factory
