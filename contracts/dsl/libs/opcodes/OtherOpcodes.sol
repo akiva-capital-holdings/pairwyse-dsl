@@ -62,6 +62,7 @@ library OtherOpcodes {
             abi.encodeWithSignature('setStorageBool(bytes32,bool)', _varNameB32, _boolVal)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
+        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     /**
@@ -128,7 +129,7 @@ library OtherOpcodes {
         );
         uint256 amount = opUint256Get(_ctx);
         recipient.transfer(amount);
-        OpcodeHelpers.putToStack(_ctx, 1);
+        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     function opTransfer(IContext _ctx) public {
@@ -167,7 +168,7 @@ library OtherOpcodes {
         );
         uint256 amount = opUint256Get(_ctx);
         IERC20(token).transferFrom(from, to, amount);
-        OpcodeHelpers.putToStack(_ctx, 1);
+        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     function opBalanceOf(IContext _ctx) public {
@@ -193,7 +194,7 @@ library OtherOpcodes {
         );
         uint256 amount = uint256(opLoadLocalGet(_ctx, 'getStorageUint256(bytes32)'));
         IERC20(token).transferFrom(from, to, amount);
-        OpcodeHelpers.putToStack(_ctx, 1);
+        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     function opUint256Get(IContext _ctx) public returns (uint256) {
