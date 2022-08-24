@@ -6,8 +6,11 @@ import { hex4Bytes } from '../utils/utils';
 import { deployParserMock } from '../../scripts/data/deploy.utils.mock';
 import { deployAgreement, deployPreprocessor } from '../../scripts/data/deploy.utils';
 import { Agreement } from '../../typechain-types';
+import { ANYONE, ONE_MONTH } from '../utils/constants';
 
-describe('Simple conditional transactions in Agreement', () => {
+// TODO: rename everywhere in the project 'Conditional Transactions' to 'Records'
+
+describe('Simple Records in Agreement', () => {
   let agreement: Agreement;
   let agreementAddr: string;
   let parser: ParserMock;
@@ -16,12 +19,7 @@ describe('Simple conditional transactions in Agreement', () => {
   let anybody: SignerWithAddress;
   let NEXT_MONTH: number;
   let snapshotId: number;
-  let LAST_BLOCK_TIMESTAMP: number;
   let preprAddr: string;
-
-  const ONE_MONTH = 60 * 60 * 24 * 30;
-  const anyone = '0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF';
-  const zeroAddress = '0x0000000000000000000000000000000000000000';
 
   type Txs = {
     txId: number;
@@ -36,9 +34,10 @@ describe('Simple conditional transactions in Agreement', () => {
   let txs: Txs[] = [];
 
   before(async () => {
-    LAST_BLOCK_TIMESTAMP = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
-      .timestamp;
-    NEXT_MONTH = LAST_BLOCK_TIMESTAMP + 60 * 60 * 24 * 30;
+    const LAST_BLOCK_TIMESTAMP = (
+      await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
+    ).timestamp;
+    NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
 
     [alice, bob, anybody] = await ethers.getSigners();
 
@@ -245,22 +244,22 @@ describe('Simple conditional transactions in Agreement', () => {
   describe('`anyone` address in the signatories', () => {
     it('should revert if `anyone` address is the last address in the list', async () => {
       // it not possible to update transaction with alice, bobo and 0xFfFF address
-      const signatories = [alice.address, bob.address, anyone];
+      const signatories = [alice.address, bob.address, ANYONE];
       await expect(agreement.addTxBlueprint(1, [], signatories)).to.be.revertedWith('CNT1');
     });
 
     it('should revert if `anyone` address is the first address in the list', async () => {
-      const signatories = [anyone, bob.address, alice.address];
+      const signatories = [ANYONE, bob.address, alice.address];
       await expect(agreement.addTxBlueprint(1, [], signatories)).to.be.revertedWith('CNT1');
     });
 
     it('should revert if `anyone` and zero addresses in the list', async () => {
-      const signatories = [zeroAddress, anyone];
+      const signatories = [ethers.constants.AddressZero, ANYONE];
       await expect(agreement.addTxBlueprint(1, [], signatories)).to.be.revertedWith('CNT1');
     });
 
     it('should revert if `anyone` was provided twice', async () => {
-      const signatories = [anyone, anyone];
+      const signatories = [ANYONE, ANYONE];
       await expect(agreement.addTxBlueprint(1, [], signatories)).to.be.revertedWith('CNT1');
     });
 

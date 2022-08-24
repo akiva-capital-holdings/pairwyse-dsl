@@ -2,14 +2,15 @@ import { ethers, network } from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
-import { hex4Bytes } from '../utils/utils';
-import { addSteps, deployAgreement, deployPreprocessor } from '../../scripts/data/deploy.utils';
+import { addSteps, hex4Bytes } from '../utils/utils';
+import { deployAgreement, deployPreprocessor } from '../../scripts/data/deploy.utils';
 import {
   aliceAndBobSteps,
   aliceBobAndCarl,
   aliceAndAnybodySteps,
 } from '../../scripts/data/agreement';
 import { Agreement } from '../../typechain-types';
+import { ANYONE, ONE_DAY, ONE_MONTH } from '../utils/constants';
 
 describe('Agreement: Alice, Bob, Carl', () => {
   let agreement: Agreement;
@@ -19,16 +20,11 @@ describe('Agreement: Alice, Bob, Carl', () => {
   let bob: SignerWithAddress;
   let carl: SignerWithAddress;
   let anybody: SignerWithAddress;
-  let NEXT_MONTH: number;
-  let LAST_BLOCK_TIMESTAMP: number;
   let snapshotId: number;
+  let NEXT_MONTH = 0;
 
-  const ONE_DAY = 60 * 60 * 24;
-  const ONE_MONTH = ONE_DAY * 30;
   const oneEthBN = parseEther('1');
   const tenTokens = parseEther('10');
-  const anyone = '0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF';
-  const requiredTxs: number[] = [];
 
   before(async () => {
     // TODO: need more simplifications for all tests
@@ -41,8 +37,9 @@ describe('Agreement: Alice, Bob, Carl', () => {
 
     [alice, bob, carl, anybody] = await ethers.getSigners();
 
-    LAST_BLOCK_TIMESTAMP = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
-      .timestamp;
+    const LAST_BLOCK_TIMESTAMP = (
+      await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
+    ).timestamp;
     NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
 
     snapshotId = await network.provider.send('evm_snapshot');
@@ -57,14 +54,14 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await agreement.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
     await agreement.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
-    const txId = 1;
+    const txId = '1';
     const signatories = [alice.address];
     const conditions = ['blockTimestamp > loadLocal uint256 LOCK_TIME'];
     const transaction = 'sendEth RECEIVER 1000000000000000000';
 
     await addSteps(
       preprocessorAddr,
-      [{ txId, requiredTxs, signatories, conditions, transaction }],
+      [{ txId, requiredTxs: [], signatories, conditions, transaction }],
       agreementAddr
     );
 
@@ -225,13 +222,9 @@ describe('Agreement: Alice, Bob, Carl', () => {
       await agreement.setStorageUint256(hex4Bytes('PURCHASE_PERCENT'), PURCHASE_PERCENT);
       await agreement.setStorageUint256(hex4Bytes('TRANSACTIONS_CONT'), agreementAddr);
 
-      const index = 4;
-      const signatories = [anyone];
-      await addSteps(
-        preprocessorAddr,
-        aliceAndAnybodySteps(alice, signatories, index),
-        agreementAddr
-      );
+      const index = '4';
+      const signatories = [ANYONE];
+      await addSteps(preprocessorAddr, aliceAndAnybodySteps(signatories, index), agreementAddr);
 
       // Alice deposits 10 dai tokens to SC
       await daiToken.connect(alice).transfer(agreementAddr, tenTokens);
