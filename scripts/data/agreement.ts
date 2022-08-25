@@ -126,7 +126,7 @@ export const businessCaseSteps = (
       `(TIME < loadLocal uint256 PLACEMENT_DATE)
        and (
          loadLocal uint256 GP_INITIAL >=
-         loadLocal uint256 ((INITIAL_FUNDS_TARGET * loadLocal uint256 DEPOSIT_MIN_PERCENT) / 100)
+        ((loadLocal uint256 INITIAL_FUNDS_TARGET * loadLocal uint256 DEPOSIT_MIN_PERCENT) / 100)
        )`,
     ],
   },
@@ -356,6 +356,7 @@ export const businessCaseSteps = (
   },
 ];
 
+// TODO: add in-DSL comments directly to the code
 export const businessCaseStepsSimplified = (
   GPAddr: string,
   LPsAddrs: string[],
@@ -367,10 +368,10 @@ export const businessCaseStepsSimplified = (
     signatories: [GPAddr],
     transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_INITIAL',
     conditions: [
-      `(TIME < loadLocal uint256 PLACEMENT_DATE)
+      `(TIME < uint256 PLACEMENT_DATE)
        and (
          loadLocal uint256 GP_INITIAL >=
-         loadLocal uint256 ((INITIAL_FUNDS_TARGET * loadLocal uint256 DEPOSIT_MIN_PERCENT) / 100)
+        ((loadLocal uint256 INITIAL_FUNDS_TARGET * loadLocal uint256 DEPOSIT_MIN_PERCENT) / 100)
        )`,
     ],
   },
