@@ -48,7 +48,6 @@ describe('Comparison opcodes', () => {
     stack = await ethers.getContractAt('Stack', stackAddr);
 
     // Setup
-    await ctx.initOpcodes();
     await ctx.setAppAddress(ctx.address);
     await ctx.setComparisonOpcodesAddr(comparisonOpcodesLib.address);
   });

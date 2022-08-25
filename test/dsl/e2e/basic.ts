@@ -1,14 +1,14 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { parseEther, parseUnits } from 'ethers/lib/utils';
-import { App, Context, Parser, Stack, StackValue__factory } from '../../../typechain-types';
+import { App, Context, Stack, StackValue__factory } from '../../../typechain-types';
 import { checkStack, checkStackTail, checkStackTailv2, hex4Bytes } from '../../utils/utils';
+import { deployBase, deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
 
 describe('DSL: basic', () => {
   let stack: Stack;
   let ctx: Context;
   let app: App;
-  let parser: Parser;
   let appAddrHex: string;
   let StackValue: StackValue__factory;
   let NEXT_MONTH: number;
@@ -30,58 +30,21 @@ describe('DSL: basic', () => {
     StackValue = await ethers.getContractFactory('StackValue');
 
     // Deploy libraries
-    const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
-    const comparisonOpcodesLib = await (
-      await ethers.getContractFactory('ComparisonOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const branchingOpcodesLib = await (
-      await ethers.getContractFactory('BranchingOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const logicalOpcodesLib = await (
-      await ethers.getContractFactory('LogicalOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const otherOpcodesLib = await (
-      await ethers.getContractFactory('OtherOpcodes', {
-        libraries: {
-          OpcodeHelpers: opcodeHelpersLib.address,
-        },
-      })
-    ).deploy();
-    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
-    const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
-    const executorLib = await (await ethers.getContractFactory('Executor')).deploy();
+    const [
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr,
+    ] = await deployOpcodeLibs();
 
-    // Deploy Preprocessor
-    const preprocessor = await (
-      await ethers.getContractFactory('Preprocessor', {
-        libraries: { StringUtils: stringLib.address },
-      })
-    ).deploy();
-
-    // Deploy Parser
-    const ParserCont = await ethers.getContractFactory('Parser', {
-      libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
-    });
-    parser = await ParserCont.deploy(preprocessor.address);
+    const [parserAddr, executorLibAddr, preprAddr] = await deployBase();
 
     // Deploy Context & setup
     ctx = await (await ethers.getContractFactory('Context')).deploy();
-    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLib.address);
-    await ctx.setBranchingOpcodesAddr(branchingOpcodesLib.address);
-    await ctx.setLogicalOpcodesAddr(logicalOpcodesLib.address);
-    await ctx.setOtherOpcodesAddr(otherOpcodesLib.address);
+    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLibAddr);
+    await ctx.setBranchingOpcodesAddr(branchingOpcodesLibAddr);
+    await ctx.setLogicalOpcodesAddr(logicalOpcodesLibAddr);
+    await ctx.setOtherOpcodesAddr(otherOpcodesLibAddr);
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
@@ -90,9 +53,11 @@ describe('DSL: basic', () => {
 
     // Deploy Application
     app = await (
-      await ethers.getContractFactory('App', { libraries: { Executor: executorLib.address } })
-    ).deploy(parser.address, ctx.address);
+      await ethers.getContractFactory('App', { libraries: { Executor: executorLibAddr } })
+    ).deploy(parserAddr, preprAddr, ctx.address);
     appAddrHex = app.address.slice(2);
+
+    await ctx.setAppAddress(app.address);
   });
 
   it('0 + 0', async () => {
@@ -892,7 +857,8 @@ describe('DSL: basic', () => {
 
   describe('if-else statement', () => {
     it('simple; using `branch` keyword', async () => {
-      await app.parse(`
+      await app.parse(
+        `
         bool false
         ifelse AA BB
 
@@ -903,7 +869,8 @@ describe('DSL: basic', () => {
         branch BB {
           7 setUint256 A
         }
-      `);
+      `
+      );
       await app.execute();
       expect(await app.getStorageUint256(hex4Bytes('A'))).to.equal(7);
     });
@@ -915,10 +882,11 @@ describe('DSL: basic', () => {
       const SIX = new Array(64).join('0') + 6;
       const SEVEN = new Array(64).join('0') + 7;
 
-      await app.parse(`
-    
+      await app.parse(
+        `
+
       ${ONE}
-    
+
       bool true
       bool true
       bool false
@@ -935,7 +903,8 @@ describe('DSL: basic', () => {
       E {
         ${SEVEN}
       }
-    `);
+    `
+      );
       await app.execute();
       await checkStackTailv2(StackValue, stack, [1, 1, 6, 2]);
     });
@@ -1180,7 +1149,7 @@ describe('DSL: basic', () => {
     });
   });
 
-  describe('Simplified writing number in wei', () => {
+  describe('Simplified writing number in wei (setUint256)', () => {
     it('should store a simple number with 18 decimals', async () => {
       const input = '(uint256 1e18) setUint256 SUM';
       await app.parse(input);
@@ -1261,7 +1230,7 @@ describe('DSL: basic', () => {
       await expect(app.parse(input)).to.be.revertedWith('SUT5');
     });
 
-    it('should revert if base does not exist', async () => {
+    it('should revert if base was not provided', async () => {
       const input = '(uint256 e18) setUint256 SUM';
       await expect(app.parse(input)).to.be.revertedWith('PRS1');
     });

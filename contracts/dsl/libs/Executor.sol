@@ -7,34 +7,37 @@ import { ErrorsExecutor } from './Errors.sol';
 // import 'hardhat/console.sol';
 
 library Executor {
-    function execute(address _ctxAddr) public {
-        IContext _ctx = IContext(_ctxAddr);
-        require(_ctx.program().length > 0, ErrorsExecutor.EXC1);
+    function execute(address _ctx) public {
+        // console.log('Executor.execute()');
+        // console.logBytes(IContext(_ctx).program());
+        require(IContext(_ctx).program().length > 0, ErrorsExecutor.EXC1);
 
-        while (_ctx.pc() < _ctx.program().length) {
-            bytes memory opcodeBytes = _ctx.programAt(_ctx.pc(), 1);
+        while (IContext(_ctx).pc() < IContext(_ctx).program().length) {
+            bytes memory opcodeBytes = IContext(_ctx).programAt(IContext(_ctx).pc(), 1);
             bytes1 opcodeByte1 = bytes1(uint8(opcodeBytes[0]));
 
-            bytes4 _selector = _ctx.selectorByOpcode(opcodeByte1);
+            bytes4 _selector = IContext(_ctx).selectorByOpcode(opcodeByte1);
             require(_selector != 0x0, ErrorsExecutor.EXC2);
-            IContext.OpcodeLibNames _libName = _ctx.opcodeLibNameByOpcode(opcodeByte1);
-            _ctx.incPc(1);
+            IContext.OpcodeLibNames _libName = IContext(_ctx).opcodeLibNameByOpcode(opcodeByte1);
+            IContext(_ctx).incPc(1);
 
             address _lib;
 
             if (_libName == IContext.OpcodeLibNames.ComparisonOpcodes) {
-                _lib = _ctx.comparisonOpcodes();
+                _lib = IContext(_ctx).comparisonOpcodes();
             } else if (_libName == IContext.OpcodeLibNames.BranchingOpcodes) {
-                _lib = _ctx.branchingOpcodes();
+                _lib = IContext(_ctx).branchingOpcodes();
             } else if (_libName == IContext.OpcodeLibNames.LogicalOpcodes) {
-                _lib = _ctx.logicalOpcodes();
+                _lib = IContext(_ctx).logicalOpcodes();
             } else {
-                _lib = _ctx.otherOpcodes();
+                _lib = IContext(_ctx).otherOpcodes();
             }
 
-            (bool success, ) = _lib.delegatecall(abi.encodeWithSelector(_selector, address(_ctx)));
+            // console.log('lib addr =', _lib);
+
+            (bool success, ) = _lib.delegatecall(abi.encodeWithSelector(_selector, _ctx));
             require(success, ErrorsExecutor.EXC3);
         }
-        _ctx.setPc(0);
+        IContext(_ctx).setPc(0);
     }
 }

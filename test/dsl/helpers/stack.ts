@@ -10,8 +10,8 @@ describe('Stack', () => {
 
   before(async () => {
     [first] = await ethers.getSigners();
-    stack = (await (await ethers.getContractFactory('Stack')).deploy()) as Stack;
-    StackValueCont = (await ethers.getContractFactory('StackValue')) as StackValue__factory;
+    stack = await (await ethers.getContractFactory('Stack')).deploy();
+    StackValueCont = await ethers.getContractFactory('StackValue');
   });
 
   it('push & length & seeLast & pop & clear', async () => {

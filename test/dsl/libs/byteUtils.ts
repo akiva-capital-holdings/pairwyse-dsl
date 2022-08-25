@@ -4,17 +4,17 @@ import { hex4Bytes } from '../../utils/utils';
 
 import { ByteUtilsMock } from '../../../typechain-types';
 
-describe('byteUtils', () => {
+describe('Byte Utils', () => {
   let app: ByteUtilsMock;
   const data = hex4Bytes('0x000000000111');
 
   before(async () => {
     const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
-    app = (await (
+    app = await (
       await ethers.getContractFactory('ByteUtilsMock', {
         libraries: { ByteUtils: byteLib.address },
       })
-    ).deploy()) as ByteUtilsMock;
+    ).deploy();
   });
 
   it('should slice if start index are valid', async () => {

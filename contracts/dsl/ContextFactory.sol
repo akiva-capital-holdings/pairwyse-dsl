@@ -7,8 +7,14 @@ contract ContextFactory {
     address[] public deployedContexts;
     event NewContext(address context);
 
-    function deployContext() external returns (address _contextAddr) {
+    /**
+     * Deploy new Context contract
+     * @param _app Address of the end application
+     * @return _contextAddr Address of a newly created Context
+     */
+    function deployContext(address _app) external returns (address _contextAddr) {
         Context _context = new Context();
+        _context.setAppAddress(_app);
         _contextAddr = address(_context);
         deployedContexts.push(_contextAddr);
         emit NewContext(_contextAddr);

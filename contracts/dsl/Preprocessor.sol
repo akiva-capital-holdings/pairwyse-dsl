@@ -11,10 +11,12 @@ import { ErrorsPreprocessor } from './libs/Errors.sol';
 
 /**
  * @dev Preprocessor of DSL code
+ * @dev This contract is a singleton and should not be deployed more than once
  *
- * One of the core contracts of the project. It can remove comments that were
- * created by user in the DSL code string. It transforms the users DSL code string
- * to the list of commands that can be used in a Parser contract.
+ * TODO: add description about Preprocessor as a single contract of the project
+ * It can remove comments that were created by user in the DSL code string. It
+ * transforms the users DSL code string to the list of commands that can be used
+ * in a Parser contract.
  *
  * DSL code in postfix notation as
  * user's string code -> Preprocessor -> each command is separated in the commands list
@@ -22,15 +24,11 @@ import { ErrorsPreprocessor } from './libs/Errors.sol';
 contract Preprocessor is IPreprocessor {
     using StringUtils for string;
 
+    // Note: temporary variable
+    // param positional number -> parameter itself
     mapping(uint256 => FuncParameter) internal parameters;
-    // type -> function name. maps DSL type (like `uint256`, `address`, `string`, or `bytes32`) to function name that
-    // can put value of this type into stack
-    mapping(string => string) internal rebuildParamTypes;
+    // Note: temporary variable
     string[] internal result; // stores the list of commands after infixToPostfix transformation
-
-    constructor() {
-        rebuildParamTypes['uint256'] = 'setUint256';
-    }
 
     /**
      * @dev The main function that transforms the user's DSL code string to the list of commands.
@@ -243,7 +241,7 @@ contract Preprocessor is IPreprocessor {
                 result.push(_parseNumber(chunk));
             } else if (chunk.mayBeNumber() && !isFunc && directUseUint256) {
                 directUseUint256 = false;
-                result.push(chunk);
+                result.push(_parseNumber(chunk));
             } else if (chunk.equal('func')) {
                 // if the chunk is 'func' then `Functions block` will occur
                 isFunc = true;
@@ -281,7 +279,7 @@ contract Preprocessor is IPreprocessor {
      * @param _chunk provided number by the user
      * @return updatedChunk amount in Wei of provided _chunk value
      */
-    function _parseNumber(string memory _chunk) internal pure returns (string memory updatedChunk) {
+    function _parseNumber(string memory _chunk) internal view returns (string memory updatedChunk) {
         try _chunk.toUint256() {
             updatedChunk = _chunk;
         } catch {
@@ -479,8 +477,10 @@ contract Preprocessor is IPreprocessor {
         string memory _value,
         string memory _variableName
     ) internal {
+        // TODO: '_type' - should be used in the future for other types
         result.push(_type);
         result.push(_value);
+        // TODO: setUint256 - update for other types in dependence on '_type'
         result.push('setUint256');
         result.push(_variableName);
     }

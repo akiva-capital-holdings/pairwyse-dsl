@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { AgreementMock } from './AgreementMock.sol';
+import { AgreementFactory } from '../AgreementFactory.sol';
 
 /**
  * @dev Factory to generate Agreement contract instances

@@ -5,45 +5,43 @@ import { Preprocessor } from '../Preprocessor.sol';
 import { ParserMock } from '../mocks/ParserMock.sol';
 import { IContext } from '../interfaces/IContext.sol';
 import { Executor } from '../libs/Executor.sol';
-import { Storage } from '../helpers/Storage.sol';
+import { UnstructuredStorageMock } from '../mocks/UnstructuredStorageMock.sol';
 
 // import "hardhat/console.sol";
 
-contract E2EApp is Storage {
-    Preprocessor public preprocessor;
-    ParserMock public parser;
-    IContext public ctx;
+contract E2EApp is UnstructuredStorageMock {
+    address public preprocessor;
+    address public parser;
+    address public context;
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
     constructor(
-        Preprocessor _preprocessor,
-        ParserMock _parser,
-        IContext _ctx
+        address _parserAddr,
+        address _preprAddr,
+        address _ctx
     ) {
-        preprocessor = _preprocessor;
-        parser = _parser;
-        ctx = _ctx;
+        parser = _parserAddr;
+        preprocessor = _preprAddr;
+        context = _ctx;
         setupContext();
     }
 
     function parse(string memory _program) external {
-        parser.parse(address(ctx), _program);
+        ParserMock(parser).parse(preprocessor, context, _program);
     }
 
     function parseCode(string[] memory _code) external {
-        parser.parseCodeExt(address(ctx), _code);
+        ParserMock(parser).parseCodeExt(context, _code);
     }
 
     function execute() external payable {
-        ctx.setMsgValue(msg.value);
-        Executor.execute(address(ctx));
+        IContext(context).setMsgValue(msg.value);
+        Executor.execute(context);
     }
 
     function setupContext() internal {
-        ctx.initOpcodes();
-        ctx.setAppAddress(address(this));
-        ctx.setMsgSender(msg.sender);
+        IContext(context).setMsgSender(msg.sender);
     }
 }
