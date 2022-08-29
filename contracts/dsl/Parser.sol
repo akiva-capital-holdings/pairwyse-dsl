@@ -10,7 +10,7 @@ import { ByteUtils } from './libs/ByteUtils.sol';
 import { Preprocessor } from './Preprocessor.sol';
 import { ErrorsParser } from './libs/Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 /**
  * @dev Parser of DSL code
@@ -133,18 +133,9 @@ contract Parser is IParser {
     }
 
     function asmLoadArray(address _ctxAddr) public {
-        _parseBranchOf(_ctxAddr, 'loadArray'); // program += bytecode for
-        // string storage _name = _nextCmd();
-        // string storage _index = _nextCmd();
-        // // program += bytecode for `NUMBERS` array and its `index`
-        // // ex. 'NUMBERS_23' that is equal as 'NUMBERS[23]'
-        // program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(_name, "_", _index))));
-        _parseVariable();
-        asmUint256();
-    }
-
-    function _parseVariableByCmd(string storage _cmd) internal {
-        program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(_cmd))));
+        _parseBranchOf(_ctxAddr, 'loadArray'); // program += bytecode for `loadArray uint256`
+        _parseVariable(); // program += bytecode for `NUMBERS`
+        asmUint256(); // index
     }
 
     /**
@@ -346,9 +337,7 @@ contract Parser is IParser {
         IContext(_ctxAddr).setPc(0);
         IContext(_ctxAddr).stack().clear();
 
-        console.log('\n');
         while (cmdIdx < cmds.length) {
-            console.log(1);
             _parseOpcodeWithParams(_ctxAddr);
         }
 

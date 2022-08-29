@@ -31,12 +31,20 @@ contract App is UnstructuredStorageMock {
         _setupContext();
     }
 
-    function setArrayUint256(string memory _name, uint256[] memory _data) public {
+    function setArrayUint256(bytes32 _name, uint256[] memory _data) public {
         IContext(ctx).setArrayUint256(_name, _data);
     }
 
-    function getUint256ByIndex(string memory _name, uint256 _index) public view returns (uint256) {
+    function getUint256ByIndex(bytes32 _name, uint256 _index) public view returns (uint256) {
         return IContext(ctx).getUint256ByIndex(_name, _index);
+    }
+
+    function setArrayAddresses(bytes32 _name, address[] memory _data) public {
+        IContext(ctx).setArrayAddresses(_name, _data);
+    }
+
+    function getAddressByIndex(bytes32 _name, uint256 _index) public view returns (address) {
+        return IContext(ctx).getAddressByIndex(_name, _index);
     }
 
     function parse(string memory _program) external {

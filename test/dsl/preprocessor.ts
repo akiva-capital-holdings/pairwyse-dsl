@@ -1285,11 +1285,18 @@ describe('Preprocessor', () => {
     });
   });
 
-  describe.skip('DSL arrays', () => {
+  describe('DSL arrays', () => {
     it('array with the index', async () => {
       const input = `loadArray uint256 NUMBERS 100`;
       const cmds = await app.callStatic.transform(ctxAddr, input);
       const expected = ['loadArray', 'uint256', 'NUMBERS', '100'];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('array without index', async () => {
+      const input = `loadArray uint256 NUMBERS`;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = ['loadArray', 'uint256', 'NUMBERS'];
       expect(cmds).to.eql(expected);
     });
 

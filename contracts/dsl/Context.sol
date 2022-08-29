@@ -11,7 +11,7 @@ import { LogicalOpcodes } from './libs/opcodes/LogicalOpcodes.sol';
 import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
 import { ErrorsContext } from './libs/Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 /**
  * @dev Preprocessor of DSL code
@@ -384,9 +384,8 @@ contract Context is IContext {
         );
 
         _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadArrayUint256.selector);
-        // _addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadArrayBool.selector);
-        // _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadArrayAddress.selector);
-        // _addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadArrayBytes32.selector);
+        _addOpcodeBranch(name, 'address', 0x02, OtherOpcodes.opLoadArrayAddress.selector);
+        // TODO: do we need more types?
 
         // Aliases
 
@@ -632,52 +631,42 @@ contract Context is IContext {
     /**
      * @dev Sets/Updates addresses for the array
      */
-    function setArrayAddresses(string memory _name, address[] memory _addresses) public {
+    function setArrayAddresses(bytes32 _name, address[] memory _addresses) public {
         array.setArrayAddresses(_name, _addresses);
     }
 
     /**
      * @dev Get address by index
      */
-    function getAddressByIndex(string memory _name, uint256 _index) public view returns (address) {
+    function getAddressByIndex(bytes32 _name, uint256 _index) public view returns (address) {
         return array.getAddressByIndex(_name, _index);
     }
 
     /**
      * @dev Get array fo the name for address
      */
-    function getAddressArray(string memory _name) public view returns (address[] memory) {
+    function getAddressArray(bytes32 _name) public view returns (address[] memory) {
         return array.getAddressArray(_name);
     }
 
     /**
      * @dev Sets/Updates addresses for the array
      */
-    function setArrayUint256(string memory _name, uint256[] memory _values) public {
+    function setArrayUint256(bytes32 _name, uint256[] memory _values) public {
         array.setArrayUint256(_name, _values);
     }
 
     /**
      * @dev Get address by index
      */
-    function getUint256ByIndex(string memory _name, uint256 _index) public view returns (uint256) {
+    function getUint256ByIndex(bytes32 _name, uint256 _index) public view returns (uint256) {
         return array.getUint256ByIndex(_name, _index);
-    }
-
-    /**
-     * @dev Get address by index
-     */
-    function getUint256ByIndex(string memory _name, bytes32 _index) public view returns (uint256) {
-        console.log('--sdfs---');
-        console.log(_name);
-        console.log(_index);
-        // return array.getUint256ByIndex(_name,  _index);
     }
 
     /**
      * @dev Get array fo the name for uint256
      */
-    function getUin256Array(string memory _name) public view returns (uint256[] memory) {
+    function getUin256Array(bytes32 _name) public view returns (uint256[] memory) {
         return array.getUint256Array(_name);
     }
 }

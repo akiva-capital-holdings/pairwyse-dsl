@@ -1,6 +1,8 @@
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
 import { ContextMock } from '../../typechain-types/dsl/mocks';
+import { hex4Bytes } from '../utils/utils';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 describe('Context', () => {
   let app: ContextMock;
@@ -182,38 +184,80 @@ describe('Context', () => {
     });
   });
 
-  describe.skip('Arrays', () => {
+  describe('Arrays', () => {
     describe('Address', () => {
+      const bob = '0xC0073850a6f02Bb56720f2C9A2f8Cc082a5C67a0';
+      const mary = '0xFD7936Bb96F49f292E61a5F2F7C02e914A0A9d90';
+      const carl = '0xd4C4a4b11f80dC75EE534C0DA478cfe388b5bAaD';
+      const array = [bob, mary, carl];
+      const zeroArr = [ethers.constants.AddressZero, ethers.constants.AddressZero];
+
       it('Check that Array can get by index / two addresses added into the list', async () => {
-        let addr0 = '0x0000000000000000000000000000000000000001';
-        let addr1 = '0x0000000000000000000000000000000000000002';
-        await app.setArrayAddresses('ADDRESSES', [addr0, addr1]);
-        expect(await app.getAddressArray('ADDRESSES')).to.include.members([addr0, addr1]);
-        expect(await app.getAddressByIndex('ADDRESSES', 1)).to.equal(addr1);
+        await app.setArrayAddresses(hex4Bytes('ADDRESSES'), array);
+        expect(await app.getAddressArray(hex4Bytes('ADDRESSES'))).to.include.members(array);
+        expect(await app.getAddressByIndex(hex4Bytes('ADDRESSES'), 0)).to.equal(bob);
+        expect(await app.getAddressByIndex(hex4Bytes('ADDRESSES'), 1)).to.equal(mary);
+        expect(await app.getAddressByIndex(hex4Bytes('ADDRESSES'), 2)).to.equal(carl);
       });
 
-      it('Check that Array can get by index / empty list can not be added', async () => {
-        let addr1 = '0x0000000000000000000000000000000000000002';
-        await expect(app.setArrayAddresses('ADDRESSES', [])).to.be.revertedWith('err');
-        await expect(app.getAddressByIndex('ADDRESSES', 1)).to.be.revertedWith('err');
+      it('reverts if tries to store zero addresses', async () => {
+        await expect(app.setArrayAddresses(hex4Bytes('ADDRESSES'), zeroArr)).to.be.revertedWith(
+          'ARR5'
+        );
+      });
+
+      it('reverts if tries to store empty array', async () => {
+        await expect(app.setArrayAddresses(hex4Bytes('ADDRESSES'), [])).to.be.revertedWith('ARR3');
+      });
+
+      it('reverts error if tried to get wrong item from array', async () => {
+        await app.setArrayAddresses(hex4Bytes('ADDRESSES'), array);
+        await expect(app.getAddressByIndex(hex4Bytes('ADDRESSES'), 9)).to.be.revertedWith('ARR2');
+      });
+
+      it('reverts error if tried to get wrong item type from array', async () => {
+        await app.setArrayAddresses(hex4Bytes('ADDRESSES'), array);
+        await expect(app.getUint256ByIndex(hex4Bytes('ADDRESSES'), 9)).to.be.revertedWith('ARR4');
       });
     });
 
     describe('Uint256', () => {
-      it('1', async () => {
-        let val0 = 3456;
-        let val1 = 0;
-        await app.setArrayUint256('NUMBERS', [val0, val1]);
-        let numbers = await app.getUin256Array('NUMBERS');
-        // .to.include.members([val0.toNumber(), val1.toNumber()]);
+      it('stores numbers and get item by index', async () => {
+        const val0 = 3456;
+        const val1 = 50;
+        await app.setArrayUint256(hex4Bytes('NUMBERS'), [val0, val1]);
+        const numbers = await app.getUin256Array(hex4Bytes('NUMBERS'));
         expect(numbers[0].toNumber()).to.equal(val0);
         expect(numbers[1].toNumber()).to.equal(val1);
-        expect(await app.getUint256ByIndex('NUMBERS', 1)).to.equal(val1);
+        expect(await app.getUint256ByIndex(hex4Bytes('NUMBERS'), 0)).to.equal(val0);
+        expect(await app.getUint256ByIndex(hex4Bytes('NUMBERS'), 1)).to.equal(val1);
       });
 
-      it('2', async () => {
-        await expect(app.setArrayUint256('NUMBERS', [])).to.be.revertedWith('err');
-        await expect(app.getUint256ByIndex('NUMBERS', 1)).to.be.revertedWith('err');
+      it('stores zero numbers and get items by index', async () => {
+        await app.setArrayUint256(hex4Bytes('NUMBERS'), [0, 0, 0, 0]);
+        const numbers = await app.getUin256Array(hex4Bytes('NUMBERS'));
+        expect(numbers[0].toNumber()).to.equal(0);
+        expect(numbers[3].toNumber()).to.equal(0);
+        expect(await app.getUint256ByIndex(hex4Bytes('NUMBERS'), 2)).to.equal(0);
+        expect(await app.getUint256ByIndex(hex4Bytes('NUMBERS'), 0)).to.equal(0);
+      });
+
+      it('reverts error if tried to store empty array and get item by index', async () => {
+        await expect(app.setArrayUint256(hex4Bytes('NUMBERS'), [])).to.be.revertedWith('ARR3');
+      });
+
+      it('reverts error if tried to get item from empty array', async () => {
+        await expect(app.getUint256ByIndex(hex4Bytes('NUMBERS'), 1)).to.be.revertedWith('ARR1');
+      });
+
+      it('reverts error if tried to get wrong item from array', async () => {
+        await app.setArrayUint256(hex4Bytes('NUMBERS'), [67, 89]);
+        await expect(app.getUint256ByIndex(hex4Bytes('NUMBERS'), 9)).to.be.revertedWith('ARR2');
+      });
+
+      it('reverts error if tried to get wrong item type from array', async () => {
+        await app.setArrayUint256(hex4Bytes('NUMBERS'), [500, 89]);
+        await expect(app.getAddressByIndex(hex4Bytes('NUMBERS'), 9)).to.be.revertedWith('ARR4');
       });
     });
   });

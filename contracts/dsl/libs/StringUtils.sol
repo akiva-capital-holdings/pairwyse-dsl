@@ -126,27 +126,4 @@ library StringUtils {
         }
         revert(ErrorsStringUtils.SUT8);
     }
-
-    function fromStrToUint256List(string memory _listStr) public view returns (uint256[] memory) {
-        require(length(_listStr) > 2, 'err');
-        uint256 end = length(_listStr) - 1;
-        require(equal(char(_listStr, 0), '[') && equal(char(_listStr, end), ']'), 'err');
-        // console.log('list', _listStr, end);
-        string memory _temp;
-        string memory _current;
-        uint256 _count;
-        uint256[] memory result;
-        for (uint256 i = 1; i <= end; i++) {
-            _current = char(_listStr, i);
-            uint256 _value;
-            if (i == end - 1 && !equal(_current, ',')) {
-                _temp = concat(_temp, _current);
-            } else if (!equal(_current, ',')) {
-                _temp = concat(_temp, _current);
-            } else if (equal(_current, ',')) {
-                _temp = '';
-            }
-        }
-        return result;
-    }
 }
