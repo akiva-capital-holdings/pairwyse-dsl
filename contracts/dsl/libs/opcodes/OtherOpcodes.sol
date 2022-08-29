@@ -24,6 +24,7 @@ library OtherOpcodes {
     }
 
     function opLoadArrayAny(address _ctx) public {
+        console.log('--2>');
         _opLoadAny(_ctx, 'loadArray');
     }
 
@@ -94,7 +95,7 @@ library OtherOpcodes {
     }
 
     function opLoadArrayUint256(address _ctx) public {
-        opLoadArray(_ctx, 'getStorageUint256(bytes32)');
+        opLoadArray(_ctx, 'getUint256ByIndex(string,bytes32)');
     }
 
     function opLoadArray(address _ctx, string memory funcSignature)
@@ -102,15 +103,17 @@ library OtherOpcodes {
         returns (bytes32 result)
     {
         console.log('----->');
+        // bytes32 _name;
         bytes32 _name = OpcodeHelpers.getNextBytes(_ctx, 4);
-        bytes32 _index = OpcodeHelpers.getNextBytes(_ctx, 4);
+        bytes32 _index = OpcodeHelpers.getNextBytes(_ctx, 32);
         console.logBytes32(_name);
-        // Load local variable by it's hex
-        (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
-            abi.encodeWithSignature(funcSignature, _name)
+        console.logBytes32(_index);
+        // // Load local variable by it's hex
+        (bool success, bytes memory data) = _ctx.call(
+            abi.encodeWithSignature(funcSignature, _name, _index)
         );
         require(success, ErrorsGeneralOpcodes.OP5);
-
+        // bytes memory data;
         // Convert bytes to bytes32
         assembly {
             result := mload(add(data, 0x20))
@@ -330,8 +333,10 @@ library OtherOpcodes {
     }
 
     function _opLoadAny(address _ctx, string memory _name) internal {
+        // console.log('--1>');
         address libAddr = IContext(_ctx).otherOpcodes();
         bytes4 _selector = OpcodeHelpers.nextBranchSelector(_ctx, _name);
+        // console.logBytes4(_selector);
         OpcodeHelpers.mustCall(libAddr, abi.encodeWithSelector(_selector, _ctx));
     }
 }

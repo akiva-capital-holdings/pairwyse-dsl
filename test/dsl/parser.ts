@@ -311,7 +311,7 @@ describe('Parser', () => {
     // TODO: add for other types
   });
 
-  describe.only('DSL arrays', () => {
+  describe.skip('DSL arrays', () => {
     it('load array with the first values', async () => {
       await app.parseCodeExt(ctxAddr, ['loadArray', 'uint256', 'NUMBERS', '1']);
       expect(await ctx.program()).to.equal(

@@ -4,13 +4,14 @@ pragma solidity ^0.8.0;
 import { IContext } from './interfaces/IContext.sol';
 import { IParser } from './interfaces/IParser.sol';
 import { Stack } from './helpers/Stack.sol';
+import { Array } from './helpers/Array.sol';
 import { ComparisonOpcodes } from './libs/opcodes/ComparisonOpcodes.sol';
 import { BranchingOpcodes } from './libs/opcodes/BranchingOpcodes.sol';
 import { LogicalOpcodes } from './libs/opcodes/LogicalOpcodes.sol';
 import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
 import { ErrorsContext } from './libs/Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Preprocessor of DSL code
@@ -23,6 +24,7 @@ contract Context is IContext {
     // stack is used by Opcode libraries like `libs/opcodes/*`
     // to store and analyze values and removing after usage
     Stack public stack;
+    Array public array;
     bytes public program; // the bytecode of a program that is provided by Parser (will be removed)
     uint256 public pc; // point counter shows what the part of command are in proccess now
     uint256 public nextpc;
@@ -62,6 +64,7 @@ contract Context is IContext {
 
     constructor() {
         stack = new Stack();
+        array = new Array();
         initOpcodes();
     }
 
@@ -624,5 +627,57 @@ contract Context is IContext {
      */
     function _addAlias(string memory _baseCmd, string memory _alias) internal {
         aliases[_alias] = _baseCmd;
+    }
+
+    /**
+     * @dev Sets/Updates addresses for the array
+     */
+    function setArrayAddresses(string memory _name, address[] memory _addresses) public {
+        array.setArrayAddresses(_name, _addresses);
+    }
+
+    /**
+     * @dev Get address by index
+     */
+    function getAddressByIndex(string memory _name, uint256 _index) public view returns (address) {
+        return array.getAddressByIndex(_name, _index);
+    }
+
+    /**
+     * @dev Get array fo the name for address
+     */
+    function getAddressArray(string memory _name) public view returns (address[] memory) {
+        return array.getAddressArray(_name);
+    }
+
+    /**
+     * @dev Sets/Updates addresses for the array
+     */
+    function setArrayUint256(string memory _name, uint256[] memory _values) public {
+        array.setArrayUint256(_name, _values);
+    }
+
+    /**
+     * @dev Get address by index
+     */
+    function getUint256ByIndex(string memory _name, uint256 _index) public view returns (uint256) {
+        return array.getUint256ByIndex(_name, _index);
+    }
+
+    /**
+     * @dev Get address by index
+     */
+    function getUint256ByIndex(string memory _name, bytes32 _index) public view returns (uint256) {
+        console.log('--sdfs---');
+        console.log(_name);
+        console.log(_index);
+        // return array.getUint256ByIndex(_name,  _index);
+    }
+
+    /**
+     * @dev Get array fo the name for uint256
+     */
+    function getUin256Array(string memory _name) public view returns (uint256[] memory) {
+        return array.getUint256Array(_name);
     }
 }

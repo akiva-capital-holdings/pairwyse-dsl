@@ -31,20 +31,12 @@ contract App is UnstructuredStorageMock {
         _setupContext();
     }
 
-    function setStorageArrayUint256(string memory _name, uint256[] memory _data) public {
-        for (uint256 i; i < _data.length; i++) {
-            bytes32 _nameWithIndex = bytes32(keccak256(abi.encodePacked(_name, '_', i)));
-            setStorageUint256(_nameWithIndex, _data[i]);
-        }
+    function setArrayUint256(string memory _name, uint256[] memory _data) public {
+        IContext(ctx).setArrayUint256(_name, _data);
     }
 
-    function getStorageArrayUint256(string memory _name, uint256 _index)
-        public
-        view
-        returns (uint256)
-    {
-        bytes32 _nameWithIndex = bytes32(keccak256(abi.encodePacked(_name, '_', _index)));
-        return getStorageUint256(_nameWithIndex);
+    function getUint256ByIndex(string memory _name, uint256 _index) public view returns (uint256) {
+        return IContext(ctx).getUint256ByIndex(_name, _index);
     }
 
     function parse(string memory _program) external {

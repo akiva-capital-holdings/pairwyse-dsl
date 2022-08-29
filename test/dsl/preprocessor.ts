@@ -1285,18 +1285,18 @@ describe('Preprocessor', () => {
     });
   });
 
-  describe('DSL arrays', () => {
+  describe.skip('DSL arrays', () => {
     it('array with the index', async () => {
-      const input = `loadArray NUMBERS 100`;
+      const input = `loadArray uint256 NUMBERS 100`;
       const cmds = await app.callStatic.transform(ctxAddr, input);
-      const expected = ['loadArray', 'NUMBERS', '100'];
+      const expected = ['loadArray', 'uint256', 'NUMBERS', '100'];
       expect(cmds).to.eql(expected);
     });
 
     it('array with zero value', async () => {
-      const input = `loadArray NUMBERS 0`;
+      const input = `loadArray uint256 NUMBERS 0`;
       const cmds = await app.callStatic.transform(ctxAddr, input);
-      const expected = ['loadArray', 'NUMBERS', '0'];
+      const expected = ['loadArray', 'uint256', 'NUMBERS', '0'];
       expect(cmds).to.eql(expected);
     });
 
@@ -1304,7 +1304,7 @@ describe('Preprocessor', () => {
       const input = `
         loadRemote bytes32 BYTES ${appAddrHex}
         transferFrom DAI OWNER RECEIVER
-        loadArray NUMBERS 12
+        loadArray uint256 NUMBERS 12
         bool true
       `;
       const cmds = await app.callStatic.transform(ctxAddr, input);
@@ -1318,6 +1318,7 @@ describe('Preprocessor', () => {
         'OWNER',
         'RECEIVER',
         'loadArray',
+        'uint256',
         'NUMBERS',
         '12',
         'bool',
@@ -1329,7 +1330,7 @@ describe('Preprocessor', () => {
     it('array without index', async () => {
       const input = `
         transferFrom DAI OWNER RECEIVER
-        loadArray NUMBERS
+        loadArray uint256 NUMBERS
         bool true
       `;
       const cmds = await app.callStatic.transform(ctxAddr, input);
@@ -1339,6 +1340,7 @@ describe('Preprocessor', () => {
         'OWNER',
         'RECEIVER',
         'loadArray',
+        'uint256',
         'NUMBERS',
         'bool',
         'true',

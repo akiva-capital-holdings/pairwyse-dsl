@@ -346,7 +346,9 @@ contract Parser is IParser {
         IContext(_ctxAddr).setPc(0);
         IContext(_ctxAddr).stack().clear();
 
+        console.log('\n');
         while (cmdIdx < cmds.length) {
+            console.log(1);
             _parseOpcodeWithParams(_ctxAddr);
         }
 
@@ -362,8 +364,9 @@ contract Parser is IParser {
      */
     function _parseOpcodeWithParams(address _ctxAddr) internal {
         string storage cmd = _nextCmd();
-        console.log(cmd);
+
         bytes1 opcode = IContext(_ctxAddr).opCodeByName(cmd);
+        // console.logBytes1(opcode);
         require(
             opcode != 0x0 || _isLabel(cmd) || isVariable[cmd],
             string(abi.encodePacked('Parser: "', cmd, '" command is unknown'))
@@ -381,7 +384,7 @@ contract Parser is IParser {
         } else {
             program = bytes.concat(program, opcode);
             bytes4 _selector = IContext(_ctxAddr).asmSelectors(cmd);
-
+            // console.logBytes4(_selector);
             if (_selector != 0x0) {
                 (bool success, ) = address(this).delegatecall(
                     abi.encodeWithSelector(_selector, IContext(_ctxAddr))

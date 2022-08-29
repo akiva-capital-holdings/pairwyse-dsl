@@ -91,4 +91,34 @@ interface IContext {
     function setMsgSender(address _msgSender) external;
 
     function setMsgValue(uint256 _msgValue) external;
+
+    /**
+     * @dev Sets/Updates addresses for the array
+     */
+    function setArrayAddresses(string memory _name, address[] memory _addresses) external;
+
+    /**
+     * @dev Get address by index
+     */
+    function getAddressByIndex(string memory _name, uint256 _index) external view returns (address);
+
+    /**
+     * @dev Get array fo the name for address
+     */
+    function getAddressArray(string memory _name) external view returns (address[] memory);
+
+    /**
+     * @dev Sets/Updates addresses for the array
+     */
+    function setArrayUint256(string memory _name, uint256[] memory _values) external;
+
+    /**
+     * @dev Get address by index
+     */
+    function getUint256ByIndex(string memory _name, uint256 _index) external view returns (uint256);
+
+    /**
+     * @dev Get array fo the name for uint256
+     */
+    function getUin256Array(string memory _name) external view returns (uint256[] memory);
 }

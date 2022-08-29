@@ -589,7 +589,7 @@ describe('DSL: basic', () => {
       await checkStack(StackValue, stack, 1, 0);
     });
 
-    it('loadRemote bool B (true)', async () => {
+    it.only('loadRemote bool B (true)', async () => {
       await app.setStorageBool(hex4Bytes('B'), true);
 
       await app.parse(`loadRemote bool B ${appAddrHex}`);
@@ -677,7 +677,7 @@ describe('DSL: basic', () => {
         await checkStack(StackValue, stack, 1, 0);
       });
 
-      it.only('bytes32 calculates 3 - 1 in bytes32 ', async () => {
+      it('bytes32 calculates 3 - 1 in bytes32 ', async () => {
         await app.setStorageBytes32(
           hex4Bytes('BYTES'),
           '0x0000000000000000000000000000000000000000000000000000000000000003'
@@ -1248,15 +1248,15 @@ describe('DSL: basic', () => {
 
   describe.only('loadArray', () => {
     it('loadArray uint256 NUMBERS 3', async () => {
-      await app.setStorageArrayUint256('NUMBERS', [1, 34, 876, 0]);
+      await app.setArrayUint256('NUMBERS', [1, 34, 876, 0]);
 
-      expect(await app.getStorageArrayUint256('NUMBERS', 2)).to.equal(876);
+      expect(await app.getUint256ByIndex('NUMBERS', 2)).to.equal(876);
       // expect(await app.getStorageUint256(hex4Bytes('NUMBERS_2)'))).to.equal(876);
-
-      await app.parse('(loadArray uint256 NUMBERS 2) setUint256 NUMBERS_BY_INDEX_2');
+      console.log('NUMBERS', hex4Bytes('NUMBERS'));
+      await app.parse('loadArray uint256 NUMBERS 2');
       await app.execute();
-      let res = await app.getStorageUint256(hex4Bytes('NUMBERS_BY_INDEX_2'));
-      expect(res).to.equal(876);
+      // let res = await app.getStorageUint256(hex4Bytes('NUMBERS_BY_INDEX_2'));
+      // expect(res).to.equal(876);
     });
   });
 });

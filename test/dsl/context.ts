@@ -15,6 +15,7 @@ describe('Context', () => {
 
   before(async () => {
     const [random] = await ethers.getSigners();
+    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
     const ContextCont = await ethers.getContractFactory('ContextMock');
     app = await ContextCont.deploy();
     await app.setAppAddress(random.address);
@@ -178,6 +179,42 @@ describe('Context', () => {
       const [addr] = await ethers.getSigners();
       await app.setMsgSender(addr.address);
       expect(await app.msgSender()).to.equal(addr.address);
+    });
+  });
+
+  describe.skip('Arrays', () => {
+    describe('Address', () => {
+      it('Check that Array can get by index / two addresses added into the list', async () => {
+        let addr0 = '0x0000000000000000000000000000000000000001';
+        let addr1 = '0x0000000000000000000000000000000000000002';
+        await app.setArrayAddresses('ADDRESSES', [addr0, addr1]);
+        expect(await app.getAddressArray('ADDRESSES')).to.include.members([addr0, addr1]);
+        expect(await app.getAddressByIndex('ADDRESSES', 1)).to.equal(addr1);
+      });
+
+      it('Check that Array can get by index / empty list can not be added', async () => {
+        let addr1 = '0x0000000000000000000000000000000000000002';
+        await expect(app.setArrayAddresses('ADDRESSES', [])).to.be.revertedWith('err');
+        await expect(app.getAddressByIndex('ADDRESSES', 1)).to.be.revertedWith('err');
+      });
+    });
+
+    describe('Uint256', () => {
+      it('1', async () => {
+        let val0 = 3456;
+        let val1 = 0;
+        await app.setArrayUint256('NUMBERS', [val0, val1]);
+        let numbers = await app.getUin256Array('NUMBERS');
+        // .to.include.members([val0.toNumber(), val1.toNumber()]);
+        expect(numbers[0].toNumber()).to.equal(val0);
+        expect(numbers[1].toNumber()).to.equal(val1);
+        expect(await app.getUint256ByIndex('NUMBERS', 1)).to.equal(val1);
+      });
+
+      it('2', async () => {
+        await expect(app.setArrayUint256('NUMBERS', [])).to.be.revertedWith('err');
+        await expect(app.getUint256ByIndex('NUMBERS', 1)).to.be.revertedWith('err');
+      });
     });
   });
 });

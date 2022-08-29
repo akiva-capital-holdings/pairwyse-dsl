@@ -278,7 +278,7 @@ contract Preprocessor is IPreprocessor {
                     loadRemoteFlag = false;
                     loadRemoteVarCount = 0;
                 }
-                if (loadArrayVarCount == 3) {
+                if (loadArrayVarCount == 4) {
                     loadArrayFlag = false;
                     loadArrayVarCount = 0;
                 }
