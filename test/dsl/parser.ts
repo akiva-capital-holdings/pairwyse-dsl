@@ -310,4 +310,17 @@ describe('Parser', () => {
     });
     // TODO: add for other types
   });
+
+  describe.only('DSL arrays', () => {
+    it('load array with the first values', async () => {
+      await app.parseCodeExt(ctxAddr, ['loadArray', 'uint256', 'NUMBERS', '1']);
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '31' +
+          '01' +
+          '1fff709e' +
+          '0000000000000000000000000000000000000000000000000000000000000001'
+      );
+    });
+  });
 });

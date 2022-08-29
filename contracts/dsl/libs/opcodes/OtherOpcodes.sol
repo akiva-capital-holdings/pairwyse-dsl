@@ -9,22 +9,22 @@ import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { StackValue } from '../../helpers/Stack.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
     using StringUtils for string;
 
     function opLoadLocalAny(address _ctx) public {
-        address libAddr = IContext(_ctx).otherOpcodes();
-        bytes4 selector = OpcodeHelpers.nextBranchSelector(_ctx, 'loadLocal');
-        OpcodeHelpers.mustCall(libAddr, abi.encodeWithSelector(selector, _ctx));
+        _opLoadAny(_ctx, 'loadLocal');
     }
 
     function opLoadRemoteAny(address _ctx) public {
-        address libAddr = IContext(_ctx).otherOpcodes();
-        bytes4 selector = OpcodeHelpers.nextBranchSelector(_ctx, 'loadRemote');
-        OpcodeHelpers.mustCall(libAddr, abi.encodeWithSelector(selector, _ctx));
+        _opLoadAny(_ctx, 'loadRemote');
+    }
+
+    function opLoadArrayAny(address _ctx) public {
+        _opLoadAny(_ctx, 'loadArray');
     }
 
     function opBlockNumber(address _ctx) public {
@@ -91,6 +91,30 @@ library OtherOpcodes {
 
     function opLoadLocalAddress(address _ctx) public {
         opLoadLocal(_ctx, 'getStorageAddress(bytes32)');
+    }
+
+    function opLoadArrayUint256(address _ctx) public {
+        opLoadArray(_ctx, 'getStorageUint256(bytes32)');
+    }
+
+    function opLoadArray(address _ctx, string memory funcSignature)
+        public
+        returns (bytes32 result)
+    {
+        console.log('----->');
+        bytes32 _name = OpcodeHelpers.getNextBytes(_ctx, 4);
+        bytes32 _index = OpcodeHelpers.getNextBytes(_ctx, 4);
+        console.logBytes32(_name);
+        // Load local variable by it's hex
+        (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
+            abi.encodeWithSignature(funcSignature, _name)
+        );
+        require(success, ErrorsGeneralOpcodes.OP5);
+
+        // Convert bytes to bytes32
+        assembly {
+            result := mload(add(data, 0x20))
+        }
     }
 
     function opLoadRemoteUint256(address _ctx) public {
@@ -271,7 +295,7 @@ library OtherOpcodes {
     function opLoadRemote(address _ctx, string memory funcSignature) public {
         bytes memory varName = OpcodeHelpers.nextBytes(_ctx, 4);
         bytes memory contractAddrBytes = OpcodeHelpers.nextBytes(_ctx, 20);
-
+        console.logBytes(varName);
         // Convert bytes to bytes32
         bytes32 varNameB32;
         bytes32 contractAddrB32;
@@ -303,5 +327,11 @@ library OtherOpcodes {
         }
 
         OpcodeHelpers.putToStack(_ctx, uint256(result));
+    }
+
+    function _opLoadAny(address _ctx, string memory _name) internal {
+        address libAddr = IContext(_ctx).otherOpcodes();
+        bytes4 _selector = OpcodeHelpers.nextBranchSelector(_ctx, _name);
+        OpcodeHelpers.mustCall(libAddr, abi.encodeWithSelector(_selector, _ctx));
     }
 }

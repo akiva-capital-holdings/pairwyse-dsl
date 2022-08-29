@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+// import 'hardhat/console.sol';
+
 library UnstructuredStorage {
     function getStorageBool(bytes32 position) internal view returns (bool data) {
         assembly {

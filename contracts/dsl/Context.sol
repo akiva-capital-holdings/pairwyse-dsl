@@ -371,6 +371,20 @@ contract Context is IContext {
         _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
         _addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadRemoteBytes32.selector);
 
+        name = 'loadArray';
+        addOpcode(
+            name,
+            0x31,
+            OtherOpcodes.opLoadArrayAny.selector,
+            IParser.asmLoadArray.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
+        _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadArrayUint256.selector);
+        // _addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadArrayBool.selector);
+        // _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadArrayAddress.selector);
+        // _addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadArrayBytes32.selector);
+
         // Aliases
 
         /*

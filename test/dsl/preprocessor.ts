@@ -1284,4 +1284,66 @@ describe('Preprocessor', () => {
       });
     });
   });
+
+  describe('DSL arrays', () => {
+    it('array with the index', async () => {
+      const input = `loadArray NUMBERS 100`;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = ['loadArray', 'NUMBERS', '100'];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('array with zero value', async () => {
+      const input = `loadArray NUMBERS 0`;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = ['loadArray', 'NUMBERS', '0'];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('array with other commands', async () => {
+      const input = `
+        loadRemote bytes32 BYTES ${appAddrHex}
+        transferFrom DAI OWNER RECEIVER
+        loadArray NUMBERS 12
+        bool true
+      `;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = [
+        'loadRemote',
+        'bytes32',
+        'BYTES',
+        appAddrHex,
+        'transferFrom',
+        'DAI',
+        'OWNER',
+        'RECEIVER',
+        'loadArray',
+        'NUMBERS',
+        '12',
+        'bool',
+        'true',
+      ];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('array without index', async () => {
+      const input = `
+        transferFrom DAI OWNER RECEIVER
+        loadArray NUMBERS
+        bool true
+      `;
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = [
+        'transferFrom',
+        'DAI',
+        'OWNER',
+        'RECEIVER',
+        'loadArray',
+        'NUMBERS',
+        'bool',
+        'true',
+      ];
+      expect(cmds).to.eql(expected);
+    });
+  });
 });

@@ -6,6 +6,7 @@ import { IContext } from '../dsl/interfaces/IContext.sol';
 import { Context } from '../dsl/Context.sol';
 import { ErrorsAgreement } from '../dsl/libs/Errors.sol';
 import { UnstructuredStorage } from '../dsl/libs/UnstructuredStorage.sol';
+// import { ArrayUtils } from '../dsl/libs/ArrayUtils.sol';
 import { ComparisonOpcodes } from '../dsl/libs/opcodes/ComparisonOpcodes.sol';
 import { BranchingOpcodes } from '../dsl/libs/opcodes/BranchingOpcodes.sol';
 import { LogicalOpcodes } from '../dsl/libs/opcodes/LogicalOpcodes.sol';
@@ -14,7 +15,7 @@ import { ErrorsConditionalTxs } from '../dsl/libs/Errors.sol';
 import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * Financial Agreement written in DSL between two or more users
@@ -90,6 +91,13 @@ contract Agreement {
 
     function setStorageUint256(bytes32 position, uint256 data) public {
         position.setStorageUint256(data);
+    }
+
+    function setStorageArrayUint256(string memory _name, uint256[] memory _data) public {
+        for (uint256 i; i < _data.length; i++) {
+            bytes32 _nameWithIndex = bytes32(keccak256(abi.encodePacked(_name, '_', i)));
+            _nameWithIndex.setStorageUint256(_data[i]);
+        }
     }
 
     /**

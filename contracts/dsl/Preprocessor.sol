@@ -197,8 +197,10 @@ contract Preprocessor is IPreprocessor {
         bool isFunc;
         bool isName;
         bool loadRemoteFlag;
+        bool loadArrayFlag;
         bool directUseUint256;
         uint256 loadRemoteVarCount;
+        uint256 loadArrayVarCount;
         string memory chunk;
         string memory name;
 
@@ -209,10 +211,20 @@ contract Preprocessor is IPreprocessor {
             directUseUint256 = _isDirectUseUint256(directUseUint256, chunk);
             // checks and updates if the chunk can use uint256 or it's loadRemote opcode
 
-            (loadRemoteFlag, loadRemoteVarCount) = _updateRemoteParams(
+            (loadRemoteFlag, loadRemoteVarCount) = _updateParams(
                 loadRemoteFlag,
                 loadRemoteVarCount,
-                chunk
+                chunk,
+                'loadRemote',
+                4
+            );
+
+            (loadArrayFlag, loadArrayVarCount) = _updateParams(
+                loadArrayFlag,
+                loadArrayVarCount,
+                chunk,
+                'loadArray',
+                4
             );
 
             // Replace alises with base commands
@@ -236,7 +248,13 @@ contract Preprocessor is IPreprocessor {
                     result.push(_stack.pop().getString());
                 }
                 _stack.pop(); // remove '(' that is left
-            } else if (!loadRemoteFlag && chunk.mayBeNumber() && !isFunc && !directUseUint256) {
+            } else if (
+                !loadRemoteFlag &&
+                !loadArrayFlag &&
+                chunk.mayBeNumber() &&
+                !isFunc &&
+                !directUseUint256
+            ) {
                 _updateUINT256param();
                 result.push(_parseNumber(chunk));
             } else if (chunk.mayBeNumber() && !isFunc && directUseUint256) {
@@ -259,6 +277,10 @@ contract Preprocessor is IPreprocessor {
                 if (loadRemoteVarCount == 4) {
                     loadRemoteFlag = false;
                     loadRemoteVarCount = 0;
+                }
+                if (loadArrayVarCount == 3) {
+                    loadArrayFlag = false;
+                    loadArrayVarCount = 0;
                 }
             }
         }
@@ -608,31 +630,35 @@ contract Preprocessor is IPreprocessor {
     }
 
     /**
-     * @dev As a 'loadRemote' opcode has 4 parameters in total and two of them are
-     * numbers, so it is important to be sure that executed code under 'loadRemote'
+     * @dev As 'loadRemote' and 'loadArray' (next load<NAME>) opcodes has 4 and 3 parameters in
+     * total and two of some are numbers, so it is important to be sure that executed code under them
      * won't mess parameters with the simple uint256 numbers.
-     * @param _loadRemoteFlag is used to check if it was started the set of parameters for 'loadRemote' opcode
-     * @param _loadRemoteVarCount is used to check if it was finished the set of parameters for 'loadRemote' opcode
+     * @param _loadFlag is used to check if it was started the set of parameters for 'load<NAME>' opcodes
+     * @param _loadVarCount is used to check if it was finished the set of parameters for 'load<NAME>' opcodes
      * @param _chunk is a current chunk from the outer function
-     * @return _flag is an updated or current value of _loadRemoteFlag
-     * @return _count is an updated or current value of _loadRemoteVarCount
+     * @param _name is a name for certain opcode
+     * @param _count is total amount parameters for certain opcode
+     * @return flag is an updated or current value of _loadFlag
+     * @return count is an updated or current value of _loadVarCount
      */
-    function _updateRemoteParams(
-        bool _loadRemoteFlag,
-        uint256 _loadRemoteVarCount,
-        string memory _chunk
-    ) internal pure returns (bool _flag, uint256 _count) {
-        _count = _loadRemoteVarCount;
-        _flag = _loadRemoteFlag;
+    function _updateParams(
+        bool _loadFlag,
+        uint256 _loadVarCount,
+        string memory _chunk,
+        string memory _name,
+        uint256 _count
+    ) internal pure returns (bool flag, uint256 count) {
+        flag = _loadFlag;
+        count = _loadVarCount;
 
-        if (_chunk.equal('loadRemote')) {
-            _flag = true;
+        if (_chunk.equal(_name)) {
+            flag = true;
         }
 
-        if (_flag && _loadRemoteVarCount < 4) {
-            _count = _loadRemoteVarCount + 1;
+        if (flag && _loadVarCount < _count) {
+            count = _loadVarCount + 1;
         }
 
-        return (_flag, _count);
+        return (flag, count);
     }
 }
