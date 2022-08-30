@@ -21,6 +21,7 @@ library ComparisonOpcodes {
 
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if they are equal.
+     * @param _ctx Context contract address
      */
     function opEq(address _ctx) public {
         StackValue last = IContext(_ctx).stack().pop();
@@ -36,6 +37,7 @@ library ComparisonOpcodes {
 
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if they are not equal.
+     * @param _ctx Context contract address
      */
     function opNotEq(address _ctx) public {
         StackValue last = IContext(_ctx).stack().pop();
@@ -51,6 +53,7 @@ library ComparisonOpcodes {
 
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if value1 < value2
+     * @param _ctx Context contract address
      */
     function opLt(address _ctx) public {
         StackValue last = IContext(_ctx).stack().pop();
@@ -66,6 +69,7 @@ library ComparisonOpcodes {
 
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if value1 > value2
+     * @param _ctx Context contract address
      */
     function opGt(address _ctx) public {
         opSwap(_ctx);
@@ -74,6 +78,7 @@ library ComparisonOpcodes {
 
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if value1 <= value2
+     * @param _ctx Context contract address
      */
     function opLe(address _ctx) public {
         opGt(_ctx);
@@ -82,6 +87,7 @@ library ComparisonOpcodes {
 
     /**
      * @dev Compares two values in the stack. Put 1 to the stack if value1 >= value2
+     * @param _ctx Context contract address
      */
     function opGe(address _ctx) public {
         opLt(_ctx);
@@ -90,6 +96,7 @@ library ComparisonOpcodes {
 
     /**
      * @dev Revert last value in the stack
+     * @param _ctx Context contract address
      */
     function opNot(address _ctx) public {
         StackValue last = IContext(_ctx).stack().pop();
@@ -103,6 +110,7 @@ library ComparisonOpcodes {
 
     /**
      * @dev Swaps two last element in the stack
+     * @param _ctx Context contract address
      */
     function opSwap(address _ctx) public {
         StackValue last = IContext(_ctx).stack().pop();
