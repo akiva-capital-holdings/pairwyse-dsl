@@ -13,11 +13,12 @@ import { ErrorsContext } from './libs/Errors.sol';
 // import 'hardhat/console.sol';
 
 /**
- * @dev Preprocessor of DSL code
+ * @dev Context of DSL code
  *
  * One of the core contracts of the project. It contains opcodes and aliases for commands.
  * It provides additional information about program state and point counter (pc).
- * Each of command that is provided by the Parser contract is processed in the Context contract
+ * During creating Context contract executes the `initOpcodes` function that provides
+ * basic working opcodes
  */
 contract Context is IContext {
     // stack is used by Opcode libraries like `libs/opcodes/*`
@@ -65,8 +66,21 @@ contract Context is IContext {
         initOpcodes();
     }
 
+    /**
+     * @dev Creates a list of opcodes and its aliases with information about each of them:
+     * - name
+     * - selectors of opcode functions,
+     * - used library for each of opcode for Executor contract
+     * - asm selector of function that uses in Parser contract
+     * Function contains simple opcodes as arithmetic, comparison and bitwise. In additional to that
+     * it contains complex opcodes that can load data (variables with different types) from memory
+     * and helpers like transfer tokens or native coins to the address or opcodes branching and internal
+     * DSL functions.
+     */
     function initOpcodes() internal {
         // Opcodes for operators
+
+        // Ex. `a == b`
         _addOpcodeForOperator(
             '==',
             0x01,
@@ -75,6 +89,8 @@ contract Context is IContext {
             OpcodeLibNames.ComparisonOpcodes,
             1
         );
+
+        // Ex. `a != b`
         _addOpcodeForOperator(
             '!=',
             0x14,
@@ -83,6 +99,8 @@ contract Context is IContext {
             OpcodeLibNames.ComparisonOpcodes,
             1
         );
+
+        // Ex. `a < b`
         _addOpcodeForOperator(
             '<',
             0x03,
@@ -91,6 +109,8 @@ contract Context is IContext {
             OpcodeLibNames.ComparisonOpcodes,
             1
         );
+
+        // Ex. `a > b`
         _addOpcodeForOperator(
             '>',
             0x04,
@@ -99,6 +119,8 @@ contract Context is IContext {
             OpcodeLibNames.ComparisonOpcodes,
             1
         );
+
+        // Ex. `a <= b`
         _addOpcodeForOperator(
             '<=',
             0x06,
@@ -107,6 +129,8 @@ contract Context is IContext {
             OpcodeLibNames.ComparisonOpcodes,
             1
         );
+
+        // Ex. `a >= b`
         _addOpcodeForOperator(
             '>=',
             0x07,
@@ -115,6 +139,9 @@ contract Context is IContext {
             OpcodeLibNames.ComparisonOpcodes,
             1
         );
+
+        // Changes swaps two values. Ex. `a swap b`
+        // TODO: add more tests
         _addOpcodeForOperator(
             'swap',
             0x05,
@@ -123,6 +150,8 @@ contract Context is IContext {
             OpcodeLibNames.ComparisonOpcodes,
             3
         );
+
+        // Used to reverse the logical state of its operand. Ex. `!a` or `!(a and b)`
         _addOpcodeForOperator(
             '!',
             0x02,
@@ -132,6 +161,7 @@ contract Context is IContext {
             4
         );
 
+        // If both the operands are true then condition becomes true. Ex. `a and b`
         _addOpcodeForOperator(
             'and',
             0x12,
@@ -140,6 +170,8 @@ contract Context is IContext {
             OpcodeLibNames.LogicalOpcodes,
             3
         );
+
+        // It copies the bit if it is set in one operand but not both. Ex. `a xor b`
         _addOpcodeForOperator(
             'xor',
             0x11,
@@ -148,6 +180,8 @@ contract Context is IContext {
             OpcodeLibNames.LogicalOpcodes,
             2
         );
+
+        // It copies a bit if it exists in either operand. Ex. `a or b`
         _addOpcodeForOperator(
             'or',
             0x13,
@@ -157,6 +191,7 @@ contract Context is IContext {
             2
         );
 
+        // Ex. `a + b`
         _addOpcodeForOperator(
             '+',
             0x26,
@@ -165,6 +200,8 @@ contract Context is IContext {
             OpcodeLibNames.LogicalOpcodes,
             2
         );
+
+        // Ex. `a - b`
         _addOpcodeForOperator(
             '-',
             0x27,
@@ -173,6 +210,8 @@ contract Context is IContext {
             OpcodeLibNames.LogicalOpcodes,
             2
         );
+
+        // Ex. `a * b`
         _addOpcodeForOperator(
             '*',
             0x28,
@@ -181,6 +220,8 @@ contract Context is IContext {
             OpcodeLibNames.LogicalOpcodes,
             3
         );
+
+        // Ex. `a / b`
         _addOpcodeForOperator(
             '/',
             0x29,
@@ -191,6 +232,20 @@ contract Context is IContext {
         );
 
         // Branching
+
+        /**
+            bool true
+            ifelse D E
+                uint2567 7000
+            end
+
+            D {
+                uint2567 0
+            }
+            E {
+                uint2567 7000 + uint2567 1
+            }
+        */
         addOpcode(
             'ifelse',
             0x23,
@@ -198,6 +253,16 @@ contract Context is IContext {
             IParser.asmIfelse.selector,
             OpcodeLibNames.BranchingOpcodes
         );
+
+        /**
+            bool true
+            if C
+            end
+
+            C {
+                ${FIVE}
+            }
+        */
         addOpcode(
             'if',
             0x25,
@@ -205,6 +270,19 @@ contract Context is IContext {
             IParser.asmIf.selector,
             OpcodeLibNames.BranchingOpcodes
         );
+
+        /**
+            Ends the block of if/ifelse/func opcodes description
+            Example: using with func opcode
+            ```
+            func SUM_OF_NUMBERS endf
+            end
+
+            SUM_OF_NUMBERS {
+                (6 + 8) setUint256 SUM
+            }
+            ```
+        */
         addOpcode(
             'end',
             0x24,
@@ -212,6 +290,7 @@ contract Context is IContext {
             0x0,
             OpcodeLibNames.BranchingOpcodes
         );
+
         // 'branch' tag gets replaced with 'end' tag. So this is just another name of the 'end' tag
         addOpcode(
             'branch',
@@ -229,6 +308,8 @@ contract Context is IContext {
             0x0,
             OpcodeLibNames.OtherOpcodes
         );
+
+        // Current block timestamp as seconds since unix epoch. Ex. `TIME <= FUTURE_TIME_VARIABLE`
         addOpcode(
             'TIME',
             0x16,
@@ -236,6 +317,8 @@ contract Context is IContext {
             0x0,
             OpcodeLibNames.OtherOpcodes
         );
+
+        // Current chain id. Ex. `blockChainId == 123`
         addOpcode(
             'blockChainId',
             0x17,
@@ -243,6 +326,8 @@ contract Context is IContext {
             0x0,
             OpcodeLibNames.OtherOpcodes
         );
+
+        // Ex. `bool true`
         addOpcode(
             'bool',
             0x18,
@@ -250,6 +335,8 @@ contract Context is IContext {
             IParser.asmBool.selector,
             OpcodeLibNames.OtherOpcodes
         );
+
+        // Ex. `uint256 567`
         addOpcode(
             'uint256',
             0x1a,
@@ -257,6 +344,8 @@ contract Context is IContext {
             IParser.asmUint256.selector,
             OpcodeLibNames.OtherOpcodes
         );
+
+        // Ex. `msgSender != 0x0000000000000000000000000000000000000000`
         addOpcode(
             'msgSender',
             0x1d,
@@ -264,6 +353,8 @@ contract Context is IContext {
             0x0,
             OpcodeLibNames.OtherOpcodes
         );
+
+        // Ex. `sendEth ETH_RECEIVER 1000000000000000000`
         addOpcode(
             'sendEth',
             0x1e,
@@ -271,6 +362,8 @@ contract Context is IContext {
             IParser.asmSend.selector,
             OpcodeLibNames.OtherOpcodes
         );
+
+        // Ex. `transfer TOKEN_ADDR TOKEN_RECEIVER 10`
         addOpcode(
             'transfer',
             0x1f,
@@ -278,6 +371,9 @@ contract Context is IContext {
             IParser.asmTransfer.selector,
             OpcodeLibNames.OtherOpcodes
         );
+
+        // Ex. `transferVar DAI RECEIVER AMOUNT`
+        // TODO: add more tests
         addOpcode(
             'transferVar',
             0x2c,
@@ -285,6 +381,9 @@ contract Context is IContext {
             IParser.asmTransferVar.selector,
             OpcodeLibNames.OtherOpcodes
         );
+
+        // Ex. `transferFrom DAI OWNER RECEIVER 10`
+        // TODO: add more tests
         addOpcode(
             'transferFrom',
             0x20,
@@ -292,6 +391,9 @@ contract Context is IContext {
             IParser.asmTransferFrom.selector,
             OpcodeLibNames.OtherOpcodes
         );
+
+        // Ex. `transferFromVar DAI OWNER RECEIVER AMOUNT`
+        // TODO: add more tests
         addOpcode(
             'transferFromVar',
             0x2a,
@@ -299,6 +401,8 @@ contract Context is IContext {
             IParser.asmTransferFromVar.selector,
             OpcodeLibNames.OtherOpcodes
         );
+
+        // Ex. `setLocalBool BOOLVAR true`
         addOpcode(
             'setLocalBool',
             0x21,
@@ -306,6 +410,8 @@ contract Context is IContext {
             IParser.asmSetLocalBool.selector,
             OpcodeLibNames.OtherOpcodes
         );
+
+        // Ex. `(4 + 17) setUint256 VAR`
         addOpcode(
             'setUint256',
             0x2e,
@@ -313,6 +419,8 @@ contract Context is IContext {
             IParser.asmSetUint256.selector,
             OpcodeLibNames.OtherOpcodes
         );
+
+        // TODO: need more examples and test how we can use it internally
         addOpcode(
             'msgValue',
             0x22,
@@ -320,6 +428,8 @@ contract Context is IContext {
             0x0,
             OpcodeLibNames.OtherOpcodes
         );
+
+        // Ex. `balanceOf DAI USER`
         addOpcode(
             'balanceOf',
             0x2b,
@@ -327,6 +437,15 @@ contract Context is IContext {
             IParser.asmBalanceOf.selector,
             OpcodeLibNames.OtherOpcodes
         );
+
+        /** Example:
+            func SUM_OF_NUMBERS endf
+            end
+
+            SUM_OF_NUMBERS {
+                (6 + 8) setUint256 SUM
+            }
+        */
         addOpcode(
             'func',
             0x30,
@@ -338,7 +457,7 @@ contract Context is IContext {
         // Complex Opcodes with sub Opcodes (branches)
 
         /*
-            Types usage examples of loadLocal and loadRemote commands:
+            Types usage examples of loadLocal and loadRemote opcodes:
                 loadLocal uint256 NUMBER_STORED_VALUE
                 loadRemote bool ADDRESS_STORED_VALUE 9A676e781A523b5d0C0e43731313A708CB607508
 
@@ -353,6 +472,7 @@ contract Context is IContext {
             IParser.asmLoadLocal.selector,
             OpcodeLibNames.OtherOpcodes
         );
+        // types that 'loadLocal' have for loading data
         _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadLocalUint256.selector);
         _addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadLocalBool.selector);
         _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadLocalAddress.selector);
@@ -366,6 +486,7 @@ contract Context is IContext {
             IParser.asmLoadRemote.selector,
             OpcodeLibNames.OtherOpcodes
         );
+        // types that 'loadRemote' have for loading data
         _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadRemoteUint256.selector);
         _addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadRemoteBool.selector);
         _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
