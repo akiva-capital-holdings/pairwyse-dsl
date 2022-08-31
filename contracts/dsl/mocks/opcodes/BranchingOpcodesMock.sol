@@ -12,6 +12,10 @@ contract BranchingOpcodesMock {
         BranchingOpcodes.opIf(_ctx);
     }
 
+    function opFunc(address _ctx) public {
+        BranchingOpcodes.opFunc(_ctx);
+    }
+
     function opEnd(address _ctx) public {
         BranchingOpcodes.opEnd(_ctx);
     }

@@ -2,9 +2,9 @@ import { ethers, network } from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
+import { BigNumber } from 'ethers';
 import { addSteps, hex4Bytes } from '../utils/utils';
 import { deployAgreement, deployPreprocessor } from '../../scripts/data/deploy.utils';
-import { BigNumber } from 'ethers';
 import {
   aliceAndBobSteps,
   aliceBobAndCarl,

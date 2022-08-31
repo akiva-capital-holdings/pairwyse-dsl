@@ -336,9 +336,19 @@ export const businessCaseTest = ({
       await agreement.setStorageAddress(hex4Bytes('TRANSACTIONS_CONT'), agreement.address);
       await agreement.setStorageUint256(hex4Bytes('INITIAL_FUNDS_TARGET'), INITIAL_FUNDS_TARGET);
       await agreement.setStorageUint256(hex4Bytes('GP_INITIAL'), GP_INITIAL);
-      await agreement.setStorageUint256(hex4Bytes('MANAGEMENT_PERCENT'), MANAGEMENT_FEE_PERCENTAGE);
-      await agreement.setStorageUint256(hex4Bytes('DEPOSIT_MIN_PERCENT'), DEPOSIT_MIN_PERCENT);
-      await agreement.setStorageUint256(hex4Bytes('PLACEMENT_DATE'), PLACEMENT_DATE);
+      await agreement.setStorageUint256(
+        hex4Bytes('MANAGEMENT_PERCENT'),
+        BigNumber.from(MANAGEMENT_FEE_PERCENTAGE)
+      );
+      await agreement.setStorageUint256(
+        hex4Bytes('DEPOSIT_MIN_PERCENT'),
+        BigNumber.from(DEPOSIT_MIN_PERCENT)
+      );
+      await agreement.setStorageUint256(
+        hex4Bytes('PLACEMENT_DATE'),
+        BigNumber.from(PLACEMENT_DATE)
+      );
+      await agreement.setStorageUint256(hex4Bytes('TIME'), new Date().getTime());
 
       console.log({
         INITIAL_FUNDS_TARGET: INITIAL_FUNDS_TARGET.toString(),
@@ -411,9 +421,15 @@ of the initial DAI funds target amount\x1b[0m
 
         // Note: we give GP 2 days time to obtain P1 - MAX_PERCENT, P2 = DEPOSIT_MIN_PERCENT:
         // a P1% / P2% ratio of LP / GP deposits
-        await agreement.setStorageUint256(hex4Bytes('LOW_LIM'), GP_GAP_DEPOSIT_LOWER_TIME);
-        await agreement.setStorageUint256(hex4Bytes('UP_LIM'), GP_GAP_DEPOSIT_UPPER_TIME);
-        await agreement.setStorageUint256(hex4Bytes('P1'), MAX_PERCENT);
+        await agreement.setStorageUint256(
+          hex4Bytes('LOW_LIM'),
+          BigNumber.from(GP_GAP_DEPOSIT_LOWER_TIME)
+        );
+        await agreement.setStorageUint256(
+          hex4Bytes('UP_LIM'),
+          BigNumber.from(GP_GAP_DEPOSIT_UPPER_TIME)
+        );
+        await agreement.setStorageUint256(hex4Bytes('P1'), BigNumber.from(MAX_PERCENT));
         const txn3Hash = await changeTokenBalanceAndGetTxHash(
           () => agreement.connect(GP).execute(txId),
           dai,
@@ -431,10 +447,10 @@ of the initial DAI funds target amount\x1b[0m
       await ethers.provider.send('evm_setNextBlockTimestamp', [CLOSING_DATE + 2 * ONE_DAY]);
       await agreement.setStorageUint256(
         hex4Bytes('FUND_INVESTMENT_DATE'),
-        CLOSING_DATE + 7 * ONE_DAY
+        BigNumber.from(CLOSING_DATE + 7 * ONE_DAY)
       );
-      await agreement.setStorageUint256(hex4Bytes('P1'), MAX_PERCENT);
-      await agreement.setStorageUint256(hex4Bytes('P2'), DEPOSIT_MIN_PERCENT);
+      await agreement.setStorageUint256(hex4Bytes('P1'), BigNumber.from(MAX_PERCENT));
+      await agreement.setStorageUint256(hex4Bytes('P2'), BigNumber.from(DEPOSIT_MIN_PERCENT));
 
       for (let i = 0; i < LP_INITIAL_ARR.length; i++) {
         const LP = LPs[i];
@@ -473,8 +489,14 @@ of the initial DAI funds target amount\x1b[0m
         const FUND_INVESTMENT_DATE = CLOSING_DATE + 7 * ONE_DAY;
 
         await ethers.provider.send('evm_setNextBlockTimestamp', [CLOSING_DATE + 7 * ONE_DAY]);
-        await agreement.setStorageUint256(hex4Bytes('FUND_INVESTMENT_DATE'), FUND_INVESTMENT_DATE);
-        await agreement.setStorageUint256(hex4Bytes('PURCHASE_AMOUNT'), PURCHASE_AMOUNT);
+        await agreement.setStorageUint256(
+          hex4Bytes('FUND_INVESTMENT_DATE'),
+          BigNumber.from(FUND_INVESTMENT_DATE)
+        );
+        await agreement.setStorageUint256(
+          hex4Bytes('PURCHASE_AMOUNT'),
+          BigNumber.from(PURCHASE_AMOUNT)
+        );
         await agreement.setStorageUint256(hex4Bytes('PURCHASE_PERCENT'), PURCHASE_PERCENT);
         let txn5Hash;
         result = false;
@@ -509,7 +531,7 @@ initiating funds\x1b[0m
 
         await ethers.provider.send('evm_setNextBlockTimestamp', [FUND_INVESTMENT_DATE + ONE_YEAR]);
 
-        await agreement.setStorageUint256(hex4Bytes('WHALE'), whale.address);
+        await agreement.setStorageUint256(hex4Bytes('WHALE'), BigNumber.from(whale.address));
         await agreement.setStorageUint256(hex4Bytes('GP_PURCHASE_RETURN'), GP_PURCHASE_RETURN);
         await dai.connect(whale).approve(agreement.address, GP_PURCHASE_RETURN);
         console.log(`Fund Investment Return = ${formatEther(GP_PURCHASE_RETURN)} DAI`);
@@ -565,8 +587,8 @@ initiating funds\x1b[0m
 
         console.log(`GP Carry Charge = ${formatEther(CARRY)} DAI`);
 
-        await agreement.setStorageUint256(hex4Bytes('HURDLE'), HURDLE);
-        await agreement.setStorageUint256(hex4Bytes('PROFIT_PART'), PROFIT_PART);
+        await agreement.setStorageUint256(hex4Bytes('HURDLE'), BigNumber.from(HURDLE));
+        await agreement.setStorageUint256(hex4Bytes('PROFIT_PART'), BigNumber.from(PROFIT_PART));
 
         const txn72Hash = await changeTokenBalanceAndGetTxHash(
           () => agreement.connect(GP).execute(txId),
@@ -609,7 +631,7 @@ initiating funds\x1b[0m
           const LP_INITIAL = LP_INITIAL_ARR[i];
           // Note: Extremely unsafe!!! LP can set LP.address and LP_INITIAL by itself
           await agreement.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
-          await agreement.setStorageUint256(hex4Bytes('LP'), LP.address);
+          await agreement.setStorageUint256(hex4Bytes('LP'), BigNumber.from(LP.address));
 
           const ALL_LPS_PROFIT = PROFIT.gt(0) ? PROFIT.sub(CARRY) : BigNumber.from(0);
           const LP_PROFIT = ALL_LPS_PROFIT.mul(LP_INITIAL).div(LP_TOTAL);

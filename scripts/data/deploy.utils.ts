@@ -106,3 +106,30 @@ export const deployAgreement = async () => {
 
   return agreement.address;
 };
+
+export const deployConditionalTxs = async () => {
+  const [
+    comparisonOpcodesLibAddr,
+    branchingOpcodesLibAddr,
+    logicalOpcodesLibAddr,
+    otherOpcodesLibAddr,
+  ] = await deployOpcodeLibs();
+
+  const [executorLibAddr] = await deployBase();
+
+  const ConditionalTxsContract = await ethers.getContractFactory('ConditionalTxs', {
+    libraries: {
+      ComparisonOpcodes: comparisonOpcodesLibAddr,
+      BranchingOpcodes: branchingOpcodesLibAddr,
+      LogicalOpcodes: logicalOpcodesLibAddr,
+      OtherOpcodes: otherOpcodesLibAddr,
+      Executor: executorLibAddr,
+    },
+  });
+  const conditional = await ConditionalTxsContract.deploy();
+  await conditional.deployed();
+
+  console.log(`\x1b[32m Conditional address \x1b[0m\x1b[32m ${conditional.address}\x1b[0m`);
+
+  return conditional.address;
+};
