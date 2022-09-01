@@ -31,6 +31,30 @@ contract OtherOpcodesMock is UnstructuredStorageMock {
         OtherOpcodes.opMsgSender(_ctx);
     }
 
+    function opMsgValue(address _ctx) public {
+        OtherOpcodes.opMsgValue(_ctx);
+    }
+
+    function opSetLocalBool(address _ctx) public {
+        OtherOpcodes.opSetLocalBool(_ctx);
+    }
+
+    function opSetUint256(address _ctx) public {
+        OtherOpcodes.opSetUint256(_ctx);
+    }
+
+    function opTransferVar(address _ctx) public {
+        OtherOpcodes.opTransferVar(_ctx);
+    }
+
+    function opBalanceOf(address _ctx) public {
+        OtherOpcodes.opBalanceOf(_ctx);
+    }
+
+    function opTransferFromVar(address _ctx) public {
+        OtherOpcodes.opTransferFromVar(_ctx);
+    }
+
     function opLoadLocalUint256(address _ctx) public {
         OtherOpcodes.opLoadLocalUint256(_ctx);
     }

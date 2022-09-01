@@ -19,4 +19,8 @@ contract BranchingOpcodesMock {
     function getUint16(address _ctx) public returns (uint16) {
         return BranchingOpcodes.getUint16(_ctx);
     }
+
+    function opFunc(address _ctx) public {
+        BranchingOpcodes.opFunc(_ctx);
+    }
 }

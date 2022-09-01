@@ -53,7 +53,7 @@ contract Agreement {
     mapping(uint256 => address[]) public signatories; // txId => signatories
     mapping(uint256 => uint256) public signatoriesLen; // txId => signarories length
     // txId => (signatory => was tx executed by signatory)
-    mapping(uint256 => mapping(address => bool)) isExecutedBySignatory;
+    mapping(uint256 => mapping(address => bool)) public isExecutedBySignatory;
 
     /**
      * Sets parser address, creates new Context instance, and setups Context
@@ -127,6 +127,7 @@ contract Agreement {
         string memory _conditionStr,
         address _conditionCtx
     ) public {
+        require(!StringUtils.equal(_conditionStr, ''), ErrorsConditionalTxs.CNT2);
         IContext(_conditionCtx).setComparisonOpcodesAddr(address(ComparisonOpcodes));
         IContext(_conditionCtx).setBranchingOpcodesAddr(address(BranchingOpcodes));
         IContext(_conditionCtx).setLogicalOpcodesAddr(address(LogicalOpcodes));
@@ -296,8 +297,11 @@ contract Agreement {
      * @param _signatories the list of addresses
      */
     function _checkSignatories(address[] memory _signatories) internal pure {
+        require(_signatories.length != 0, ErrorsConditionalTxs.CNT1);
+        require(_signatories[0] != address(0), ErrorsConditionalTxs.CNT1);
         if (_signatories.length > 1) {
             for (uint256 i = 0; i < _signatories.length; i++) {
+                require(_signatories[i] != address(0), ErrorsConditionalTxs.CNT1);
                 require(_signatories[i] != ANYONE, ErrorsConditionalTxs.CNT1);
             }
         }

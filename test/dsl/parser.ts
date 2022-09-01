@@ -285,10 +285,8 @@ describe('Parser', () => {
         '0x' +
           '1c' + // loadRemote
           '01' + // uint256
-          `545cbf77${
-            // bytecode for a `NUMBER` name
-            appAddrHex.toLowerCase()
-          }`
+          '545cbf77' + // bytecode for a `NUMBER` name
+          `${appAddrHex.toLowerCase()}`
       );
     });
 
@@ -302,10 +300,8 @@ describe('Parser', () => {
         '0x' +
           '1c' + // loadRemote
           '02' + // bool
-          `f11f9a5d${
-            // bytecode for a `BOOL_VALUE` name
-            appAddrHex.toLowerCase()
-          }`
+          'f11f9a5d' + // bytecode for a `BOOL_VALUE` name
+          `${appAddrHex.toLowerCase()}`
       );
     });
     // TODO: add for other types
