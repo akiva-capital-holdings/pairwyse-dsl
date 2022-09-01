@@ -47,6 +47,10 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctx, uint256(uint160(IContext(_ctx).msgValue())));
     }
 
+    /**
+     * @dev Sets boolean variable in the application contract.
+     * The value of bool variable is taken from DSL code itself
+     */
     function opSetLocalBool(address _ctx) public {
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
 
@@ -58,9 +62,12 @@ library OtherOpcodes {
             abi.encodeWithSignature('setStorageBool(bytes32,bool)', _varNameB32, _boolVal)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
-        OpcodeHelpers.putToStack(_ctx, 1);
+        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
+    /**
+     * @dev Sets uint256 variable in the application contract. The value of the variable is taken from stack
+     */
     function opSetUint256(address _ctx) public {
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
 
@@ -74,7 +81,7 @@ library OtherOpcodes {
         );
         require(success, ErrorsGeneralOpcodes.OP1);
 
-        OpcodeHelpers.putToStack(_ctx, 1);
+        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     function opLoadLocalUint256(address _ctx) public {
@@ -124,7 +131,7 @@ library OtherOpcodes {
         );
         uint256 amount = opUint256Get(_ctx);
         recipient.transfer(amount);
-        OpcodeHelpers.putToStack(_ctx, 1);
+        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     function opTransfer(address _ctx) public {
@@ -139,7 +146,7 @@ library OtherOpcodes {
         // console.log('recipient', recipient);
         uint256 amount = opUint256Get(_ctx);
         IERC20(token).transfer(recipient, amount);
-        OpcodeHelpers.putToStack(_ctx, 1);
+        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     function opTransferVar(address _ctx) public {
@@ -159,7 +166,7 @@ library OtherOpcodes {
         IERC20(token).transfer(recipient, amount);
         // console.log('balance contract after', IERC20(token).balanceOf(address(this)));
         // console.log('balance recipient after', IERC20(token).balanceOf(recipient));
-        OpcodeHelpers.putToStack(_ctx, 1);
+        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     function opTransferFrom(address _ctx) public {
@@ -178,7 +185,7 @@ library OtherOpcodes {
         // console.log('from', from);
         // console.log('to', to);
         IERC20(token).transferFrom(from, to, amount);
-        OpcodeHelpers.putToStack(_ctx, 1);
+        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     function opBalanceOf(address _ctx) public {
@@ -209,7 +216,7 @@ library OtherOpcodes {
         // console.log('to', to);
         // console.log('amount', amount);
         IERC20(token).transferFrom(from, to, amount);
-        OpcodeHelpers.putToStack(_ctx, 1);
+        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     function opUint256Get(address _ctx) public returns (uint256) {
