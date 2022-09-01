@@ -71,25 +71,25 @@ const tests = {
         return Suite.create(parentSuite, this.name);
       },
     },
-    //   {
-    //     base: '4',
-    //     name: 'Scenario 2:  GP fails to balance LP deposit',
-    //     dynamicTestData,
-    //     GP_INITIAL: parseUnits('20', 18),
-    //     LP_INITIAL_ARR: [parseUnits('990', 18)],
-    //     INITIAL_FUNDS_TARGET: parseUnits('1000', 18),
-    //     CAPITAL_LOSS: parseUnits('0', 18),
-    //     CAPITAL_GAINS: parseUnits('200', 18),
-    //     DEPOSIT_MIN_PERCENT: 2,
-    //     PURCHASE_PERCENT: 90,
-    //     MANAGEMENT_FEE_PERCENTAGE: 2,
-    //     HURDLE: 9,
-    //     PROFIT_PART: 20,
-    //     GP_FAILS_TO_DO_GAP_DEPOSIT: true,
-    //     get suiteInstance() {
-    //       return Suite.create(parentSuite, this.name);
-    //     },
+    // {
+    //   base: '4',
+    //   name: 'Scenario 2:  GP fails to balance LP deposit',
+    //   dynamicTestData,
+    //   GP_INITIAL: parseUnits('20', 18),
+    //   LP_INITIAL_ARR: [parseUnits('990', 18)],
+    //   INITIAL_FUNDS_TARGET: parseUnits('1000', 18),
+    //   CAPITAL_LOSS: parseUnits('0', 18),
+    //   CAPITAL_GAINS: parseUnits('200', 18),
+    //   DEPOSIT_MIN_PERCENT: 2,
+    //   PURCHASE_PERCENT: 90,
+    //   MANAGEMENT_FEE_PERCENTAGE: 2,
+    //   HURDLE: 9,
+    //   PROFIT_PART: 20,
+    //   GP_FAILS_TO_DO_GAP_DEPOSIT: true,
+    //   get suiteInstance() {
+    //     return Suite.create(parentSuite, this.name);
     //   },
+    // },
     //   {
     //     base: '4',
     //     name: 'Scenario 3:  Loss incurred, fully covered by GP',
