@@ -41,7 +41,9 @@ describe('Agreement: Alice, Bob, Carl', () => {
       await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
     ).timestamp;
     NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
+  });
 
+  beforeEach(async () => {
     snapshotId = await network.provider.send('evm_snapshot');
   });
 

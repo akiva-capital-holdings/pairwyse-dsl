@@ -563,7 +563,9 @@ describe('Agreement: Investment Fund tests math', () => {
     dai = await (await ethers.getContractFactory('Token'))
       .connect(alice)
       .deploy(parseUnits('100000000', 18));
+  });
 
+  beforeEach(async () => {
     snapshotId = await network.provider.send('evm_snapshot');
   });
 

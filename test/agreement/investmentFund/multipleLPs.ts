@@ -45,7 +45,9 @@ const parentSuite = describe('Agreement: Investment Fund', () => {
 
     dynamicTestData.PLACEMENT_DATE = LAST_BLOCK_TIMESTAMP + ONE_MONTH; // NEXT_MONTH
     dynamicTestData.CLOSING_DATE = LAST_BLOCK_TIMESTAMP + 2 * ONE_MONTH; // NEXT_TWO_MONTH
+  });
 
+  beforeEach(async () => {
     snapshotId = await network.provider.send('evm_snapshot');
   });
 
