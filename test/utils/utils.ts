@@ -45,7 +45,7 @@ export const pushToStack = async (
   SV: StackValue__factory,
   context: Context,
   ST: Stack__factory,
-  arr: (string | number)[]
+  arr: (string | number | BigNumber)[]
 ) => {
   const stackValues: StackValue[] = [];
 
@@ -62,6 +62,9 @@ export const pushToStack = async (
       await stackValues[i].setUint256(arr[i] as number);
     } else if (typeof arr[i] === 'string') {
       await stackValues[i].setString(arr[i] as string);
+    } else if (typeof arr[i] === 'object') {
+      // this is BigNumber type
+      await stackValues[i].setUint256(arr[i] as BigNumber);
     }
     await stack.push(stackValues[i].address);
   }
@@ -353,13 +356,13 @@ export const businessCaseTest = ({
         console.log(`txn hash: \x1b[35m${txn1.hash}\x1b[0m`);
         result = true;
       } catch (err) {
-        console.error(err);
         await expect(agreement.connect(GP).execute(txId)).to.be.revertedWith('CNT3');
         console.log(`\x1b[33m
       Condition is not satisfied.
       GP must deposit a minimum ${DEPOSIT_MIN_PERCENT}% \
 of the initial DAI funds target amount\x1b[0m
         `);
+        throw err;
       }
       // Other tests have no sense if result is false
       if (!result) return; // TODO: fail the test if result ==  false
@@ -492,7 +495,11 @@ initiating funds\x1b[0m
           `);
         }
         // Other tests have no sense if result is false
-        if (!result) return;
+        if (!result)
+          throw new Error(
+            'Condition is not satisfied. GP authorized to purchase the investment asset using \
+up to 90% of total initiating funds'
+          );
 
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(agreement.address))} DAI`);
         console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
