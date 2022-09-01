@@ -13,7 +13,7 @@ contract AgreementFactory {
 
     /**
      * @dev Deploy new Agreement contract
-     * @param _parser Parser contract instance
+     * @param _parser Parser contract address
      * @return _agreementAddr Address of newly created Agreement
      */
     function deployAgreement(address _parser) external returns (address _agreementAddr) {

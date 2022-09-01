@@ -22,6 +22,7 @@ library LogicalOpcodes {
     /**
      * @dev Compares two values in the stack. Put 1 if both of them are 1, put
      *      0 otherwise
+     * @param _ctx Context contract address
      */
     function opAnd(address _ctx) public {
         StackValue last = IContext(_ctx).stack().pop();
@@ -38,6 +39,7 @@ library LogicalOpcodes {
     /**
      * @dev Compares two values in the stack. Put 1 if either one of them is 1,
      *      put 0 otherwise
+     * @param _ctx Context contract address
      */
     function opOr(address _ctx) public {
         StackValue last = IContext(_ctx).stack().pop();
@@ -51,6 +53,11 @@ library LogicalOpcodes {
         OpcodeHelpers.putToStack(_ctx, result ? 1 : 0);
     }
 
+    /**
+     * @dev Compares two values in the stack. Put 1 if the values ​
+     * ​are different and 0 if they are the same
+     * @param _ctx Context contract address
+     */
     function opXor(address _ctx) public {
         StackValue last = IContext(_ctx).stack().pop();
         StackValue prev = IContext(_ctx).stack().pop();
@@ -64,6 +71,10 @@ library LogicalOpcodes {
         OpcodeHelpers.putToStack(_ctx, result ? 1 : 0);
     }
 
+    /**
+     * @dev Add two values and put result in the stack.
+     * @param _ctx Context contract address
+     */
     function opAdd(address _ctx) public {
         StackValue last = IContext(_ctx).stack().pop();
         StackValue prev = IContext(_ctx).stack().pop();
@@ -76,6 +87,10 @@ library LogicalOpcodes {
         OpcodeHelpers.putToStack(_ctx, result);
     }
 
+    /**
+     * @dev Subtracts one value from enother and put result in the stack.
+     * @param _ctx Context contract address
+     */
     function opSub(address _ctx) public {
         StackValue last = IContext(_ctx).stack().pop();
         StackValue prev = IContext(_ctx).stack().pop();
@@ -88,6 +103,10 @@ library LogicalOpcodes {
         OpcodeHelpers.putToStack(_ctx, result);
     }
 
+    /**
+     * @dev Multiplies values and put result in the stack.
+     * @param _ctx Context contract address
+     */
     function opMul(address _ctx) public {
         StackValue last = IContext(_ctx).stack().pop();
         StackValue prev = IContext(_ctx).stack().pop();

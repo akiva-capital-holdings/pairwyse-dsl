@@ -27,12 +27,6 @@ contract Agreement {
     IParser public parser;
     IContext public context;
 
-    constructor(address _parser) {
-        parser = IParser(_parser);
-        context = new Context();
-        context.setAppAddress(address(this));
-    }
-
     event NewTransaction(
         uint256 txId, // transaction ID
         uint256[] requiredTransactions, // required transactions that have to be executed
@@ -42,8 +36,9 @@ contract Agreement {
         string[] conditionStrings
     );
 
+    // TODO: rename to Record
     struct Tx {
-        uint256[] requiredTransactions;
+        uint256[] requiredTransactions; // TODO: rename to required records
         address transactionContext;
         bool isExecuted;
         string transactionString;
@@ -59,6 +54,15 @@ contract Agreement {
     mapping(uint256 => uint256) public signatoriesLen; // txId => signarories length
     // txId => (signatory => was tx executed by signatory)
     mapping(uint256 => mapping(address => bool)) isExecutedBySignatory;
+
+    /**
+     * Sets parser address, creates new Context instance, and setups Context
+     */
+    constructor(address _parser) {
+        parser = IParser(_parser);
+        context = new Context();
+        context.setAppAddress(address(this));
+    }
 
     function getStorageBool(bytes32 position) public view returns (bool data) {
         return position.getStorageBool();
@@ -151,48 +155,66 @@ contract Agreement {
         txs[_txId].transactionString = _transactionString;
     }
 
-    function conditionContextsLen(uint256 _txId) public view returns (uint256) {
-        return conditionContexts[_txId].length;
+    /**
+     * @dev Based on Record ID returns the number of condition Context instances
+     * @param _recordId Record ID
+     * @return Number of condition Context instances of the Record
+     */
+    function conditionContextsLen(uint256 _recordId) public view returns (uint256) {
+        return conditionContexts[_recordId].length;
     }
 
-    function conditionStringsLen(uint256 _txId) public view returns (uint256) {
-        return conditionStrings[_txId].length;
+    /**
+     * @dev Based on Record ID returns the number of condition strings
+     * @param _recordId Record ID
+     * @return Number of Condition strings of the Record
+     */
+    function conditionStringsLen(uint256 _recordId) public view returns (uint256) {
+        return conditionStrings[_recordId].length;
     }
 
+    // TODO: make private
+    // TODO: rename `execTx` -> `executeRecord`
+    /**
+     * @dev Execute Record
+     * @param _recordId Record ID to execute
+     * @param _msgValue Value that were sent along with function execution // TODO: possibly remove this argument
+     * @param _signatory The user that is executing the Record
+     */
     function execTx(
-        uint256 _txId,
+        uint256 _recordId,
         uint256 _msgValue,
         address _signatory
     ) public {
-        Tx memory txn = txs[_txId];
-        require(!isExecutedBySignatory[_txId][_signatory], ErrorsConditionalTxs.CNT4);
+        Tx memory txn = txs[_recordId];
+        require(!isExecutedBySignatory[_recordId][_signatory], ErrorsConditionalTxs.CNT4);
 
         IContext(txn.transactionContext).setMsgValue(_msgValue);
         Executor.execute(address(txn.transactionContext));
-        isExecutedBySignatory[_txId][_signatory] = true;
+        isExecutedBySignatory[_recordId][_signatory] = true;
 
         // Check is tx was executed by all signatories
         uint256 executionProgress;
-        address[] memory signatoriesOfTx = signatories[_txId];
-        for (uint256 i = 0; i < signatoriesLen[_txId]; i++) {
-            if (isExecutedBySignatory[_txId][signatoriesOfTx[i]]) executionProgress++;
+        address[] memory signatoriesOfTx = signatories[_recordId];
+        for (uint256 i = 0; i < signatoriesLen[_recordId]; i++) {
+            if (isExecutedBySignatory[_recordId][signatoriesOfTx[i]]) executionProgress++;
         }
         // If all signatories have executed the transaction - mark the tx as executed
-        if (executionProgress == signatoriesLen[_txId]) {
-            txs[_txId].isExecuted = true;
+        if (executionProgress == signatoriesLen[_recordId]) {
+            txs[_recordId].isExecuted = true;
         }
     }
 
     /**
      * @dev Checks conditions for the certain transaction
-     * @param _txId is the ID of a transaction
+     * @param _recordId Record ID which conditions to check
      * @param _msgValue passed amount of native tokens for conditional
      */
     function checkConditions(
-        uint256 _txId,
+        uint256 _recordId,
         uint256 _msgValue /*onlyOwner*/
     ) public {
-        Tx memory txn = txs[_txId];
+        Tx memory txn = txs[_recordId];
         Tx memory requiredTx;
         for (uint256 i = 0; i < txn.requiredTransactions.length; i++) {
             requiredTx = txs[txn.requiredTransactions[i]];
@@ -209,16 +231,22 @@ contract Agreement {
         }
 
         bool _res = true;
-        for (uint256 i = 0; i < conditionContexts[_txId].length; i++) {
-            IContext(conditionContexts[_txId][i]).setMsgValue(_msgValue);
-            Executor.execute(conditionContexts[_txId][i]);
+        for (uint256 i = 0; i < conditionContexts[_recordId].length; i++) {
+            IContext(conditionContexts[_recordId][i]).setMsgValue(_msgValue);
+            Executor.execute(conditionContexts[_recordId][i]);
             _res =
                 _res &&
-                (IContext(conditionContexts[_txId][i]).stack().seeLast().getUint256() > 0);
+                (IContext(conditionContexts[_recordId][i]).stack().seeLast().getUint256() > 0);
         }
         require(_res, ErrorsConditionalTxs.CNT3);
     }
 
+    /**
+     * @dev Parse DSL code from the user and set the program bytecode in Context contract
+     * @param _code DSL code input from the user
+     * @param _context Context address
+     * @param _preProc Preprocessor address
+     */
     function parse(
         string memory _code,
         address _context,
