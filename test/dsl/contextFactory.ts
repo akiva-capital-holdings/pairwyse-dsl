@@ -12,6 +12,9 @@ describe('ContextFactory', () => {
     appAddr = app.address;
     // Deploy ContextFactory
     factory = await (await ethers.getContractFactory('ContextFactory')).deploy();
+  });
+
+  beforeEach(async () => {
     snapshotId = await network.provider.send('evm_snapshot');
   });
 

@@ -35,7 +35,9 @@ describe('DSL: math', () => {
     ).deploy(parserAddr, preprAddr, ctx.address);
 
     await ctx.setAppAddress(app.address);
+  });
 
+  beforeEach(async () => {
     snapshotId = await network.provider.send('evm_snapshot');
   });
 

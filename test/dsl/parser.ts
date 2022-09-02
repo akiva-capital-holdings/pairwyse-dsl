@@ -27,8 +27,9 @@ describe('Parser', () => {
     ctxAddr = ctx.address;
     await ctx.setAppAddress(appAddr);
     await ctx.setMsgSender(sender.address);
+  });
 
-    // Make a snapshot
+  beforeEach(async () => {
     snapshotId = await network.provider.send('evm_snapshot');
   });
 

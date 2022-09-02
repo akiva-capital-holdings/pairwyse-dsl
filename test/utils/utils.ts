@@ -362,10 +362,9 @@ export const businessCaseTest = ({
       GP must deposit a minimum ${DEPOSIT_MIN_PERCENT}% \
 of the initial DAI funds target amount\x1b[0m
         `);
-        throw err;
       }
       // Other tests have no sense if result is false
-      if (!result) return; // TODO: fail the test if result ==  false
+      if (!result) return;
 
       // Step 2
       txId = base.concat('2');

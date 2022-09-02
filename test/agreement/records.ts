@@ -53,6 +53,9 @@ describe('Simple Records in Agreement', () => {
 
     const parserAddr = await deployParserMock();
     parser = await ethers.getContractAt('ParserMock', parserAddr);
+  });
+
+  beforeEach(async () => {
     // Make a snapshot
     snapshotId = await network.provider.send('evm_snapshot');
   });
