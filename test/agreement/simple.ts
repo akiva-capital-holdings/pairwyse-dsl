@@ -27,10 +27,6 @@ describe('Agreement: Alice, Bob, Carl', () => {
   const tenTokens = parseEther('10');
 
   before(async () => {
-    // TODO: need more simplifications for all tests
-    /*
-      - tests module templates
-    */
     agreementAddr = await deployAgreement();
     preprocessorAddr = await deployPreprocessor();
     agreement = await ethers.getContractAt('Agreement', agreementAddr);
@@ -49,6 +45,21 @@ describe('Agreement: Alice, Bob, Carl', () => {
 
   afterEach(async () => {
     await network.provider.send('evm_revert', [snapshotId]);
+  });
+
+  it('incorrect signatory', async () => {
+    const txId = '1';
+    const signatories = [alice.address];
+    const conditions = ['blockTimestamp > loadLocal uint256 LOCK_TIME'];
+    const transaction = 'sendEth RECEIVER 1000000000000000000';
+
+    await addSteps(
+      preprocessorAddr,
+      [{ txId, requiredTxs: [], signatories, conditions, transaction }],
+      agreementAddr
+    );
+
+    await expect(agreement.connect(bob).execute(txId)).to.be.revertedWith('AGR1');
   });
 
   it('one condition', async () => {
@@ -105,12 +116,8 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await expect(
       agreement.connect(alice).execute(21, { value: parseEther('2') })
     ).to.be.revertedWith('AGR3');
-    await expect(agreement.connect(bob).execute(22)).to.be.revertedWith(
-      'Agreement: required tx #21 was not executed'
-    );
-    await expect(agreement.connect(alice).execute(23)).to.be.revertedWith(
-      'Agreement: required tx #22 was not executed'
-    );
+    await expect(agreement.connect(bob).execute(22)).to.be.revertedWith('AGR2');
+    await expect(agreement.connect(alice).execute(23)).to.be.revertedWith('AGR2');
 
     await agreement.connect(alice).execute(21, { value: oneEthBN });
 

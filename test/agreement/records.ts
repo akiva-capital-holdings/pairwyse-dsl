@@ -1,12 +1,13 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
-import { ContextMock as ContextMockType, ParserMock } from '../../typechain-types/dsl/mocks';
+import { ParserMock } from '../../typechain-types/dsl/mocks';
 import { hex4Bytes } from '../utils/utils';
 import { deployAgreementMock, deployParserMock } from '../../scripts/data/deploy.utils.mock';
 import { deployPreprocessor } from '../../scripts/data/deploy.utils';
 import { AgreementMock, ContextMock__factory } from '../../typechain-types';
 import { anyone, ONE_MONTH } from '../utils/constants';
+import { Records } from '../types';
 
 // TODO: rename everywhere in the project 'Conditional Transactions' to 'Records'
 
@@ -24,17 +25,6 @@ describe('Simple Records in Agreement', () => {
 
   const oneEth = ethers.utils.parseEther('1');
   const tenTokens = ethers.utils.parseEther('10');
-
-  // TODO: move to types file
-  type Records = {
-    recordId: number;
-    requiredRecords: number[];
-    signatories: string[];
-    transactionStr: string;
-    conditionStrings: string[];
-    transactionCtx: ContextMockType;
-    conditionContexts: ContextMockType[];
-  };
 
   let records: Records[] = [];
 
@@ -67,7 +57,7 @@ describe('Simple Records in Agreement', () => {
     await network.provider.send('evm_revert', [snapshotId]);
   });
 
-  it('test one transaction', async () => {
+  it('record with one transaction', async () => {
     // Set variables
     await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
     await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
@@ -130,8 +120,23 @@ describe('Simple Records in Agreement', () => {
 
       // Execute transaction
       await expect(app.connect(alice).execute(recordId)).to.be.revertedWith('AGR6');
-      await expect(app.checkConditions(recordId, 0)).to.be.revertedWith('AGR6');
+
+      // Validate
+      expect(await app.callStatic.validateConditions(recordId, 0)).equal(false);
+
+      // Advance time
+      // await ethers.provider.send('evm_increaseTime', [ONE_MONTH + ONE_MONTH]);
       await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
+      for (let j = 0; j < condCtxLen; j++) {
+        await parser.parse(
+          preprAddr,
+          await app.conditionContexts(recordId, j),
+          await app.conditionStrings(recordId, j)
+        );
+      }
+
+      // Validate again
+      expect(await app.callStatic.validateConditions(recordId, 0)).equal(true);
       await expect(await app.fulfill(recordId, 0, alice.address)).to.changeEtherBalance(
         bob,
         oneEth
@@ -200,60 +205,125 @@ describe('Simple Records in Agreement', () => {
     }
   });
 
-  // it.only('check conditions', async () => {
-  //   records.push({
-  //     recordId: 2,
-  //     requiredRecords: [3],
-  //     signatories: [bob.address],
-  //     transactionStr: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
-  //     conditionStrings: ['bool true'],
-  //     transactionCtx: await ContextCont.deploy(),
-  //     conditionContexts: [await ContextCont.deploy()],
-  //   });
-  //   // Set conditional transaction
-  //   for (let i = 0; i < records.length; i++) {
-  //     const {
-  //       recordId,
-  //       requiredRecords,
-  //       signatories,
-  //       conditionContexts,
-  //       conditionStrings,
-  //       transactionCtx,
-  //       transactionStr,
-  //     } = records[i];
+  it('validate required records', async () => {
+    // Deploy Token contract
+    const token = await (await ethers.getContractFactory('Token'))
+      .connect(bob)
+      .deploy(ethers.utils.parseEther('1000'));
 
-  //     // Set conditional transaction
-  //     await app.addRecordBlueprint(recordId, requiredRecords, signatories);
-  //     for (let j = 0; j < conditionContexts.length; j++) {
-  //       await app.addRecordCondition(recordId, conditionStrings[j], conditionContexts[j].address);
-  //     }
-  //     await app.addRecordTransaction(recordId, transactionStr, transactionCtx.address);
+    // Set variables
+    await app.setStorageAddress(hex4Bytes('TOKEN_ADDR'), token.address);
+    await app.setStorageAddress(hex4Bytes('BOB'), bob.address);
+    await app.setStorageAddress(hex4Bytes('ALICE'), alice.address);
+    await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
-  //     // Set app addresses & msg senders
-  //     await transactionCtx.setAppAddress(app.address);
-  //     await transactionCtx.setMsgSender(alice.address);
-  //     await conditionContexts[0].setAppAddress(app.address);
-  //     await conditionContexts[0].setMsgSender(alice.address);
+    records.push({
+      recordId: 1,
+      requiredRecords: [3],
+      signatories: [bob.address],
+      transactionStr: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
+      conditionStrings: ['blockTimestamp > loadLocal uint256 LOCK_TIME'],
+      transactionCtx: await ContextCont.deploy(),
+      conditionContexts: [await ContextCont.deploy()],
+    });
+    // Set conditional transaction
+    for (let i = 0; i < records.length; i++) {
+      const {
+        recordId,
+        requiredRecords,
+        signatories,
+        conditionContexts,
+        conditionStrings,
+        transactionCtx,
+        transactionStr,
+      } = records[i];
 
-  //     // Parse all conditions and a transaction
-  //     const condCtxLen = (await app.conditionContextsLen(recordId)).toNumber();
-  //     expect(condCtxLen).to.equal(1);
-  //     const condStrLen = (await app.conditionStringsLen(recordId)).toNumber();
-  //     expect(condStrLen).to.equal(1);
-  //     for (let j = 0; j < condCtxLen; j++) {
-  //       await parser.parse(
-  //         preprAddr,
-  //         await app.conditionContexts(recordId, j),
-  //         await app.conditionStrings(recordId, j)
-  //       );
-  //     }
-  //     await parser.parse(preprAddr, transactionCtx.address, transactionStr);
+      // Set conditional transaction
+      await app.addRecordBlueprint(recordId, requiredRecords, signatories);
+      for (let j = 0; j < conditionContexts.length; j++) {
+        await app.addRecordCondition(recordId, conditionStrings[j], conditionContexts[j].address);
+      }
+      await app.addRecordTransaction(recordId, transactionStr, transactionCtx.address);
 
-  //     await expect(app.fulfill(recordId, 0, alice.address)).to.be.revertedWith(
-  //       'ConditionalRecords: required tx #3 was not executed'
-  //     );
-  //   }
-  // });
+      // Set app addresses & msg senders
+      await transactionCtx.setAppAddress(app.address);
+      await transactionCtx.setMsgSender(alice.address);
+      await conditionContexts[0].setAppAddress(app.address);
+      await conditionContexts[0].setMsgSender(alice.address);
+
+      // Parse all conditions and a transaction
+      const condCtxLen = (await app.conditionContextsLen(recordId)).toNumber();
+      expect(condCtxLen).to.equal(1);
+      const condStrLen = (await app.conditionStringsLen(recordId)).toNumber();
+      expect(condStrLen).to.equal(1);
+      for (let j = 0; j < condCtxLen; j++) {
+        await parser.parse(
+          preprAddr,
+          await app.conditionContexts(recordId, j),
+          await app.conditionStrings(recordId, j)
+        );
+      }
+      await parser.parse(preprAddr, transactionCtx.address, transactionStr);
+
+      // Validate required records
+      expect(await app.validateRequiredRecords(recordId)).equal(false);
+    }
+  });
+
+  it('verify signatories', async () => {
+    records.push({
+      recordId: 1,
+      requiredRecords: [],
+      signatories: [bob.address],
+      transactionStr: 'bool true',
+      conditionStrings: ['bool true'],
+      transactionCtx: await ContextCont.deploy(),
+      conditionContexts: [await ContextCont.deploy()],
+    });
+    // Set conditional transaction
+    for (let i = 0; i < records.length; i++) {
+      const {
+        recordId,
+        requiredRecords,
+        signatories,
+        conditionContexts,
+        conditionStrings,
+        transactionCtx,
+        transactionStr,
+      } = records[i];
+
+      // Set conditional transaction
+      await app.addRecordBlueprint(recordId, requiredRecords, signatories);
+      for (let j = 0; j < conditionContexts.length; j++) {
+        await app.addRecordCondition(recordId, conditionStrings[j], conditionContexts[j].address);
+      }
+      await app.addRecordTransaction(recordId, transactionStr, transactionCtx.address);
+
+      // Set app addresses & msg senders
+      await transactionCtx.setAppAddress(app.address);
+      await transactionCtx.setMsgSender(alice.address);
+      await conditionContexts[0].setAppAddress(app.address);
+      await conditionContexts[0].setMsgSender(alice.address);
+
+      // Parse all conditions and a transaction
+      const condCtxLen = (await app.conditionContextsLen(recordId)).toNumber();
+      expect(condCtxLen).to.equal(1);
+      const condStrLen = (await app.conditionStringsLen(recordId)).toNumber();
+      expect(condStrLen).to.equal(1);
+      for (let j = 0; j < condCtxLen; j++) {
+        await parser.parse(
+          preprAddr,
+          await app.conditionContexts(recordId, j),
+          await app.conditionStrings(recordId, j)
+        );
+      }
+      await parser.parse(preprAddr, transactionCtx.address, transactionStr);
+
+      // Check signatories
+      expect(await app.connect(alice).verify(recordId)).equal(false);
+      expect(await app.connect(bob).verify(recordId)).equal(true);
+    }
+  });
 
   it('check 0 conditions', async () => {
     records.push({

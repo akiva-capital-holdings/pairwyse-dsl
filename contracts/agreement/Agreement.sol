@@ -67,10 +67,6 @@ contract Agreement {
         return position.getStorageAddress();
     }
 
-    function getStorageBytes32(bytes32 position) external view returns (bytes32 data) {
-        return position.getStorageBytes32();
-    }
-
     function getStorageUint256(bytes32 position) external view returns (uint256 data) {
         return position.getStorageUint256();
     }
@@ -81,10 +77,6 @@ contract Agreement {
 
     function setStorageAddress(bytes32 position, address data) external {
         position.setStorageAddress(data);
-    }
-
-    function setStorageBytes32(bytes32 position, bytes32 data) external {
-        position.setStorageBytes32(data);
     }
 
     function setStorageUint256(bytes32 position, uint256 data) external {
@@ -149,9 +141,9 @@ contract Agreement {
     }
 
     function execute(uint256 _recordId) external payable {
-        // console.log(payable(address(this)).balance);
         require(_verify(_recordId), ErrorsAgreement.AGR1);
-        require(_validate(_recordId, msg.value), ErrorsAgreement.AGR2);
+        require(_validateRequiredRecords(_recordId), ErrorsAgreement.AGR2);
+        require(_validateConditions(_recordId, msg.value), ErrorsAgreement.AGR6);
         require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
     }
 
@@ -219,42 +211,6 @@ contract Agreement {
     }
 
     /**
-     * @dev Checks conditions for the certain transaction
-     * @param _recordId Record ID which conditions to check
-     * @param _msgValue passed amount of native tokens for conditional
-     */
-    function _checkConditions(
-        uint256 _recordId,
-        uint256 _msgValue /*onlyOwner*/
-    ) internal {
-        Record memory txn = txs[_recordId];
-        Record memory requiredRecord;
-        for (uint256 i = 0; i < txn.requiredRecords.length; i++) {
-            requiredRecord = txs[txn.requiredRecords[i]];
-            require(
-                requiredRecord.isExecuted,
-                string(
-                    abi.encodePacked(
-                        'Agreement: required tx #',
-                        StringUtils.toString(txn.requiredRecords[i]),
-                        ' was not executed'
-                    )
-                )
-            );
-        }
-
-        bool _res = true;
-        for (uint256 i = 0; i < conditionContexts[_recordId].length; i++) {
-            IContext(conditionContexts[_recordId][i]).setMsgValue(_msgValue);
-            Executor.execute(conditionContexts[_recordId][i]);
-            _res =
-                _res &&
-                (IContext(conditionContexts[_recordId][i]).stack().seeLast().getUint256() > 0);
-        }
-        require(_res, ErrorsAgreement.AGR6);
-    }
-
-    /**
      * @dev Checks input _signatures that only one  'anyone' address exists in the
      * list or that 'anyone' address does not exist in signatures at all
      * @param _signatories the list of addresses
@@ -283,17 +239,25 @@ contract Agreement {
         return false;
     }
 
-    function _validate(uint256 _recordId, uint256 _msgValue) internal returns (bool) {
-        uint256 _len = conditionContexts[_recordId].length;
-        _checkConditions(_recordId, _msgValue);
-        uint256 _result;
-        for (uint256 i = 0; i < _len; i++) {
-            _result += (IContext(conditionContexts[_recordId][i]).stack().seeLast().getUint256() >
-                0)
-                ? 1
-                : 0;
+    function _validateRequiredRecords(uint256 _recordId) internal view returns (bool) {
+        Record memory txn = txs[_recordId];
+        Record memory requiredRecord;
+        for (uint256 i = 0; i < txn.requiredRecords.length; i++) {
+            requiredRecord = txs[txn.requiredRecords[i]];
+            if (!requiredRecord.isExecuted) return false;
         }
-        return _result == _len;
+        return true;
+    }
+
+    function _validateConditions(uint256 _recordId, uint256 _msgValue) internal returns (bool) {
+        for (uint256 i = 0; i < conditionContexts[_recordId].length; i++) {
+            IContext(conditionContexts[_recordId][i]).setMsgValue(_msgValue);
+            Executor.execute(conditionContexts[_recordId][i]);
+            if (IContext(conditionContexts[_recordId][i]).stack().seeLast().getUint256() == 0)
+                return false;
+        }
+
+        return true;
     }
 
     /**

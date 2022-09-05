@@ -7,13 +7,13 @@ pragma solidity ^0.8.0;
  * @title List of Agreement errors
  */
 library ErrorsAgreement {
-    string constant AGR1 = 'AGR1'; // Agreement: bad tx signatory
-    string constant AGR2 = 'AGR2'; // Agreement: tx condition is not satisfied
-    string constant AGR3 = 'AGR3'; // Agreement: tx fulfilment error
+    string constant AGR1 = 'AGR1'; // Agreement: bad record signatory
+    string constant AGR2 = 'AGR2'; // Agreement: not all required records are executed
+    string constant AGR3 = 'AGR3'; // Agreement: record fulfilment error
     string constant AGR4 = 'AGR4'; // Agreement: signatures are invalid
     string constant AGR5 = 'AGR5'; // Agreement: The transaction should have at least one condition
-    string constant AGR6 = 'AGR6'; // Agreement: txn condition is not satisfied
-    string constant AGR7 = 'AGR7'; // Agreement: txn already was executed by this signatory
+    string constant AGR6 = 'AGR6'; // Agreement: not all record conditions are satisfied
+    string constant AGR7 = 'AGR7'; // Agreement: record already was executed by this signatory
 }
 
 /**
