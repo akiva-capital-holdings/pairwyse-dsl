@@ -279,7 +279,7 @@ contract Preprocessor is IPreprocessor {
      * @param _chunk provided number by the user
      * @return updatedChunk amount in Wei of provided _chunk value
      */
-    function _parseNumber(string memory _chunk) internal view returns (string memory updatedChunk) {
+    function _parseNumber(string memory _chunk) internal pure returns (string memory updatedChunk) {
         try _chunk.toUint256() {
             updatedChunk = _chunk;
         } catch {
