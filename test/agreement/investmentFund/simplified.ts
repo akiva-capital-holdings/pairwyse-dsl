@@ -14,7 +14,7 @@ dotenv.config();
 
 const dynamicTestData = {} as DynamicTestData;
 
-const parentSuite = describe.skip('Agreement: Investment Fund Simplified', () => {
+const parentSuite = describe('Agreement: Investment Fund Simplified', () => {
   let snapshotId: number;
 
   before(async () => {

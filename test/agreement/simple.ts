@@ -10,7 +10,7 @@ import {
   aliceAndAnybodySteps,
 } from '../../scripts/data/agreement';
 import { Agreement } from '../../typechain-types';
-import { ANYONE, ONE_DAY, ONE_MONTH } from '../utils/constants';
+import { anyone, ONE_DAY, ONE_MONTH } from '../utils/constants';
 
 describe('Agreement: Alice, Bob, Carl', () => {
   let agreement: Agreement;
@@ -74,14 +74,14 @@ describe('Agreement: Alice, Bob, Carl', () => {
     // await expect(agreement.connect(anybody).execute(txId)).to.be.revertedWith('AGR1');
 
     // Condition isn't satisfied
-    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('CNT3');
+    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('AGR6');
 
     // Execute transaction
     await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
     await expect(await agreement.connect(alice).execute(txId)).to.changeEtherBalance(bob, oneEthBN);
 
     // Tx already executed
-    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('CNT4');
+    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('AGR7');
   });
 
   it('Alice (borrower) and Bob (lender)', async () => {
@@ -106,17 +106,17 @@ describe('Agreement: Alice, Bob, Carl', () => {
       agreement.connect(alice).execute(21, { value: parseEther('2') })
     ).to.be.revertedWith('AGR3');
     await expect(agreement.connect(bob).execute(22)).to.be.revertedWith(
-      'ConditionalTxs: required tx #21 was not executed'
+      'Agreement: required tx #21 was not executed'
     );
     await expect(agreement.connect(alice).execute(23)).to.be.revertedWith(
-      'ConditionalTxs: required tx #22 was not executed'
+      'Agreement: required tx #22 was not executed'
     );
 
     await agreement.connect(alice).execute(21, { value: oneEthBN });
 
     expect(await ethers.provider.getBalance(agreementAddr)).to.equal(oneEthBN);
     await expect(agreement.connect(alice).execute(21, { value: oneEthBN })).to.be.revertedWith(
-      'CNT4'
+      'AGR7'
     );
 
     // Bob lends 10 tokens to Alice
@@ -225,7 +225,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
       await agreement.setStorageUint256(hex4Bytes('TRANSACTIONS_CONT'), agreementAddr);
 
       const index = '4';
-      const signatories = [ANYONE];
+      const signatories = [anyone];
       await addSteps(preprocessorAddr, aliceAndAnybodySteps(signatories, index), agreementAddr);
 
       // Alice deposits 10 dai tokens to SC

@@ -356,7 +356,7 @@ export const businessCaseTest = ({
         console.log(`txn hash: \x1b[35m${txn1.hash}\x1b[0m`);
         result = true;
       } catch (err) {
-        await expect(agreement.connect(GP).execute(txId)).to.be.revertedWith('CNT3');
+        await expect(agreement.connect(GP).execute(txId)).to.be.revertedWith('AGR6');
         console.log(`\x1b[33m
       Condition is not satisfied.
       GP must deposit a minimum ${DEPOSIT_MIN_PERCENT}% \
@@ -452,7 +452,7 @@ of the initial DAI funds target amount\x1b[0m
           );
           console.log(`txn hash: \x1b[35m${txn4Hash}\x1b[0m`);
         } else {
-          await expect(agreement.connect(LP).execute(txId)).to.be.revertedWith('CNT3');
+          await expect(agreement.connect(LP).execute(txId)).to.be.revertedWith('AGR6');
           console.log(`\x1b[33m
       As GP did gap deposit, LP is not allowed to withdraw the funds.
       LP incurs transaction error if tries to withdraw funds after investment closing date\x1b[0m
@@ -486,7 +486,7 @@ of the initial DAI funds target amount\x1b[0m
           );
           result = true;
         } catch {
-          await expect(agreement.connect(GP).execute(txId)).to.be.revertedWith('CNT3');
+          await expect(agreement.connect(GP).execute(txId)).to.be.revertedWith('AGR6');
           console.log(`\x1b[33m
         Condition is not satisfied.
         GP authorized to purchase the investment asset using up to 90% of total \

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { AgreementFactory } from '../../typechain-types';
 
-describe('Agreement Factory', () => {
+describe.skip('Agreement Factory', () => {
   let factory: AgreementFactory;
 
   beforeEach(async () => {
