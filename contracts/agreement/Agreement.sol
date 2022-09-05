@@ -14,6 +14,7 @@ import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 
 // import 'hardhat/console.sol';
+// TODO: automatically make sure that no contract exceeds the maximum contract size
 
 /**
  * Financial Agreement written in DSL between two or more users

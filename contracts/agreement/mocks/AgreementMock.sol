@@ -14,7 +14,6 @@ import { OtherOpcodes } from '../../dsl/libs/opcodes/OtherOpcodes.sol';
 import { Executor } from '../../dsl/libs/Executor.sol';
 import { StringUtils } from '../../dsl/libs/StringUtils.sol';
 
-// This is just an empty contract. Is used only in AgreementFactoryMock
 contract AgreementMock is Agreement {
     constructor(address _parser) Agreement(_parser) {}
 
