@@ -8,14 +8,11 @@ import { ErrorsExecutor } from './Errors.sol';
 
 library Executor {
     function execute(address _ctx) public {
-        // console.log('Executor.execute()');
-        // console.logBytes(IContext(_ctx).program());
         require(IContext(_ctx).program().length > 0, ErrorsExecutor.EXC1);
 
         while (IContext(_ctx).pc() < IContext(_ctx).program().length) {
             bytes memory opcodeBytes = IContext(_ctx).programAt(IContext(_ctx).pc(), 1);
             bytes1 opcodeByte1 = bytes1(uint8(opcodeBytes[0]));
-            // console.logBytes1(opcodeByte1);
 
             bytes4 _selector = IContext(_ctx).selectorByOpcode(opcodeByte1);
             require(_selector != 0x0, ErrorsExecutor.EXC2);
@@ -33,8 +30,6 @@ library Executor {
             } else {
                 _lib = IContext(_ctx).otherOpcodes();
             }
-
-            // console.log('lib addr =', _lib);
 
             (bool success, ) = _lib.delegatecall(abi.encodeWithSelector(_selector, _ctx));
             require(success, ErrorsExecutor.EXC3);

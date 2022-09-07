@@ -1,13 +1,7 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
-import {
-  E2EApp,
-  Context,
-  Preprocessor,
-  Stack,
-  StackValue__factory,
-} from '../../../typechain-types';
-import { checkStack, checkStackTailv2, hex4Bytes, hex4BytesShort } from '../../utils/utils';
+import { E2EApp, Context, Preprocessor, Stack } from '../../../typechain-types';
+import { checkStackTailv2, hex4Bytes, hex4BytesShort } from '../../utils/utils';
 import { deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
 import { deployBaseMock } from '../../../scripts/data/deploy.utils.mock';
 
@@ -21,7 +15,6 @@ describe('End-to-end', () => {
   let ctx: Context;
   let ctxAddr: string;
   let app: E2EApp;
-  let StackValue: StackValue__factory;
   let NEXT_MONTH: number;
   let PREV_MONTH: number;
   let lastBlockTimestamp: number;
@@ -36,9 +29,6 @@ describe('End-to-end', () => {
 
     NEXT_MONTH = lastBlockTimestamp + 60 * 60 * 24 * 30;
     PREV_MONTH = lastBlockTimestamp - 60 * 60 * 24 * 30;
-
-    // Create StackValue Factory instance
-    StackValue = await ethers.getContractFactory('StackValue');
 
     // Deploy libraries
     const [
@@ -91,7 +81,7 @@ describe('End-to-end', () => {
       // Execute program
       await app.execute();
 
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
   });
 
@@ -152,7 +142,7 @@ describe('End-to-end', () => {
       await app.setStorageUint256(hex4Bytes('RISK'), RISK);
 
       await app.execute();
-      await checkStack(StackValue, stack, 1, result);
+      await checkStackTailv2(stack, [result]);
     }
 
     it('bytecode', async () => {
@@ -503,11 +493,10 @@ describe('End-to-end', () => {
 
       // Execute and check
       await app.execute();
-      StackValue = await ethers.getContractFactory('StackValue');
       const StackCont = await ethers.getContractFactory('Stack');
       const contextStackAddress = await ctx.stack();
       stack = StackCont.attach(contextStackAddress);
-      await checkStackTailv2(StackValue, stack, [0]);
+      await checkStackTailv2(stack, [0]);
       expect(await app.getStorageUint256(hex4Bytes('A'))).equal(6);
       expect(await app.getStorageBool(hex4Bytes('A'))).equal(true);
     });

@@ -41,7 +41,7 @@ library ErrorsStack {
  * @title List of BranchingOpcodes errors
  */
 library ErrorsBranchingOpcodes {
-    string constant BOP1 = 'BOP1'; // Opcodes: bad type in the stack
+    // string constant BOP1 = 'BOP1'; // Opcodes: bad type in the stack
 }
 
 /**
@@ -49,9 +49,9 @@ library ErrorsBranchingOpcodes {
  */
 library ErrorsGeneralOpcodes {
     string constant OP1 = 'OP1'; // Opcodes: opSetLocal call not success
-    string constant OP2 = 'OP2'; // Opcodes: bad type
+    // string constant OP2 = 'OP2'; // Opcodes: bad type
     string constant OP3 = 'OP3'; // Opcodes: opLoadRemote call not success
-    string constant OP4 = 'OP4'; // Opcodes: type mismatch
+    // string constant OP4 = 'OP4'; // Opcodes: type mismatch
     string constant OP5 = 'OP5'; // Opcodes: opLoadLocal call not success
 }
 

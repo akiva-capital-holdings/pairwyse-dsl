@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import { IContext } from '../../interfaces/IContext.sol';
 import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
-import { StackValue } from '../../helpers/Stack.sol';
 import { ErrorsOpcodeHelpers } from '../Errors.sol';
 
 // import 'hardhat/console.sol';
@@ -18,10 +17,9 @@ library OpcodeHelpers {
     using UnstructuredStorage for bytes32;
     using StringUtils for string;
 
+    // TODO: get rid of putToStack function
     function putToStack(address _ctx, uint256 _value) public {
-        StackValue resultValue = new StackValue();
-        resultValue.setUint256(_value);
-        IContext(_ctx).stack().push(resultValue);
+        IContext(_ctx).stack().push(_value);
     }
 
     function nextBytes(address _ctx, uint256 size) public returns (bytes memory out) {

@@ -125,7 +125,6 @@ contract Agreement {
         address _transactionContext,
         address[] memory _conditionContexts
     ) external {
-        // console.log('update');
         _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
         for (uint256 i = 0; i < _conditionContexts.length; i++) {
             _addRecordCondition(_recordId, _conditionStrings[i], _conditionContexts[i]);
@@ -254,8 +253,7 @@ contract Agreement {
         for (uint256 i = 0; i < conditionContexts[_recordId].length; i++) {
             IContext(conditionContexts[_recordId][i]).setMsgValue(_msgValue);
             Executor.execute(conditionContexts[_recordId][i]);
-            if (IContext(conditionContexts[_recordId][i]).stack().seeLast().getUint256() == 0)
-                return false;
+            if (IContext(conditionContexts[_recordId][i]).stack().seeLast() == 0) return false;
         }
 
         return true;
@@ -292,6 +290,6 @@ contract Agreement {
             txs[_recordId].isExecuted = true;
         }
 
-        return IContext(txn.transactionContext).stack().seeLast().getUint256() == 0 ? false : true;
+        return IContext(txn.transactionContext).stack().seeLast() == 0 ? false : true;
     }
 }

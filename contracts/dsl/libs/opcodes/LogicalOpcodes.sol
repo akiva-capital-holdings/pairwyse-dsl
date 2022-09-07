@@ -6,7 +6,6 @@ import { IERC20 } from '../../interfaces/IERC20.sol';
 import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
-import { StackValue } from '../../helpers/Stack.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
 // import 'hardhat/console.sol';
@@ -25,15 +24,9 @@ library LogicalOpcodes {
      * @param _ctx Context contract address
      */
     function opAnd(address _ctx) public {
-        StackValue last = IContext(_ctx).stack().pop();
-        StackValue prev = IContext(_ctx).stack().pop();
-
-        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
-        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
-
-        bool result = (prev.getUint256() > 0) && (last.getUint256() > 0);
-
-        OpcodeHelpers.putToStack(_ctx, result ? 1 : 0);
+        uint256 last = IContext(_ctx).stack().pop();
+        uint256 prev = IContext(_ctx).stack().pop();
+        OpcodeHelpers.putToStack(_ctx, (prev > 0) && (last > 0) ? 1 : 0);
     }
 
     /**
@@ -42,15 +35,9 @@ library LogicalOpcodes {
      * @param _ctx Context contract address
      */
     function opOr(address _ctx) public {
-        StackValue last = IContext(_ctx).stack().pop();
-        StackValue prev = IContext(_ctx).stack().pop();
-
-        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
-        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
-
-        bool result = (prev.getUint256() > 0) || (last.getUint256() > 0);
-
-        OpcodeHelpers.putToStack(_ctx, result ? 1 : 0);
+        uint256 last = IContext(_ctx).stack().pop();
+        uint256 prev = IContext(_ctx).stack().pop();
+        OpcodeHelpers.putToStack(_ctx, (prev > 0) || (last > 0) ? 1 : 0);
     }
 
     /**
@@ -59,16 +46,12 @@ library LogicalOpcodes {
      * @param _ctx Context contract address
      */
     function opXor(address _ctx) public {
-        StackValue last = IContext(_ctx).stack().pop();
-        StackValue prev = IContext(_ctx).stack().pop();
-
-        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
-        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
-
-        bool result = ((prev.getUint256() > 0) && (last.getUint256() == 0)) ||
-            ((prev.getUint256() == 0) && (last.getUint256() > 0));
-
-        OpcodeHelpers.putToStack(_ctx, result ? 1 : 0);
+        uint256 last = IContext(_ctx).stack().pop();
+        uint256 prev = IContext(_ctx).stack().pop();
+        OpcodeHelpers.putToStack(
+            _ctx,
+            ((prev > 0) && (last == 0)) || ((prev == 0) && (last > 0)) ? 1 : 0
+        );
     }
 
     /**
@@ -76,15 +59,9 @@ library LogicalOpcodes {
      * @param _ctx Context contract address
      */
     function opAdd(address _ctx) public {
-        StackValue last = IContext(_ctx).stack().pop();
-        StackValue prev = IContext(_ctx).stack().pop();
-
-        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
-        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
-
-        uint256 result = prev.getUint256() + last.getUint256();
-
-        OpcodeHelpers.putToStack(_ctx, result);
+        uint256 last = IContext(_ctx).stack().pop();
+        uint256 prev = IContext(_ctx).stack().pop();
+        OpcodeHelpers.putToStack(_ctx, prev + last);
     }
 
     /**
@@ -92,15 +69,9 @@ library LogicalOpcodes {
      * @param _ctx Context contract address
      */
     function opSub(address _ctx) public {
-        StackValue last = IContext(_ctx).stack().pop();
-        StackValue prev = IContext(_ctx).stack().pop();
-
-        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
-        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
-
-        uint256 result = prev.getUint256() - last.getUint256();
-
-        OpcodeHelpers.putToStack(_ctx, result);
+        uint256 last = IContext(_ctx).stack().pop();
+        uint256 prev = IContext(_ctx).stack().pop();
+        OpcodeHelpers.putToStack(_ctx, prev - last);
     }
 
     /**
@@ -108,15 +79,9 @@ library LogicalOpcodes {
      * @param _ctx Context contract address
      */
     function opMul(address _ctx) public {
-        StackValue last = IContext(_ctx).stack().pop();
-        StackValue prev = IContext(_ctx).stack().pop();
-
-        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
-        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
-
-        uint256 result = prev.getUint256() * last.getUint256();
-
-        OpcodeHelpers.putToStack(_ctx, result);
+        uint256 last = IContext(_ctx).stack().pop();
+        uint256 prev = IContext(_ctx).stack().pop();
+        OpcodeHelpers.putToStack(_ctx, prev * last);
     }
 
     /**
@@ -125,14 +90,8 @@ library LogicalOpcodes {
      * @param _ctx Context address
      */
     function opDiv(address _ctx) public {
-        StackValue last = IContext(_ctx).stack().pop();
-        StackValue prev = IContext(_ctx).stack().pop();
-
-        require(last.getType() == prev.getType(), ErrorsGeneralOpcodes.OP4);
-        require(last.getType() == StackValue.StackType.UINT256, ErrorsGeneralOpcodes.OP2);
-
-        uint256 result = prev.getUint256() / last.getUint256();
-
-        OpcodeHelpers.putToStack(_ctx, result);
+        uint256 last = IContext(_ctx).stack().pop();
+        uint256 prev = IContext(_ctx).stack().pop();
+        OpcodeHelpers.putToStack(_ctx, prev / last);
     }
 }

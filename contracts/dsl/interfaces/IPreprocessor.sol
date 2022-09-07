@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { IContext } from './IContext.sol';
-import { Stack, StackValue } from '../helpers/Stack.sol';
+import { StringStack } from '../helpers/StringStack.sol';
 import { StringUtils } from '../libs/StringUtils.sol';
 
 // import 'hardhat/console.sol';
@@ -40,6 +40,6 @@ interface IPreprocessor {
     function infixToPostfix(
         address _ctxAddr,
         string[] memory _code,
-        Stack _stack
+        StringStack _stack
     ) external returns (string[] memory);
 }
