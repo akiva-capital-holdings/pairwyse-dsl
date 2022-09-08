@@ -170,20 +170,6 @@ contract Preprocessor is IPreprocessor {
         return result;
     }
 
-    // function _isCurrency (string memory _chunk) public pure returns (bool){
-    //     if(_chunk.equal('ETH') || _chunk.equal('GWEI')){
-    //         return true;
-    //     } return false;
-    // }
-
-    function _multiplier(string memory _chunk) internal pure returns (uint256 multiplier) {
-        if (_chunk.equal('ETH')) {
-            return multiplier = 1000000000000000000;
-        } else if (_chunk.equal('GWEI')) {
-            return multiplier = 1000000000;
-        } else return multiplier = 0;
-    }
-
     /**
      * @dev Rebuild and transforms the user's DSL commands (can be prepared by
      * the `split()` function) to the list of commands.
@@ -217,9 +203,6 @@ contract Preprocessor is IPreprocessor {
         uint256 currencyMultiplier;
         string memory chunk;
         string memory name;
-        // 1e18 - ok; e18 - fail
-        // 2 eth - ok; eth - fail
-        // try to create variable ETH - fail
 
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
@@ -256,13 +239,13 @@ contract Preprocessor is IPreprocessor {
                 }
                 _stack.pop(); // remove '(' that is left
             } else if (!loadRemoteFlag && chunk.mayBeNumber() && !isFunc && !directUseUint256) {
-                if (i + 1 <= _code.length - 1) {
+                if (i <= _code.length - 2) {
                     currencyMultiplier = _multiplier(_code[i + 1]);
                 }
                 _updateUINT256param();
                 result.push(_parseNumber(chunk, currencyMultiplier));
             } else if (chunk.mayBeNumber() && !isFunc && directUseUint256) {
-                if (i + 1 <= _code.length - 1) {
+                if (i <= _code.length - 2) {
                     currencyMultiplier = _multiplier(_code[i + 1]);
                 }
                 directUseUint256 = false;
@@ -300,12 +283,28 @@ contract Preprocessor is IPreprocessor {
     }
 
     /**
+     * @dev checks the value, and returns the corresponding multiplier.
+     * If it is Ether, then it returns 1000000000000000000,
+     * If it is GWEI, then it returns 1000000000
+     * @param _chunk is a command from DSL command list
+     * @return multiplier returns the corresponding multiplier.
+     */
+    function _multiplier(string memory _chunk) internal pure returns (uint256 multiplier) {
+        if (_chunk.equal('ETH')) {
+            return multiplier = 1000000000000000000;
+        } else if (_chunk.equal('GWEI')) {
+            return multiplier = 1000000000;
+        } else return multiplier = 0;
+    }
+
+    /**
      * @dev As the string of values can be simple and complex for DSL this function returns a number in
      * Wei regardless of what type of number parameter was provided by the user.
      * For example:
      * `uint256 1000000` - simple
      * `uint256 1e6 - complex`
      * @param _chunk provided number by the user
+     * @param _currencyMultiplier provided number of the multiplier
      * @return updatedChunk amount in Wei of provided _chunk value
      */
     function _parseNumber(string memory _chunk, uint256 _currencyMultiplier)

@@ -5,7 +5,7 @@ import { parseUnits } from 'ethers/lib/utils';
 import { Preprocessor } from '../../typechain-types';
 import { Testcase } from '../types';
 
-describe('Preprocessor', () => {
+describe.only('Preprocessor', () => {
   let app: Preprocessor;
   let ctxAddr: string;
   let appAddrHex: string;
@@ -917,64 +917,134 @@ describe('Preprocessor', () => {
     });
   });
 
+  describe.only('Convertations tests', () => {
+    it('0 ETH - ok', async () => {
+      const input = '0 ETH';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = ['uint256', '0'];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('0 GWEI - ok', async () => {
+      const input = '0 GWEI';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = ['uint256', '0'];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('1 ETH > 1 GWEI', async () => {
+      const input = '1 ETH > 1 GWEI';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = ['uint256', '1000000000000000000', 'uint256', '1000000000', '>'];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('1 ETH = 1e9 GWEI', async () => {
+      const input = '1 ETH = 1e9 GWEI';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = ['uint256', '1000000000000000000', '=', 'uint256', '1000000000000000000'];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('uint256 1 ETH', async () => {
+      const input = 'uint256 1 ETH';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = ['uint256', '1000000000000000000'];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('uint256 1 GWEI', async () => {
+      const input = 'uint256 1 GWEI';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = ['uint256', '1000000000'];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('sendEth ETH_RECEIVER 1e5 GWEI', async () => {
+      const input = 'sendEth ETH_RECEIVER 1e5 GWEI';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = ['sendEth', 'ETH_RECEIVER', '100000000000000'];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('sendEth ETH_RECEIVER 1e2 ETH', async () => {
+      const input = 'sendEth ETH_RECEIVER 1e2 ETH';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = ['sendEth', 'ETH_RECEIVER', '100000000000000000000'];
+      expect(cmds).to.eql(expected);
+    });
+
+    it('just ETH', async () => {
+      const input = 'ETH';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql([]);
+    });
+
+    it('just GWEI', async () => {
+      const input = 'GWEI';
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      expect(cmds).to.eql([]);
+    });
+  });
+
   describe('Simplified writing number in wei', () => {
     describe('setUint256', () => {
+      const transferFromBase = ['uint256', 'value', 'setUint256', 'SUM'];
+
       it('should return a simple number with 18 decimals', async () => {
         const input = '(uint256 1e18) setUint256 SUM';
         const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql(['uint256', parseUnits('1', 18).toString(), 'setUint256', 'SUM']);
+        transferFromBase[1] = parseUnits('1', 18).toString();
+        expect(cmds).to.eql(transferFromBase);
       });
 
       it('should return a simple number with 18 decimals without uint256 type', async () => {
         const input = '(123e18) setUint256 SUM';
         const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql(['uint256', parseUnits('123', 18).toString(), 'setUint256', 'SUM']);
+        transferFromBase[1] = parseUnits('123', 18).toString();
+        expect(cmds).to.eql(transferFromBase);
       });
 
       it('should return a simple number with 36 decimals', async () => {
         const input = '(uint256 1e36) setUint256 SUM';
         const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql([
-          'uint256',
-          parseUnits('1', 36).toString(), // ex. 1000000000000000000 ETH
-          'setUint256',
-          'SUM',
-        ]);
+        transferFromBase[1] = parseUnits('1', 36).toString(); // ex. 1000000000000000000 ETH
+        expect(cmds).to.eql(transferFromBase);
       });
 
       it('should return a long number with 18 decimals', async () => {
         const input = '(uint256 1000000000000000e18) setUint256 SUM';
         const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql([
-          'uint256',
-          parseUnits('1000000000000000', 18).toString(),
-          'setUint256',
-          'SUM',
-        ]);
+        transferFromBase[1] = parseUnits('1000000000000000', 18).toString();
+        expect(cmds).to.eql(transferFromBase);
       });
 
       it('should return a simple number with 10 decimals', async () => {
         const input = '(uint256 146e10) setUint256 SUM';
         const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql(['uint256', parseUnits('146', 10).toString(), 'setUint256', 'SUM']);
+        transferFromBase[1] = parseUnits('146', 10).toString();
+        expect(cmds).to.eql(transferFromBase);
       });
 
       it('should return a long number with 10 decimals', async () => {
         const input = '(uint256 1000000000000000e10) setUint256 SUM';
         const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql(['uint256', parseUnits('1', 25).toString(), 'setUint256', 'SUM']);
+        transferFromBase[1] = parseUnits('1', 25).toString();
+        expect(cmds).to.eql(transferFromBase);
       });
 
       it('should return a simple number without decimals even using simplified method', async () => {
         const input = '(uint256 123e0) setUint256 SUM';
         const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql(['uint256', parseUnits('123', 0).toString(), 'setUint256', 'SUM']);
+        transferFromBase[1] = parseUnits('123', 0).toString();
+        expect(cmds).to.eql(transferFromBase);
       });
 
       it('should return a long number without decimals even using simplified method', async () => {
         const input = '(uint256 1000000000000000e0) setUint256 SUM';
         const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql(['uint256', parseUnits('1', 15).toString(), 'setUint256', 'SUM']);
+        transferFromBase[1] = parseUnits('1', 15).toString();
+        expect(cmds).to.eql(transferFromBase);
       });
 
       it('should revert if tried to put several `e` symbol', async () => {
@@ -1132,7 +1202,8 @@ describe('Preprocessor', () => {
       it('should return a simple number with 18 decimals', async () => {
         const input = 'transferFrom DAI OWNER RECEIVER 1 ETH';
         const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql(['transferFrom', 'DAI', 'OWNER', 'RECEIVER', (1e18).toString()]);
+        transferFromBase[4] = parseUnits('1', 18).toString();
+        expect(cmds).to.eql(transferFromBase);
       });
 
       it('should return a simple number with 9 decimals', async () => {
