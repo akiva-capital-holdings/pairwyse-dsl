@@ -51,6 +51,7 @@ contract Preprocessor is IPreprocessor {
         external
         returns (string[] memory)
     {
+        // TODO: create temporary stack instance only once (in constructor)
         Stack stack = new Stack();
         string[] memory code = split(_program);
         return infixToPostfix(_ctxAddr, code, stack);
@@ -256,17 +257,13 @@ contract Preprocessor is IPreprocessor {
                 _stack.pop(); // remove '(' that is left
             } else if (!loadRemoteFlag && chunk.mayBeNumber() && !isFunc && !directUseUint256) {
                 if (i + 1 <= _code.length - 1) {
-                    if (_multiplier(_code[i + 1]) > 0) {
-                        currencyMultiplier = _multiplier(_code[i + 1]);
-                    }
+                    currencyMultiplier = _multiplier(_code[i + 1]);
                 }
                 _updateUINT256param();
                 result.push(_parseNumber(chunk, currencyMultiplier));
             } else if (chunk.mayBeNumber() && !isFunc && directUseUint256) {
                 if (i + 1 <= _code.length - 1) {
-                    if (_multiplier(_code[i + 1]) > 0) {
-                        currencyMultiplier = _multiplier(_code[i + 1]);
-                    }
+                    currencyMultiplier = _multiplier(_code[i + 1]);
                 }
                 directUseUint256 = false;
                 result.push(_parseNumber(chunk, currencyMultiplier));
@@ -282,8 +279,10 @@ contract Preprocessor is IPreprocessor {
                 // if it was already set the name for a function
                 isName = false;
                 isFunc = _parceFuncParams(chunk, name, isFunc);
-            } else if (_multiplier(chunk) > 0) {
-                currencyMultiplier = 0;
+            } else if (_isCurrencySymbol(chunk)) {
+                // we've already transformed the number before the keyword
+                // so we can safely skip the chunk
+                continue;
             } else {
                 result.push(chunk);
                 if (loadRemoteVarCount == 4) {
@@ -316,9 +315,11 @@ contract Preprocessor is IPreprocessor {
     {
         if (_currencyMultiplier > 0) {
             try _chunk.toUint256() {
-                updatedChunk = _chunk.convertation(_currencyMultiplier);
+                updatedChunk = StringUtils.toString(_chunk.toUint256() * _currencyMultiplier);
             } catch {
-                updatedChunk = _chunk.getWei().convertation(_currencyMultiplier);
+                updatedChunk = StringUtils.toString(
+                    _chunk.getWei().toUint256() * _currencyMultiplier
+                );
             }
         } else {
             try _chunk.toUint256() {
@@ -327,6 +328,16 @@ contract Preprocessor is IPreprocessor {
                 updatedChunk = _chunk.getWei();
             }
         }
+    }
+
+    /**
+     * @dev Check is chunk is a currency symbol
+     * @param _chunk is a current chunk from the DSL string code
+     * @return true or false based on whether chunk is a currency symbol or not
+     */
+    function _isCurrencySymbol(string memory _chunk) internal pure returns (bool) {
+        if (_chunk.equal('ETH') || _chunk.equal('GWEI')) return true;
+        return false;
     }
 
     /**

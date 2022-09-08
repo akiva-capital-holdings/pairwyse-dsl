@@ -72,14 +72,6 @@ library StringUtils {
         }
     }
 
-    function convertation(string memory _value, uint256 _currencyMultiplier)
-        public
-        pure
-        returns (string memory result)
-    {
-        result = toString(toUint256(_value) * _currencyMultiplier);
-    }
-
     // string decimal number with e symbol (1e18) to uint256 (in wei)
     function getWei(string memory _s) public pure returns (string memory result) {
         bool isFound; // was `e` symbol found
