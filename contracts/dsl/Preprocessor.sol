@@ -169,6 +169,20 @@ contract Preprocessor is IPreprocessor {
         return result;
     }
 
+    // function _isCurrency (string memory _chunk) public pure returns (bool){
+    //     if(_chunk.equal('ETH') || _chunk.equal('GWEI')){
+    //         return true;
+    //     } return false;
+    // }
+
+    function _multiplier(string memory _chunk) internal pure returns (uint256 multiplier) {
+        if (_chunk.equal('ETH')) {
+            return multiplier = 1000000000000000000;
+        } else if (_chunk.equal('GWEI')) {
+            return multiplier = 1000000000;
+        } else return multiplier = 0;
+    }
+
     /**
      * @dev Rebuild and transforms the user's DSL commands (can be prepared by
      * the `split()` function) to the list of commands.
@@ -199,16 +213,20 @@ contract Preprocessor is IPreprocessor {
         bool loadRemoteFlag;
         bool directUseUint256;
         uint256 loadRemoteVarCount;
+        uint256 currencyMultiplier;
         string memory chunk;
         string memory name;
+        // 1e18 - ok; e18 - fail
+        // 2 eth - ok; eth - fail
+        // try to create variable ETH - fail
 
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
+            currencyMultiplier = 0;
 
             // returns true if the chunk can use uint256 directly
             directUseUint256 = _isDirectUseUint256(directUseUint256, chunk);
             // checks and updates if the chunk can use uint256 or it's loadRemote opcode
-
             (loadRemoteFlag, loadRemoteVarCount) = _updateRemoteParams(
                 loadRemoteFlag,
                 loadRemoteVarCount,
@@ -237,11 +255,21 @@ contract Preprocessor is IPreprocessor {
                 }
                 _stack.pop(); // remove '(' that is left
             } else if (!loadRemoteFlag && chunk.mayBeNumber() && !isFunc && !directUseUint256) {
+                if (i + 1 <= _code.length - 1) {
+                    if (_multiplier(_code[i + 1]) > 0) {
+                        currencyMultiplier = _multiplier(_code[i + 1]);
+                    }
+                }
                 _updateUINT256param();
-                result.push(_parseNumber(chunk));
+                result.push(_parseNumber(chunk, currencyMultiplier));
             } else if (chunk.mayBeNumber() && !isFunc && directUseUint256) {
+                if (i + 1 <= _code.length - 1) {
+                    if (_multiplier(_code[i + 1]) > 0) {
+                        currencyMultiplier = _multiplier(_code[i + 1]);
+                    }
+                }
                 directUseUint256 = false;
-                result.push(_parseNumber(chunk));
+                result.push(_parseNumber(chunk, currencyMultiplier));
             } else if (chunk.equal('func')) {
                 // if the chunk is 'func' then `Functions block` will occur
                 isFunc = true;
@@ -254,6 +282,8 @@ contract Preprocessor is IPreprocessor {
                 // if it was already set the name for a function
                 isName = false;
                 isFunc = _parceFuncParams(chunk, name, isFunc);
+            } else if (_multiplier(chunk) > 0) {
+                currencyMultiplier = 0;
             } else {
                 result.push(chunk);
                 if (loadRemoteVarCount == 4) {
@@ -279,11 +309,23 @@ contract Preprocessor is IPreprocessor {
      * @param _chunk provided number by the user
      * @return updatedChunk amount in Wei of provided _chunk value
      */
-    function _parseNumber(string memory _chunk) internal view returns (string memory updatedChunk) {
-        try _chunk.toUint256() {
-            updatedChunk = _chunk;
-        } catch {
-            updatedChunk = _chunk.getWei();
+    function _parseNumber(string memory _chunk, uint256 _currencyMultiplier)
+        internal
+        pure
+        returns (string memory updatedChunk)
+    {
+        if (_currencyMultiplier > 0) {
+            try _chunk.toUint256() {
+                updatedChunk = _chunk.convertation(_currencyMultiplier);
+            } catch {
+                updatedChunk = _chunk.getWei().convertation(_currencyMultiplier);
+            }
+        } else {
+            try _chunk.toUint256() {
+                updatedChunk = _chunk;
+            } catch {
+                updatedChunk = _chunk.getWei();
+            }
         }
     }
 

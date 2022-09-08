@@ -36,6 +36,14 @@ contract Agreement {
         string[] conditionStrings
     );
 
+    modifier canSetToStorage(bytes32 position) {
+        bytes32 ETH_4_BYTES_HEX = 0xaaaebeba00000000000000000000000000000000000000000000000000000000;
+        bytes32 GWEI_4_BYTES_HEX = 0x0c93a5d800000000000000000000000000000000000000000000000000000000;
+        require(position != ETH_4_BYTES_HEX, 'AGR4'); // check that variable name is not 'ETH'
+        require(position != GWEI_4_BYTES_HEX, 'AGR4'); // check that variable name is not 'GWEI'
+        _;
+    }
+
     // TODO: rename to Record
     struct Tx {
         uint256[] requiredTransactions; // TODO: rename to required records
@@ -80,19 +88,19 @@ contract Agreement {
         return position.getStorageUint256();
     }
 
-    function setStorageBool(bytes32 position, bool data) public {
+    function setStorageBool(bytes32 position, bool data) public canSetToStorage(position) {
         position.setStorageBool(data);
     }
 
-    function setStorageAddress(bytes32 position, address data) public {
+    function setStorageAddress(bytes32 position, address data) public canSetToStorage(position) {
         position.setStorageAddress(data);
     }
 
-    function setStorageBytes32(bytes32 position, bytes32 data) public {
+    function setStorageBytes32(bytes32 position, bytes32 data) public canSetToStorage(position) {
         position.setStorageBytes32(data);
     }
 
-    function setStorageUint256(bytes32 position, uint256 data) public {
+    function setStorageUint256(bytes32 position, uint256 data) public canSetToStorage(position) {
         position.setStorageUint256(data);
     }
 

@@ -10,6 +10,7 @@ library ErrorsAgreement {
     string constant AGR1 = 'AGR1'; // Agreement: bad tx signatory
     string constant AGR2 = 'AGR2'; // Agreement: tx condition is not satisfied
     string constant AGR3 = 'AGR3'; // Agreement: tx fulfilment error
+    string constant AGR4 = 'AGR4'; // Agreement: wrong position name
 }
 
 /**

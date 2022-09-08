@@ -775,6 +775,28 @@ describe('Preprocessor', () => {
       expect(cmds).to.eql(expected);
     });
 
+    it('should transform correctly if sendEth 1 GWEI is in the code', async () => {
+      const input = `
+      loadRemote bool BOOL_V ${appAddrHex}
+      sendEth RECEIVER 239423894
+      1 GWEI
+      `;
+
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      const expected = [
+        'loadRemote',
+        'bool',
+        'BOOL_V',
+        appAddrHex,
+        'sendEth',
+        'RECEIVER',
+        '239423894',
+        'uint256',
+        '1000000000',
+      ];
+      expect(cmds).to.eql(expected);
+    });
+
     it('should transform correctly if `transfer` is in the code', async () => {
       const input = `
       bool false
@@ -1108,6 +1130,34 @@ describe('Preprocessor', () => {
       const transferFromBase = ['transferFrom', 'DAI', 'OWNER', 'RECEIVER'];
 
       it('should return a simple number with 18 decimals', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 1 ETH';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferFromBase[4] = parseUnits('1', 18).toString();
+        expect(cmds).to.eql(transferFromBase);
+      });
+
+      it('should return a simple number with 9 decimals', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 1 GWEI';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferFromBase[4] = parseUnits('1', 9).toString();
+        expect(cmds).to.eql(transferFromBase);
+      });
+
+      it('should return a simple number with 20 decimals', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 1e2 ETH';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferFromBase[4] = parseUnits('1', 20).toString();
+        expect(cmds).to.eql(transferFromBase);
+      });
+
+      it('should return a simple number with 11 decimals', async () => {
+        const input = 'transferFrom DAI OWNER RECEIVER 1e2 GWEI';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferFromBase[4] = parseUnits('1', 11).toString();
+        expect(cmds).to.eql(transferFromBase);
+      });
+
+      it('should return a simple number with 18 decimals', async () => {
         const input = 'transferFrom DAI OWNER RECEIVER 1e18';
         const cmds = await app.callStatic.transform(ctxAddr, input);
         transferFromBase[4] = parseUnits('1', 18).toString();
@@ -1196,6 +1246,34 @@ describe('Preprocessor', () => {
 
     describe('transfer', () => {
       const transferBase = ['transfer', 'DAI', 'RECEIVER'];
+
+      it('should return a simple number with 18 decimals', async () => {
+        const input = 'transfer DAI RECEIVER 1 ETH';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferBase[3] = parseUnits('1', 18).toString();
+        expect(cmds).to.eql(transferBase);
+      });
+
+      it('should return a simple number with 9 decimals', async () => {
+        const input = 'transfer DAI RECEIVER 1 GWEI';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferBase[3] = parseUnits('1', 9).toString();
+        expect(cmds).to.eql(transferBase);
+      });
+
+      it('should return a simple number with 20 decimals', async () => {
+        const input = 'transfer DAI RECEIVER 1e2 ETH';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferBase[3] = parseUnits('1', 20).toString();
+        expect(cmds).to.eql(transferBase);
+      });
+
+      it('should return a simple number with 11 decimals', async () => {
+        const input = 'transfer DAI RECEIVER 1e2 GWEI';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        transferBase[3] = parseUnits('1', 11).toString();
+        expect(cmds).to.eql(transferBase);
+      });
 
       it('should return a simple number with 18 decimals', async () => {
         const input = 'transfer DAI RECEIVER 1e18';
