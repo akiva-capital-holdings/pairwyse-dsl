@@ -24,8 +24,7 @@ export const deployBaseMock = async () => {
   return [parserAddr, executorLibAddr, preprocessorAddr];
 };
 
-export const deployConditionalTxsMock = async (agreementAddress: string) => {
-  // TODO: Deploy only ConditionalTxs without libraries
+export const deployAgreementMock = async () => {
   const [
     comparisonOpcodesLibAddr,
     branchingOpcodesLibAddr,
@@ -33,19 +32,21 @@ export const deployConditionalTxsMock = async (agreementAddress: string) => {
     otherOpcodesLibAddr,
   ] = await deployOpcodeLibs();
 
-  const executorLibAddr = await deployExecutor();
-  const context = await (
-    await ethers.getContractFactory('ContextMock', {
-      libraries: {
-        ComparisonOpcodes: comparisonOpcodesLibAddr,
-        BranchingOpcodes: branchingOpcodesLibAddr,
-        LogicalOpcodes: logicalOpcodesLibAddr,
-        OtherOpcodes: otherOpcodesLibAddr,
-        Executor: executorLibAddr,
-      },
-    })
-  ).deploy();
-  await context.setAppAddress(agreementAddress);
+  const [parserAddr, executorLibAddr] = await deployBaseMock();
 
-  return context.address;
+  const MockContract = await ethers.getContractFactory('AgreementMock', {
+    libraries: {
+      ComparisonOpcodes: comparisonOpcodesLibAddr,
+      BranchingOpcodes: branchingOpcodesLibAddr,
+      LogicalOpcodes: logicalOpcodesLibAddr,
+      OtherOpcodes: otherOpcodesLibAddr,
+      Executor: executorLibAddr,
+    },
+  });
+  const mock = await MockContract.deploy(parserAddr);
+  await mock.deployed();
+
+  console.log(`\x1b[32m AgreementMock address \x1b[0m\x1b[32m ${mock.address}\x1b[0m`);
+
+  return mock.address;
 };

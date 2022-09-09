@@ -3,7 +3,6 @@ import { ethers } from 'hardhat';
 /* eslint-disable camelcase */
 import {
   Stack__factory,
-  StackValue__factory,
   Context,
   Stack,
   OtherOpcodesMock,
@@ -20,7 +19,6 @@ import {
 
 describe('Other opcodes', () => {
   let StackCont: Stack__factory;
-  let StackValue: StackValue__factory;
   /* eslint-enable camelcase */
   let app: OtherOpcodesMock;
   let clientApp: UnstructuredStorageMock;
@@ -32,7 +30,6 @@ describe('Other opcodes', () => {
 
   before(async () => {
     StackCont = await ethers.getContractFactory('Stack');
-    StackValue = await ethers.getContractFactory('StackValue');
 
     ctx = await (await ethers.getContractFactory('Context')).deploy();
     ctxAddr = ctx.address;
@@ -106,11 +103,7 @@ describe('Other opcodes', () => {
       // stack size is 1
       expect(await stack.length()).to.equal(1);
 
-      // get result
-      const svResultAddress = await stack.stack(0);
-      const svResult = StackValue.attach(svResultAddress);
-
-      expect(await svResult.getUint256()).to.equal(opBlockResult.blockNumber);
+      expect(await stack.seeLast()).to.equal(opBlockResult.blockNumber);
     });
 
     // Block timestamp doesn't work because Hardhat doesn't return timestamp
@@ -126,10 +119,6 @@ describe('Other opcodes', () => {
       // stack size is 1
       expect(await stack.length()).to.equal(1);
 
-      // get result
-      const svResultAddress = await stack.stack(0);
-      const svResult = StackValue.attach(svResultAddress);
-
       const lastBlockTimestamp = (
         await ethers.provider.getBlock(
           // eslint-disable-next-line no-underscore-dangle
@@ -137,10 +126,7 @@ describe('Other opcodes', () => {
         )
       ).timestamp;
 
-      expect((await svResult.getUint256()).toNumber()).to.be.approximately(
-        lastBlockTimestamp,
-        1000
-      );
+      expect((await stack.seeLast()).toNumber()).to.be.approximately(lastBlockTimestamp, 1000);
     });
 
     // Block TIME doesn't work because Hardhat doesn't return timestamp
@@ -157,10 +143,6 @@ describe('Other opcodes', () => {
       // stack size is 1
       expect(await stack.length()).to.equal(1);
 
-      // get result
-      const svResultAddress = await stack.stack(0);
-      const svResult = StackValue.attach(svResultAddress);
-
       const lastBlockTimestamp = (
         await ethers.provider.getBlock(
           // eslint-disable-next-line no-underscore-dangle
@@ -168,10 +150,7 @@ describe('Other opcodes', () => {
         )
       ).timestamp;
 
-      expect((await svResult.getUint256()).toNumber()).to.be.approximately(
-        lastBlockTimestamp,
-        1000
-      );
+      expect((await stack.seeLast()).toNumber()).to.be.approximately(lastBlockTimestamp, 1000);
     });
 
     it('blockChainId', async () => {
@@ -186,11 +165,7 @@ describe('Other opcodes', () => {
       // stack size is 1
       expect(await stack.length()).to.equal(1);
 
-      // get result
-      const svResultAddress = await stack.stack(0);
-      const svResult = StackValue.attach(svResultAddress);
-
-      expect(await svResult.getUint256()).to.equal(opBlockResult.chainId);
+      expect(await stack.seeLast()).to.equal(opBlockResult.chainId);
     });
   });
 
@@ -198,32 +173,32 @@ describe('Other opcodes', () => {
     const [first, second] = await ethers.getSigners();
 
     await app.opMsgSender(ctxAddr);
-    await checkStack(StackValue, stack, 1, 0);
+    await checkStack(stack, 1, 0);
     await stack.clear();
 
     await ctx.setMsgSender(first.address);
     await app.opMsgSender(ctxAddr);
-    await checkStack(StackValue, stack, 1, first.address);
+    await checkStack(stack, 1, first.address);
     await stack.clear();
 
     await ctx.setMsgSender(second.address);
     await app.opMsgSender(ctxAddr);
-    await checkStack(StackValue, stack, 1, second.address);
+    await checkStack(stack, 1, second.address);
   });
 
   it('opMsgValue', async () => {
     await app.opMsgValue(ctxAddr);
-    await checkStack(StackValue, stack, 1, 0);
+    await checkStack(stack, 1, 0);
     await stack.clear();
 
     await ctx.setMsgValue(10);
     await app.opMsgValue(ctxAddr);
-    await checkStack(StackValue, stack, 1, 10);
+    await checkStack(stack, 1, 10);
     await stack.clear();
 
     await ctx.setMsgValue(25);
     await app.opMsgValue(ctxAddr);
-    await checkStack(StackValue, stack, 1, 25);
+    await checkStack(stack, 1, 25);
   });
 
   describe('opSetLocalBool', async () => {
@@ -233,7 +208,7 @@ describe('Other opcodes', () => {
     afterEach(async () => {
       await ctx.setPc(0);
       await stack.clear();
-      await checkStackTailv2(StackValue, stack, []);
+      await checkStackTailv2(stack, []);
     });
 
     it('error: opSetLocal call not success', async () => {
@@ -262,17 +237,11 @@ describe('Other opcodes', () => {
     afterEach(async () => {
       await ctx.setPc(0);
       await stack.clear();
-      await checkStackTailv2(StackValue, stack, []);
-    });
-
-    it('error: bad type in the stack', async () => {
-      await pushToStack(StackValue, ctx, StackCont, ['15']);
-      await ctx.setProgram(`0x${bytesVarName}`);
-      await expect(app.opSetUint256(ctxAddr)).to.be.revertedWith('OP2');
+      await checkStackTailv2(stack, []);
     });
 
     it('error: opSetLocal call not success', async () => {
-      await pushToStack(StackValue, ctx, StackCont, [15]);
+      await pushToStack(ctx, StackCont, [15]);
       await ctx.setProgram(`0x${bytesVarName}`);
 
       const badContract = await (await ethers.getContractFactory('StorageWithRevert')).deploy();
@@ -282,14 +251,14 @@ describe('Other opcodes', () => {
     });
 
     it('success: regular number', async () => {
-      await pushToStack(StackValue, ctx, StackCont, [15]);
+      await pushToStack(ctx, StackCont, [15]);
       await ctx.setProgram(`0x${bytesVarName}`);
       await app.opSetUint256(ctxAddr);
       expect(await clientApp.getStorageUint256(bytes32VarName)).to.equal(15);
     });
 
     it('success: big number', async () => {
-      await pushToStack(StackValue, ctx, StackCont, [ethers.utils.parseEther('100')]);
+      await pushToStack(ctx, StackCont, [ethers.utils.parseEther('100')]);
       await ctx.setProgram(`0x${bytesVarName}`);
       await app.opSetUint256(ctxAddr);
       expect(await clientApp.getStorageUint256(bytes32VarName)).to.equal(
@@ -308,7 +277,7 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${number}`);
 
     await app.opLoadLocalUint256(ctxAddr);
-    await checkStackTailv2(StackValue, stack, [testValue]);
+    await checkStackTailv2(stack, [testValue]);
   });
 
   it('opLoadLocalBytes32', async () => {
@@ -321,7 +290,7 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${bytes}`);
 
     await app.opLoadLocalBytes32(ctxAddr);
-    await checkStackTailv2(StackValue, stack, [testValue]);
+    await checkStackTailv2(stack, [testValue]);
   });
 
   it('opLoadLocalBool', async () => {
@@ -334,7 +303,7 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${bool}`);
 
     await app.opLoadLocalBool(ctxAddr);
-    await checkStackTailv2(StackValue, stack, [+testValue]);
+    await checkStackTailv2(stack, [+testValue]);
   });
 
   it('opLoadLocalAddress', async () => {
@@ -348,7 +317,7 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${address}`);
 
     await app.opLoadLocalAddress(ctxAddr);
-    await checkStackTailv2(StackValue, stack, [testValue]);
+    await checkStackTailv2(stack, [testValue]);
   });
 
   it('opLoadRemoteUint256', async () => {
@@ -361,7 +330,7 @@ describe('Other opcodes', () => {
 
     await ctx.setProgram(`0x${number}${clientApp.address.substring(2)}`);
     await app.opLoadRemoteUint256(ctxAddr);
-    await checkStackTailv2(StackValue, stack, [testValue]);
+    await checkStackTailv2(stack, [testValue]);
   });
 
   it('opLoadRemoteBytes32', async () => {
@@ -373,7 +342,7 @@ describe('Other opcodes', () => {
     const bytes = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${bytes}${clientApp.address.substring(2)}`);
     await app.opLoadRemoteBytes32(ctxAddr);
-    await checkStackTailv2(StackValue, stack, [testValue]);
+    await checkStackTailv2(stack, [testValue]);
   });
 
   it('opLoadRemoteBool', async () => {
@@ -385,7 +354,7 @@ describe('Other opcodes', () => {
     const bool = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${bool}${clientApp.address.substring(2)}`);
     await app.opLoadRemoteBool(ctxAddr);
-    await checkStackTailv2(StackValue, stack, [+testValue]);
+    await checkStackTailv2(stack, [+testValue]);
   });
 
   it('opLoadRemoteAddress', async () => {
@@ -398,19 +367,19 @@ describe('Other opcodes', () => {
     const addr = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${addr}${clientApp.address.substring(2)}`);
     await app.opLoadRemoteAddress(ctxAddr);
-    await checkStackTailv2(StackValue, stack, [testValue]);
+    await checkStackTailv2(stack, [testValue]);
   });
 
   it('opBool', async () => {
     await ctx.setProgram('0x01');
     await app.opBool(ctxAddr);
-    await checkStackTailv2(StackValue, stack, ['0x01']);
+    await checkStackTailv2(stack, ['0x01']);
   });
 
   it('opUint256', async () => {
     await ctx.setProgram('0x0000000000000000000000000000000000000000000000000000000000000001');
     await app.opUint256(ctxAddr);
-    await checkStackTailv2(StackValue, stack, ['1']);
+    await checkStackTailv2(stack, ['1']);
   });
 
   it('opSendEth', async () => {
@@ -437,7 +406,7 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${address}${fundAmountHex}`);
 
     await expect(() => app.opSendEth(ctxAddr)).to.changeEtherBalance(receiver, fundAmountUint);
-    await checkStackTailv2(StackValue, stack, ['1']);
+    await checkStackTailv2(stack, ['1']);
   });
 
   it('opTransfer', async () => {
@@ -456,7 +425,7 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${tokenAddress}${receiverAddress}${uint256StrToHex(testAmount)}`);
 
     await app.opTransfer(ctxAddr);
-    await checkStackTailv2(StackValue, stack, ['1']);
+    await checkStackTailv2(stack, ['1']);
 
     const balanceOfReceiver = await testERC20.balanceOf(receiver.address);
 
@@ -482,7 +451,7 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${tokenAddress}${receiverAddress}${amount}`);
 
     await app.opTransferVar(ctxAddr);
-    await checkStackTailv2(StackValue, stack, ['1']);
+    await checkStackTailv2(stack, ['1']);
 
     const balanceOfReceiver = await testERC20.balanceOf(receiver.address);
     expect(balanceOfReceiver).to.be.equal(testAmount);
@@ -512,7 +481,7 @@ describe('Other opcodes', () => {
     );
 
     await app.opTransferFrom(ctxAddr);
-    await checkStackTailv2(StackValue, stack, ['1']);
+    await checkStackTailv2(stack, ['1']);
 
     const balanceOfReceiver = await testERC20.balanceOf(receiver.address);
     expect(balanceOfReceiver).to.be.equal(testAmount);
@@ -542,7 +511,7 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${tokenAddress}${senderAddress}${receiverAddress}${amount}`);
 
     await app.opTransferFromVar(ctxAddr);
-    await checkStackTailv2(StackValue, stack, ['1']);
+    await checkStackTailv2(stack, ['1']);
 
     const balanceOfReceiver = await testERC20.balanceOf(receiver.address);
     expect(balanceOfReceiver).to.be.equal(testAmount);
@@ -566,7 +535,7 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${tokenAddress}${receiverAddress}`);
 
     await app.opBalanceOf(ctxAddr);
-    await checkStackTailv2(StackValue, stack, [testAmount]);
+    await checkStackTailv2(stack, [testAmount]);
     await testERC20.burn(receiver.address, testAmount);
   });
 
@@ -615,7 +584,7 @@ describe('Other opcodes', () => {
     await app.setStorageBytes32(bytes32TestValueName, testValue);
     await app.opLoadLocal(ctxAddr, testSignature);
 
-    checkStackTailv2(StackValue, stack, [testValue]);
+    checkStackTailv2(stack, [testValue]);
   });
 
   it('opLoadRemote', async () => {
@@ -628,6 +597,6 @@ describe('Other opcodes', () => {
     const bytes = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${bytes}${clientApp.address.substring(2)}`);
     await app.opLoadRemote(ctxAddr, testSignature);
-    await checkStackTailv2(StackValue, stack, [testValue]);
+    await checkStackTailv2(stack, [testValue]);
   });
 });

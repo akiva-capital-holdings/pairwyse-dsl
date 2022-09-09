@@ -1,18 +1,14 @@
 import { ethers } from 'hardhat';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
-import { App, Context, Stack, StackValue__factory } from '../../../typechain-types';
-import { checkStack } from '../../utils/utils';
+import { App, Context, Stack } from '../../../typechain-types';
+import { checkStackTailv2 } from '../../utils/utils';
 
 describe('Boolean Algebra', () => {
   let stack: Stack;
   let ctx: Context;
   let app: App;
-  let StackValue: StackValue__factory;
 
   before(async () => {
-    // Create StackValue Factory instance
-    StackValue = await ethers.getContractFactory('StackValue');
-
     // Deploy libraries
     const [
       comparisonOpcodesLibAddr,
@@ -51,7 +47,7 @@ describe('Boolean Algebra', () => {
           `
       );
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     }
 
     describe('A & B <=> B & A', async () => {
@@ -84,7 +80,7 @@ describe('Boolean Algebra', () => {
           `
       );
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     }
 
     describe('(A & B) & C <=> A & (B & C)', async () => {
@@ -136,7 +132,7 @@ describe('Boolean Algebra', () => {
       );
       await app.execute();
 
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     }
 
     describe('A & (B | C) <=> (A & B) | (A & C)', async () => {
@@ -181,7 +177,7 @@ describe('Boolean Algebra', () => {
 
       await app.parse(`! (bool ${A} ${op1} bool ${B}) == ! bool ${A} ${op2} ! bool ${B}`);
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     }
 
     describe('!(A | B) <=> (!A) & (!B)', async () => {
@@ -203,13 +199,13 @@ describe('Boolean Algebra', () => {
     it('!!F == F', async () => {
       await app.parse('! (! bool false) == bool false');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
 
     it('!!T == T', async () => {
       await app.parse('! (! bool true) == bool true');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
   });
 
@@ -218,7 +214,7 @@ describe('Boolean Algebra', () => {
       async function testCase(A: 'true' | 'false') {
         await app.parse(`(bool ${A} or bool ${A}) == bool ${A}`);
         await app.execute();
-        await checkStack(StackValue, stack, 1, 1);
+        await checkStackTailv2(stack, [1]);
       }
       it('(T or T) == T', async () => testCase('true'));
       it('(F or F) == F', async () => testCase('false'));
@@ -228,7 +224,7 @@ describe('Boolean Algebra', () => {
       async function testCase(A: 'true' | 'false') {
         await app.parse(`(bool ${A} or bool true) == bool true`);
         await app.execute();
-        await checkStack(StackValue, stack, 1, 1);
+        await checkStackTailv2(stack, [1]);
       }
       it('(T or 1) == 1', async () => testCase('true'));
       it('(F or 1) == 1', async () => testCase('false'));
@@ -238,7 +234,7 @@ describe('Boolean Algebra', () => {
       async function testCase(A: 'true' | 'false') {
         await app.parse(`(bool ${A} and bool ${A}) == bool ${A}`);
         await app.execute();
-        await checkStack(StackValue, stack, 1, 1);
+        await checkStackTailv2(stack, [1]);
       }
       it('(T and T) == T', async () => testCase('true'));
       it('(F and F) == F', async () => testCase('false'));
@@ -248,7 +244,7 @@ describe('Boolean Algebra', () => {
       async function testCase(A: 'true' | 'false') {
         await app.parse(`(bool ${A} and bool true) == bool ${A}`);
         await app.execute();
-        await checkStack(StackValue, stack, 1, 1);
+        await checkStackTailv2(stack, [1]);
       }
       it('(T and 1) == T', async () => testCase('true'));
       it('(F and 1) == F', async () => testCase('false'));
@@ -258,7 +254,7 @@ describe('Boolean Algebra', () => {
       async function testCase(A: 'true' | 'false') {
         await app.parse(`(bool ${A} or ! bool ${A}) == bool true`);
         await app.execute();
-        await checkStack(StackValue, stack, 1, 1);
+        await checkStackTailv2(stack, [1]);
       }
       it('(T or !T) == 1', async () => testCase('true'));
       it('(F or !F) == 1', async () => testCase('false'));
@@ -268,7 +264,7 @@ describe('Boolean Algebra', () => {
       async function testCase(A: 'true' | 'false') {
         await app.parse(`(bool ${A} or bool false) == bool ${A}`);
         await app.execute();
-        await checkStack(StackValue, stack, 1, 1);
+        await checkStackTailv2(stack, [1]);
       }
       it('(T or 0) == T', async () => testCase('true'));
       it('(F or 0) == F', async () => testCase('false'));
@@ -278,7 +274,7 @@ describe('Boolean Algebra', () => {
       async function testCase(A: 'true' | 'false') {
         await app.parse(`(bool ${A} and ! bool ${A}) == bool false`);
         await app.execute();
-        await checkStack(StackValue, stack, 1, 1);
+        await checkStackTailv2(stack, [1]);
       }
       it('(T and !T) == 0', async () => testCase('true'));
       it('(F and !F) == 0', async () => testCase('false'));

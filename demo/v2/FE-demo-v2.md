@@ -21,9 +21,8 @@ Node
 4. `git checkout f6ca4e7f580bc97bf07f6d3dbc9fd3c31f20de96`
 5. `yarn`
 6. In one terminal window: `npx hardhat node`
-7. In another terminal window: `npx hardhat run --network localhost scripts/deploy.agreementFactory.ts`. Remember AgreementFactory address
-8. In another terminal window: `npx hardhat run --network localhost scripts/deploy.parser.ts`. Remember Parser address
-9. In another terminal window: `npx hardhat run --network localhost scripts/deploy.contextFactory.ts`. Remember ContextFactory address
+7. In another terminal window: `npx hardhat run --network localhost scripts/deploy.parser.ts`. Remember Parser address
+8. In another terminal window: `npx hardhat run --network localhost scripts/deploy.contextFactory.ts`. Remember ContextFactory address
 
 ### Setup FE
 
@@ -33,7 +32,6 @@ Node
 4. `git checkout f57151d8bd5476c75a0dc920f2edafedcada7073`
 5. `yarn`
 6. Modify `.env.locale`:
-   - Set `REACT_APP_AGREEMENT_FACTORY` to AgreementFactory address that you've remembered
    - Set `REACT_APP_PARSER` to Parser address that you've remembered
    - Set `REACT_APP_CONTEXT_FACTORY` to ContextFactory address that you've remembered
 7. `yarn start:locale`

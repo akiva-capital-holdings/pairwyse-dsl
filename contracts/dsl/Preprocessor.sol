@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { IContext } from './interfaces/IContext.sol';
 import { IPreprocessor } from './interfaces/IPreprocessor.sol';
-import { Stack, StackValue } from './helpers/Stack.sol';
+import { StringStack } from './helpers/StringStack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 import { ErrorsPreprocessor } from './libs/Errors.sol';
 
@@ -30,6 +30,13 @@ contract Preprocessor is IPreprocessor {
     // Note: temporary variable
     string[] internal result; // stores the list of commands after infixToPostfix transformation
 
+    // Stack with elements of type string that is used to temporarily store data of `infixToPostfix` function
+    StringStack internal strStack;
+
+    constructor() {
+        strStack = new StringStack();
+    }
+
     /**
      * @dev The main function that transforms the user's DSL code string to the list of commands.
      *
@@ -54,7 +61,7 @@ contract Preprocessor is IPreprocessor {
         // TODO: create temporary stack instance only once (in constructor)
         Stack stack = new Stack();
         string[] memory code = split(_program);
-        return infixToPostfix(_ctxAddr, code, stack);
+        return infixToPostfix(_ctxAddr, code, strStack);
     }
 
     /**
@@ -186,15 +193,14 @@ contract Preprocessor is IPreprocessor {
      *
      * @param _ctxAddr is a context contract address
      * @param _code is a DSL command list
-     * @return _stack uses for getting and storing temporary data to
+     * @return _stack uses for getting and storing temporary string data
      * rebuild the list of commands
      */
     function infixToPostfix(
         address _ctxAddr,
         string[] memory _code,
-        Stack _stack
+        StringStack _stack
     ) public returns (string[] memory) {
-        delete result;
         bool isFunc;
         bool isName;
         bool loadRemoteFlag;
@@ -204,6 +210,11 @@ contract Preprocessor is IPreprocessor {
         string memory chunk;
         string memory name;
 
+        // Cleanup
+        delete result;
+        _stack.clear();
+
+        // Infix to postfix
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
             currencyMultiplier = 0;
@@ -226,16 +237,16 @@ contract Preprocessor is IPreprocessor {
                 while (
                     _stack.length() > 0 &&
                     IContext(_ctxAddr).opsPriors(chunk) <=
-                    IContext(_ctxAddr).opsPriors(_stack.seeLast().getString())
+                    IContext(_ctxAddr).opsPriors(_stack.seeLast())
                 ) {
-                    result.push(_stack.pop().getString());
+                    result.push(_stack.pop());
                 }
-                _pushStringToStack(_stack, chunk);
+                _stack.push(chunk);
             } else if (chunk.equal('(')) {
-                _pushStringToStack(_stack, chunk);
+                _stack.push(chunk);
             } else if (chunk.equal(')')) {
-                while (!_stack.seeLast().getString().equal('(')) {
-                    result.push(_stack.pop().getString());
+                while (!_stack.seeLast().equal('(')) {
+                    result.push(_stack.pop());
                 }
                 _stack.pop(); // remove '(' that is left
             } else if (!loadRemoteFlag && chunk.mayBeNumber() && !isFunc && !directUseUint256) {
@@ -276,7 +287,7 @@ contract Preprocessor is IPreprocessor {
         }
 
         while (_stack.length() > 0) {
-            result.push(_stack.pop().getString());
+            result.push(_stack.pop());
         }
 
         return result;
@@ -307,6 +318,7 @@ contract Preprocessor is IPreprocessor {
      * @param _currencyMultiplier provided number of the multiplier
      * @return updatedChunk amount in Wei of provided _chunk value
      */
+     
     function _parseNumber(string memory _chunk, uint256 _currencyMultiplier)
         internal
         pure
@@ -544,12 +556,6 @@ contract Preprocessor is IPreprocessor {
     function _pushFuncName(string memory _name) internal {
         result.push('func');
         result.push(_name);
-    }
-
-    function _pushStringToStack(Stack stack_, string memory value) internal {
-        StackValue stackValue = new StackValue();
-        stackValue.setString(value);
-        stack_.push(stackValue);
     }
 
     function _isOperator(address _ctxAddr, string memory op) internal view returns (bool) {

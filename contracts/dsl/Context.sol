@@ -21,6 +21,9 @@ import { ErrorsContext } from './libs/Errors.sol';
  * basic working opcodes
  */
 contract Context is IContext {
+    // The address that is used to symbolyze any signer inside Conditional Transaction
+    address public constant anyone = 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF;
+
     // stack is used by Opcode libraries like `libs/opcodes/*`
     // to store and analyze values and removing after usage
     Stack public stack;
