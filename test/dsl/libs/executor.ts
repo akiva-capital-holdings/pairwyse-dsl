@@ -3,22 +3,18 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
-import { Context, StackValue__factory, Stack, ExecutorMock } from '../../../typechain-types';
-import { checkStack, checkStackTail, hex4Bytes } from '../../utils/utils';
+import { Context, Stack, ExecutorMock } from '../../../typechain-types';
+import { checkStack, checkStackTailv2, hex4Bytes } from '../../utils/utils';
 
 describe('Executor', () => {
   let ctx: Context;
   let ctxAddr: string;
   let stack: Stack;
   let app: ExecutorMock;
-  let StackValue: StackValue__factory;
   let sender: SignerWithAddress;
 
   before(async () => {
     [sender] = await ethers.getSigners();
-
-    // Create StackValue Factory instance
-    StackValue = await ethers.getContractFactory('StackValue');
 
     // Deploy libraries
     const [
@@ -92,7 +88,7 @@ describe('Executor', () => {
             '24' // action: end
         );
         await app.execute(ctxAddr);
-        await checkStackTail(StackValue, stack, 0, []);
+        await checkStackTailv2(stack, []);
       });
 
       it('if condition is true', async () => {
@@ -112,7 +108,7 @@ describe('Executor', () => {
             '24' // action: end
         );
         await app.execute(ctxAddr);
-        await checkStackTail(StackValue, stack, 3, [1, 2, 4]);
+        await checkStackTailv2(stack, [1, 2, 4]);
       });
 
       it('if condition is false', async () => {
@@ -132,7 +128,7 @@ describe('Executor', () => {
             '24' // action: end
         );
         await app.execute(ctxAddr);
-        await checkStackTail(StackValue, stack, 0, []);
+        await checkStackTailv2(stack, []);
       });
     });
 
@@ -150,7 +146,7 @@ describe('Executor', () => {
 
         await ctx.setProgram(programTrue);
         await app.execute(ctxAddr);
-        await checkStackTail(StackValue, stack, 2, [2, 3]);
+        await checkStackTailv2(stack, [2, 3]);
       });
 
       it('if condition is true', async () => {
@@ -171,7 +167,7 @@ describe('Executor', () => {
 
         await ctx.setProgram(programTrue);
         await app.execute(ctxAddr);
-        await checkStackTail(StackValue, stack, 2, [1, 3]);
+        await checkStackTailv2(stack, [1, 3]);
       });
 
       it('if condition is true (#2)', async () => {
@@ -196,7 +192,7 @@ describe('Executor', () => {
 
         await ctx.setProgram(programTrue);
         await app.execute(ctxAddr);
-        await checkStackTail(StackValue, stack, 3, [1, 2, 4]);
+        await checkStackTailv2(stack, [1, 2, 4]);
       });
 
       it('if condition is false', async () => {
@@ -207,7 +203,7 @@ describe('Executor', () => {
 
         await ctx.setProgram(programFalse);
         await app.execute(ctxAddr);
-        await checkStackTail(StackValue, stack, 2, [2, 3]);
+        await checkStackTailv2(stack, [2, 3]);
       });
 
       it('if condition is false (#2)', async () => {
@@ -232,7 +228,7 @@ describe('Executor', () => {
 
         await ctx.setProgram(programTrue);
         await app.execute(ctxAddr);
-        await checkStackTail(StackValue, stack, 2, [3, 4]);
+        await checkStackTailv2(stack, [3, 4]);
       });
     });
 
@@ -245,7 +241,7 @@ describe('Executor', () => {
        */
       await ctx.setProgram('0x15');
       const evalTx = await app.execute(ctxAddr);
-      await checkStack(StackValue, stack, 1, evalTx.blockNumber || 0);
+      await checkStack(stack, 1, evalTx.blockNumber || 0);
     });
 
     it('blockNumber < blockTimestamp', async () => {
@@ -259,7 +255,7 @@ describe('Executor', () => {
        */
       await ctx.setProgram('0x151603');
       await app.execute(ctxAddr);
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStack(stack, 1, 1);
     });
 
     it('blockNumber < TIME', async () => {
@@ -274,7 +270,7 @@ describe('Executor', () => {
        */
       await ctx.setProgram('0x151603');
       await app.execute(ctxAddr);
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStack(stack, 1, 1);
     });
 
     describe('Load local', () => {
@@ -300,7 +296,7 @@ describe('Executor', () => {
           const number2 = bytes32Number2.substring(2, 10);
           await ctx.setProgram(`0x1b01${number}1b01${number2}04`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 1);
+          await checkStack(stack, 1, 1);
         });
 
         it('5 <= 3', async () => {
@@ -324,7 +320,7 @@ describe('Executor', () => {
           const number2 = bytes32Number2.substring(2, 10);
           await ctx.setProgram(`0x1b01${number}1b01${number2}06`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 0);
+          await checkStack(stack, 1, 0);
         });
 
         it('12 = 12', async () => {
@@ -348,7 +344,7 @@ describe('Executor', () => {
           const number2 = bytes32Number2.substring(2, 10);
           await ctx.setProgram(`0x1b01${number}1b01${number2}01`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 1);
+          await checkStack(stack, 1, 1);
         });
       });
 
@@ -380,7 +376,7 @@ describe('Executor', () => {
           const bytes2 = bytes32Bytes2.substring(2, 10);
           await ctx.setProgram(`0x1b04${bytes}1b04${bytes2}01`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 1);
+          await checkStack(stack, 1, 1);
         });
 
         it('bytes32 are not equal', async () => {
@@ -410,7 +406,7 @@ describe('Executor', () => {
           const bytes2 = bytes32Bytes2.substring(2, 10);
           await ctx.setProgram(`0x1b04${bytes}1b04${bytes2}01`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 0);
+          await checkStack(stack, 1, 0);
         });
       });
 
@@ -436,7 +432,7 @@ describe('Executor', () => {
           const bytes2 = bytes32Bytes2.substring(2, 10);
           await ctx.setProgram(`0x1b03${bytes}1b03${bytes2}01`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 1);
+          await checkStack(stack, 1, 1);
         });
 
         it('addresses are not equal', async () => {
@@ -460,7 +456,7 @@ describe('Executor', () => {
           const bytes2 = bytes32Bytes2.substring(2, 10);
           await ctx.setProgram(`0x1b03${bytes}1b03${bytes2}01`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 0);
+          await checkStack(stack, 1, 0);
         });
       });
 
@@ -486,7 +482,7 @@ describe('Executor', () => {
           const bytes2 = bytes32Bytes2.substring(2, 10);
           await ctx.setProgram(`0x1b02${bytes}1b02${bytes2}01`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 1);
+          await checkStack(stack, 1, 1);
         });
 
         it('true && true', async () => {
@@ -510,7 +506,7 @@ describe('Executor', () => {
           const bytes2 = bytes32Bytes2.substring(2, 10);
           await ctx.setProgram(`0x1b02${bytes}1b02${bytes2}12`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 1);
+          await checkStack(stack, 1, 1);
         });
 
         it('true == false', async () => {
@@ -534,7 +530,7 @@ describe('Executor', () => {
           const bytes2 = bytes32Bytes2.substring(2, 10);
           await ctx.setProgram(`0x1b02${bytes}1b02${bytes2}01`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 0);
+          await checkStack(stack, 1, 0);
         });
       });
     });
@@ -568,7 +564,7 @@ describe('Executor', () => {
           const number2 = bytes32Number2.substring(2, 10);
           await ctx.setProgram(`0x1c01${number}${appAddr}1c01${number2}${appAddr}04`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 1);
+          await checkStack(stack, 1, 1);
         });
 
         it('5 <= 3', async () => {
@@ -592,7 +588,7 @@ describe('Executor', () => {
           const number2 = bytes32Number2.substring(2, 10);
           await ctx.setProgram(`0x1c01${number}${appAddr}1c01${number2}${appAddr}06`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 0);
+          await checkStack(stack, 1, 0);
         });
 
         it('12 = 12', async () => {
@@ -616,7 +612,7 @@ describe('Executor', () => {
           const number2 = bytes32Number2.substring(2, 10);
           await ctx.setProgram(`0x1c01${number}${appAddr}1c01${number2}${appAddr}01`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 1);
+          await checkStack(stack, 1, 1);
         });
       });
 
@@ -642,7 +638,7 @@ describe('Executor', () => {
           const addr2 = addrBytes2.substring(2, 10);
           await ctx.setProgram(`0x1c03${addr}${appAddr}1c03${addr2}${appAddr}01`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 1);
+          await checkStack(stack, 1, 1);
         });
 
         it('different addresses are not equal', async () => {
@@ -666,7 +662,7 @@ describe('Executor', () => {
           const addr2 = addrBytes2.substring(2, 10);
           await ctx.setProgram(`0x1c03${addr}${appAddr}1c03${addr2}${appAddr}01`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 0);
+          await checkStack(stack, 1, 0);
         });
       });
 
@@ -698,7 +694,7 @@ describe('Executor', () => {
           const bytes2 = bytes32Bytes2.substring(2, 10);
           await ctx.setProgram(`0x1c04${bytes}${appAddr}1c04${bytes2}${appAddr}01`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 1);
+          await checkStack(stack, 1, 1);
         });
 
         it('bytes32 are not equal', async () => {
@@ -728,7 +724,7 @@ describe('Executor', () => {
           const bytes2 = bytes32Bytes2.substring(2, 10);
           await ctx.setProgram(`0x1c04${bytes}${appAddr}1c04${bytes2}${appAddr}01`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 0);
+          await checkStack(stack, 1, 0);
         });
       });
 
@@ -754,7 +750,7 @@ describe('Executor', () => {
           const bool2 = boolBytes2.substring(2, 10);
           await ctx.setProgram(`0x1c02${bool}${appAddr}1c02${bool2}${appAddr}01`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 1);
+          await checkStack(stack, 1, 1);
         });
 
         it('true != true', async () => {
@@ -778,7 +774,7 @@ describe('Executor', () => {
           const bool2 = boolBytes2.substring(2, 10);
           await ctx.setProgram(`0x1c02${bool}${appAddr}1c02${bool2}${appAddr}14`);
           await app.execute(ctxAddr);
-          await checkStack(StackValue, stack, 1, 0);
+          await checkStack(stack, 1, 0);
         });
       });
     });

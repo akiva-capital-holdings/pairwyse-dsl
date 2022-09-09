@@ -1,8 +1,8 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { parseEther, parseUnits } from 'ethers/lib/utils';
-import { App, Context, Stack, StackValue__factory } from '../../../typechain-types';
-import { checkStack, checkStackTail, checkStackTailv2, hex4Bytes } from '../../utils/utils';
+import { App, Context, Stack } from '../../../typechain-types';
+import { checkStackTailv2, hex4Bytes } from '../../utils/utils';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
 
 describe('DSL: basic', () => {
@@ -10,7 +10,6 @@ describe('DSL: basic', () => {
   let ctx: Context;
   let app: App;
   let appAddrHex: string;
-  let StackValue: StackValue__factory;
   let NEXT_MONTH: number;
   let PREV_MONTH: number;
   let lastBlockTimestamp: number;
@@ -25,9 +24,6 @@ describe('DSL: basic', () => {
 
     NEXT_MONTH = lastBlockTimestamp + 60 * 60 * 24 * 30;
     PREV_MONTH = lastBlockTimestamp - 60 * 60 * 24 * 30;
-
-    // Create StackValue Factory instance
-    StackValue = await ethers.getContractFactory('StackValue');
 
     // Deploy libraries
     const [
@@ -63,172 +59,172 @@ describe('DSL: basic', () => {
   it('0 + 0', async () => {
     await app.parse('0 + 0');
     await app.execute();
-    await checkStackTailv2(StackValue, stack, [0]);
+    await checkStackTailv2(stack, [0]);
   });
 
   it('0 - 0', async () => {
     await app.parse('0 - 0');
     await app.execute();
-    await checkStackTailv2(StackValue, stack, [0]);
+    await checkStackTailv2(stack, [0]);
   });
 
   it('0 + 1', async () => {
     await app.parse('0 + 1');
     await app.execute();
-    await checkStackTailv2(StackValue, stack, [1]);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('1 - 0', async () => {
     await app.parse('1 - 0');
     await app.execute();
-    await checkStackTailv2(StackValue, stack, [1]);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('2 + 3', async () => {
     await app.parse('2 + 3');
     await app.execute();
-    await checkStackTailv2(StackValue, stack, [5]);
+    await checkStackTailv2(stack, [5]);
   });
 
   it('7 - 3', async () => {
     await app.parse('7 - 3');
     await app.execute();
-    await checkStackTailv2(StackValue, stack, [4]);
+    await checkStackTailv2(stack, [4]);
   });
 
   it('2 * 3', async () => {
     await app.parse('2 * 3');
     await app.execute();
-    await checkStackTailv2(StackValue, stack, [6]);
+    await checkStackTailv2(stack, [6]);
   });
 
   it('2 / 3', async () => {
     await app.parse('2 / 3');
     await app.execute();
-    await checkStackTailv2(StackValue, stack, [0]);
+    await checkStackTailv2(stack, [0]);
   });
 
   it('20 / 3', async () => {
     await app.parse('20 / 3');
     await app.execute();
-    await checkStackTailv2(StackValue, stack, [6]);
+    await checkStackTailv2(stack, [6]);
   });
 
   it('21 / 3', async () => {
     await app.parse('21 / 3');
     await app.execute();
-    await checkStackTailv2(StackValue, stack, [7]);
+    await checkStackTailv2(stack, [7]);
   });
 
   it('1122334433', async () => {
     await app.parse('1122334433');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 1122334433);
+    await checkStackTailv2(stack, [1122334433]);
   });
 
   it('2 3 -> 2 3', async () => {
     await app.parse('2 3');
     await app.execute();
-    await checkStackTail(StackValue, stack, 2, [2, 3]);
+    await checkStackTailv2(stack, [2, 3]);
   });
 
   it('5 == 5', async () => {
     await app.parse('5 == 5');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('5 != 6', async () => {
     await app.parse('5 != 6');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('5 < 6', async () => {
     await app.parse('5 < 6');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('5 < 5 = false', async () => {
     await app.parse('5 < 5');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 0);
+    await checkStackTailv2(stack, [0]);
   });
 
   it('6 > 5', async () => {
     await app.parse('6 > 5');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('5 > 5 = false', async () => {
     await app.parse('5 > 5');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 0);
+    await checkStackTailv2(stack, [0]);
   });
 
   it('5 <= 5', async () => {
     await app.parse('5 <= 5');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('5 <= 6', async () => {
     await app.parse('5 <= 6');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('5 >= 5', async () => {
     await app.parse('5 >= 5');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('6 >= 5', async () => {
     await app.parse('6 >= 5');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('5 6 swap -> 6 5', async () => {
     await app.parse('5 swap 6');
     await app.execute();
-    await checkStackTail(StackValue, stack, 2, [6, 5]);
+    await checkStackTailv2(stack, [6, 5]);
   });
 
   describe('Logical AND', async () => {
     it('1 && 0 = false', async () => {
       await app.parse('1 and 0');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 0);
+      await checkStackTailv2(stack, [0]);
     });
     it('1 && 1 = true', async () => {
       await app.parse('1 and 1');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
     it('0 && 1 = false', async () => {
       await app.parse('0 and 1');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 0);
+      await checkStackTailv2(stack, [0]);
     });
     it('0 && 0 = false', async () => {
       await app.parse('0 and 0');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 0);
+      await checkStackTailv2(stack, [0]);
     });
     it('3 && 3 = false', async () => {
       await app.parse('3 and 3');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
     it('(((1 && 5) && 7) && 0) = 0', async () => {
       await app.parse('1 and 5 and 7 and 0');
       await app.execute();
 
-      await checkStack(StackValue, stack, 1, 0);
+      await checkStackTailv2(stack, [0]);
     });
   });
 
@@ -236,33 +232,33 @@ describe('DSL: basic', () => {
     it('1 || 0 = true', async () => {
       await app.parse('1 or 0');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
     it('1 || 1 = true', async () => {
       await app.parse('1 or 1');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
     it('0 || 5 = true', async () => {
       await app.parse('0 or 5');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
     it('0 || 0 = false', async () => {
       await app.parse('0 or 0');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 0);
+      await checkStackTailv2(stack, [0]);
     });
     it('3 || 3 = false', async () => {
       await app.parse('3 or 3');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
     it('0 || 0 || 3', async () => {
       await app.parse('0 or 0 or 3');
       await app.execute();
 
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
   });
 
@@ -270,37 +266,37 @@ describe('DSL: basic', () => {
     it('0 xor 0 = false', async () => {
       await app.parse('0 xor 0');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 0);
+      await checkStackTailv2(stack, [0]);
     });
     it('1 xor 0 = true', async () => {
       await app.parse('1 xor 0');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
     it('0 xor 1 = true', async () => {
       await app.parse('0 xor 1');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
     it('1 xor 1 = false', async () => {
       await app.parse('1 xor 1');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 0);
+      await checkStackTailv2(stack, [0]);
     });
     it('5 xor 0 = true', async () => {
       await app.parse('5 xor 0');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
     it('0 xor 5 = true', async () => {
       await app.parse('0 xor 5');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
     it('5 xor 6 = false', async () => {
       await app.parse('5 xor 6');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 0);
+      await checkStackTailv2(stack, [0]);
     });
   });
 
@@ -308,55 +304,55 @@ describe('DSL: basic', () => {
     it('NOT 0 = 1', async () => {
       await app.parse('! 0');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
     it('NOT 1 = 0', async () => {
       await app.parse('! 1');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 0);
+      await checkStackTailv2(stack, [0]);
     });
     it('NOT 3 = 0', async () => {
       await app.parse('! 3');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 0);
+      await checkStackTailv2(stack, [0]);
     });
 
     it('NOT NOT 3 = 1', async () => {
       await app.parse('! (! 3)');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
 
     it('NOT NOT NOT 3 = 0', async () => {
       await app.parse('! (! (! 3))');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 0);
+      await checkStackTailv2(stack, [0]);
     });
   });
 
   it('push false', async () => {
     await app.parse('bool false');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 0);
+    await checkStackTailv2(stack, [0]);
   });
 
   it('push true', async () => {
     await app.parse('bool true');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('blockNumber', async () => {
     await app.parse('blockNumber');
     const tx = await app.execute();
-    await checkStack(StackValue, stack, 1, tx.blockNumber!);
+    await checkStackTailv2(stack, [tx.blockNumber!]);
   });
 
   it('blockTimestamp', async () => {
     await app.parse('blockTimestamp');
     await app.execute();
     const block = await ethers.provider.getBlock('latest');
-    await checkStack(StackValue, stack, 1, block.timestamp);
+    await checkStackTailv2(stack, [block.timestamp]);
   });
 
   it('TIME', async () => {
@@ -364,13 +360,13 @@ describe('DSL: basic', () => {
     await app.parse('TIME');
     await app.execute();
     const block = await ethers.provider.getBlock('latest');
-    await checkStack(StackValue, stack, 1, block.timestamp);
+    await checkStackTailv2(stack, [block.timestamp]);
   });
 
   it('blockChainId', async () => {
     await app.parse('blockChainId');
     const tx = await app.execute();
-    await checkStack(StackValue, stack, 1, tx.chainId);
+    await checkStackTailv2(stack, [tx.chainId]);
   });
 
   it('setLocalBool', async () => {
@@ -398,7 +394,7 @@ describe('DSL: basic', () => {
       await app.setStorageUint256(hex4Bytes('NUMBER'), 777);
       await app.parse('loadLocal uint256 NUMBER');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 777);
+      await checkStackTailv2(stack, [777]);
     });
 
     it('loadLocal uint256 NUMBER (1000) > loadLocal uint256 NUMBER2 (15)', async () => {
@@ -412,7 +408,7 @@ describe('DSL: basic', () => {
 
       await app.parse('loadLocal uint256 NUMBER > loadLocal uint256 NUMBER2');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
 
     it('loadLocal uint256 TIMESTAMP < loadLocal uint256 NEXT_MONTH', async () => {
@@ -421,7 +417,7 @@ describe('DSL: basic', () => {
 
       await app.parse('loadLocal uint256 TIMESTAMP < loadLocal uint256 NEXT_MONTH');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
 
     it('loadLocal uint256 TIMESTAMP > loadLocal uint256 NEXT_MONTH', async () => {
@@ -430,7 +426,7 @@ describe('DSL: basic', () => {
 
       await app.parse('loadLocal uint256 TIMESTAMP > loadLocal uint256 NEXT_MONTH');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 0);
+      await checkStackTailv2(stack, [0]);
     });
 
     it('loadLocal bool A (false)', async () => {
@@ -438,7 +434,7 @@ describe('DSL: basic', () => {
 
       await app.parse('loadLocal bool A');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 0);
+      await checkStackTailv2(stack, [0]);
     });
 
     it('loadLocal bool B (true)', async () => {
@@ -446,7 +442,7 @@ describe('DSL: basic', () => {
 
       await app.parse('loadLocal bool B');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
 
     it('loadLocal bool A (false) != loadLocal bool B (true)', async () => {
@@ -455,7 +451,7 @@ describe('DSL: basic', () => {
 
       await app.parse('loadLocal bool A != loadLocal bool B');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
 
     it('NOR loadLocal bool A (false) != loadLocal bool B (true)', async () => {
@@ -464,7 +460,7 @@ describe('DSL: basic', () => {
 
       await app.parse('! (loadLocal bool A != loadLocal bool B)');
       await app.execute();
-      await checkStack(StackValue, stack, 1, 0);
+      await checkStackTailv2(stack, [0]);
     });
 
     describe('opLoadLocalAddress', () => {
@@ -480,7 +476,7 @@ describe('DSL: basic', () => {
 
         await app.parse('loadLocal address ADDR == loadLocal address ADDR2');
         await app.execute();
-        await checkStack(StackValue, stack, 1, 1);
+        await checkStackTailv2(stack, [1]);
       });
 
       it('addresses are not equal', async () => {
@@ -495,7 +491,7 @@ describe('DSL: basic', () => {
 
         await app.parse('loadLocal address ADDR == loadLocal address ADDR2');
         await app.execute();
-        await checkStack(StackValue, stack, 1, 0);
+        await checkStackTailv2(stack, [0]);
       });
     });
 
@@ -512,7 +508,7 @@ describe('DSL: basic', () => {
 
         await app.parse('loadLocal bytes32 BYTES == loadLocal bytes32 BYTES2');
         await app.execute();
-        await checkStack(StackValue, stack, 1, 1);
+        await checkStackTailv2(stack, [1]);
       });
 
       it('bytes32 are not equal', async () => {
@@ -527,7 +523,7 @@ describe('DSL: basic', () => {
 
         await app.parse('loadLocal bytes32 BYTES == loadLocal bytes32 BYTES2');
         await app.execute();
-        await checkStack(StackValue, stack, 1, 0);
+        await checkStackTailv2(stack, [0]);
       });
 
       it('should revert if values visually shifted, but still not the same', async () => {
@@ -542,7 +538,7 @@ describe('DSL: basic', () => {
 
         await app.parse('loadLocal bytes32 BYTES == loadLocal bytes32 BYTES2');
         await app.execute();
-        await checkStack(StackValue, stack, 1, 0);
+        await checkStackTailv2(stack, [0]);
       });
     });
   });
@@ -553,7 +549,7 @@ describe('DSL: basic', () => {
 
       await app.parse(`loadRemote uint256 NUMBER ${appAddrHex}`);
       await app.execute();
-      await checkStack(StackValue, stack, 1, 777);
+      await checkStackTailv2(stack, [777]);
     });
 
     it('loadRemote uint256 NUMBER (1000) > loadRemote uint256 NUMBER2 (15)', async () => {
@@ -569,7 +565,7 @@ describe('DSL: basic', () => {
         `loadRemote uint256 NUMBER ${appAddrHex} > loadRemote uint256 NUMBER2 ${appAddrHex}`
       );
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
 
     it('loadLocal uint256 TIMESTAMP < loadRemote uint256 NEXT_MONTH', async () => {
@@ -578,7 +574,7 @@ describe('DSL: basic', () => {
 
       await app.parse(`loadLocal uint256 TIMESTAMP < loadRemote uint256 NEXT_MONTH ${appAddrHex}`);
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
 
     it('loadRemote bool A (false)', async () => {
@@ -586,7 +582,7 @@ describe('DSL: basic', () => {
 
       await app.parse(`loadRemote bool A ${appAddrHex}`);
       await app.execute();
-      await checkStack(StackValue, stack, 1, 0);
+      await checkStackTailv2(stack, [0]);
     });
 
     it('loadRemote bool B (true)', async () => {
@@ -594,7 +590,7 @@ describe('DSL: basic', () => {
 
       await app.parse(`loadRemote bool B ${appAddrHex}`);
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
 
     it('loadRemote bool A (false) != loadRemote bool B (true)', async () => {
@@ -603,7 +599,7 @@ describe('DSL: basic', () => {
 
       await app.parse(`loadRemote bool A ${appAddrHex} != loadRemote bool B ${appAddrHex}`);
       await app.execute();
-      await checkStack(StackValue, stack, 1, 1);
+      await checkStackTailv2(stack, [1]);
     });
 
     describe('opLoadRemoteAddress', () => {
@@ -621,7 +617,7 @@ describe('DSL: basic', () => {
           `loadRemote address ADDR ${appAddrHex} == loadRemote address ADDR2 ${appAddrHex}`
         );
         await app.execute();
-        await checkStack(StackValue, stack, 1, 1);
+        await checkStackTailv2(stack, [1]);
       });
 
       it('different addresses are not equal', async () => {
@@ -638,7 +634,7 @@ describe('DSL: basic', () => {
           `loadRemote address ADDR ${appAddrHex} == loadRemote address ADDR2 ${appAddrHex}`
         );
         await app.execute();
-        await checkStack(StackValue, stack, 1, 0);
+        await checkStackTailv2(stack, [0]);
       });
     });
 
@@ -657,7 +653,7 @@ describe('DSL: basic', () => {
           `loadRemote bytes32 BYTES ${appAddrHex} == loadRemote bytes32 BYTES2 ${appAddrHex}`
         );
         await app.execute();
-        await checkStack(StackValue, stack, 1, 1);
+        await checkStackTailv2(stack, [1]);
       });
 
       it('bytes32 are not equal', async () => {
@@ -674,7 +670,7 @@ describe('DSL: basic', () => {
           `loadRemote bytes32 BYTES ${appAddrHex} == loadRemote bytes32 BYTES2 ${appAddrHex}`
         );
         await app.execute();
-        await checkStack(StackValue, stack, 1, 0);
+        await checkStackTailv2(stack, [0]);
       });
 
       it('bytes32 calculates 3 - 1 in bytes32 ', async () => {
@@ -692,7 +688,7 @@ describe('DSL: basic', () => {
         );
         await app.execute();
         // 3 - 1 = 2
-        await checkStack(StackValue, stack, 1, 2);
+        await checkStackTailv2(stack, [2]);
       });
 
       it('bytes32 calculates 0 - 2 ', async () => {
@@ -734,14 +730,14 @@ describe('DSL: basic', () => {
     await app.setStorageAddress(hex4Bytes('SENDER'), sender.address);
     await app.parse('loadLocal address SENDER == msgSender');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('msgValue', async () => {
     const oneEth = parseEther('1');
     await app.parse('msgValue');
     await app.execute({ value: oneEth });
-    await checkStack(StackValue, stack, 1, oneEth.toString());
+    await checkStackTailv2(stack, [oneEth]);
   });
 
   it('sendEth', async () => {
@@ -757,7 +753,7 @@ describe('DSL: basic', () => {
     // Enough ETH on the contract
     await vault.sendTransaction({ to: app.address, value: twoEth });
     await expect(await app.execute()).to.changeEtherBalance(receiver, twoEth);
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('transfer', async () => {
@@ -776,7 +772,7 @@ describe('DSL: basic', () => {
     await app.parse(`transfer DAI RECEIVER ${oneDAI.toString()}`);
     await app.execute();
     expect(await dai.balanceOf(receiver.address)).to.equal(oneDAI);
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('transferVar', async () => {
@@ -796,7 +792,7 @@ describe('DSL: basic', () => {
     await app.parse('transferVar DAI RECEIVER AMOUNT');
     await app.execute();
     expect(await dai.balanceOf(receiver.address)).to.equal(oneDAI);
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('transferFrom', async () => {
@@ -816,7 +812,7 @@ describe('DSL: basic', () => {
     await app.parse(`transferFrom DAI OWNER RECEIVER ${oneDAI.toString()}`);
     await app.execute();
     expect(await dai.balanceOf(receiver.address)).to.equal(oneDAI);
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('transferFromVar', async () => {
@@ -837,7 +833,7 @@ describe('DSL: basic', () => {
     await app.parse('transferFromVar DAI OWNER RECEIVER AMOUNT');
     await app.execute();
     expect(await dai.balanceOf(receiver.address)).to.equal(oneDAI);
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('balance of', async () => {
@@ -852,7 +848,7 @@ describe('DSL: basic', () => {
     await app.parse('balanceOf DAI USER');
     await app.execute();
     // expect(await dai.balanceOf(user.address)).to.equal(parseEther('1000'));
-    await checkStack(StackValue, stack, 1, parseEther('1000'));
+    await checkStackTailv2(stack, [parseEther('1000')]);
   });
 
   describe('if-else statement', () => {
@@ -906,7 +902,7 @@ describe('DSL: basic', () => {
     `
       );
       await app.execute();
-      await checkStackTailv2(StackValue, stack, [1, 1, 6, 2]);
+      await checkStackTailv2(stack, [1, 1, 6, 2]);
     });
   });
 
@@ -915,7 +911,7 @@ describe('DSL: basic', () => {
     await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
     await app.parse('loadLocal uint256 TIMESTAMP > loadLocal uint256 PREV_MONTH');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('TIMESTAMP < NEXT_MONTH', async () => {
@@ -923,20 +919,20 @@ describe('DSL: basic', () => {
     await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
     await app.parse('(loadLocal uint256 TIMESTAMP) < (loadLocal uint256 NEXT_MONTH)');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('block number < block timestamp', async () => {
     await app.parse('blockNumber < blockTimestamp');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   it('block number < TIME', async () => {
     // TIME is an alias for blockTimestamp
     await app.parse('blockNumber < TIME');
     await app.execute();
-    await checkStack(StackValue, stack, 1, 1);
+    await checkStackTailv2(stack, [1]);
   });
 
   describe('((time > init) and (time < expiry)) or (risk != true)', () => {
@@ -959,7 +955,7 @@ describe('DSL: basic', () => {
         `
       );
       await app.execute();
-      await checkStack(StackValue, stack, 1, target);
+      await checkStackTailv2(stack, [target]);
     }
 
     // T - true, F - false
