@@ -6,7 +6,6 @@ import { IERC20 } from '../../interfaces/IERC20.sol';
 import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
-import { ErrorsBranchingOpcodes } from '../Errors.sol';
 
 // import 'hardhat/console.sol';
 
