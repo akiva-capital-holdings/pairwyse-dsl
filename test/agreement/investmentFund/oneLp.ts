@@ -52,11 +52,49 @@ const parentSuite = describe('Agreement: Investment Fund', () => {
   });
 });
 
+const testNames = {
+  scenario1: 'Scenario 1: LP deposits; GP balances; Profit Realized',
+  scenario2: 'Scenario 2: GP fails to balance LP deposit',
+  scenario3: 'Scenario 3: Loss incurred, fully covered by GP',
+  scenario4: 'Scenario 4: Loss incurred, not fully covered by GP',
+  scenario5: 'Scenario 5: Using bigger values, PURCHASE_PERCENT less than 90',
+  scenario6: 'Scenario 6: GP_INITIAL less than needed',
+  scenario7: 'Scenario 7: PURCHASE_PERCENT more than 90',
+  scenario8: 'Scenario 8: HURDLE is 1 percent',
+  scenario9: 'Scenario 9: MANAGEMENT_FEE_PERCENTAGE is 33%',
+  scenario10: 'Scenario 10: Carry Charge is 0%',
+  scenario11: 'Scenario 11: CAPITAL_GAINS capital gains is big',
+  scenario12: 'Scenario 12: Smart contract does not store funds if values are small',
+  scenario13: 'Scenario 13: Smart contract does not store funds if values too small',
+  scenario14: 'Scenario 14: DEPOSIT_MIN_PERCENT is 1%',
+  scenario15:
+    'Scenario 15: Should be non zero value in the end of contract. Correct LP investment profit',
+};
+
+// Note: to disable any of the tests just comment out any test name from this array
+const enabledTests = [
+  testNames.scenario1,
+  testNames.scenario2,
+  testNames.scenario3,
+  testNames.scenario4,
+  testNames.scenario5,
+  testNames.scenario6,
+  testNames.scenario7,
+  testNames.scenario8,
+  testNames.scenario9,
+  testNames.scenario10,
+  testNames.scenario11,
+  testNames.scenario12,
+  testNames.scenario13,
+  testNames.scenario14,
+  testNames.scenario15,
+];
+
 const tests = {
   'Lifecycle Test one LP': [
     {
       base: '4',
-      name: 'Scenario 1: LP deposits; GP balances; Profit Realized',
+      name: testNames.scenario1,
       dynamicTestData,
       GP_INITIAL: parseUnits('20', 18),
       LP_INITIAL_ARR: [parseUnits('990', 18)],
@@ -75,7 +113,7 @@ const tests = {
     },
     {
       base: '4',
-      name: 'Scenario 2:  GP fails to balance LP deposit',
+      name: testNames.scenario2,
       dynamicTestData,
       GP_INITIAL: parseUnits('20', 18),
       LP_INITIAL_ARR: [parseUnits('990', 18)],
@@ -94,7 +132,7 @@ const tests = {
     },
     {
       base: '4',
-      name: 'Scenario 3:  Loss incurred, fully covered by GP',
+      name: testNames.scenario3,
       dynamicTestData,
       GP_INITIAL: parseUnits('20', 18),
       LP_INITIAL_ARR: [parseUnits('990', 18)],
@@ -113,7 +151,7 @@ const tests = {
     },
     {
       base: '4',
-      name: 'Scenario 4:  Loss incurred, not fully covered by GP',
+      name: testNames.scenario4,
       dynamicTestData,
       GP_INITIAL: parseUnits('20', 18),
       LP_INITIAL_ARR: [parseUnits('990', 18)],
@@ -132,7 +170,7 @@ const tests = {
     },
     {
       base: '4',
-      name: 'Scenario 5: Using bigger values, PURCHASE_PERCENT less than 90',
+      name: testNames.scenario5,
       dynamicTestData,
       GP_INITIAL: parseUnits('20000', 18),
       LP_INITIAL_ARR: [parseUnits('990000', 18)],
@@ -151,7 +189,7 @@ const tests = {
     },
     {
       base: '4',
-      name: 'Scenario 6:  GP_INITIAL less than needed',
+      name: testNames.scenario6,
       dynamicTestData,
       GP_INITIAL: parseUnits('20', 18),
       LP_INITIAL_ARR: [parseUnits('990000', 18)],
@@ -170,7 +208,7 @@ const tests = {
     },
     {
       base: '4',
-      name: 'Scenario 7:  PURCHASE_PERCENT more than 90',
+      name: testNames.scenario7,
       dynamicTestData,
       GP_INITIAL: parseUnits('20', 18),
       LP_INITIAL_ARR: [parseUnits('990', 18)],
@@ -189,7 +227,7 @@ const tests = {
     },
     {
       base: '4',
-      name: 'Scenario 8:  HURDLE is 1 percent',
+      name: testNames.scenario8,
       dynamicTestData,
       GP_INITIAL: parseUnits('20', 18),
       LP_INITIAL_ARR: [parseUnits('990', 18)],
@@ -208,7 +246,7 @@ const tests = {
     },
     {
       base: '4',
-      name: 'Scenario 9:  MANAGEMENT_FEE_PERCENTAGE is 33%',
+      name: testNames.scenario9,
       dynamicTestData,
       GP_INITIAL: parseUnits('20', 18),
       LP_INITIAL_ARR: [parseUnits('990', 18)],
@@ -227,7 +265,7 @@ const tests = {
     },
     {
       base: '4',
-      name: 'Scenario 10:  Carry Charge is 0%',
+      name: testNames.scenario10,
       dynamicTestData,
       GP_INITIAL: parseUnits('20', 18),
       LP_INITIAL_ARR: [parseUnits('990', 18)],
@@ -246,7 +284,7 @@ const tests = {
     },
     {
       base: '4',
-      name: 'Scenario 11:  CAPITAL_GAINS capital gains is big',
+      name: testNames.scenario11,
       dynamicTestData,
       GP_INITIAL: parseUnits('20', 18),
       LP_INITIAL_ARR: [parseUnits('990', 18)],
@@ -265,7 +303,7 @@ const tests = {
     },
     {
       base: '4',
-      name: 'Scenario 12: smart contract does not store funds if values are small',
+      name: testNames.scenario12,
       dynamicTestData,
       GP_INITIAL: parseUnits('1999999', 0),
       LP_INITIAL_ARR: [parseUnits('98555555', 0)],
@@ -284,7 +322,7 @@ const tests = {
     },
     {
       base: '4',
-      name: 'Scenario 13:  smart contract does not store funds if values too small',
+      name: testNames.scenario13,
       dynamicTestData,
       GP_INITIAL: parseUnits('1998', 0),
       LP_INITIAL_ARR: [parseUnits('99999', 0)],
@@ -303,7 +341,7 @@ const tests = {
     },
     {
       base: '4',
-      name: 'Scenario 14: DEPOSIT_MIN_PERCENT is 1%',
+      name: testNames.scenario14,
       dynamicTestData,
       GP_INITIAL: parseUnits('10', 18),
       LP_INITIAL_ARR: [parseUnits('999', 18)],
@@ -327,8 +365,7 @@ const tests = {
     // P1
     {
       base: '4',
-      name: 'Scenario 15: Should be non zero value in the end of contract. \
-      Correct LP investment profit',
+      name: testNames.scenario15,
       dynamicTestData,
       GP_INITIAL: parseUnits('340000', 0),
       LP_INITIAL_ARR: [parseUnits('900000', 0)],
@@ -350,6 +387,8 @@ const tests = {
 
 (Object.keys(tests) as (keyof typeof tests)[]).forEach((testBlockName) => {
   for (const test of tests[testBlockName]) {
-    businessCaseTest(test);
+    if (enabledTests.includes(test.name)) {
+      businessCaseTest(test);
+    }
   }
 });

@@ -6,14 +6,7 @@ import { BigNumber, Contract, ContractTransaction, utils } from 'ethers';
 import { formatEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 import { Suite, Test } from 'mocha';
-import {
-  Stack__factory,
-  StackValue__factory,
-  Stack,
-  Context,
-  StackValue,
-  ERC20,
-} from '../../typechain-types';
+import { Stack__factory, Stack, Context, ERC20 } from '../../typechain-types';
 import { DynamicTestData, OpConditionalTxFunc, TxObject } from '../types';
 import { ONE_DAY, ONE_MONTH, ONE_YEAR } from './constants';
 
@@ -34,47 +27,26 @@ export const hex4BytesShort = (str: string) => hex4Bytes(str).slice(2, 2 + 8);
 
 /**
  * Push values to stack
- * @param SV StackValue: StackValue__factory
  * @param context context: Context
  * @param ST Stack: Stack__factory
  * @param arr Array of values to put in stack. They are put in stack one-by-one
  *            from the beginning of the array
- * @returns created stack
  */
 export const pushToStack = async (
-  SV: StackValue__factory,
   context: Context,
   ST: Stack__factory,
   arr: (string | number | BigNumber)[]
 ) => {
-  const stackValues: StackValue[] = [];
-
-  for (let i = 0; i < arr.length; ++i) {
-    const sv = await SV.deploy();
-    stackValues.push(sv);
-  }
-
   const contextStackAddress = await context.stack();
   const stack = ST.attach(contextStackAddress);
 
-  for (let i = 0; i < stackValues.length; ++i) {
-    if (typeof arr[i] === 'number') {
-      await stackValues[i].setUint256(arr[i] as number);
-    } else if (typeof arr[i] === 'string') {
-      await stackValues[i].setString(arr[i] as string);
-    } else if (typeof arr[i] === 'object') {
-      // this is BigNumber type
-      await stackValues[i].setUint256(arr[i] as BigNumber);
-    }
-    await stack.push(stackValues[i].address);
+  for (let i = 0; i < arr.length; ++i) {
+    await stack.push(arr[i]);
   }
-
-  return stack;
 };
 
 /**
- * Checks stack length and it's value
- * @param SV StackValue: StackValue__factory
+ * Checks stack length and it's last value
  * @param stack stack: Stack
  * @param expectedLen Expected length of the stack
  * @param expectedValue Expected value on the top of the stack (last value)
@@ -82,69 +54,34 @@ export const pushToStack = async (
  * @param badValueErr [optional] error message for incorrect stack value
  */
 export const checkStack = async (
-  SV: StackValue__factory,
   stack: Stack,
   expectedLen: number,
   expectedValue: number | string | BigNumber,
   indexFromEnd: number = 0,
-  type: 'string' | 'number' = 'number',
   badLenErr = 'Bad stack length',
   badValueErr = 'Bad stack value'
 ) => {
   // check stack length
   const stackLen = await stack.length();
   expect(stackLen.toNumber()).to.equal(expectedLen, badLenErr);
-
-  // get result
-  const svResultAddress = await stack.stack(stackLen.toNumber() - 1 - indexFromEnd);
-  const svResult = SV.attach(svResultAddress);
-
-  if (type === 'number') {
-    expect(await svResult.getUint256()).to.equal(expectedValue, badValueErr);
-  } else if (type === 'string') {
-    expect(await svResult.getString()).to.equal(expectedValue, badValueErr);
-  }
+  // check result
+  const value = await stack.stack(stackLen.toNumber() - 1 - indexFromEnd);
+  expect(value).to.equal(expectedValue, badValueErr);
 };
 
-export async function checkStackTail(
-  SV: StackValue__factory,
-  stack: Stack,
-  expectedLen: number,
-  expectedValues: (number | string)[],
-  type: 'string' | 'number' = 'number',
-  badLenErr = 'Bad stack length',
-  badValueErr = 'Bad stack value'
-) {
-  for (let i = 0; i < expectedValues.length; i++) {
-    await checkStack(
-      SV,
-      stack,
-      expectedLen,
-      expectedValues[expectedValues.length - 1 - i],
-      i,
-      type,
-      badLenErr,
-      badValueErr
-    );
-  }
-}
-
+// TODO: rename to `checkStackTail`
 export async function checkStackTailv2(
-  SV: StackValue__factory,
   stack: Stack,
-  expectedValues: (number | string)[],
-  type: 'string' | 'number' = 'number',
+  expectedValues: (number | string | BigNumber)[],
   badLenErr = 'Bad stack length',
   badValueErr = 'Bad stack value'
 ) {
   for (let i = 0; i < expectedValues.length; i++) {
     await checkStack(
-      SV,
       stack,
       expectedValues.length,
       expectedValues[expectedValues.length - 1 - i],
       i,
-      type,
       badLenErr,
       badValueErr
     );
@@ -155,7 +92,6 @@ export async function checkStackTailv2(
  * Test stack with two values that combines into a single value after the
  * operation. Ex. 1 > 2 = 0
  * @param ST Stack: Stack__factory
- * @param SV StackValue: StackValue__factory
  * @param context context: Context
  * @param opcodes opcodes: Opcodes
  * @param opFunc opcode function (>, <, =, ...)
@@ -165,7 +101,6 @@ export async function checkStackTailv2(
  */
 export const testTwoInputOneOutput = async (
   ST: Stack__factory,
-  SV: StackValue__factory,
   context: Context,
   opcodes: Contract,
   opFunc: OpConditionalTxFunc,
@@ -173,9 +108,11 @@ export const testTwoInputOneOutput = async (
   value2: number,
   result: number
 ) => {
-  const stack = await pushToStack(SV, context, ST, [value1, value2]);
+  await pushToStack(context, ST, [value1, value2]);
   await opFunc(opcodes)(context.address);
-  await checkStack(SV, stack, 1, result);
+  const contextStackAddress = await context.stack();
+  const stack = ST.attach(contextStackAddress);
+  await checkStack(stack, 1, result);
 };
 
 /**
@@ -356,7 +293,7 @@ export const businessCaseTest = ({
         console.log(`txn hash: \x1b[35m${txn1.hash}\x1b[0m`);
         result = true;
       } catch (err) {
-        await expect(agreement.connect(GP).execute(txId)).to.be.revertedWith('CNT3');
+        await expect(agreement.connect(GP).execute(txId)).to.be.revertedWith('AGR6');
         console.log(`\x1b[33m
       Condition is not satisfied.
       GP must deposit a minimum ${DEPOSIT_MIN_PERCENT}% \
@@ -452,7 +389,7 @@ of the initial DAI funds target amount\x1b[0m
           );
           console.log(`txn hash: \x1b[35m${txn4Hash}\x1b[0m`);
         } else {
-          await expect(agreement.connect(LP).execute(txId)).to.be.revertedWith('CNT3');
+          await expect(agreement.connect(LP).execute(txId)).to.be.revertedWith('AGR6');
           console.log(`\x1b[33m
       As GP did gap deposit, LP is not allowed to withdraw the funds.
       LP incurs transaction error if tries to withdraw funds after investment closing date\x1b[0m
@@ -486,7 +423,7 @@ of the initial DAI funds target amount\x1b[0m
           );
           result = true;
         } catch {
-          await expect(agreement.connect(GP).execute(txId)).to.be.revertedWith('CNT3');
+          await expect(agreement.connect(GP).execute(txId)).to.be.revertedWith('AGR6');
           console.log(`\x1b[33m
         Condition is not satisfied.
         GP authorized to purchase the investment asset using up to 90% of total \

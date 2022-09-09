@@ -7,19 +7,13 @@ pragma solidity ^0.8.0;
  * @title List of Agreement errors
  */
 library ErrorsAgreement {
-    string constant AGR1 = 'AGR1'; // Agreement: bad tx signatory
-    string constant AGR2 = 'AGR2'; // Agreement: tx condition is not satisfied
-    string constant AGR3 = 'AGR3'; // Agreement: tx fulfilment error
-}
-
-/**
- * @title List of ConditionalTxs errors
- */
-library ErrorsConditionalTxs {
-    string constant CNT1 = 'CNT1'; // ConditionalTxs: signatures are invalid
-    string constant CNT2 = 'CNT2'; // ConditionalTxs: The transaction should have at least one condition
-    string constant CNT3 = 'CNT3'; // ConditionalTxs: txn condition is not satisfied
-    string constant CNT4 = 'CNT4'; // ConditionalTxs: txn already was executed by this signatory
+    string constant AGR1 = 'AGR1'; // Agreement: bad record signatory
+    string constant AGR2 = 'AGR2'; // Agreement: not all required records are executed
+    string constant AGR3 = 'AGR3'; // Agreement: record fulfilment error
+    string constant AGR4 = 'AGR4'; // Agreement: signatures are invalid
+    string constant AGR5 = 'AGR5'; // Agreement: The transaction should have at least one condition
+    string constant AGR6 = 'AGR6'; // Agreement: not all record conditions are satisfied
+    string constant AGR7 = 'AGR7'; // Agreement: record already was executed by this signatory
 }
 
 /**
@@ -44,20 +38,11 @@ library ErrorsStack {
 }
 
 /**
- * @title List of BranchingOpcodes errors
- */
-library ErrorsBranchingOpcodes {
-    string constant BOP1 = 'BOP1'; // Opcodes: bad type in the stack
-}
-
-/**
  * @title List of OtherOpcodes errors
  */
 library ErrorsGeneralOpcodes {
     string constant OP1 = 'OP1'; // Opcodes: opSetLocal call not success
-    string constant OP2 = 'OP2'; // Opcodes: bad type
     string constant OP3 = 'OP3'; // Opcodes: opLoadRemote call not success
-    string constant OP4 = 'OP4'; // Opcodes: type mismatch
     string constant OP5 = 'OP5'; // Opcodes: opLoadLocal call not success
 }
 

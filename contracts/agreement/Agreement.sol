@@ -10,11 +10,11 @@ import { ComparisonOpcodes } from '../dsl/libs/opcodes/ComparisonOpcodes.sol';
 import { BranchingOpcodes } from '../dsl/libs/opcodes/BranchingOpcodes.sol';
 import { LogicalOpcodes } from '../dsl/libs/opcodes/LogicalOpcodes.sol';
 import { OtherOpcodes } from '../dsl/libs/opcodes/OtherOpcodes.sol';
-import { ErrorsConditionalTxs } from '../dsl/libs/Errors.sol';
 import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 
 // import 'hardhat/console.sol';
+// TODO: automatically make sure that no contract exceeds the maximum contract size
 
 /**
  * Financial Agreement written in DSL between two or more users
@@ -29,25 +29,21 @@ contract Agreement {
 
     event NewTransaction(
         uint256 txId, // transaction ID
-        uint256[] requiredTransactions, // required transactions that have to be executed
+        uint256[] requiredRecords, // required transactions that have to be executed
         address[] signatories, // addresses that can execute the transaction
         string transaction, // DSL code string ex. `uint256 5 > uint256 3`
         //  DSL code strings that have to be executed successfully before the `transaction DSL code`
         string[] conditionStrings
     );
 
-    // TODO: rename to Record
-    struct Tx {
-        uint256[] requiredTransactions; // TODO: rename to required records
+    struct Record {
+        uint256[] requiredRecords;
         address transactionContext;
         bool isExecuted;
         string transactionString;
     }
 
-    // The address that is used to symbolyze any signer inside Conditional Transaction
-    address public constant ANYONE = 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF;
-
-    mapping(uint256 => Tx) public txs; // txId => Tx struct
+    mapping(uint256 => Record) public txs; // txId => Record struct
     mapping(uint256 => address[]) public conditionContexts; // txId => condition Context
     mapping(uint256 => string[]) public conditionStrings; // txId => DSL condition as string
     mapping(uint256 => address[]) public signatories; // txId => signatories
@@ -64,96 +60,28 @@ contract Agreement {
         context.setAppAddress(address(this));
     }
 
-    function getStorageBool(bytes32 position) public view returns (bool data) {
+    function getStorageBool(bytes32 position) external view returns (bool data) {
         return position.getStorageBool();
     }
 
-    function getStorageAddress(bytes32 position) public view returns (address data) {
+    function getStorageAddress(bytes32 position) external view returns (address data) {
         return position.getStorageAddress();
     }
 
-    function getStorageBytes32(bytes32 position) public view returns (bytes32 data) {
-        return position.getStorageBytes32();
-    }
-
-    function getStorageUint256(bytes32 position) public view returns (uint256 data) {
+    function getStorageUint256(bytes32 position) external view returns (uint256 data) {
         return position.getStorageUint256();
     }
 
-    function setStorageBool(bytes32 position, bool data) public {
+    function setStorageBool(bytes32 position, bool data) external {
         position.setStorageBool(data);
     }
 
-    function setStorageAddress(bytes32 position, address data) public {
+    function setStorageAddress(bytes32 position, address data) external {
         position.setStorageAddress(data);
     }
 
-    function setStorageBytes32(bytes32 position, bytes32 data) public {
-        position.setStorageBytes32(data);
-    }
-
-    function setStorageUint256(bytes32 position, uint256 data) public {
+    function setStorageUint256(bytes32 position, uint256 data) external {
         position.setStorageUint256(data);
-    }
-
-    /**
-     * @dev Define some basic values for a new Conditional Transaction
-     * @param _txId is the ID of a transaction
-     * @param _requiredTransactions transactions ids that have to be executed
-     * @param _signatories addresses that can execute the chosen transaction
-     */
-    function addTxBlueprint(
-        uint256 _txId,
-        uint256[] memory _requiredTransactions,
-        address[] memory _signatories
-    ) public {
-        _checkSignatories(_signatories);
-
-        Tx memory txn = Tx(_requiredTransactions, address(0), false, '');
-        signatories[_txId] = _signatories;
-        signatoriesLen[_txId] = _signatories.length;
-        txs[_txId] = txn;
-    }
-
-    /**
-     * @dev Conditional Transaction: Append a condition to already existing conditions
-     * inside Conditional Transaction
-     * @param _txId Conditional Transaction ID
-     * @param _conditionStr DSL code for condition
-     * @param _conditionCtx Context contract address for block of DSL code for `_conditionStr`
-     */
-    function addTxCondition(
-        uint256 _txId,
-        string memory _conditionStr,
-        address _conditionCtx
-    ) public {
-        require(!StringUtils.equal(_conditionStr, ''), ErrorsConditionalTxs.CNT2);
-        IContext(_conditionCtx).setComparisonOpcodesAddr(address(ComparisonOpcodes));
-        IContext(_conditionCtx).setBranchingOpcodesAddr(address(BranchingOpcodes));
-        IContext(_conditionCtx).setLogicalOpcodesAddr(address(LogicalOpcodes));
-        IContext(_conditionCtx).setOtherOpcodesAddr(address(OtherOpcodes));
-
-        conditionContexts[_txId].push(_conditionCtx);
-        conditionStrings[_txId].push(_conditionStr);
-    }
-
-    /**
-     * @dev Conditional Transaction: Add a transaction that should be executed if all
-     * conditions inside Conditional Transacion are met
-     */
-    function addTxTransaction(
-        uint256 _txId,
-        string memory _transactionString,
-        address _transactionContext
-    ) public {
-        require(conditionStrings[_txId].length > 0, ErrorsConditionalTxs.CNT2);
-        IContext(_transactionContext).setComparisonOpcodesAddr(address(ComparisonOpcodes));
-        IContext(_transactionContext).setBranchingOpcodesAddr(address(BranchingOpcodes));
-        IContext(_transactionContext).setLogicalOpcodesAddr(address(LogicalOpcodes));
-        IContext(_transactionContext).setOtherOpcodesAddr(address(OtherOpcodes));
-
-        txs[_txId].transactionContext = _transactionContext;
-        txs[_txId].transactionString = _transactionString;
     }
 
     /**
@@ -161,7 +89,7 @@ contract Agreement {
      * @param _recordId Record ID
      * @return Number of condition Context instances of the Record
      */
-    function conditionContextsLen(uint256 _recordId) public view returns (uint256) {
+    function conditionContextsLen(uint256 _recordId) external view returns (uint256) {
         return conditionContexts[_recordId].length;
     }
 
@@ -170,76 +98,8 @@ contract Agreement {
      * @param _recordId Record ID
      * @return Number of Condition strings of the Record
      */
-    function conditionStringsLen(uint256 _recordId) public view returns (uint256) {
+    function conditionStringsLen(uint256 _recordId) external view returns (uint256) {
         return conditionStrings[_recordId].length;
-    }
-
-    // TODO: make private
-    // TODO: rename `execTx` -> `executeRecord`
-    /**
-     * @dev Execute Record
-     * @param _recordId Record ID to execute
-     * @param _msgValue Value that were sent along with function execution // TODO: possibly remove this argument
-     * @param _signatory The user that is executing the Record
-     */
-    function execTx(
-        uint256 _recordId,
-        uint256 _msgValue,
-        address _signatory
-    ) public {
-        Tx memory txn = txs[_recordId];
-        require(!isExecutedBySignatory[_recordId][_signatory], ErrorsConditionalTxs.CNT4);
-
-        IContext(txn.transactionContext).setMsgValue(_msgValue);
-        Executor.execute(address(txn.transactionContext));
-        isExecutedBySignatory[_recordId][_signatory] = true;
-
-        // Check is tx was executed by all signatories
-        uint256 executionProgress;
-        address[] memory signatoriesOfTx = signatories[_recordId];
-        for (uint256 i = 0; i < signatoriesLen[_recordId]; i++) {
-            if (isExecutedBySignatory[_recordId][signatoriesOfTx[i]]) executionProgress++;
-        }
-        // If all signatories have executed the transaction - mark the tx as executed
-        if (executionProgress == signatoriesLen[_recordId]) {
-            txs[_recordId].isExecuted = true;
-        }
-    }
-
-    /**
-     * @dev Checks conditions for the certain transaction
-     * @param _recordId Record ID which conditions to check
-     * @param _msgValue passed amount of native tokens for conditional
-     */
-    function checkConditions(
-        uint256 _recordId,
-        uint256 _msgValue /*onlyOwner*/
-    ) public {
-        Tx memory txn = txs[_recordId];
-        Tx memory requiredTx;
-        for (uint256 i = 0; i < txn.requiredTransactions.length; i++) {
-            requiredTx = txs[txn.requiredTransactions[i]];
-            require(
-                requiredTx.isExecuted,
-                string(
-                    abi.encodePacked(
-                        'ConditionalTxs: required tx #',
-                        StringUtils.toString(txn.requiredTransactions[i]),
-                        ' was not executed'
-                    )
-                )
-            );
-        }
-
-        bool _res = true;
-        for (uint256 i = 0; i < conditionContexts[_recordId].length; i++) {
-            IContext(conditionContexts[_recordId][i]).setMsgValue(_msgValue);
-            Executor.execute(conditionContexts[_recordId][i]);
-            _res =
-                _res &&
-                (IContext(conditionContexts[_recordId][i]).stack().seeLast().getUint256() > 0);
-        }
-        require(_res, ErrorsConditionalTxs.CNT3);
     }
 
     /**
@@ -257,88 +117,179 @@ contract Agreement {
     }
 
     function update(
-        uint256 _txId,
-        uint256[] memory _requiredTransactions,
+        uint256 _recordId,
+        uint256[] memory _requiredRecords,
         address[] memory _signatories,
         string memory _transactionString,
         string[] memory _conditionStrings,
         address _transactionContext,
         address[] memory _conditionContexts
     ) external {
-        // console.log('update');
-        addTxBlueprint(_txId, _requiredTransactions, _signatories);
+        _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
         for (uint256 i = 0; i < _conditionContexts.length; i++) {
-            addTxCondition(_txId, _conditionStrings[i], _conditionContexts[i]);
+            _addRecordCondition(_recordId, _conditionStrings[i], _conditionContexts[i]);
         }
-        addTxTransaction(_txId, _transactionString, _transactionContext);
+        _addRecordTransaction(_recordId, _transactionString, _transactionContext);
 
         emit NewTransaction(
-            _txId,
-            _requiredTransactions,
+            _recordId,
+            _requiredRecords,
             _signatories,
             _transactionString,
             _conditionStrings
         );
     }
 
-    function execute(uint256 _txId) external payable {
-        // console.log(payable(address(this)).balance);
-        require(verify(_txId), ErrorsAgreement.AGR1);
-        require(validate(_txId, msg.value), ErrorsAgreement.AGR2);
-        require(fulfil(_txId, msg.value, msg.sender), ErrorsAgreement.AGR3);
+    function execute(uint256 _recordId) external payable {
+        require(_verify(_recordId), ErrorsAgreement.AGR1);
+        require(_validateRequiredRecords(_recordId), ErrorsAgreement.AGR2);
+        require(_validateConditions(_recordId, msg.value), ErrorsAgreement.AGR6);
+        require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
     }
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
     /**
-     * @dev Checks input _signatures that only one  'ANYONE' address exists in the
-     * list or that 'ANYONE' address does not exist in signatures at all
+     * @dev Define some basic values for a new Conditional Transaction
+     * @param _recordId is the ID of a transaction
+     * @param _requiredRecords transactions ids that have to be executed
+     * @param _signatories addresses that can execute the chosen transaction
+     */
+    function _addRecordBlueprint(
+        uint256 _recordId,
+        uint256[] memory _requiredRecords,
+        address[] memory _signatories
+    ) internal {
+        _checkSignatories(_signatories);
+
+        Record memory txn = Record(_requiredRecords, address(0), false, '');
+        signatories[_recordId] = _signatories;
+        signatoriesLen[_recordId] = _signatories.length;
+        txs[_recordId] = txn;
+    }
+
+    /**
+     * @dev Conditional Transaction: Append a condition to already existing conditions
+     * inside Conditional Transaction
+     * @param _recordId Conditional Transaction ID
+     * @param _conditionStr DSL code for condition
+     * @param _conditionCtx Context contract address for block of DSL code for `_conditionStr`
+     */
+    function _addRecordCondition(
+        uint256 _recordId,
+        string memory _conditionStr,
+        address _conditionCtx
+    ) internal {
+        require(!StringUtils.equal(_conditionStr, ''), ErrorsAgreement.AGR5);
+        IContext(_conditionCtx).setComparisonOpcodesAddr(address(ComparisonOpcodes));
+        IContext(_conditionCtx).setBranchingOpcodesAddr(address(BranchingOpcodes));
+        IContext(_conditionCtx).setLogicalOpcodesAddr(address(LogicalOpcodes));
+        IContext(_conditionCtx).setOtherOpcodesAddr(address(OtherOpcodes));
+
+        conditionContexts[_recordId].push(_conditionCtx);
+        conditionStrings[_recordId].push(_conditionStr);
+    }
+
+    /**
+     * @dev Conditional Transaction: Add a transaction that should be executed if all
+     * conditions inside Conditional Transacion are met
+     */
+    function _addRecordTransaction(
+        uint256 _recordId,
+        string memory _transactionString,
+        address _transactionContext
+    ) internal {
+        require(conditionStrings[_recordId].length > 0, ErrorsAgreement.AGR5);
+        IContext(_transactionContext).setComparisonOpcodesAddr(address(ComparisonOpcodes));
+        IContext(_transactionContext).setBranchingOpcodesAddr(address(BranchingOpcodes));
+        IContext(_transactionContext).setLogicalOpcodesAddr(address(LogicalOpcodes));
+        IContext(_transactionContext).setOtherOpcodesAddr(address(OtherOpcodes));
+
+        txs[_recordId].transactionContext = _transactionContext;
+        txs[_recordId].transactionString = _transactionString;
+    }
+
+    /**
+     * @dev Checks input _signatures that only one  'anyone' address exists in the
+     * list or that 'anyone' address does not exist in signatures at all
      * @param _signatories the list of addresses
      */
-    function _checkSignatories(address[] memory _signatories) internal pure {
-        require(_signatories.length != 0, ErrorsConditionalTxs.CNT1);
-        require(_signatories[0] != address(0), ErrorsConditionalTxs.CNT1);
+    function _checkSignatories(address[] memory _signatories) internal view {
+        require(_signatories.length != 0, ErrorsAgreement.AGR4);
+        require(_signatories[0] != address(0), ErrorsAgreement.AGR4);
         if (_signatories.length > 1) {
             for (uint256 i = 0; i < _signatories.length; i++) {
-                require(_signatories[i] != address(0), ErrorsConditionalTxs.CNT1);
-                require(_signatories[i] != ANYONE, ErrorsConditionalTxs.CNT1);
+                require(_signatories[i] != address(0), ErrorsAgreement.AGR4);
+                require(_signatories[i] != context.anyone(), ErrorsAgreement.AGR4);
             }
         }
     }
 
-    function verify(uint256 _txId) internal view returns (bool) {
-        if (signatoriesLen[_txId] == 1 && signatories[_txId][0] == ANYONE) {
+    function _verify(uint256 _recordId) internal view returns (bool) {
+        if (signatoriesLen[_recordId] == 1 && signatories[_recordId][0] == context.anyone()) {
             return true;
         }
 
-        for (uint256 i = 0; i < signatoriesLen[_txId]; i++) {
-            if (signatories[_txId][i] == msg.sender) {
+        for (uint256 i = 0; i < signatoriesLen[_recordId]; i++) {
+            if (signatories[_recordId][i] == msg.sender) {
                 return true;
             }
         }
         return false;
     }
 
-    function validate(uint256 _txId, uint256 _msgValue) internal returns (bool) {
-        uint256 _len = conditionContextsLen(_txId);
-        checkConditions(_txId, _msgValue);
-        uint256 _result;
-        for (uint256 i = 0; i < _len; i++) {
-            _result += (IContext(conditionContexts[_txId][i]).stack().seeLast().getUint256() > 0)
-                ? 1
-                : 0;
+    function _validateRequiredRecords(uint256 _recordId) internal view returns (bool) {
+        Record memory txn = txs[_recordId];
+        Record memory requiredRecord;
+        for (uint256 i = 0; i < txn.requiredRecords.length; i++) {
+            requiredRecord = txs[txn.requiredRecords[i]];
+            if (!requiredRecord.isExecuted) return false;
         }
-        return _result == _len;
+        return true;
     }
 
-    function fulfil(
-        uint256 _txId,
+    function _validateConditions(uint256 _recordId, uint256 _msgValue) internal returns (bool) {
+        for (uint256 i = 0; i < conditionContexts[_recordId].length; i++) {
+            IContext(conditionContexts[_recordId][i]).setMsgValue(_msgValue);
+            Executor.execute(conditionContexts[_recordId][i]);
+            if (IContext(conditionContexts[_recordId][i]).stack().seeLast() == 0) return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @dev Fulfill Record
+     * @param _recordId Record ID to execute
+     * @param _msgValue Value that were sent along with function execution // TODO: possibly remove this argument
+     * @param _signatory The user that is executing the Record
+     * @return Boolean whether the record was successfully executed or not
+     */
+    function _fulfill(
+        uint256 _recordId,
         uint256 _msgValue,
         address _signatory
     ) internal returns (bool) {
-        Tx memory txn = txs[_txId];
-        execTx(_txId, _msgValue, _signatory);
-        return IContext(txn.transactionContext).stack().seeLast().getUint256() == 0 ? false : true;
+        Record memory txn = txs[_recordId];
+
+        require(!isExecutedBySignatory[_recordId][_signatory], ErrorsAgreement.AGR7);
+
+        IContext(txn.transactionContext).setMsgValue(_msgValue);
+        Executor.execute(address(txn.transactionContext));
+        isExecutedBySignatory[_recordId][_signatory] = true;
+
+        // Check is tx was executed by all signatories
+        uint256 executionProgress;
+        address[] memory signatoriesOfRecord = signatories[_recordId];
+        for (uint256 i = 0; i < signatoriesLen[_recordId]; i++) {
+            if (isExecutedBySignatory[_recordId][signatoriesOfRecord[i]]) executionProgress++;
+        }
+        // If all signatories have executed the transaction - mark the tx as executed
+        if (executionProgress == signatoriesLen[_recordId]) {
+            txs[_recordId].isExecuted = true;
+        }
+
+        return IContext(txn.transactionContext).stack().seeLast() == 0 ? false : true;
     }
 }

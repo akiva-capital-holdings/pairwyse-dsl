@@ -6,8 +6,6 @@ import { IERC20 } from '../../interfaces/IERC20.sol';
 import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
-import { StackValue } from '../../helpers/Stack.sol';
-import { ErrorsBranchingOpcodes } from '../Errors.sol';
 
 // import 'hardhat/console.sol';
 
@@ -24,14 +22,12 @@ library BranchingOpcodes {
             OpcodeHelpers.putToStack(_ctx, 0); // for if-else condition to work all the time
         }
 
-        StackValue last = _getLast(_ctx);
-        require(last.getType() == StackValue.StackType.UINT256, ErrorsBranchingOpcodes.BOP1);
-
+        uint256 last = IContext(_ctx).stack().pop();
         uint16 _posTrueBranch = getUint16(_ctx);
         uint16 _posFalseBranch = getUint16(_ctx);
 
         IContext(_ctx).setNextPc(IContext(_ctx).pc());
-        IContext(_ctx).setPc(last.getUint256() > 0 ? _posTrueBranch : _posFalseBranch);
+        IContext(_ctx).setPc(last > 0 ? _posTrueBranch : _posFalseBranch);
     }
 
     function opIf(address _ctx) public {
@@ -39,12 +35,10 @@ library BranchingOpcodes {
             OpcodeHelpers.putToStack(_ctx, 0); // for if condition to work all the time
         }
 
-        StackValue last = _getLast(_ctx);
-        require(last.getType() == StackValue.StackType.UINT256, ErrorsBranchingOpcodes.BOP1);
-
+        uint256 last = IContext(_ctx).stack().pop();
         uint16 _posTrueBranch = getUint16(_ctx);
 
-        if (last.getUint256() != 0) {
+        if (last != 0) {
             IContext(_ctx).setNextPc(IContext(_ctx).pc());
             IContext(_ctx).setPc(_posTrueBranch);
         } else {
@@ -57,17 +51,10 @@ library BranchingOpcodes {
             OpcodeHelpers.putToStack(_ctx, 0);
         }
 
-        StackValue last = _getLast(_ctx);
-        require(last.getType() == StackValue.StackType.UINT256, ErrorsBranchingOpcodes.BOP1);
-
         uint16 _reference = getUint16(_ctx);
 
         IContext(_ctx).setNextPc(IContext(_ctx).pc());
         IContext(_ctx).setPc(_reference);
-    }
-
-    function _getLast(address _ctx) public returns (StackValue) {
-        return IContext(_ctx).stack().pop();
     }
 
     function opEnd(address _ctx) public {

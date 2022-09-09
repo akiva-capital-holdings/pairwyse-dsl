@@ -117,7 +117,7 @@ describe('Preprocessor', () => {
 
     const infixToPostfixTest = ({ name, expr, expected }: Testcase) => {
       it(name, async () => {
-        const stack = await (await ethers.getContractFactory('Stack')).deploy();
+        const stack = await (await ethers.getContractFactory('StringStack')).deploy();
         const inputArr = jsTransform(expr);
         const res = await app.callStatic.infixToPostfix(ctxAddr, inputArr, stack.address);
         expect(res).to.eql(expected);
