@@ -14,7 +14,7 @@ library ErrorsAgreement {
     string constant AGR5 = 'AGR5'; // Agreement: The transaction should have at least one condition
     string constant AGR6 = 'AGR6'; // Agreement: not all record conditions are satisfied
     string constant AGR7 = 'AGR7'; // Agreement: record already was executed by this signatory
-    string constant AGR4 = 'AGR8'; // Agreement: the variable name is reserved
+    string constant AGR8 = 'AGR8'; // Agreement: the variable name is reserved
 }
 
 /**

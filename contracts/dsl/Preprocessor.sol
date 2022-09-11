@@ -58,8 +58,6 @@ contract Preprocessor is IPreprocessor {
         external
         returns (string[] memory)
     {
-        // TODO: create temporary stack instance only once (in constructor)
-        Stack stack = new Stack();
         string[] memory code = split(_program);
         return infixToPostfix(_ctxAddr, code, strStack);
     }
@@ -318,7 +316,7 @@ contract Preprocessor is IPreprocessor {
      * @param _currencyMultiplier provided number of the multiplier
      * @return updatedChunk amount in Wei of provided _chunk value
      */
-     
+
     function _parseNumber(string memory _chunk, uint256 _currencyMultiplier)
         internal
         pure
