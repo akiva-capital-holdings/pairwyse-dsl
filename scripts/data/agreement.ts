@@ -2,6 +2,23 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { BigNumber } from 'ethers';
 import { TxObject } from '../../test/types';
 
+export const oneEthToBobSteps = (alice: SignerWithAddress) => [
+  {
+    txId: 1,
+    requiredTxs: [],
+    signatories: [alice.address],
+    conditions: ['bool true'],
+    transaction: 'msgValue == 1e18',
+  },
+  {
+    txId: 2,
+    requiredTxs: [1],
+    signatories: [alice.address],
+    conditions: ['bool true'],
+    transaction: 'sendEth BOB 1e18',
+  },
+];
+
 export const aliceAndBobSteps = (
   alice: SignerWithAddress,
   bob: SignerWithAddress,

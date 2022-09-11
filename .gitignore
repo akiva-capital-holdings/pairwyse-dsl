@@ -10,6 +10,7 @@ deployments
 #Hardhat files
 cache
 artifacts
+*.bytecode
 
 # Mac files
 .DS_Store

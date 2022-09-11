@@ -8,6 +8,7 @@ import {
   aliceAndBobSteps,
   aliceBobAndCarl,
   aliceAndAnybodySteps,
+  oneEthToBobSteps,
 } from '../../scripts/data/agreement';
 import { Agreement } from '../../typechain-types';
 import { anyone, ONE_DAY, ONE_MONTH } from '../utils/constants';
@@ -93,6 +94,21 @@ describe('Agreement: Alice, Bob, Carl', () => {
 
     // Tx already executed
     await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('AGR7');
+  });
+
+  it('Alice gives 1 ETH to Bob', async () => {
+    // Set variables
+    await agreement.setStorageAddress(hex4Bytes('BOB'), bob.address);
+
+    // Update Agreement
+    await addSteps(preprocessorAddr, oneEthToBobSteps(alice), agreementAddr);
+
+    // Execute
+    await expect(await agreement.connect(alice).execute(1, { value: oneEthBN })).changeEtherBalance(
+      alice,
+      oneEthBN.mul(-1)
+    );
+    await expect(await agreement.connect(alice).execute(2)).to.changeEtherBalance(bob, oneEthBN);
   });
 
   it('Alice (borrower) and Bob (lender)', async () => {
