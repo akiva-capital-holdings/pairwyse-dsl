@@ -116,4 +116,33 @@ describe('StringUtils', () => {
     expect(await app.mayBeNumber('2-test')).to.be.equal(true);
     await expect(app.mayBeNumber('')).to.be.revertedWith('SUT7');
   });
+
+  it('isCapital', async () => {
+    expect(await app.isCapital('A')).to.be.equal(true);
+    expect(await app.isCapital('Z')).to.be.equal(true);
+    expect(await app.isCapital('Aa')).to.be.equal(true);
+    expect(await app.isCapital('Zz')).to.be.equal(true);
+    expect(await app.isCapital('a')).to.be.equal(false);
+    expect(await app.isCapital('z')).to.be.equal(false);
+    expect(await app.isCapital('@')).to.be.equal(false);
+    expect(await app.isCapital('[')).to.be.equal(false);
+    expect(await app.isCapital('aA')).to.be.equal(false);
+    expect(await app.isCapital('zZ')).to.be.equal(false);
+    await expect(app.isCapital('')).to.be.revertedWith('SUT7');
+  });
+
+  it('areAllCapital', async () => {
+    await expect(app.areAllCapital('')).to.be.revertedWith('SUT7');
+    expect(await app.areAllCapital('A')).to.be.equal(true);
+    expect(await app.areAllCapital('Z')).to.be.equal(true);
+    expect(await app.areAllCapital('Aa')).to.be.equal(false);
+    expect(await app.areAllCapital('Zz')).to.be.equal(false);
+    expect(await app.areAllCapital('AaBC')).to.be.equal(false);
+    expect(await app.areAllCapital('BUZz')).to.be.equal(false);
+    expect(await app.areAllCapital('HELL@')).to.be.equal(false);
+    expect(await app.areAllCapital('[PORK')).to.be.equal(false);
+    expect(await app.areAllCapital('HELLO')).to.be.equal(true);
+    expect(await app.areAllCapital('PORK')).to.be.equal(true);
+    expect(await app.areAllCapital('ABCDEFGHIJKLMNOPQRSTUVWXYZ')).to.be.equal(true);
+  });
 });

@@ -49,4 +49,12 @@ contract StringUtilsMock {
     function mayBeNumber(string memory _s) public pure returns (bool isNumber) {
         return StringUtils.mayBeNumber(_s);
     }
+
+    function isCapital(string memory _s) public pure returns (bool) {
+        return StringUtils.isCapital(_s);
+    }
+
+    function areAllCapital(string memory _s) public pure returns (bool) {
+        return StringUtils.areAllCapital(_s);
+    }
 }

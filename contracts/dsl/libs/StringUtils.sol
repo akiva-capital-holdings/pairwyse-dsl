@@ -126,4 +126,31 @@ library StringUtils {
         }
         revert(ErrorsStringUtils.SUT8);
     }
+
+    /**
+     * @dev Checks is the first character of the string is a capital latin letter
+     * @param _s is a current string to check
+     * @return isCapital whether the first char is a capital latin letter or not
+     */
+    function isCapital(string memory _s) public pure returns (bool) {
+        require(!equal(_s, ''), ErrorsStringUtils.SUT7);
+        bytes1 _byte = bytes(_s)[0];
+        return uint8(_byte) >= 0x41 && uint8(_byte) <= 0x5a;
+    }
+
+    /**
+     * @dev Checks is string consists of capital latin letters only
+     * @param _s is a current string to check
+     * @return isCapital whether the string consists of capital latin letters only or not
+     */
+    function areAllCapital(string memory _s) public pure returns (bool) {
+        require(!equal(_s, ''), ErrorsStringUtils.SUT7);
+
+        for (uint256 i = 0; i < length(_s); i++) {
+            if (uint8(bytes(_s)[i]) < 0x41 || uint8(bytes(_s)[i]) > 0x5a) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
