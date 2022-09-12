@@ -57,6 +57,61 @@ describe('Simple Records in Agreement', () => {
     await network.provider.send('evm_revert', [snapshotId]);
   });
 
+  it('archived transaction', async () => {
+    // Set variables
+    await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
+    await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
+
+    const ContextMock = await ethers.getContractFactory('ContextMock');
+    const transactionContext = await ContextMock.deploy();
+    await transactionContext.setAppAddress(appAddr);
+    const conditionContext = await ContextMock.deploy();
+    await conditionContext.setAppAddress(appAddr);
+
+    records.push({
+      recordId: 96,
+      requiredRecords: [],
+      signatories: [alice.address],
+      transactionStr: 'sendEth RECEIVER 1000000000000000000',
+      conditionStrings: ['blockTimestamp > loadLocal uint256 LOCK_TIME'],
+      transactionCtx: transactionContext,
+      conditionContexts: [conditionContext],
+    });
+
+    // Set conditional transaction
+    for (let i = 0; i < records.length; i++) {
+      const {
+        recordId,
+        requiredRecords,
+        signatories,
+        conditionContexts,
+        conditionStrings,
+        transactionCtx,
+        transactionStr,
+      } = records[i];
+
+      // Set conditional transaction
+      await app.addRecordBlueprint(recordId, requiredRecords, signatories);
+      for (let j = 0; j < conditionContexts.length; j++) {
+        await app.addRecordCondition(recordId, conditionStrings[j], conditionContexts[j].address);
+      }
+      await app.addRecordTransaction(recordId, transactionStr, transactionCtx.address);
+
+      // Set msg senders
+      await transactionCtx.setMsgSender(alice.address);
+      await conditionContexts[0].setMsgSender(alice.address);
+
+      // Archived transaction
+      app.archiveTx(recordId);
+      await expect(app.archiveTx(999)).to.be.revertedWith('AGR8');
+
+      // unArchived transaction
+      app.unArchiveTx(recordId);
+      await expect(app.unArchiveTx(999)).to.be.revertedWith('AGR8');
+      await expect(app.unArchiveTx(recordId)).to.be.revertedWith('AGR9');
+    }
+  });
+
   it('record with one transaction', async () => {
     // Set variables
     await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);

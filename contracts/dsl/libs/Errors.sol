@@ -14,6 +14,8 @@ library ErrorsAgreement {
     string constant AGR5 = 'AGR5'; // Agreement: The transaction should have at least one condition
     string constant AGR6 = 'AGR6'; // Agreement: not all record conditions are satisfied
     string constant AGR7 = 'AGR7'; // Agreement: record already was executed by this signatory
+    string constant AGR8 = 'AGR8'; // Agreement: this transaction does not exist
+    string constant AGR9 = 'AGR9'; // Agreement: this transaction has not yet been archived
 }
 
 /**
