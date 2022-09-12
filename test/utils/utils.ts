@@ -13,6 +13,7 @@ import { ONE_DAY, ONE_MONTH, ONE_YEAR } from './constants';
 /**
  * Apply keccak256 to `str`, cut the result to the first 4 bytes, append
  * 28 bytes (32b - 4b) of zeros
+ * Ex. 0x17f06ae800000000000000000000000000000000000000000000000000000000
  * @param str Input string
  * @returns bytes4(keccak256(str))
  */
@@ -23,6 +24,11 @@ export const hex4Bytes = (str: string) =>
     .map((x, i) => (i < 10 ? x : '0'))
     .join('');
 
+/**
+ * Ex. 17f06ae8
+ * @param str
+ * @returns
+ */
 export const hex4BytesShort = (str: string) => hex4Bytes(str).slice(2, 2 + 8);
 
 /**

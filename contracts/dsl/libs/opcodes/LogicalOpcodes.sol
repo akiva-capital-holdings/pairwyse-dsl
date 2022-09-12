@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import { IContext } from '../../interfaces/IContext.sol';
 import { IERC20 } from '../../interfaces/IERC20.sol';
 import { StringUtils } from '../StringUtils.sol';
-import { UnstructuredStorage } from '../UnstructuredStorage.sol';
+// import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
@@ -15,7 +15,7 @@ import { ErrorsGeneralOpcodes } from '../Errors.sol';
  * @notice Opcodes for set operators such as AND, OR, XOR
  */
 library LogicalOpcodes {
-    using UnstructuredStorage for bytes32;
+    // using UnstructuredStorage for bytes32;
     using StringUtils for string;
 
     /**

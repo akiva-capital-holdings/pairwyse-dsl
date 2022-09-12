@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+// import 'hardhat/console.sol';
+
 library UnstructuredStorage {
     function getStorageBool(bytes32 position) internal view returns (bool data) {
         assembly {
@@ -27,6 +29,16 @@ library UnstructuredStorage {
         }
     }
 
+    function getStorageWithType(bytes32 position) internal view returns (bytes memory) {
+        uint256 dataType;
+        bytes32 data;
+        assembly {
+            dataType := sload(position)
+            data := sload(add(position, 0x20)) // 0x20 is the size of dataType
+        }
+        return abi.encode(dataType, data);
+    }
+
     function setStorageBool(bytes32 position, bool data) internal {
         assembly {
             sstore(position, data)
@@ -48,6 +60,17 @@ library UnstructuredStorage {
     function setStorageUint256(bytes32 position, uint256 data) internal {
         assembly {
             sstore(position, data)
+        }
+    }
+
+    function setStorageWithType(
+        bytes32 position,
+        uint256 dataType,
+        bytes32 data
+    ) internal {
+        assembly {
+            sstore(position, dataType)
+            sstore(add(position, 0x20), data) // 0x20 is the size of dataType
         }
     }
 }

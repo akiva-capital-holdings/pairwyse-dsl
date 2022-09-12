@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import { IContext } from '../../interfaces/IContext.sol';
 import { IERC20 } from '../../interfaces/IERC20.sol';
 import { StringUtils } from '../StringUtils.sol';
-import { UnstructuredStorage } from '../UnstructuredStorage.sol';
+// import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 
 // import 'hardhat/console.sol';
@@ -14,7 +14,7 @@ import { OpcodeHelpers } from './OpcodeHelpers.sol';
  * @notice Opcodes for logical operators such as if/esle, switch/case
  */
 library BranchingOpcodes {
-    using UnstructuredStorage for bytes32;
+    // using UnstructuredStorage for bytes32;
     using StringUtils for string;
 
     function opIfelse(address _ctx) public {

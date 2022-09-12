@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { IContext } from '../../interfaces/IContext.sol';
 import { StringUtils } from '../StringUtils.sol';
-import { UnstructuredStorage } from '../UnstructuredStorage.sol';
+// import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { ErrorsOpcodeHelpers } from '../Errors.sol';
 
 // import 'hardhat/console.sol';
@@ -14,7 +14,7 @@ import { ErrorsOpcodeHelpers } from '../Errors.sol';
  * @dev Opcode libraries are: ComparisonOpcodes, BranchingOpcodes, LogicalOpcodes, and OtherOpcodes
  */
 library OpcodeHelpers {
-    using UnstructuredStorage for bytes32;
+    // using UnstructuredStorage for bytes32;
     using StringUtils for string;
 
     // TODO: get rid of putToStack function

@@ -4,14 +4,14 @@ pragma solidity ^0.8.0;
 import { IContext } from '../../interfaces/IContext.sol';
 import { IERC20 } from '../../interfaces/IERC20.sol';
 import { StringUtils } from '../StringUtils.sol';
-import { UnstructuredStorage } from '../UnstructuredStorage.sol';
+// import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
 // import 'hardhat/console.sol';
 
 library OtherOpcodes {
-    using UnstructuredStorage for bytes32;
+    // using UnstructuredStorage for bytes32;
     using StringUtils for string;
 
     function opLoadLocalAny(address _ctx) public {
@@ -223,6 +223,19 @@ library OtherOpcodes {
         assembly {
             result := mload(add(data, 0x20))
         }
+    }
+
+    function opLoadLocalWithType(address _ctx) public returns (uint256 dataType, bytes32 value) {
+        bytes32 varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+
+        // Load local variable by it's hex
+        (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
+            abi.encodeWithSignature('getStorageWithType(bytes32)', varNameB32)
+        );
+        require(success, ErrorsGeneralOpcodes.OP5);
+
+        // TODO: understand & explain why 2 extra arguments are prepended to the result of the call
+        (, , dataType, value) = abi.decode(data, (bytes32, bytes32, uint256, bytes32));
     }
 
     function opAddressGet(address _ctx) public returns (address) {

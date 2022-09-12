@@ -118,6 +118,10 @@ contract OtherOpcodesMock is UnstructuredStorageMock {
         return OtherOpcodes.opLoadLocalGet(_ctx, funcSignature);
     }
 
+    function opLoadLocalWithType(address _ctx) public returns (uint256 dataType, bytes32 value) {
+        return OtherOpcodes.opLoadLocalWithType(_ctx);
+    }
+
     function opAddressGet(address _ctx) public returns (address) {
         return OtherOpcodes.opAddressGet(_ctx);
     }

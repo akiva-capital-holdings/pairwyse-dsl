@@ -548,18 +548,31 @@ describe('Other opcodes', () => {
   });
 
   it('opLoadLocalGet', async () => {
-    const testValue = hex4Bytes('TEST_VALUE');
+    const value = hex4Bytes('VAR');
     const bytes32TestValueName = hex4Bytes('BYTES32');
-    const testSignature = 'getStorageBytes32(bytes32)';
 
-    await clientApp.setStorageBytes32(bytes32TestValueName, testValue);
+    await clientApp.setStorageBytes32(bytes32TestValueName, value);
 
     const bytes = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${bytes}`);
 
-    const result = await app.callStatic.opLoadLocalGet(ctxAddr, testSignature);
+    const result = await app.callStatic.opLoadLocalGet(ctxAddr, 'getStorageBytes32(bytes32)');
 
-    expect(result).to.be.equal(testValue);
+    expect(result).to.be.equal(value);
+  });
+
+  it('opLoadLocalWithType', async () => {
+    const varName = hex4Bytes('AMOUNT');
+    const dataType = 1;
+    const data = '0x1230000000000000000000000000000000000000000000000000000000000045';
+
+    await clientApp.setStorageWithType(varName, dataType, data);
+    const varNameShort = varName.substring(2, 10);
+    await ctx.setProgram(`0x${varNameShort}`);
+
+    const [dataTypeRes, dataRes] = await app.callStatic.opLoadLocalWithType(ctxAddr);
+    expect(dataTypeRes).equal(dataType);
+    expect(dataRes).equal(data);
   });
 
   it('opAddressGet', async () => {
