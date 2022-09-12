@@ -36,7 +36,6 @@ contract Agreement {
         string[] conditionStrings
     );
 
-
     modifier isReserved(bytes32 position) {
         bytes32 ETH_4_BYTES_HEX = 0xaaaebeba00000000000000000000000000000000000000000000000000000000;
         bytes32 GWEI_4_BYTES_HEX = 0x0c93a5d800000000000000000000000000000000000000000000000000000000;
