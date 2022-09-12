@@ -248,13 +248,13 @@ contract Preprocessor is IPreprocessor {
                 }
                 _stack.pop(); // remove '(' that is left
             } else if (!loadRemoteFlag && chunk.mayBeNumber() && !isFunc && !directUseUint256) {
-                if (i <= _code.length - 2) {
+                if (i + 1 <= _code.length - 1) {
                     currencyMultiplier = _multiplier(_code[i + 1]);
                 }
                 _updateUINT256param();
                 result.push(_parseNumber(chunk, currencyMultiplier));
             } else if (chunk.mayBeNumber() && !isFunc && directUseUint256) {
-                if (i <= _code.length - 2) {
+                if (i + 1 <= _code.length - 1) {
                     currencyMultiplier = _multiplier(_code[i + 1]);
                 }
                 directUseUint256 = false;
