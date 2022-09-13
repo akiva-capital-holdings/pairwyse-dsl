@@ -237,6 +237,7 @@ library OtherOpcodes {
         require(success, ErrorsGeneralOpcodes.OP5);
         // TODO: understand & explain why 2 extra arguments are prepended to the result of the call
         (, , dataType, value) = abi.decode(data, (bytes32, bytes32, uint256, bytes32));
+        OpcodeHelpers.putToStack(_ctx, uint256(value));
     }
 
     function opAddressGet(address _ctx) public returns (address) {
