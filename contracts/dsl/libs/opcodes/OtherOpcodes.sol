@@ -213,7 +213,7 @@ library OtherOpcodes {
     {
         bytes32 varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
 
-        // Load local variable by it's hex
+        // Load local variable by its hex
         (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(funcSignature, varNameB32)
         );
@@ -226,6 +226,8 @@ library OtherOpcodes {
     }
 
     function opLoadLocalWithType(address _ctx) public returns (uint256 dataType, bytes32 value) {
+        // TODO: remove dataType from this function as stack can contain only uint256 values either
+        //       way
         bytes32 varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
 
         // Load local variable by it's hex
@@ -233,7 +235,6 @@ library OtherOpcodes {
             abi.encodeWithSignature('getStorageWithType(bytes32)', varNameB32)
         );
         require(success, ErrorsGeneralOpcodes.OP5);
-
         // TODO: understand & explain why 2 extra arguments are prepended to the result of the call
         (, , dataType, value) = abi.decode(data, (bytes32, bytes32, uint256, bytes32));
     }

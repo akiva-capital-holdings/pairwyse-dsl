@@ -5,7 +5,7 @@ import { deployBaseMock } from '../../scripts/data/deploy.utils.mock';
 import { Context, ParserMock } from '../../typechain-types';
 import { hex4Bytes } from '../utils/utils';
 
-describe.only('Parser', () => {
+describe('Parser', () => {
   let sender: SignerWithAddress;
   let app: ParserMock;
   let preprocessorAddr: string;
@@ -72,11 +72,16 @@ describe.only('Parser', () => {
       expect(await ctx.program()).to.equal(expected);
     });
 
-    it.only('AMOUNT > 5', async () => {
+    it('AMOUNT > 5', async () => {
       await app.parse(preprocessorAddr, ctxAddr, 'AMOUNT > 5');
       expect(await ctx.program()).equal(
-        '0x311a000000000000000000000000000000000000000000000000000000000000504'
+        '0x311a3a187d1a000000000000000000000000000000000000000000000000000000000000000504'
       );
+    });
+
+    it('NUMBER > NUMBER2', async () => {
+      await app.parse(preprocessorAddr, ctxAddr, 'NUMBER > NUMBER2');
+      expect(await ctx.program()).equal('0x31545cbf7731b66353ab04');
     });
 
     it('loadLocal uint256 TIMESTAMP < loadLocal uint256 NEXT_MONTH', async () => {

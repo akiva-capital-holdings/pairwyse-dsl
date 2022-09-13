@@ -349,13 +349,11 @@ contract Parser is IParser {
 
         bytes1 opcode = IContext(_ctxAddr).opCodeByName(cmd);
 
-        if (opcode == 0x0 && cmd.areAllCapital()) {
-            console.log(cmd, ' is a variable name');
+        if (opcode == 0x0 && cmd.isValidVarName()) {
             // this is a variable name
             opcode = IContext(_ctxAddr).VARIABLE_OPCODE();
-        }
-
-        if (isVariable[cmd]) {
+            program = bytes.concat(program, opcode, bytes4(keccak256(abi.encodePacked(cmd))));
+        } else if (isVariable[cmd]) {
             // if the variable was saved before its loading, so the concatenation
             // will gather the current program and a prepared loading program for this variable
             program = bytes.concat(program, savedProgram[cmd]);

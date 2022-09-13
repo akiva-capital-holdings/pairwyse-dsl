@@ -54,7 +54,7 @@ contract StringUtilsMock {
         return StringUtils.isCapital(_s);
     }
 
-    function areAllCapital(string memory _s) public pure returns (bool) {
-        return StringUtils.areAllCapital(_s);
+    function isValidVarName(string memory _s) public pure returns (bool) {
+        return StringUtils.isValidVarName(_s);
     }
 }

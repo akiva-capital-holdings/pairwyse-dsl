@@ -4,7 +4,13 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
 import { Context, Stack, ExecutorMock } from '../../../typechain-types';
-import { checkStack, checkStackTailv2, hex4Bytes } from '../../utils/utils';
+import {
+  addressToHex,
+  checkStack,
+  checkStackTailv2,
+  hex4Bytes,
+  numberToHex,
+} from '../../utils/utils';
 
 describe('Executor', () => {
   let ctx: Context;
@@ -773,6 +779,233 @@ describe('Executor', () => {
           const bool = boolBytes.substring(2, 10);
           const bool2 = boolBytes2.substring(2, 10);
           await ctx.setProgram(`0x1c02${bool}${appAddr}1c02${bool2}${appAddr}14`);
+          await app.execute(ctxAddr);
+          await checkStack(stack, 1, 0);
+        });
+      });
+    });
+
+    describe.only('Load with type', () => {
+      describe('uint256', () => {
+        it('17 > 15', async () => {
+          // Set NUMBER
+          const bytes32Number = hex4Bytes('NUMBER');
+          await app.setStorageWithType(bytes32Number, 1, numberToHex(17));
+          // Set NUMBER2
+          const bytes32Number2 = hex4Bytes('NUMBER2');
+          await app.setStorageWithType(bytes32Number2, 1, numberToHex(15));
+          /**
+           * The program is: `NUMBER > NUMBER2`
+           */
+          const number = bytes32Number.substring(2, 10);
+          const number2 = bytes32Number2.substring(2, 10);
+          await ctx.setProgram(`0x31${number}31${number2}04`);
+          await app.execute(ctxAddr);
+          await checkStack(stack, 1, 1);
+        });
+
+        it('5 <= 3', async () => {
+          // Set NUMBER
+          const bytes32Number = hex4Bytes('NUMBER');
+          await app.setStorageWithType(bytes32Number, 1, numberToHex(5));
+          // Set NUMBER2
+          const bytes32Number2 = hex4Bytes('NUMBER2');
+          await app.setStorageWithType(bytes32Number2, 1, numberToHex(3));
+          /**
+           * The program is: `NUMBER <= NUMBER2`
+           */
+          const number = bytes32Number.substring(2, 10);
+          const number2 = bytes32Number2.substring(2, 10);
+          await ctx.setProgram(`0x31${number}31${number2}06`);
+          await app.execute(ctxAddr);
+          await checkStack(stack, 1, 0);
+        });
+
+        it('12 = 12', async () => {
+          // Set NUMBER
+          const bytes32Number = hex4Bytes('NUMBER');
+          await app.setStorageWithType(bytes32Number, 1, numberToHex(12));
+          // Set NUMBER2
+          const bytes32Number2 = hex4Bytes('NUMBER2');
+          await app.setStorageWithType(bytes32Number2, 1, numberToHex(12));
+          /**
+           * The program is: `NUMBER == NUMBER2`
+           */
+          const number = bytes32Number.substring(2, 10);
+          const number2 = bytes32Number2.substring(2, 10);
+          await ctx.setProgram(`0x31${number}31${number2}01`);
+          await app.execute(ctxAddr);
+          await checkStack(stack, 1, 1);
+        });
+      });
+
+      describe('bytes32', () => {
+        it('equal', async () => {
+          // Set BYTES
+          const bytes32Bytes = hex4Bytes('BYTES');
+          await app.setStorageWithType(
+            bytes32Bytes,
+            1, // TODO: remove the type as in the stack there is only one type either way: uint256
+            '0x1234500000000000000000000000000000000000000000000000000000000001'
+          );
+
+          // Set BYTES2
+          const bytes32Bytes2 = hex4Bytes('BYTES2');
+          await app.setStorageWithType(
+            bytes32Bytes2,
+            1,
+            '0x1234500000000000000000000000000000000000000000000000000000000001'
+          );
+
+          /**
+           * The program is: `BYTES = BYTES2`
+           */
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
+          await ctx.setProgram(`0x31${bytes}31${bytes2}01`);
+          await app.execute(ctxAddr);
+          await checkStack(stack, 1, 1);
+        });
+
+        it('not equal', async () => {
+          // Set BYTES
+          const bytes32Bytes = hex4Bytes('BYTES');
+          await app.setStorageWithType(
+            bytes32Bytes,
+            1,
+            '0x1234500000000000000000000000000000000000000000000000000000000001'
+          );
+
+          // Set BYTES2
+          const bytes32Bytes2 = hex4Bytes('BYTES2');
+          await app.setStorageWithType(
+            bytes32Bytes2,
+            1,
+            '0x1234500000000000000000000000000000000000000000000000000000000011'
+          );
+
+          /**
+           * The program is: `BYTES = BYTES2`
+           */
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
+          await ctx.setProgram(`0x31${bytes}31${bytes2}01`);
+          await app.execute(ctxAddr);
+          await checkStack(stack, 1, 0);
+        });
+      });
+
+      describe('address', () => {
+        console.log(addressToHex('0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5'));
+        it('equal', async () => {
+          // Set ADDR
+          const bytes32Bytes = hex4Bytes('ADDR');
+          await app.setStorageWithType(
+            bytes32Bytes,
+            1,
+            addressToHex('0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5')
+          );
+
+          // Set ADDR2
+          const bytes32Bytes2 = hex4Bytes('ADDR2');
+          await app.setStorageWithType(
+            bytes32Bytes2,
+            1,
+            addressToHex('0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5')
+          );
+
+          /**
+           * The program is: `ADDR = ADDR2`
+           */
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
+          await ctx.setProgram(`0x31${bytes}31${bytes2}01`);
+          await app.execute(ctxAddr);
+          await checkStack(stack, 1, 1);
+        });
+
+        it('not equal', async () => {
+          // Set ADDR
+          const bytes32Bytes = hex4Bytes('ADDR');
+          await app.setStorageWithType(
+            bytes32Bytes,
+            1,
+            addressToHex('0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5')
+          );
+
+          // Set ADDR2
+          const bytes32Bytes2 = hex4Bytes('ADDR2');
+          await app.setStorageWithType(
+            bytes32Bytes2,
+            1,
+            addressToHex('0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836')
+          );
+
+          /**
+           * The program is: `ADDR = ADDR2`
+           */
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
+          await ctx.setProgram(`0x31${bytes}31${bytes2}01`);
+          await app.execute(ctxAddr);
+          await checkStack(stack, 1, 0);
+        });
+      });
+
+      describe('bool', () => {
+        it('true == true', async () => {
+          // Set BOOL
+          const bytes32Bytes = hex4Bytes('BOOL');
+          await app.setStorageWithType(bytes32Bytes, 1, numberToHex(1));
+
+          // Set BOOL2
+          const bytes32Bytes2 = hex4Bytes('BOOL2');
+          await app.setStorageWithType(bytes32Bytes2, 1, numberToHex(1));
+
+          /**
+           * The program is: `BOOL = BOOL2`
+           */
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
+          await ctx.setProgram(`0x31${bytes}31${bytes2}01`);
+          await app.execute(ctxAddr);
+          await checkStack(stack, 1, 1);
+        });
+
+        it('true && true', async () => {
+          // Set BOOL
+          const bytes32Bytes = hex4Bytes('BOOL');
+          await app.setStorageWithType(bytes32Bytes, 1, numberToHex(1));
+
+          // Set BOOL2
+          const bytes32Bytes2 = hex4Bytes('BOOL2');
+          await app.setStorageWithType(bytes32Bytes2, 1, numberToHex(1));
+
+          /**
+           * The program is: `BOOL && BOOL2`
+           */
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
+          await ctx.setProgram(`0x31${bytes}31${bytes2}12`);
+          await app.execute(ctxAddr);
+          await checkStack(stack, 1, 1);
+        });
+
+        it('true == false', async () => {
+          // Set BOOL
+          const bytes32Bytes = hex4Bytes('BOOL');
+          await app.setStorageWithType(bytes32Bytes, 1, numberToHex(1));
+
+          // Set BOOL2
+          const bytes32Bytes2 = hex4Bytes('BOOL2');
+          await app.setStorageWithType(bytes32Bytes2, 1, numberToHex(0));
+
+          /**
+           * The program is: `BOOL = BOOL2`
+           */
+          const bytes = bytes32Bytes.substring(2, 10);
+          const bytes2 = bytes32Bytes2.substring(2, 10);
+          await ctx.setProgram(`0x31${bytes}31${bytes2}01`);
           await app.execute(ctxAddr);
           await checkStack(stack, 1, 0);
         });

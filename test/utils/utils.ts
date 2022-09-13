@@ -25,6 +25,36 @@ export const hex4Bytes = (str: string) =>
     .join('');
 
 /**
+ * Converts a number into hex string with `0x` prefix and 32 bytes size
+ * @param num Input number
+ * @returns bytes32(num)
+ */
+export const numberToHex = (num: number) => {
+  const hex = num.toString(16);
+  let res = hex;
+  for (let i = hex.length; i < 64; i++) {
+    res = '0'.concat(res);
+  }
+  return `0x${res}`;
+};
+
+/**
+ * Converts an Ethereum address (that is hex string of the lenght 42 symbols)
+ * into hex string with the lenght of 66 symbols
+ * @example 0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5 (len: 42) ->
+ *          0x00000000000000000000000052bc44d5378309EE2abF1539BF71dE1b7d7bE3b5 (len 66)
+ * @param str Input address
+ * @returns extended address
+ */
+export const addressToHex = (str: string) => {
+  let res = str.substring(2);
+  for (let i = res.length; i < 64; i++) {
+    res = '0'.concat(res);
+  }
+  return `0x${res}`;
+};
+
+/**
  * Ex. 17f06ae8
  * @param str
  * @returns

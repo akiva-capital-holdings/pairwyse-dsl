@@ -131,18 +131,26 @@ describe('StringUtils', () => {
     await expect(app.isCapital('')).to.be.revertedWith('SUT7');
   });
 
-  it('areAllCapital', async () => {
-    await expect(app.areAllCapital('')).to.be.revertedWith('SUT7');
-    expect(await app.areAllCapital('A')).to.be.equal(true);
-    expect(await app.areAllCapital('Z')).to.be.equal(true);
-    expect(await app.areAllCapital('Aa')).to.be.equal(false);
-    expect(await app.areAllCapital('Zz')).to.be.equal(false);
-    expect(await app.areAllCapital('AaBC')).to.be.equal(false);
-    expect(await app.areAllCapital('BUZz')).to.be.equal(false);
-    expect(await app.areAllCapital('HELL@')).to.be.equal(false);
-    expect(await app.areAllCapital('[PORK')).to.be.equal(false);
-    expect(await app.areAllCapital('HELLO')).to.be.equal(true);
-    expect(await app.areAllCapital('PORK')).to.be.equal(true);
-    expect(await app.areAllCapital('ABCDEFGHIJKLMNOPQRSTUVWXYZ')).to.be.equal(true);
+  it('isValidVarName', async () => {
+    await expect(app.isValidVarName('')).to.be.revertedWith('SUT7');
+
+    // true
+    expect(await app.isValidVarName('A')).to.be.equal(true);
+    expect(await app.isValidVarName('Z')).to.be.equal(true);
+    expect(await app.isValidVarName('HELLO')).to.be.equal(true);
+    expect(await app.isValidVarName('PORK')).to.be.equal(true);
+    expect(await app.isValidVarName('ABCDEFGHIJKLMNOPQRSTUVWXYZ')).to.be.equal(true);
+    expect(await app.isValidVarName('$100')).to.be.equal(true);
+    expect(await app.isValidVarName('_$100')).to.be.equal(true);
+    expect(await app.isValidVarName('$H$LL_')).to.be.equal(true);
+
+    // false
+    expect(await app.isValidVarName('Aa')).to.be.equal(false);
+    expect(await app.isValidVarName('Zz')).to.be.equal(false);
+    expect(await app.isValidVarName('AaBC')).to.be.equal(false);
+    expect(await app.isValidVarName('BUZz')).to.be.equal(false);
+    expect(await app.isValidVarName('HELL@')).to.be.equal(false);
+    expect(await app.isValidVarName('[PORK')).to.be.equal(false);
+    expect(await app.isValidVarName('0HELLO')).to.be.equal(false);
   });
 });
