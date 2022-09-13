@@ -204,6 +204,7 @@ contract Preprocessor is IPreprocessor {
         bool loadRemoteFlag;
         bool directUseUint256;
         uint256 loadRemoteVarCount;
+        uint256 currencyMultiplier;
         string memory chunk;
         string memory name;
 
@@ -214,11 +215,11 @@ contract Preprocessor is IPreprocessor {
         // Infix to postfix
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
+            currencyMultiplier = 0;
 
             // returns true if the chunk can use uint256 directly
             directUseUint256 = _isDirectUseUint256(directUseUint256, chunk);
             // checks and updates if the chunk can use uint256 or it's loadRemote opcode
-
             (loadRemoteFlag, loadRemoteVarCount) = _updateRemoteParams(
                 loadRemoteFlag,
                 loadRemoteVarCount,
@@ -247,11 +248,17 @@ contract Preprocessor is IPreprocessor {
                 }
                 _stack.pop(); // remove '(' that is left
             } else if (!loadRemoteFlag && chunk.mayBeNumber() && !isFunc && !directUseUint256) {
+                if (i + 1 <= _code.length - 1) {
+                    currencyMultiplier = _multiplier(_code[i + 1]);
+                }
                 _updateUINT256param();
-                result.push(_parseNumber(chunk));
+                result.push(_parseNumber(chunk, currencyMultiplier));
             } else if (chunk.mayBeNumber() && !isFunc && directUseUint256) {
+                if (i + 1 <= _code.length - 1) {
+                    currencyMultiplier = _multiplier(_code[i + 1]);
+                }
                 directUseUint256 = false;
-                result.push(_parseNumber(chunk));
+                result.push(_parseNumber(chunk, currencyMultiplier));
             } else if (chunk.equal('func')) {
                 // if the chunk is 'func' then `Functions block` will occur
                 isFunc = true;
@@ -264,6 +271,10 @@ contract Preprocessor is IPreprocessor {
                 // if it was already set the name for a function
                 isName = false;
                 isFunc = _parceFuncParams(chunk, name, isFunc);
+            } else if (_isCurrencySymbol(chunk)) {
+                // we've already transformed the number before the keyword
+                // so we can safely skip the chunk
+                continue;
             } else {
                 result.push(chunk);
                 if (loadRemoteVarCount == 4) {
@@ -281,20 +292,61 @@ contract Preprocessor is IPreprocessor {
     }
 
     /**
+     * @dev checks the value, and returns the corresponding multiplier.
+     * If it is Ether, then it returns 1000000000000000000,
+     * If it is GWEI, then it returns 1000000000
+     * @param _chunk is a command from DSL command list
+     * @return multiplier returns the corresponding multiplier.
+     */
+    function _multiplier(string memory _chunk) internal pure returns (uint256 multiplier) {
+        if (_chunk.equal('ETH')) {
+            return multiplier = 1000000000000000000;
+        } else if (_chunk.equal('GWEI')) {
+            return multiplier = 1000000000;
+        } else return multiplier = 0;
+    }
+
+    /**
      * @dev As the string of values can be simple and complex for DSL this function returns a number in
      * Wei regardless of what type of number parameter was provided by the user.
      * For example:
      * `uint256 1000000` - simple
      * `uint256 1e6 - complex`
      * @param _chunk provided number by the user
+     * @param _currencyMultiplier provided number of the multiplier
      * @return updatedChunk amount in Wei of provided _chunk value
      */
-    function _parseNumber(string memory _chunk) internal pure returns (string memory updatedChunk) {
-        try _chunk.toUint256() {
-            updatedChunk = _chunk;
-        } catch {
-            updatedChunk = _chunk.getWei();
+
+    function _parseNumber(string memory _chunk, uint256 _currencyMultiplier)
+        internal
+        pure
+        returns (string memory updatedChunk)
+    {
+        if (_currencyMultiplier > 0) {
+            try _chunk.toUint256() {
+                updatedChunk = StringUtils.toString(_chunk.toUint256() * _currencyMultiplier);
+            } catch {
+                updatedChunk = StringUtils.toString(
+                    _chunk.getWei().toUint256() * _currencyMultiplier
+                );
+            }
+        } else {
+            try _chunk.toUint256() {
+                updatedChunk = _chunk;
+            } catch {
+                updatedChunk = _chunk.getWei();
+            }
         }
+    }
+
+    /**
+     * @dev Check is chunk is a currency symbol
+     * @param _chunk is a current chunk from the DSL string code
+     * @return true or false based on whether chunk is a currency symbol or not
+     */
+    function _isCurrencySymbol(string memory _chunk) internal pure returns (bool) {
+        if (_chunk.equal('ETH') || _chunk.equal('GWEI')) return true;
+        return false;
     }
 
     /**

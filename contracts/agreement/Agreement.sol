@@ -36,6 +36,14 @@ contract Agreement {
         string[] conditionStrings
     );
 
+    modifier isReserved(bytes32 position) {
+        bytes32 ETH_4_BYTES_HEX = 0xaaaebeba00000000000000000000000000000000000000000000000000000000;
+        bytes32 GWEI_4_BYTES_HEX = 0x0c93a5d800000000000000000000000000000000000000000000000000000000;
+        require(position != ETH_4_BYTES_HEX, 'AGR8'); // check that variable name is not 'ETH'
+        require(position != GWEI_4_BYTES_HEX, 'AGR8'); // check that variable name is not 'GWEI'
+        _;
+    }
+
     struct Record {
         uint256[] requiredRecords;
         address transactionContext;
@@ -73,15 +81,19 @@ contract Agreement {
         return position.getStorageUint256();
     }
 
-    function setStorageBool(bytes32 position, bool data) external {
+    function setStorageBool(bytes32 position, bool data) external isReserved(position) {
         position.setStorageBool(data);
     }
 
-    function setStorageAddress(bytes32 position, address data) external {
+    function setStorageAddress(bytes32 position, address data) external isReserved(position) {
         position.setStorageAddress(data);
     }
 
-    function setStorageUint256(bytes32 position, uint256 data) external {
+    function setStorageBytes32(bytes32 position, bytes32 data) external isReserved(position) {
+        position.setStorageBytes32(data);
+    }
+
+    function setStorageUint256(bytes32 position, uint256 data) external isReserved(position) {
         position.setStorageUint256(data);
     }
 
