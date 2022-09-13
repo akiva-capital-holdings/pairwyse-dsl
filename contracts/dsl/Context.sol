@@ -23,6 +23,7 @@ import { ErrorsContext } from './libs/Errors.sol';
 contract Context is IContext {
     // The address that is used to symbolyze any signer inside Conditional Transaction
     address public constant anyone = 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF;
+    bytes1 public constant VARIABLE_OPCODE = 0x31;
 
     // stack is used by Opcode libraries like `libs/opcodes/*`
     // to store and analyze values and removing after usage
@@ -495,8 +496,13 @@ contract Context is IContext {
         _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
         _addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadRemoteBytes32.selector);
 
-        // Aliases
+        // Add universal opcode for all variable names
+        selectorByOpcode[VARIABLE_OPCODE] = OtherOpcodes.opLoadLocalWithType.selector;
+        opcodeLibNameByOpcode[VARIABLE_OPCODE] = OpcodeLibNames.OtherOpcodes;
 
+        /***********
+         * Aliases *
+         **********/
         /*
             As the blockTimestamp is the current opcode the user can use TIME alias to
             simplify the DSL code string.
@@ -552,7 +558,7 @@ contract Context is IContext {
      * @param _name is the name of the command
      * @param _opcode is the opcode of the command
      * @param _opSelector is the selector of the function for this opcode
-       from onle of library in `contracts/libs/opcodes/*`
+       from one of libraries in `contracts/libs/opcodes/*`
      * @param _asmSelector is the selector of the function from the Parser for that opcode
      * @param _libName is the name of library that is used fot the opcode
      */

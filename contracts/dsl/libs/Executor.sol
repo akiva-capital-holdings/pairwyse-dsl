@@ -15,7 +15,12 @@ library Executor {
             bytes1 opcodeByte1 = bytes1(uint8(opcodeBytes[0]));
 
             bytes4 _selector = IContext(_ctx).selectorByOpcode(opcodeByte1);
-            require(_selector != 0x0, ErrorsExecutor.EXC2);
+            // require(_selector != 0x0, ErrorsExecutor.EXC2);
+
+            if (_selector == 0x0) {
+                // This should be a variable name
+            }
+
             IContext.OpcodeLibNames _libName = IContext(_ctx).opcodeLibNameByOpcode(opcodeByte1);
             IContext(_ctx).incPc(1);
 

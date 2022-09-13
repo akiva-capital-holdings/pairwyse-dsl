@@ -5,7 +5,7 @@ import { deployBaseMock } from '../../scripts/data/deploy.utils.mock';
 import { Context, ParserMock } from '../../typechain-types';
 import { hex4Bytes } from '../utils/utils';
 
-describe('Parser', () => {
+describe.only('Parser', () => {
   let sender: SignerWithAddress;
   let app: ParserMock;
   let preprocessorAddr: string;
@@ -70,6 +70,13 @@ describe('Parser', () => {
       await app.parse(preprocessorAddr, ctxAddr, 'uint256 1122334433');
       const expected = '0x1a0000000000000000000000000000000000000000000000000000000042e576e1';
       expect(await ctx.program()).to.equal(expected);
+    });
+
+    it.only('AMOUNT > 5', async () => {
+      await app.parse(preprocessorAddr, ctxAddr, 'AMOUNT > 5');
+      expect(await ctx.program()).equal(
+        '0x311a000000000000000000000000000000000000000000000000000000000000504'
+      );
     });
 
     it('loadLocal uint256 TIMESTAMP < loadLocal uint256 NEXT_MONTH', async () => {

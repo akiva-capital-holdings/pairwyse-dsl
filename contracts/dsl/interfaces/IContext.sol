@@ -14,6 +14,8 @@ interface IContext {
     // Variables
     function anyone() external view returns (address);
 
+    function VARIABLE_OPCODE() external view returns (bytes1);
+
     function stack() external view returns (Stack);
 
     function program() external view returns (bytes memory);
