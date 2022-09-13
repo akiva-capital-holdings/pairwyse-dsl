@@ -101,10 +101,14 @@ describe('Simple Records in Agreement', () => {
       await transactionCtx.setMsgSender(alice.address);
       await conditionContexts[0].setMsgSender(alice.address);
 
+      // Check that record unarchived yet
+      const unArchivedRecord = await app.txs(recordId);
+      expect(unArchivedRecord.isArchived).to.be.equal(false);
+
       // Check that record was actually archived
       await app.archiveRecord(recordId);
       const firstArchivedRecord = await app.txs(recordId);
-      await expect(firstArchivedRecord[2]).to.be.equal(true);
+      expect(firstArchivedRecord.isArchived).to.be.equal(true);
 
       // Check that record does not exist
       await expect(app.archiveRecord(999)).to.be.revertedWith('AGR9');
@@ -112,12 +116,12 @@ describe('Simple Records in Agreement', () => {
       // Check that secondary archived record still archived
       await app.archiveRecord(recordId);
       const secondArchivedRecord = await app.txs(recordId);
-      await expect(secondArchivedRecord[2]).to.be.equal(true);
+      expect(secondArchivedRecord.isArchived).to.be.equal(true);
 
       // Check that record was actually unArchived
       await app.unArchiveRecord(recordId);
       const firstUnArchivedRecord = await app.txs(recordId);
-      await expect(firstUnArchivedRecord[2]).to.be.equal(false);
+      expect(firstUnArchivedRecord.isArchived).to.be.equal(false);
 
       // Check that secondary unAchived will reverted
       await expect(app.unArchiveRecord(recordId)).to.be.revertedWith('AGR10');
@@ -128,7 +132,7 @@ describe('Simple Records in Agreement', () => {
       // Check that third archived record was actually archived after unachived
       await app.archiveRecord(recordId);
       const thirdArchivedRecord = await app.txs(recordId);
-      await expect(thirdArchivedRecord[2]).to.be.equal(true);
+      expect(thirdArchivedRecord.isArchived).to.be.equal(true);
     }
   });
 
