@@ -96,23 +96,20 @@ contract Agreement {
 
     /**
      * @dev archived any of the existing records by recordId.
-     * if the record doesn’t exist - raise an error
      * @param _recordId Record ID
      */
-    function archiveTx(uint256 _recordId) external {
-        require(txs[_recordId].transactionContext != address(0), ErrorsAgreement.AGR8);
+    function archiveRecord(uint256 _recordId) external {
+        require(txs[_recordId].transactionContext != address(0), ErrorsAgreement.AGR9);
         txs[_recordId].isArchived = true;
     }
 
     /**
      * @dev  unarchive any of the existing records by recordId
-     * if the record doesn’t exist - raise an error
-     * if the record wasn’t archived - raise an error
      * @param _recordId Record ID
      */
-    function unArchiveTx(uint256 _recordId) external {
-        require(txs[_recordId].transactionContext != address(0), ErrorsAgreement.AGR8);
-        require(txs[_recordId].isArchived != false, ErrorsAgreement.AGR9);
+    function unArchiveRecord(uint256 _recordId) external {
+        require(txs[_recordId].transactionContext != address(0), ErrorsAgreement.AGR9);
+        require(txs[_recordId].isArchived != false, ErrorsAgreement.AGR10);
         txs[_recordId].isArchived = false;
     }
 
