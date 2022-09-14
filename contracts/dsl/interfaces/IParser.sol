@@ -26,7 +26,7 @@ interface IParser {
 
     function asmLoadRemote(address _ctxAddr) external;
 
-    function asmDeclare() external;
+    function asmDeclare(address _ctxAddr) external;
 
     function asmBool() external;
 

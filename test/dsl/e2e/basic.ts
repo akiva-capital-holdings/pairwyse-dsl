@@ -1255,29 +1255,34 @@ describe('DSL: basic', () => {
   describe.only('arrays', () => {
     const EMPTY_BYTES = new Array(65).join('0');
     const EMPTY_ARRAY = '0x' + EMPTY_BYTES + EMPTY_BYTES;
-    const EMPTY_DATA = '0x' + new Array(64).join('0') + '2' + EMPTY_BYTES;
+    const DECLARED_ARR_UINT256 =
+      '0x' +
+      new Array(64).join('0') +
+      '2' + // array type of the variable name
+      '01' + // uint256 type of the array
+      new Array(63).join('0'); // left values. TODO: should be less or will use for smth?
 
     it('should declare an empty array with the position on the next empty item', async () => {
       expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_ARRAY);
-      await app.parse('declare NUMBERS');
+      await app.parse('declare NUMBERS uint256');
       await app.execute();
-      expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_DATA);
+      expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(DECLARED_ARR_UINT256);
 
-      // should declare the array twice
-      await app.parse('declare NUMBERS');
+      // it is possible to declare the same array twice
+      await app.parse('declare NUMBERS uint256');
       await app.execute();
-      expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_DATA);
+      expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(DECLARED_ARR_UINT256);
     });
 
     it('should declare an empty array even with additional code', async () => {
       expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_ARRAY);
       await app.parse(`
           (123e18) setUint256 SUM
-          declare NUMBERS
+          declare NUMBERS uint256
           22 setUint256 B
         `);
       await app.execute();
-      expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_DATA);
+      expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(DECLARED_ARR_UINT256);
       expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(parseUnits('123', 18));
       expect(await app.getStorageUint256(hex4Bytes('B'))).to.equal(22);
     });
@@ -1288,17 +1293,17 @@ describe('DSL: basic', () => {
       expect(await app.getStorageWithType(hex4Bytes('ARR_TEST'))).to.equal(EMPTY_ARRAY);
       await app.parse(`
           (123e18) setUint256 SUM
-          declare NUMBERS
+          declare NUMBERS uint256
           22 setUint256 B
-          declare NAMES
+          declare NAMES uint256
           TIME
-          declare ARR_TEST
+          declare ARR_TEST uint256
           bool false
         `);
       await app.execute();
-      expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_DATA);
-      expect(await app.getStorageWithType(hex4Bytes('ARR_TEST'))).to.equal(EMPTY_DATA);
-      expect(await app.getStorageWithType(hex4Bytes('NAMES'))).to.equal(EMPTY_DATA);
+      expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(DECLARED_ARR_UINT256);
+      expect(await app.getStorageWithType(hex4Bytes('ARR_TEST'))).to.equal(DECLARED_ARR_UINT256);
+      expect(await app.getStorageWithType(hex4Bytes('NAMES'))).to.equal(DECLARED_ARR_UINT256);
       expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(parseUnits('123', 18));
       expect(await app.getStorageUint256(hex4Bytes('B'))).to.equal(22);
     });

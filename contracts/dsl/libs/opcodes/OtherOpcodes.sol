@@ -81,19 +81,18 @@ library OtherOpcodes {
     }
 
     /**
-     * @dev Declares empty array
-     * - 0x2 is a type of array variable by _varNameB32 name
-     * - the data (type of the array) is empty
+     * @dev Declares an empty array
      */
     function opDeclare(address _ctx) public {
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+        bytes32 _varType = OpcodeHelpers.getNextBytes(_ctx, 1);
 
         (bool success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
                 'setStorageWithType(bytes32,uint256,bytes32)',
                 _varNameB32,
-                0x2,
-                0
+                0x2, // a type of variable for _varNameB32 name. always will be 0x2 for array names
+                _varType // type of the array
             )
         );
         require(success, ErrorsGeneralOpcodes.OP1);
