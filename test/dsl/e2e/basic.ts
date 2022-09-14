@@ -1,4 +1,4 @@
-import { ethers } from 'hardhat';
+import { ethers, network } from 'hardhat';
 import { expect } from 'chai';
 import { parseEther, parseUnits } from 'ethers/lib/utils';
 import { App, Context, Stack } from '../../../typechain-types';
@@ -13,6 +13,7 @@ describe('DSL: basic', () => {
   let NEXT_MONTH: number;
   let PREV_MONTH: number;
   let lastBlockTimestamp: number;
+  let snapshotId: number;
 
   before(async () => {
     lastBlockTimestamp = (
@@ -54,6 +55,15 @@ describe('DSL: basic', () => {
     appAddrHex = app.address.slice(2);
 
     await ctx.setAppAddress(app.address);
+  });
+
+  beforeEach(async () => {
+    snapshotId = await network.provider.send('evm_snapshot');
+  });
+
+  afterEach(async () => {
+    // Return to the snapshot
+    await network.provider.send('evm_revert', [snapshotId]);
   });
 
   it('0 + 0', async () => {
@@ -1240,5 +1250,153 @@ describe('DSL: basic', () => {
       const input = '(uint256 45ee6) setUint256 SUM';
       await expect(app.parse(input)).to.be.revertedWith('SUT5');
     });
+  });
+
+  describe.only('arrays', () => {
+    const EMPTY_BYTES = new Array(65).join('0');
+    const EMPTY_ARRAY = '0x' + EMPTY_BYTES + EMPTY_BYTES;
+    const EMPTY_DATA = '0x' + new Array(64).join('0') + '2' + EMPTY_BYTES;
+
+    it('should declare an empty array with the position on the next empty item', async () => {
+      expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_ARRAY);
+      await app.parse('declare NUMBERS');
+      await app.execute();
+      expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_DATA);
+
+      // should declare the array twice
+      await app.parse('declare NUMBERS');
+      await app.execute();
+      expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_DATA);
+    });
+
+    it('should declare an empty array even with additional code', async () => {
+      expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_ARRAY);
+      await app.parse(`
+          (123e18) setUint256 SUM
+          declare NUMBERS
+          22 setUint256 B
+        `);
+      await app.execute();
+      expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_DATA);
+      expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(parseUnits('123', 18));
+      expect(await app.getStorageUint256(hex4Bytes('B'))).to.equal(22);
+    });
+
+    it('should declare several arrays with additional code', async () => {
+      expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_ARRAY);
+      expect(await app.getStorageWithType(hex4Bytes('NAMES'))).to.equal(EMPTY_ARRAY);
+      expect(await app.getStorageWithType(hex4Bytes('ARR_TEST'))).to.equal(EMPTY_ARRAY);
+      await app.parse(`
+          (123e18) setUint256 SUM
+          declare NUMBERS
+          22 setUint256 B
+          declare NAMES
+          TIME
+          declare ARR_TEST
+          bool false
+        `);
+      await app.execute();
+      expect(await app.getStorageWithType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_DATA);
+      expect(await app.getStorageWithType(hex4Bytes('ARR_TEST'))).to.equal(EMPTY_DATA);
+      expect(await app.getStorageWithType(hex4Bytes('NAMES'))).to.equal(EMPTY_DATA);
+      expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(parseUnits('123', 18));
+      expect(await app.getStorageUint256(hex4Bytes('B'))).to.equal(22);
+    });
+
+    // describe('uint256', () => {
+    //   // TODO: all executes should have normal errors
+    //   const arr = [1, 2, 876, 0];
+    //   it.skip('should return number that stores in the new variable', async () => {
+    //     await app.setArrayUint256(hex4Bytes('NUMBERS'), arr);
+    //     expect(await app.getUint256ByIndex(hex4Bytes('NUMBERS'), 2)).to.equal(876);
+    //     await app.parse('NUMBERS 2');
+    //     await app.execute();
+
+    //     await app.parse('(NUMBERS 2) setUint256 NEW');
+    //     await app.execute();
+    //     let res = await app.getStorageUint256(hex4Bytes('NEW'));
+    //     expect(res).to.equal(876);
+    //   });
+
+    //   it.skip('should return number of sum of two parameters from array', async () => {
+    //     await app.setArrayUint256(hex4Bytes('NUMBERS'), arr);
+    //     expect(await app.getUint256ByIndex(hex4Bytes('NUMBERS'), 2)).to.equal(876);
+
+    //     await app.parse('NUMBERS 2 + NUMBERS 0');
+    //     await app.execute();
+
+    //     await app.parse(
+    //       '(NUMBERS 2 + NUMBERS 0) setUint256 SUM'
+    //     );
+    //     await app.execute();
+    //     let res = await app.getStorageUint256(hex4Bytes('SUM'));
+    //     expect(res).to.equal(877);
+    //   });
+
+    //   it.skip('should return number of dividion of two parameters from array', async () => {
+    //     await app.setArrayUint256(hex4Bytes('NUMBERS'), arr);
+    //     expect(await app.getUint256ByIndex(hex4Bytes('NUMBERS'), 2)).to.equal(876);
+
+    //     await app.parse('NUMBERS 2 / NUMBERS 1');
+    //     await app.execute();
+
+    //     await app.parse(
+    //       '(NUMBERS 2 / NUMBERS 1) setUint256 DIV'
+    //     );
+    //     await app.execute();
+    //     let res = await app.getStorageUint256(hex4Bytes('DIV'));
+    //     expect(res).to.equal(438);
+    //   });
+
+    //   it.skip('returns error if index was not provided', async () => {
+    //     await app.setArrayUint256(hex4Bytes('NUMBERS'), arr);
+    //     await expect(app.parse('NUMBERS')).to.be.revertedWith('PRS1');
+    //   });
+
+    //   it.skip('returns error if load number by index that does not exist', async () => {
+    //     await app.setArrayUint256(hex4Bytes('NUMBERS'), arr);
+    //     await app.parse('NUMBERS 6');
+    //     await expect(app.execute()).to.be.revertedWith('err');
+    //   });
+
+    //   it.skip('returns error if load number by index that does not exist', async () => {
+    //     await app.setArrayUint256(hex4Bytes('NUMBERS'), arr);
+    //     await app.parse('NUMBERS 6');
+    //     await expect(app.execute()).to.be.revertedWith('err');
+    //   });
+    // });
+
+    // describe('address', () => {
+    //   // TODO: all executes should have normal errors
+    //   const bob = '0xC0073850a6f02Bb56720f2C9A2f8Cc082a5C67a0';
+    //   const mary = '0xFD7936Bb96F49f292E61a5F2F7C02e914A0A9d90';
+    //   const carl = '0xd4C4a4b11f80dC75EE534C0DA478cfe388b5bAaD';
+    //   const arr = [bob, mary, carl];
+    //   const zeroArr = [ethers.constants.AddressZero, ethers.constants.AddressZero];
+
+    //   it.skip('should return address that stores in the new variable', async () => {
+    //     await app.setArrayAddresses(hex4Bytes('ADDRESSES'), arr);
+    //     expect(await app.getAddressByIndex(hex4Bytes('ADDRESSES'), 2)).to.equal(carl);
+    //     await app.parse('loadArray address ADDRESSES 2');
+    //     await app.execute();
+    //     // TODO: set directly in the storage as mix of name + index?
+    //   });
+
+    //   it.skip('returns error if index was not provided', async () => {
+    //     await app.setArrayAddresses(hex4Bytes('ADDRESSES'), arr);
+    //     await expect(app.parse('loadArray address ADDRESSES')).to.be.revertedWith('PRS1');
+    //   });
+
+    //   it.skip('returns error if load address by index in enpty array', async () => {
+    //     await app.parse('loadArray address ADDRESSES 18');
+    //     await expect(app.execute()).to.be.revertedWith('err');
+    //   });
+
+    //   it.skip('returns error if load address by index that does not exist', async () => {
+    //     await app.setArrayAddresses(hex4Bytes('ADDRESSES'), arr);
+    //     await app.parse('loadArray address ADDRESSES 18');
+    //     await expect(app.execute()).to.be.revertedWith('err');
+    //   });
+    // });
   });
 });

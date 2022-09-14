@@ -307,4 +307,84 @@ describe('Parser', () => {
     });
     // TODO: add for other types
   });
+
+  describe.only('DSL arrays', () => {
+    it('declare array', async () => {
+      await app.parseCodeExt(ctxAddr, ['declare', 'NUMBERS']);
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '31' + // declare
+          '1fff709e' // bytecode for a `NUMBERS` name
+      );
+    });
+
+    it('declare array only with additional code just before it', async () => {
+      const number = new Array(64).join('0') + 6;
+      await app.parseCodeExt(ctxAddr, [
+        'uint256',
+        '6',
+        'loadLocal',
+        'uint256',
+        'TIMESTAMP',
+        'declare',
+        'NUMBERS',
+      ]);
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '1a' + // uint256
+          `${number}` + // 6
+          '1b' + // loadLocal
+          '01' + // uint256
+          '1b7b16d4' + // TIMESTAMP
+          '31' + // declare
+          '1fff709e' // bytecode for a `NUMBERS` name
+      );
+    });
+
+    it('declare array only with additional code just after it', async () => {
+      const number = new Array(64).join('0') + 6;
+      await app.parseCodeExt(ctxAddr, [
+        'declare',
+        'NUMBERS',
+        'uint256',
+        '6',
+        'loadLocal',
+        'uint256',
+        'TIMESTAMP',
+      ]);
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '31' + // declare
+          '1fff709e' + // bytecode for a `NUMBERS` name
+          '1a' + // uint256
+          `${number}` + // 6
+          '1b' + // loadLocal
+          '01' + // uint256
+          '1b7b16d4' // TIMESTAMP
+      );
+    });
+
+    it('declare array with additional code before and after it', async () => {
+      const number = new Array(64).join('0') + 6;
+      await app.parseCodeExt(ctxAddr, [
+        'uint256',
+        '6',
+        'declare',
+        'NUMBERS',
+        'loadLocal',
+        'uint256',
+        'TIMESTAMP',
+      ]);
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '1a' + // uint256
+          `${number}` + // 6
+          '31' + // declare
+          '1fff709e' + // bytecode for a `NUMBERS` name
+          '1b' + // loadLocal
+          '01' + // uint256
+          '1b7b16d4' // TIMESTAMP
+      );
+    });
+  });
 });

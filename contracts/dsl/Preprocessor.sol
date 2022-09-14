@@ -4,10 +4,11 @@ pragma solidity ^0.8.0;
 import { IContext } from './interfaces/IContext.sol';
 import { IPreprocessor } from './interfaces/IPreprocessor.sol';
 import { StringStack } from './helpers/StringStack.sol';
+import { StringArray } from './helpers/StringArray.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 import { ErrorsPreprocessor } from './libs/Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Preprocessor of DSL code
@@ -23,6 +24,7 @@ import { ErrorsPreprocessor } from './libs/Errors.sol';
  */
 contract Preprocessor is IPreprocessor {
     using StringUtils for string;
+    // using StringUtils for uint256;
 
     // Note: temporary variable
     // param positional number -> parameter itself
@@ -32,6 +34,8 @@ contract Preprocessor is IPreprocessor {
 
     // Stack with elements of type string that is used to temporarily store data of `infixToPostfix` function
     StringStack internal strStack;
+
+    // StringArray internal array;
 
     constructor() {
         strStack = new StringStack();
@@ -153,7 +157,15 @@ contract Preprocessor is IPreprocessor {
                 continue;
             }
 
-            if (char.equal(' ') || char.equal('\n') || char.equal('(') || char.equal(')')) {
+            if (
+                char.equal(' ') ||
+                char.equal('\n') ||
+                char.equal('(') ||
+                char.equal(')') ||
+                char.equal('[') ||
+                char.equal(']') ||
+                char.equal(',')
+            ) {
                 if (buffer.length() > 0) {
                     result.push(buffer);
                     buffer = '';
@@ -162,7 +174,7 @@ contract Preprocessor is IPreprocessor {
                 buffer = buffer.concat(char);
             }
 
-            if (char.equal('(') || char.equal(')')) {
+            if (char.equal('(') || char.equal(')') || char.equal('[') || char.equal(']')) {
                 result.push(char);
             }
         }
@@ -207,7 +219,7 @@ contract Preprocessor is IPreprocessor {
         uint256 currencyMultiplier;
         string memory chunk;
         string memory name;
-
+        // bool isArrayStart;
         // Cleanup
         delete result;
         _stack.clear();
@@ -225,6 +237,35 @@ contract Preprocessor is IPreprocessor {
                 loadRemoteVarCount,
                 chunk
             );
+
+            // ---> start block for DSL arrays
+            // if (chunk.equal('[') && !isArrayStart) { // TODO: what if array can contain other arrays?
+            //     isArrayStart = true;
+            //     array = new StringArray();
+            //     continue;
+            // } else if (isArrayStart && array.getType().equal('it') && !chunk.equal(']')) {
+            //     string memory _type = _getArrayType(array, chunk);
+            //     array.setType(_type);
+            //     array.push(chunk);
+            //     continue;
+            // } else if (isArrayStart && !array.getType().equal('it') && !chunk.equal(']')) {
+            //     array.push(chunk);
+            //     continue;
+            // } else if (chunk.equal(']') && isArrayStart) {
+            //     if (array.length() != 0) {
+
+            //         result.push(array.getType());
+            //         result.push(array.length().toString());
+            //         for (uint256 _index; _index < array.length(); _index++) {
+            //             result.push(array.getItemByIndex(_index));
+            //         }
+            //         array.clear();
+            //     } else {
+            //         result.pop(); // remove the name of array from the comand list
+            //     }
+            //     isArrayStart = false;
+            //     continue;
+            // } // <--- end block for DSL arrays
 
             // Replace alises with base commands
             if (_isAlias(_ctxAddr, chunk)) {
@@ -304,6 +345,18 @@ contract Preprocessor is IPreprocessor {
         } else if (_chunk.equal('GWEI')) {
             return multiplier = 1000000000;
         } else return multiplier = 0;
+    }
+
+    function _getArrayType(StringArray _array, string memory _chunk)
+        internal
+        view
+        returns (string memory _type)
+    {
+        if (_chunk.mayBeNumber()) {
+            return 'uint256';
+        } else if (_array.getType().equal('implicitType')) {
+            revert('PPR1'); // wrong type of array
+        }
     }
 
     /**

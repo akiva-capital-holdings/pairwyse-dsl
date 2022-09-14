@@ -24,6 +24,7 @@ import { ErrorsParser } from './libs/Errors.sol';
  */
 contract Parser is IParser {
     using StringUtils for string;
+    // using StringUtils for uint256;
     using ByteUtils for bytes;
 
     // Note: temporary variables block
@@ -103,6 +104,18 @@ contract Parser is IParser {
     function asmSetUint256(address _ctxAddr) public {
         _setVariable(_ctxAddr, cmds[cmdIdx], 'uint256');
         _parseVariable();
+    }
+
+    /**
+     * @dev Updates the program with the name(its position) of the array
+     *
+     *  * Example of a command:
+     * ```
+     * declare ARR_NAME
+     * ```
+     */
+    function asmDeclare() public {
+        _parseVariable(); // program += bytecode for `ARR_NAME`
     }
 
     /**
@@ -348,10 +361,6 @@ contract Parser is IParser {
         string storage cmd = _nextCmd();
 
         bytes1 opcode = IContext(_ctxAddr).opCodeByName(cmd);
-        require(
-            opcode != 0x0 || _isLabel(cmd) || isVariable[cmd],
-            string(abi.encodePacked('Parser: "', cmd, '" command is unknown'))
-        );
 
         if (isVariable[cmd]) {
             // if the variable was saved before its loading, so the concatenation
@@ -362,7 +371,7 @@ contract Parser is IParser {
             bytes memory programBefore = program.slice(0, labelPos[cmd]);
             bytes memory programAfter = program.slice(labelPos[cmd] + 2, program.length);
             program = bytes.concat(programBefore, bytes2(uint16(_branchLocation)), programAfter);
-        } else {
+        } else if (opcode != 0x0) {
             program = bytes.concat(program, opcode);
             bytes4 _selector = IContext(_ctxAddr).asmSelectors(cmd);
 
@@ -372,8 +381,9 @@ contract Parser is IParser {
                 );
                 require(success, ErrorsParser.PRS1);
             }
+        } else {
+            revert(string(abi.encodePacked('Parser: "', cmd, '" command is unknown')));
         }
-        // if no selector then opcode without params
     }
 
     /**
@@ -445,4 +455,23 @@ contract Parser is IParser {
         // ex. savedProgram['NUMBER'] = 'loadLocal uint256 NUMBER'
         savedProgram[_name] = bytes.concat(type_, code_, name_);
     }
+
+    // function _loadArrayItem(address _ctxAddr,
+    //     string memory _name,
+    //     uint256 _index
+    // ) internal {
+
+    // (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
+    //     abi.encodeWithSignature('getStorageArrBytes32(bytes32)',
+    // IContext(_ctx).getArrayPosition(_name).values(_index))
+    // );
+    // require(success, ErrorsGeneralOpcodes.OP5);
+
+    // Convert bytes to bytes32
+    // assembly {
+    //     result := mload(add(data, 0x20))
+    // }
+    // bytes1 type_ =  IContext(_ctx).getArrayPosition(_name).getType();
+    // program = bytes.concat(program, type_, result);
+    // }
 }

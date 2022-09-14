@@ -23,6 +23,8 @@ import { ErrorsContext } from './libs/Errors.sol';
 contract Context is IContext {
     // The address that is used to symbolyze any signer inside Conditional Transaction
     address public constant anyone = 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF;
+    // mapping(string => bytes32) public arrays;
+    // mapping(string => bool) public isArray;
 
     // stack is used by Opcode libraries like `libs/opcodes/*`
     // to store and analyze values and removing after usage
@@ -457,6 +459,15 @@ contract Context is IContext {
             OpcodeLibNames.BranchingOpcodes
         );
 
+        // Ex. `declare BALANCES`
+        addOpcode(
+            'declare',
+            0x31,
+            OtherOpcodes.opDeclare.selector,
+            IParser.asmDeclare.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
         // Complex Opcodes with sub Opcodes (branches)
 
         /*
@@ -735,4 +746,18 @@ contract Context is IContext {
     function _addAlias(string memory _baseCmd, string memory _alias) internal {
         aliases[_alias] = _baseCmd;
     }
+
+    // /**
+    //  * @dev Get position of the array by its name
+    //  */
+    // function getArrayPosition(string memory _name) public returns(bytes32) {
+    //     return arrays[_name];
+    // }
+
+    // *
+    //  * @dev Set position of the array by its name
+
+    // function setArrayPosition(string memory _name, bytes32 _position) public {
+    //     arrays[_name] = _position;
+    // }
 }

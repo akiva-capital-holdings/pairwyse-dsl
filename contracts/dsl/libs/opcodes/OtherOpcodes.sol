@@ -80,6 +80,25 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
+    /**
+     * @dev Declares empty array
+     * - 0x2 is a type of array variable by _varNameB32 name
+     * - the data (type of the array) is empty
+     */
+    function opDeclare(address _ctx) public {
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+
+        (bool success, ) = IContext(_ctx).appAddr().call(
+            abi.encodeWithSignature(
+                'setStorageWithType(bytes32,uint256,bytes32)',
+                _varNameB32,
+                0x2,
+                0
+            )
+        );
+        require(success, ErrorsGeneralOpcodes.OP1);
+    }
+
     function opLoadLocalUint256(address _ctx) public {
         opLoadLocal(_ctx, 'getStorageUint256(bytes32)');
     }
