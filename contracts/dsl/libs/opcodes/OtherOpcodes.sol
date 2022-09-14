@@ -84,8 +84,8 @@ library OtherOpcodes {
      * @dev Declares an empty array
      */
     function opDeclare(address _ctx) public {
-        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
         bytes32 _varType = OpcodeHelpers.getNextBytes(_ctx, 1);
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
 
         (bool success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(

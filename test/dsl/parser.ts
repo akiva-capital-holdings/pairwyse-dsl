@@ -308,15 +308,15 @@ describe('Parser', () => {
     // TODO: add for other types
   });
 
-  describe.only('DSL arrays', () => {
+  describe('DSL arrays', () => {
     describe('uint256 type', () => {
       it('declare array', async () => {
-        await app.parseCodeExt(ctxAddr, ['declare', 'NUMBERS', 'uint256']);
+        await app.parseCodeExt(ctxAddr, ['declare', 'uint256', 'NUMBERS']);
         expect(await ctx.program()).to.equal(
           '0x' +
             '31' + // declare
-            '1fff709e' + // bytecode for a `NUMBERS` name
-            '01' // uint256
+            '01' + // uint256
+            '1fff709e' // bytecode for a `NUMBERS` name
         );
       });
 
@@ -329,8 +329,8 @@ describe('Parser', () => {
           'uint256',
           'TIMESTAMP',
           'declare',
-          'NUMBERS',
           'uint256',
+          'NUMBERS',
         ]);
         expect(await ctx.program()).to.equal(
           '0x' +
@@ -340,8 +340,8 @@ describe('Parser', () => {
             '01' + // uint256
             '1b7b16d4' + // TIMESTAMP
             '31' + // declare
-            '1fff709e' + // bytecode for a `NUMBERS` name
-            '01' // uint256
+            '01' + // uint256
+            '1fff709e' // bytecode for a `NUMBERS` name
         );
       });
 
@@ -349,8 +349,8 @@ describe('Parser', () => {
         const number = new Array(64).join('0') + 6;
         await app.parseCodeExt(ctxAddr, [
           'declare',
-          'NUMBERS',
           'uint256',
+          'NUMBERS',
           'uint256',
           '6',
           'loadLocal',
@@ -360,8 +360,8 @@ describe('Parser', () => {
         expect(await ctx.program()).to.equal(
           '0x' +
             '31' + // declare
-            '1fff709e' + // bytecode for a `NUMBERS` name
             '01' + // uint256
+            '1fff709e' + // bytecode for a `NUMBERS` name
             '1a' + // uint256
             `${number}` + // 6
             '1b' + // loadLocal
@@ -376,8 +376,8 @@ describe('Parser', () => {
           'uint256',
           '6',
           'declare',
-          'NUMBERS',
           'uint256',
+          'NUMBERS',
           'loadLocal',
           'uint256',
           'TIMESTAMP',
@@ -387,8 +387,8 @@ describe('Parser', () => {
             '1a' + // uint256
             `${number}` + // 6
             '31' + // declare
-            '1fff709e' + // bytecode for a `NUMBERS` name
             '01' + // uint256
+            '1fff709e' + // bytecode for a `NUMBERS` name
             '1b' + // loadLocal
             '01' + // uint256
             '1b7b16d4' // TIMESTAMP

@@ -8,7 +8,7 @@ import { StringArray } from './helpers/StringArray.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 import { ErrorsPreprocessor } from './libs/Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 /**
  * @dev Preprocessor of DSL code
@@ -238,7 +238,7 @@ contract Preprocessor is IPreprocessor {
                 chunk
             );
 
-            // ---> start block for DSL arrays
+            // ---> start block for DSL arrays without types
             // if (chunk.equal('[') && !isArrayStart) { // TODO: what if array can contain other arrays?
             //     isArrayStart = true;
             //     array = new StringArray();

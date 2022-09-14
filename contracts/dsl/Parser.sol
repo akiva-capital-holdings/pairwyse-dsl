@@ -115,8 +115,8 @@ contract Parser is IParser {
      * ```
      */
     function asmDeclare(address _ctxAddr) public {
-        _parseVariable(); // program += bytecode for `ARR_NAME`
         _parseBranchOf(_ctxAddr, 'declare'); // program += bytecode for type of array
+        _parseVariable(); // program += bytecode for `ARR_NAME`
     }
 
     /**
@@ -362,6 +362,10 @@ contract Parser is IParser {
         string storage cmd = _nextCmd();
 
         bytes1 opcode = IContext(_ctxAddr).opCodeByName(cmd);
+        require(
+            opcode != 0x0 || _isLabel(cmd) || isVariable[cmd],
+            string(abi.encodePacked('Parser: "', cmd, '" command is unknown'))
+        );
 
         if (isVariable[cmd]) {
             // if the variable was saved before its loading, so the concatenation
@@ -372,7 +376,7 @@ contract Parser is IParser {
             bytes memory programBefore = program.slice(0, labelPos[cmd]);
             bytes memory programAfter = program.slice(labelPos[cmd] + 2, program.length);
             program = bytes.concat(programBefore, bytes2(uint16(_branchLocation)), programAfter);
-        } else if (opcode != 0x0) {
+        } else {
             program = bytes.concat(program, opcode);
             bytes4 _selector = IContext(_ctxAddr).asmSelectors(cmd);
 
@@ -382,9 +386,8 @@ contract Parser is IParser {
                 );
                 require(success, ErrorsParser.PRS1);
             }
-        } else {
-            revert(string(abi.encodePacked('Parser: "', cmd, '" command is unknown')));
         }
+        // if no selector then opcode without params
     }
 
     /**
