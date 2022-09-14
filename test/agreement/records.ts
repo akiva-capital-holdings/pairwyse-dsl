@@ -57,6 +57,85 @@ describe('Simple Records in Agreement', () => {
     await network.provider.send('evm_revert', [snapshotId]);
   });
 
+  it('archived transaction', async () => {
+    // Set variables
+    await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
+    await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
+
+    const ContextMock = await ethers.getContractFactory('ContextMock');
+    const transactionContext = await ContextMock.deploy();
+    await transactionContext.setAppAddress(appAddr);
+    const conditionContext = await ContextMock.deploy();
+    await conditionContext.setAppAddress(appAddr);
+
+    records.push({
+      recordId: 96,
+      requiredRecords: [],
+      signatories: [alice.address],
+      transactionStr: 'sendEth RECEIVER 1000000000000000000',
+      conditionStrings: ['blockTimestamp > loadLocal uint256 LOCK_TIME'],
+      transactionCtx: transactionContext,
+      conditionContexts: [conditionContext],
+    });
+
+    // Set conditional transaction
+    for (let i = 0; i < records.length; i++) {
+      const {
+        recordId,
+        requiredRecords,
+        signatories,
+        conditionContexts,
+        conditionStrings,
+        transactionCtx,
+        transactionStr,
+      } = records[i];
+
+      // Set conditional transaction
+      await app.addRecordBlueprint(recordId, requiredRecords, signatories);
+      for (let j = 0; j < conditionContexts.length; j++) {
+        await app.addRecordCondition(recordId, conditionStrings[j], conditionContexts[j].address);
+      }
+      await app.addRecordTransaction(recordId, transactionStr, transactionCtx.address);
+
+      // Set msg senders
+      await transactionCtx.setMsgSender(alice.address);
+      await conditionContexts[0].setMsgSender(alice.address);
+
+      // Check that record unarchived yet
+      const unArchivedRecord = await app.txs(recordId);
+      expect(unArchivedRecord.isArchived).to.be.equal(false);
+
+      // Check that record was actually archived
+      await app.archiveRecord(recordId);
+      const firstArchivedRecord = await app.txs(recordId);
+      expect(firstArchivedRecord.isArchived).to.be.equal(true);
+
+      // Check that record does not exist
+      await expect(app.archiveRecord(999)).to.be.revertedWith('AGR9');
+
+      // Check that secondary archived record still archived
+      await app.archiveRecord(recordId);
+      const secondArchivedRecord = await app.txs(recordId);
+      expect(secondArchivedRecord.isArchived).to.be.equal(true);
+
+      // Check that record was actually unArchived
+      await app.unArchiveRecord(recordId);
+      const firstUnArchivedRecord = await app.txs(recordId);
+      expect(firstUnArchivedRecord.isArchived).to.be.equal(false);
+
+      // Check that secondary unAchived will reverted
+      await expect(app.unArchiveRecord(recordId)).to.be.revertedWith('AGR10');
+
+      // Check that record does not exist when unArchiveRecord
+      await expect(app.unArchiveRecord(999)).to.be.revertedWith('AGR9');
+
+      // Check that third archived record was actually archived after unachived
+      await app.archiveRecord(recordId);
+      const thirdArchivedRecord = await app.txs(recordId);
+      expect(thirdArchivedRecord.isArchived).to.be.equal(true);
+    }
+  });
+
   it('record with one transaction', async () => {
     // Set variables
     await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);

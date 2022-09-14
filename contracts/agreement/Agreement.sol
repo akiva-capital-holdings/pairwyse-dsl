@@ -48,6 +48,7 @@ contract Agreement {
         uint256[] requiredRecords;
         address transactionContext;
         bool isExecuted;
+        bool isArchived;
         string transactionString;
     }
 
@@ -103,6 +104,25 @@ contract Agreement {
      */
     function conditionContextsLen(uint256 _recordId) external view returns (uint256) {
         return conditionContexts[_recordId].length;
+    }
+
+    /**
+     * @dev archived any of the existing records by recordId.
+     * @param _recordId Record ID
+     */
+    function archiveRecord(uint256 _recordId) external {
+        require(txs[_recordId].transactionContext != address(0), ErrorsAgreement.AGR9);
+        txs[_recordId].isArchived = true;
+    }
+
+    /**
+     * @dev  unarchive any of the existing records by recordId
+     * @param _recordId Record ID
+     */
+    function unArchiveRecord(uint256 _recordId) external {
+        require(txs[_recordId].transactionContext != address(0), ErrorsAgreement.AGR9);
+        require(txs[_recordId].isArchived != false, ErrorsAgreement.AGR10);
+        txs[_recordId].isArchived = false;
     }
 
     /**
@@ -175,7 +195,7 @@ contract Agreement {
     ) internal {
         _checkSignatories(_signatories);
 
-        Record memory txn = Record(_requiredRecords, address(0), false, '');
+        Record memory txn = Record(_requiredRecords, address(0), false, false, '');
         signatories[_recordId] = _signatories;
         signatoriesLen[_recordId] = _signatories.length;
         txs[_recordId] = txn;
