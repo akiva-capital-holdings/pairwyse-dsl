@@ -264,13 +264,7 @@ contract Preprocessor is IPreprocessor {
                 // if it was already set the name for a function
                 isName = false;
                 isFunc = _parceFuncParams(chunk, name, isFunc);
-            }
-            /* else if (chunk.isValidVarName()) {
-                // Process variables with implicit types
-                result.push(chunk);
-                result.push('var');
-            }*/
-            else {
+            } else {
                 result.push(chunk);
                 if (loadRemoteVarCount == 4) {
                     loadRemoteFlag = false;
