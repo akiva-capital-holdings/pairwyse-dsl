@@ -150,7 +150,7 @@ describe('Preprocessor', () => {
         `);
       expect(res).to.eql(
         jsTransform(`
-          loadLocal address SENDER
+          var SENDER
             ==
           msgSender
         `)
@@ -177,14 +177,14 @@ describe('Preprocessor', () => {
         jsTransform(`
         (
           (
-            blockTimestamp > loadLocal uint256 INIT
+            blockTimestamp > var INIT
           )
             and
           (
-            blockTimestamp < loadLocal uint256 EXPIRY
+            blockTimestamp < var EXPIRY
               or
             (
-              loadLocal bool RISK != bool true
+              var RISK != bool true
             )
           )
         )
@@ -273,6 +273,7 @@ describe('Preprocessor', () => {
         var RISK != bool true)`;
 
       const cmds = await app.callStatic.transform(ctxAddr, program);
+      const expected = [
         'var',
         'TMSTAMP',
         'var',
@@ -290,7 +291,8 @@ describe('Preprocessor', () => {
         'bool',
         'true',
         '!=',
-      ]);
+      ];
+      expect(cmds).to.eql(expected);
     });
 
     it('if expression', async () => {
