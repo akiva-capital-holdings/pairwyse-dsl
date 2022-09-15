@@ -99,7 +99,7 @@ describe('End-to-end', () => {
     and
     (loadLocal uint256 NOW < loadLocal uint256 EXPIRY))
     or
-    ((loadLocal bool RISK == bool true)
+    ((loadLocal uint256 RISK == bool true)
     ==
     (bool false))
   `;
@@ -116,7 +116,7 @@ describe('End-to-end', () => {
 
       '12', // ['and'],
 
-      `1b02${hex4BytesShort('RISK')}`, // ['loadLocal', 'bool', 'RISK'],
+      `1b01${hex4BytesShort('RISK')}`, // ['loadLocal', 'uint256', 'RISK'],
       '1801', // ['bool', 'true'],
       '01', // ['=='],
 

@@ -63,8 +63,8 @@ describe('Preprocessor', () => {
       },
       {
         name: 'simple',
-        expr: 'loadLocal address SENDER == msgSender',
-        expected: ['loadLocal', 'address', 'SENDER', 'msgSender', '=='],
+        expr: 'loadLocal uint256 SENDER == msgSender',
+        expected: ['loadLocal', 'uint256', 'SENDER', 'msgSender', '=='],
       },
       {
         name: 'complex',
@@ -73,7 +73,7 @@ describe('Preprocessor', () => {
           and
         (blockTimestamp < loadLocal uint256 EXPIRY)
           or
-        (loadLocal bool RISK != bool true)
+        (loadLocal uint256 RISK != bool true)
       `,
         expected: [
           'TIME',
@@ -88,7 +88,7 @@ describe('Preprocessor', () => {
           '<', // B
           'and',
           'loadLocal',
-          'bool',
+          'uint256',
           'RISK',
           'bool',
           'true',
@@ -129,7 +129,7 @@ describe('Preprocessor', () => {
 
   describe('split', () => {
     it('simple case', async () => {
-      const input = 'loadLocal address SENDER == msgSender';
+      const input = 'loadLocal uint256 SENDER == msgSender';
       const res = await app.callStatic.split(input);
       expect(res).to.eql(jsTransform(input));
     });
@@ -148,7 +148,7 @@ describe('Preprocessor', () => {
 
     it('new line symbol', async () => {
       const input = `
-          loadLocal address SENDER
+          loadLocal uint256 SENDER
             ==
           msgSender
         `;
@@ -167,7 +167,7 @@ describe('Preprocessor', () => {
             blockTimestamp < loadLocal uint256 EXPIRY
               or
             (
-              loadLocal bool RISK != bool true
+              loadLocal uint256 RISK != bool true
             )
           )
         )
@@ -257,11 +257,11 @@ describe('Preprocessor', () => {
 
     it('complex expression', async () => {
       const program = `
-        (((loadLocal uint256 TIMESTAMP >    loadLocal uint256 INIT)
+        (((loadLocal uint256 TIMESTAMP > loadLocal uint256 INIT)
           and
-        (loadLocal uint256 TIMESTAMP <   loadLocal uint256 EXPIRY))
+        (loadLocal uint256 TIMESTAMP < loadLocal uint256 EXPIRY))
           or
-        loadLocal bool RISK != bool true)`;
+        loadLocal uint256 RISK != bool true)`;
 
       const cmds = await app.callStatic.transform(ctxAddr, program);
       const expected = [
@@ -281,7 +281,7 @@ describe('Preprocessor', () => {
         '<',
         'and',
         'loadLocal',
-        'bool',
+        'uint256',
         'RISK',
         'or',
         'bool',

@@ -429,36 +429,36 @@ describe('DSL: basic', () => {
       await checkStackTailv2(stack, [0]);
     });
 
-    it('loadLocal bool A (false)', async () => {
+    it('loadLocal uint256 A (false)', async () => {
       await app.setStorageBool(hex4Bytes('A'), false);
 
-      await app.parse('loadLocal bool A');
+      await app.parse('loadLocal uint256 A');
       await app.execute();
       await checkStackTailv2(stack, [0]);
     });
 
-    it('loadLocal bool B (true)', async () => {
+    it('loadLocal uint256 B (true)', async () => {
       await app.setStorageBool(hex4Bytes('B'), true);
 
-      await app.parse('loadLocal bool B');
+      await app.parse('loadLocal uint256 B');
       await app.execute();
       await checkStackTailv2(stack, [1]);
     });
 
-    it('loadLocal bool A (false) != loadLocal bool B (true)', async () => {
+    it('loadLocal uint256 A (false) != loadLocal uint256 B (true)', async () => {
       await app.setStorageBool(hex4Bytes('A'), false);
       await app.setStorageBool(hex4Bytes('B'), true);
 
-      await app.parse('loadLocal bool A != loadLocal bool B');
+      await app.parse('loadLocal uint256 A != loadLocal uint256 B');
       await app.execute();
       await checkStackTailv2(stack, [1]);
     });
 
-    it('NOR loadLocal bool A (false) != loadLocal bool B (true)', async () => {
+    it('NOR loadLocal uint256 A (false) != loadLocal uint256 B (true)', async () => {
       await app.setStorageBool(hex4Bytes('A'), false);
       await app.setStorageBool(hex4Bytes('B'), true);
 
-      await app.parse('! (loadLocal bool A != loadLocal bool B)');
+      await app.parse('! (loadLocal uint256 A != loadLocal uint256 B)');
       await app.execute();
       await checkStackTailv2(stack, [0]);
     });
@@ -474,7 +474,7 @@ describe('DSL: basic', () => {
           '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5'
         );
 
-        await app.parse('loadLocal address ADDR == loadLocal address ADDR2');
+        await app.parse('loadLocal uint256 ADDR == loadLocal uint256 ADDR2');
         await app.execute();
         await checkStackTailv2(stack, [1]);
       });
@@ -489,7 +489,7 @@ describe('DSL: basic', () => {
           '0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836'
         );
 
-        await app.parse('loadLocal address ADDR == loadLocal address ADDR2');
+        await app.parse('loadLocal uint256 ADDR == loadLocal uint256 ADDR2');
         await app.execute();
         await checkStackTailv2(stack, [0]);
       });
@@ -506,7 +506,7 @@ describe('DSL: basic', () => {
           '0x1234500000000000000000000000000000000000000000000000000000000001'
         );
 
-        await app.parse('loadLocal bytes32 BYTES == loadLocal bytes32 BYTES2');
+        await app.parse('loadLocal uint256 BYTES == loadLocal uint256 BYTES2');
         await app.execute();
         await checkStackTailv2(stack, [1]);
       });
@@ -521,7 +521,7 @@ describe('DSL: basic', () => {
           '0x1234500000000000000000000000000000000000000000000000000000000011'
         );
 
-        await app.parse('loadLocal bytes32 BYTES == loadLocal bytes32 BYTES2');
+        await app.parse('loadLocal uint256 BYTES == loadLocal uint256 BYTES2');
         await app.execute();
         await checkStackTailv2(stack, [0]);
       });
@@ -536,7 +536,7 @@ describe('DSL: basic', () => {
           '0x0000000000000000000000000000000000000000000000000000000000000010'
         );
 
-        await app.parse('loadLocal bytes32 BYTES == loadLocal bytes32 BYTES2');
+        await app.parse('loadLocal uint256 BYTES == loadLocal uint256 BYTES2');
         await app.execute();
         await checkStackTailv2(stack, [0]);
       });
@@ -728,7 +728,7 @@ describe('DSL: basic', () => {
   it('msgSender', async () => {
     const [sender] = await ethers.getSigners();
     await app.setStorageAddress(hex4Bytes('SENDER'), sender.address);
-    await app.parse('loadLocal address SENDER == msgSender');
+    await app.parse('loadLocal uint256 SENDER == msgSender');
     await app.execute();
     await checkStackTailv2(stack, [1]);
   });
@@ -951,7 +951,7 @@ describe('DSL: basic', () => {
         and
         (loadLocal uint256 TIMESTAMP < loadLocal uint256 EXPIRY)
         or
-        (loadLocal bool RISK != bool true)
+        (loadLocal uint256 RISK != bool true)
         `
       );
       await app.execute();

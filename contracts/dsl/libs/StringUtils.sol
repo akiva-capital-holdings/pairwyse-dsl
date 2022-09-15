@@ -126,4 +126,38 @@ library StringUtils {
         }
         revert(ErrorsStringUtils.SUT8);
     }
+
+    /**
+     * @dev Checks is string is a valid DSL variable name (matches regexp /^([A-Z_$][A-Z\d_$]*)$/g)
+     * @param _s is a current string to check
+     * @return isCapital whether the string is a valid DSL variable name or not
+     */
+    function isValidVarName(string memory _s) public pure returns (bool) {
+        require(!equal(_s, ''), ErrorsStringUtils.SUT7);
+
+        uint8 A = 0x41;
+        uint8 Z = 0x5a;
+        uint8 underscore = 0x5f;
+        uint8 dollar = 0x24;
+        uint8 zero = 0x30;
+        uint8 nine = 0x39;
+
+        uint8 symbol;
+        // This is the same as applying regexp /^([A-Z_$][A-Z\d_$]*)$/g
+        for (uint256 i = 0; i < length(_s); i++) {
+            symbol = uint8(bytes(_s)[i]);
+            if (
+                (i == 0 &&
+                    !((symbol >= A && symbol <= Z) || symbol == underscore || symbol == dollar)) ||
+                (i > 0 &&
+                    !((symbol >= A && symbol <= Z) ||
+                        (symbol >= zero && symbol <= nine) ||
+                        symbol == underscore ||
+                        symbol == dollar))
+            ) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

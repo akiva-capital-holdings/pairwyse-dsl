@@ -110,7 +110,7 @@ export const aliceBobAndCarl = (
     conditions: [
       `
               TIME > loadLocal uint256 EXPIRY
-          and (loadLocal bool OBLIGATIONS_SETTLED == bool false)
+          and (loadLocal uint256 OBLIGATIONS_SETTLED == bool false)
         `,
     ],
   },
@@ -123,7 +123,7 @@ export const aliceBobAndCarl = (
     conditions: [
       `
               TIME > loadLocal uint256 EXPIRY
-          and (loadLocal bool LENDER_WITHDRAW_INSURERS == bool false)
+          and (loadLocal uint256 LENDER_WITHDRAW_INSURERS == bool false)
         `,
     ],
   },
