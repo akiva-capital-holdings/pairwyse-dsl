@@ -390,6 +390,29 @@ describe('DSL: basic', () => {
   });
 
   describe('variables', () => {
+    describe('implicit usage', () => {
+      it('NUMBER', async () => {
+        await app.setStorageUint256(hex4Bytes('NUMBER'), 777);
+        await app.parse('NUMBER');
+        await app.execute();
+        await checkStackTailv2(stack, [777]);
+      });
+
+      it('NUMBER (1000) > NUMBER2 (15)', async () => {
+        // Set NUMBER
+        const bytes32Number = hex4Bytes('NUMBER');
+        await app.setStorageUint256(bytes32Number, 1000);
+
+        // Set NUMBER2
+        const bytes32Number2 = hex4Bytes('NUMBER2');
+        await app.setStorageUint256(bytes32Number2, 15);
+
+        await app.parse('NUMBER > NUMBER2');
+        await app.execute();
+        await checkStackTailv2(stack, [1]);
+      });
+    });
+
     it('var NUMBER', async () => {
       await app.setStorageUint256(hex4Bytes('NUMBER'), 777);
       await app.parse('var NUMBER');

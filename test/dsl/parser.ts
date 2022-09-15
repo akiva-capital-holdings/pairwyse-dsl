@@ -78,6 +78,18 @@ describe('Parser', () => {
       expect(await ctx.program()).to.equal(expected);
     });
 
+    it('AMOUNT > 5', async () => {
+      await app.parse(preprocessorAddr, ctxAddr, 'AMOUNT > 5');
+      expect(await ctx.program()).equal(
+        '0x1b1a3a187d1a000000000000000000000000000000000000000000000000000000000000000504'
+      );
+    });
+
+    it('NUMBER > NUMBER2', async () => {
+      await app.parse(preprocessorAddr, ctxAddr, 'NUMBER > NUMBER2');
+      expect(await ctx.program()).equal('0x1b545cbf771bb66353ab04');
+    });
+
     it('((time > init) and (time < expiry)) or (risk != true)', async () => {
       await app.parse(
         preprocessorAddr,
