@@ -14,11 +14,11 @@ library OtherOpcodes {
     using UnstructuredStorage for bytes32;
     using StringUtils for string;
 
-    function opLoadLocalAny(address _ctx) public {
-        address libAddr = IContext(_ctx).otherOpcodes();
-        bytes4 selector = OpcodeHelpers.nextBranchSelector(_ctx, 'loadLocal');
-        OpcodeHelpers.mustCall(libAddr, abi.encodeWithSelector(selector, _ctx));
-    }
+    // function opLoadLocalAny(address _ctx) public {
+    //     address libAddr = IContext(_ctx).otherOpcodes();
+    //     bytes4 selector = OpcodeHelpers.nextBranchSelector(_ctx, 'loadLocal');
+    //     OpcodeHelpers.mustCall(libAddr, abi.encodeWithSelector(selector, _ctx));
+    // }
 
     function opLoadRemoteAny(address _ctx) public {
         address libAddr = IContext(_ctx).otherOpcodes();
@@ -84,17 +84,17 @@ library OtherOpcodes {
         opLoadLocal(_ctx, 'getStorageUint256(bytes32)');
     }
 
-    function opLoadLocalBytes32(address _ctx) public {
-        opLoadLocal(_ctx, 'getStorageBytes32(bytes32)');
-    }
+    // function opLoadLocalBytes32(address _ctx) public {
+    //     opLoadLocal(_ctx, 'getStorageBytes32(bytes32)');
+    // }
 
-    function opLoadLocalBool(address _ctx) public {
-        opLoadLocal(_ctx, 'getStorageBool(bytes32)');
-    }
+    // function opLoadLocalBool(address _ctx) public {
+    //     opLoadLocal(_ctx, 'getStorageBool(bytes32)');
+    // }
 
-    function opLoadLocalAddress(address _ctx) public {
-        opLoadLocal(_ctx, 'getStorageAddress(bytes32)');
-    }
+    // function opLoadLocalAddress(address _ctx) public {
+    //     opLoadLocal(_ctx, 'getStorageAddress(bytes32)');
+    // }
 
     function opLoadRemoteUint256(address _ctx) public {
         opLoadRemote(_ctx, 'getStorageUint256(bytes32)');

@@ -62,14 +62,14 @@ describe('End-to-end', () => {
     await ctx.setAppAddress(app.address);
   });
 
-  describe('blockChainId < loadLocal uint256 VAR', () => {
-    it('blockChainId < loadLocal uint256 VAR', async () => {
+  describe('blockChainId < var VAR', () => {
+    it('blockChainId < var VAR', async () => {
       const chainId = await getChainId();
       const varHashPadded = hex4Bytes('VAR');
       const varHash = varHashPadded.slice(2, 2 + 8);
       const varValue = chainId + 1;
-      const code = 'blockChainId < loadLocal uint256 VAR';
-      const bytecode = ['17', `1b01${varHash}`, '03'];
+      const code = 'blockChainId < var VAR';
+      const bytecode = ['17', `1b${varHash}`, '03'];
 
       // Parse code
       await app.setStorageUint256(varHashPadded, varValue);
@@ -95,28 +95,28 @@ describe('End-to-end', () => {
     });
 
     const code = `
-    ((loadLocal uint256 NOW > loadLocal uint256 INIT)
+    ((var NOW > var INIT)
     and
-    (loadLocal uint256 NOW < loadLocal uint256 EXPIRY))
+    (var NOW < var EXPIRY))
     or
-    ((loadLocal uint256 RISK == bool true)
+    ((var RISK == bool true)
     ==
     (bool false))
   `;
 
     const bytecode = [
       /* eslint-disable no-multi-spaces */
-      `1b01${hex4BytesShort('NOW')}`, // ['loadLocal', 'uint256', 'NOW'],
-      `1b01${hex4BytesShort('INIT')}`, // ['loadLocal', 'uint256', 'INIT'],
+      `1b${hex4BytesShort('NOW')}`, // ['var', 'NOW'],
+      `1b${hex4BytesShort('INIT')}`, // ['var', 'INIT'],
       '04', // ['>'], // A
 
-      `1b01${hex4BytesShort('NOW')}`, // ['loadLocal', 'uint256', 'NOW'],
-      `1b01${hex4BytesShort('EXPIRY')}`, // ['loadLocal', 'uint256', 'EXPIRY'],
+      `1b${hex4BytesShort('NOW')}`, // ['var', 'NOW'],
+      `1b${hex4BytesShort('EXPIRY')}`, // ['var', 'EXPIRY'],
       '03', // ['<'], // B
 
       '12', // ['and'],
 
-      `1b01${hex4BytesShort('RISK')}`, // ['loadLocal', 'uint256', 'RISK'],
+      `1b${hex4BytesShort('RISK')}`, // ['var', 'RISK'],
       '1801', // ['bool', 'true'],
       '01', // ['=='],
 
@@ -249,7 +249,7 @@ describe('End-to-end', () => {
       end
 
       SUM_OF_NUMBERS {
-        (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+        (var SUM_OF_NUMBERS_1 + var SUM_OF_NUMBERS_2) setUint256 SUM
       }
       `;
 
@@ -267,11 +267,9 @@ describe('End-to-end', () => {
         'SUM_OF_NUMBERS',
         'end',
         'SUM_OF_NUMBERS',
-        'loadLocal',
-        'uint256',
+        'var',
         'SUM_OF_NUMBERS_1',
-        'loadLocal',
-        'uint256',
+        'var',
         'SUM_OF_NUMBERS_2',
         '+',
         'setUint256',
@@ -298,11 +296,9 @@ describe('End-to-end', () => {
         '30' + // func
         '0050' + // position of the SUM_OF_NUMBERS name
         '24' + // end
-        '1b' + // loadLocal
-        '01' + // uint256
+        '1b' + // var
         'c56b21ed' + // SUM_OF_NUMBERS_1
-        '1b' + // loadLocal
-        '01' + // uint256
+        '1b' + // var
         '66fb6745' + // SUM_OF_NUMBERS_2
         '26' + // +
         '2e' + // setUint256
@@ -360,11 +356,11 @@ describe('End-to-end', () => {
     });
   });
 
-  describe('Load local variables without loadLocal opcode', async () => {
+  describe('Load local variables without `var` opcode', async () => {
     it('set two local variables, one of them using in the next command', async () => {
       const input = `
       uint256 6 setUint256 A
-      (A + 2) setUint256 SUM
+      (var A + 2) setUint256 SUM
       `;
       const SIX = new Array(64).join('0') + 6;
       const TWO = new Array(64).join('0') + 2;
@@ -374,6 +370,7 @@ describe('End-to-end', () => {
         '6',
         'setUint256',
         'A',
+        'var',
         'A',
         'uint256',
         '2',
@@ -391,8 +388,7 @@ describe('End-to-end', () => {
         `${SIX}` + // 6
         '2e' + // setUint256
         '03783fac' + // A
-        '1b' + // loadlocal
-        '01' + // uint256
+        '1b' + // var
         '03783fac' + // A
         '1a' + // uint256
         `${TWO}` +
@@ -405,7 +401,7 @@ describe('End-to-end', () => {
     it('updates A variable', async () => {
       const input = `
       uint256 6 setUint256 A
-      (A + 2) setUint256 A
+      (var A + 2) setUint256 A
       `;
       const SIX = new Array(64).join('0') + 6;
       const TWO = new Array(64).join('0') + 2;
@@ -415,6 +411,7 @@ describe('End-to-end', () => {
         '6',
         'setUint256',
         'A',
+        'var',
         'A',
         'uint256',
         '2',
@@ -432,8 +429,7 @@ describe('End-to-end', () => {
         `${SIX}` + // 6
         '2e' + // setUint256
         '03783fac' + // A
-        '1b' + // loadlocal
-        '01' + // uint256
+        '1b' + // var
         '03783fac' + // A
         '1a' + // uint256
         `${TWO}` +

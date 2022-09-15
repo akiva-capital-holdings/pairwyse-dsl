@@ -63,32 +63,29 @@ describe('Preprocessor', () => {
       },
       {
         name: 'simple',
-        expr: 'loadLocal uint256 SENDER == msgSender',
-        expected: ['loadLocal', 'uint256', 'SENDER', 'msgSender', '=='],
+        expr: 'var SENDER == msgSender',
+        expected: ['var', 'SENDER', 'msgSender', '=='],
       },
       {
         name: 'complex',
         expr: `
-        (blockTimestamp > loadLocal uint256 INIT)
+        (blockTimestamp > var INIT)
           and
-        (blockTimestamp < loadLocal uint256 EXPIRY)
+        (blockTimestamp < var EXPIRY)
           or
-        (loadLocal uint256 RISK != bool true)
+        (var RISK != bool true)
       `,
         expected: [
           'TIME',
-          'loadLocal',
-          'uint256',
+          'var',
           'INIT',
           '>', // A
           'TIME',
-          'loadLocal',
-          'uint256',
+          'var',
           'EXPIRY',
           '<', // B
           'and',
-          'loadLocal',
-          'uint256',
+          'var',
           'RISK',
           'bool',
           'true',
@@ -129,13 +126,13 @@ describe('Preprocessor', () => {
 
   describe('split', () => {
     it('simple case', async () => {
-      const input = 'loadLocal uint256 SENDER == msgSender';
+      const input = 'var SENDER == msgSender';
       const res = await app.callStatic.split(input);
       expect(res).to.eql(jsTransform(input));
     });
 
     it('extra spaces', async () => {
-      const input = 'loadLocal      address SENDER == msgSender';
+      const input = 'var      SENDER ==   msgSender';
       const res = await app.callStatic.split(input);
       expect(res).to.eql(jsTransform(input));
     });
@@ -148,7 +145,7 @@ describe('Preprocessor', () => {
 
     it('new line symbol', async () => {
       const input = `
-          loadLocal uint256 SENDER
+          var SENDER
             ==
           msgSender
         `;
@@ -160,14 +157,14 @@ describe('Preprocessor', () => {
       const input = `
         (
           (
-            blockTimestamp > loadLocal uint256 INIT
+            blockTimestamp > var INIT
           )
             and
           (
-            blockTimestamp < loadLocal uint256 EXPIRY
+            blockTimestamp < var EXPIRY
               or
             (
-              loadLocal uint256 RISK != bool true
+              var RISK != bool true
             )
           )
         )
@@ -257,31 +254,26 @@ describe('Preprocessor', () => {
 
     it('complex expression', async () => {
       const program = `
-        (((loadLocal uint256 TIMESTAMP > loadLocal uint256 INIT)
+        (((var TIMESTAMP > var INIT)
           and
-        (loadLocal uint256 TIMESTAMP < loadLocal uint256 EXPIRY))
+        (var TIMESTAMP < var EXPIRY))
           or
-        loadLocal uint256 RISK != bool true)`;
+        var RISK != bool true)`;
 
       const cmds = await app.callStatic.transform(ctxAddr, program);
       const expected = [
-        'loadLocal',
-        'uint256',
+        'var',
         'TIMESTAMP',
-        'loadLocal',
-        'uint256',
+        'var',
         'INIT',
         '>',
-        'loadLocal',
-        'uint256',
+        'var',
         'TIMESTAMP',
-        'loadLocal',
-        'uint256',
+        'var',
         'EXPIRY',
         '<',
         'and',
-        'loadLocal',
-        'uint256',
+        'var',
         'RISK',
         'or',
         'bool',
@@ -835,7 +827,7 @@ describe('Preprocessor', () => {
         end
 
         SUM_OF_NUMBERS {
-          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+          (var SUM_OF_NUMBERS_1 + var SUM_OF_NUMBERS_2) setUint256 SUM
         }
         `;
       const expected = [
@@ -851,11 +843,9 @@ describe('Preprocessor', () => {
         'SUM_OF_NUMBERS',
         'end',
         'SUM_OF_NUMBERS',
-        'loadLocal',
-        'uint256',
+        'var',
         'SUM_OF_NUMBERS_1',
-        'loadLocal',
-        'uint256',
+        'var',
         'SUM_OF_NUMBERS_2',
         '+',
         'setUint256',
@@ -873,7 +863,7 @@ describe('Preprocessor', () => {
         end
 
         SUM_OF_NUMBERS {
-          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+          (var SUM_OF_NUMBERS_1 + var SUM_OF_NUMBERS_2) setUint256 SUM
         }
         `;
 
@@ -887,7 +877,7 @@ describe('Preprocessor', () => {
         end
 
         SUM_OF_NUMBERS {
-          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+          (var SUM_OF_NUMBERS_1 + var SUM_OF_NUMBERS_2) setUint256 SUM
         }
         `;
 

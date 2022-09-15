@@ -72,7 +72,7 @@ const testNames = {
 };
 
 // Note: to disable any of the tests just comment out any test name from this array
-const enabledTests = [
+const enabledTests: string[] = [
   testNames.scenario1,
   testNames.scenario2,
   testNames.scenario3,
@@ -361,7 +361,7 @@ const tests = {
     // TODO: check with Misha again
     // used the 34% / 66% percentage, as in the third agreement we have dividing values by 66 %
     // P1 = 100 - 34
-    // ex. loadLocal uint256 DEPOSIT_MIN_PERCENT * loadLocal uint256 LP_INITIAL / loadLocal uint256
+    // ex. var DEPOSIT_MIN_PERCENT * var LP_INITIAL / var
     // P1
     {
       base: '4',

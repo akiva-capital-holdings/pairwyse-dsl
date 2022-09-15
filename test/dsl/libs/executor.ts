@@ -287,14 +287,14 @@ describe('Executor', () => {
           /**
            * The program is:
            * `
-           *  loadLocalUint256 NUMBER
-           *  loadLocalUint256 NUMBER2
+           *  var NUMBER
+           *  var NUMBER2
            *  >
            * `
            */
           const number = bytes32Number.substring(2, 10);
           const number2 = bytes32Number2.substring(2, 10);
-          await ctx.setProgram(`0x1b01${number}1b01${number2}04`);
+          await ctx.setProgram(`0x1b${number}1b${number2}04`);
           await app.execute(ctxAddr);
           await checkStack(stack, 1, 1);
         });
@@ -311,14 +311,14 @@ describe('Executor', () => {
           /**
            * The program is:
            * `
-           *  loadLocalUint256 NUMBER
-           *  loadLocalUint256 NUMBER2
+           *  var NUMBER
+           *  var NUMBER2
            *  >
            * `
            */
           const number = bytes32Number.substring(2, 10);
           const number2 = bytes32Number2.substring(2, 10);
-          await ctx.setProgram(`0x1b01${number}1b01${number2}06`);
+          await ctx.setProgram(`0x1b${number}1b${number2}06`);
           await app.execute(ctxAddr);
           await checkStack(stack, 1, 0);
         });
@@ -335,204 +335,204 @@ describe('Executor', () => {
           /**
            * The program is:
            * `
-           *  loadLocalUint256 NUMBER
-           *  loadLocalUint256 NUMBER2
+           *  var NUMBER
+           *  var NUMBER2
            *  >
            * `
            */
           const number = bytes32Number.substring(2, 10);
           const number2 = bytes32Number2.substring(2, 10);
-          await ctx.setProgram(`0x1b01${number}1b01${number2}01`);
+          await ctx.setProgram(`0x1b${number}1b${number2}01`);
           await app.execute(ctxAddr);
           await checkStack(stack, 1, 1);
         });
       });
 
-      describe('opLoadLocalBytes32', () => {
-        it('bytes32 are equal', async () => {
-          // Set BYTES
-          const bytes32Bytes = hex4Bytes('BYTES');
-          await app.setStorageBytes32(
-            bytes32Bytes,
-            '0x1234500000000000000000000000000000000000000000000000000000000001'
-          );
+      // describe('opLoadLocalBytes32', () => {
+      //   it('bytes32 are equal', async () => {
+      //     // Set BYTES
+      //     const bytes32Bytes = hex4Bytes('BYTES');
+      //     await app.setStorageBytes32(
+      //       bytes32Bytes,
+      //       '0x1234500000000000000000000000000000000000000000000000000000000001'
+      //     );
 
-          // Set BYTES2
-          const bytes32Bytes2 = hex4Bytes('BYTES2');
-          await app.setStorageBytes32(
-            bytes32Bytes2,
-            '0x1234500000000000000000000000000000000000000000000000000000000001'
-          );
+      //     // Set BYTES2
+      //     const bytes32Bytes2 = hex4Bytes('BYTES2');
+      //     await app.setStorageBytes32(
+      //       bytes32Bytes2,
+      //       '0x1234500000000000000000000000000000000000000000000000000000000001'
+      //     );
 
-          /**
-           * The program is:
-           * `
-           *  opLoadLocalBytes32 BYTES
-           *  opLoadLocalBytes32 BYTES2
-           *  =
-           * `
-           */
-          const bytes = bytes32Bytes.substring(2, 10);
-          const bytes2 = bytes32Bytes2.substring(2, 10);
-          await ctx.setProgram(`0x1b04${bytes}1b04${bytes2}01`);
-          await app.execute(ctxAddr);
-          await checkStack(stack, 1, 1);
-        });
+      //     /**
+      //      * The program is:
+      //      * `
+      //      *  opLoadLocalBytes32 BYTES
+      //      *  opLoadLocalBytes32 BYTES2
+      //      *  =
+      //      * `
+      //      */
+      //     const bytes = bytes32Bytes.substring(2, 10);
+      //     const bytes2 = bytes32Bytes2.substring(2, 10);
+      //     await ctx.setProgram(`0x1b04${bytes}1b04${bytes2}01`);
+      //     await app.execute(ctxAddr);
+      //     await checkStack(stack, 1, 1);
+      //   });
 
-        it('bytes32 are not equal', async () => {
-          // Set BYTES
-          const bytes32Bytes = hex4Bytes('BYTES');
-          await app.setStorageBytes32(
-            bytes32Bytes,
-            '0x1234500000000000000000000000000000000000000000000000000000000001'
-          );
+      //   it('bytes32 are not equal', async () => {
+      //     // Set BYTES
+      //     const bytes32Bytes = hex4Bytes('BYTES');
+      //     await app.setStorageBytes32(
+      //       bytes32Bytes,
+      //       '0x1234500000000000000000000000000000000000000000000000000000000001'
+      //     );
 
-          // Set BYTES2
-          const bytes32Bytes2 = hex4Bytes('BYTES2');
-          await app.setStorageBytes32(
-            bytes32Bytes2,
-            '0x1234500000000000000000000000000000000000000000000000000000000011'
-          );
+      //     // Set BYTES2
+      //     const bytes32Bytes2 = hex4Bytes('BYTES2');
+      //     await app.setStorageBytes32(
+      //       bytes32Bytes2,
+      //       '0x1234500000000000000000000000000000000000000000000000000000000011'
+      //     );
 
-          /**
-           * The program is:
-           * `
-           *  opLoadLocalBytes32 BYTES
-           *  opLoadLocalBytes32 BYTES2
-           *  =
-           * `
-           */
-          const bytes = bytes32Bytes.substring(2, 10);
-          const bytes2 = bytes32Bytes2.substring(2, 10);
-          await ctx.setProgram(`0x1b04${bytes}1b04${bytes2}01`);
-          await app.execute(ctxAddr);
-          await checkStack(stack, 1, 0);
-        });
-      });
+      //     /**
+      //      * The program is:
+      //      * `
+      //      *  opLoadLocalBytes32 BYTES
+      //      *  opLoadLocalBytes32 BYTES2
+      //      *  =
+      //      * `
+      //      */
+      //     const bytes = bytes32Bytes.substring(2, 10);
+      //     const bytes2 = bytes32Bytes2.substring(2, 10);
+      //     await ctx.setProgram(`0x1b04${bytes}1b04${bytes2}01`);
+      //     await app.execute(ctxAddr);
+      //     await checkStack(stack, 1, 0);
+      //   });
+      // });
 
-      describe('opLoadLocalAddress', () => {
-        it('addresses are equal', async () => {
-          // Set ADDR
-          const bytes32Bytes = hex4Bytes('ADDR');
-          await app.setStorageAddress(bytes32Bytes, '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+      // describe('opLoadLocalAddress', () => {
+      //   it('addresses are equal', async () => {
+      //     // Set ADDR
+      //     const bytes32Bytes = hex4Bytes('ADDR');
+      //     await app.setStorageAddress(bytes32Bytes, '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
 
-          // Set ADDR2
-          const bytes32Bytes2 = hex4Bytes('ADDR2');
-          await app.setStorageAddress(bytes32Bytes2, '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+      //     // Set ADDR2
+      //     const bytes32Bytes2 = hex4Bytes('ADDR2');
+      //     await app.setStorageAddress(bytes32Bytes2, '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
 
-          /**
-           * The program is:
-           * `
-           *  opLoadLocalAddress ADDR
-           *  opLoadLocalAddress ADDR2
-           *  =
-           * `
-           */
-          const bytes = bytes32Bytes.substring(2, 10);
-          const bytes2 = bytes32Bytes2.substring(2, 10);
-          await ctx.setProgram(`0x1b03${bytes}1b03${bytes2}01`);
-          await app.execute(ctxAddr);
-          await checkStack(stack, 1, 1);
-        });
+      //     /**
+      //      * The program is:
+      //      * `
+      //      *  opLoadLocalAddress ADDR
+      //      *  opLoadLocalAddress ADDR2
+      //      *  =
+      //      * `
+      //      */
+      //     const bytes = bytes32Bytes.substring(2, 10);
+      //     const bytes2 = bytes32Bytes2.substring(2, 10);
+      //     await ctx.setProgram(`0x1b03${bytes}1b03${bytes2}01`);
+      //     await app.execute(ctxAddr);
+      //     await checkStack(stack, 1, 1);
+      //   });
 
-        it('addresses are not equal', async () => {
-          // Set ADDR
-          const bytes32Bytes = hex4Bytes('ADDR');
-          await app.setStorageAddress(bytes32Bytes, '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+      //   it('addresses are not equal', async () => {
+      //     // Set ADDR
+      //     const bytes32Bytes = hex4Bytes('ADDR');
+      //     await app.setStorageAddress(bytes32Bytes, '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
 
-          // Set ADDR2
-          const bytes32Bytes2 = hex4Bytes('ADDR2');
-          await app.setStorageAddress(bytes32Bytes2, '0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836');
+      //     // Set ADDR2
+      //     const bytes32Bytes2 = hex4Bytes('ADDR2');
+      //     await app.setStorageAddress(bytes32Bytes2, '0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836');
 
-          /**
-           * The program is:
-           * `
-           *  opLoadLocalAddress ADDR
-           *  opLoadLocalAddress ADDR2
-           *  =
-           * `
-           */
-          const bytes = bytes32Bytes.substring(2, 10);
-          const bytes2 = bytes32Bytes2.substring(2, 10);
-          await ctx.setProgram(`0x1b03${bytes}1b03${bytes2}01`);
-          await app.execute(ctxAddr);
-          await checkStack(stack, 1, 0);
-        });
-      });
+      //     /**
+      //      * The program is:
+      //      * `
+      //      *  opLoadLocalAddress ADDR
+      //      *  opLoadLocalAddress ADDR2
+      //      *  =
+      //      * `
+      //      */
+      //     const bytes = bytes32Bytes.substring(2, 10);
+      //     const bytes2 = bytes32Bytes2.substring(2, 10);
+      //     await ctx.setProgram(`0x1b03${bytes}1b03${bytes2}01`);
+      //     await app.execute(ctxAddr);
+      //     await checkStack(stack, 1, 0);
+      //   });
+      // });
 
-      describe('opLoadLocalBool', () => {
-        it('true == true', async () => {
-          // Set BOOL
-          const bytes32Bytes = hex4Bytes('BOOL');
-          await app.setStorageBool(bytes32Bytes, true);
+      // describe('opLoadLocalBool', () => {
+      //   it('true == true', async () => {
+      //     // Set BOOL
+      //     const bytes32Bytes = hex4Bytes('BOOL');
+      //     await app.setStorageBool(bytes32Bytes, true);
 
-          // Set BOOL2
-          const bytes32Bytes2 = hex4Bytes('BOOL2');
-          await app.setStorageBool(bytes32Bytes2, true);
+      //     // Set BOOL2
+      //     const bytes32Bytes2 = hex4Bytes('BOOL2');
+      //     await app.setStorageBool(bytes32Bytes2, true);
 
-          /**
-           * The program is:
-           * `
-           *  opLoadLocalBool BOOL
-           *  opLoadLocalBool BOOL2
-           *  =
-           * `
-           */
-          const bytes = bytes32Bytes.substring(2, 10);
-          const bytes2 = bytes32Bytes2.substring(2, 10);
-          await ctx.setProgram(`0x1b02${bytes}1b02${bytes2}01`);
-          await app.execute(ctxAddr);
-          await checkStack(stack, 1, 1);
-        });
+      //     /**
+      //      * The program is:
+      //      * `
+      //      *  opLoadLocalBool BOOL
+      //      *  opLoadLocalBool BOOL2
+      //      *  =
+      //      * `
+      //      */
+      //     const bytes = bytes32Bytes.substring(2, 10);
+      //     const bytes2 = bytes32Bytes2.substring(2, 10);
+      //     await ctx.setProgram(`0x1b02${bytes}1b02${bytes2}01`);
+      //     await app.execute(ctxAddr);
+      //     await checkStack(stack, 1, 1);
+      //   });
 
-        it('true && true', async () => {
-          // Set BOOL
-          const bytes32Bytes = hex4Bytes('BOOL');
-          await app.setStorageBool(bytes32Bytes, true);
+      //   it('true && true', async () => {
+      //     // Set BOOL
+      //     const bytes32Bytes = hex4Bytes('BOOL');
+      //     await app.setStorageBool(bytes32Bytes, true);
 
-          // Set BOOL2
-          const bytes32Bytes2 = hex4Bytes('BOOL2');
-          await app.setStorageBool(bytes32Bytes2, true);
+      //     // Set BOOL2
+      //     const bytes32Bytes2 = hex4Bytes('BOOL2');
+      //     await app.setStorageBool(bytes32Bytes2, true);
 
-          /**
-           * The program is:
-           * `
-           *  opLoadLocalBool BOOL
-           *  opLoadLocalBool BOOL2
-           *  =
-           * `
-           */
-          const bytes = bytes32Bytes.substring(2, 10);
-          const bytes2 = bytes32Bytes2.substring(2, 10);
-          await ctx.setProgram(`0x1b02${bytes}1b02${bytes2}12`);
-          await app.execute(ctxAddr);
-          await checkStack(stack, 1, 1);
-        });
+      //     /**
+      //      * The program is:
+      //      * `
+      //      *  opLoadLocalBool BOOL
+      //      *  opLoadLocalBool BOOL2
+      //      *  =
+      //      * `
+      //      */
+      //     const bytes = bytes32Bytes.substring(2, 10);
+      //     const bytes2 = bytes32Bytes2.substring(2, 10);
+      //     await ctx.setProgram(`0x1b02${bytes}1b02${bytes2}12`);
+      //     await app.execute(ctxAddr);
+      //     await checkStack(stack, 1, 1);
+      //   });
 
-        it('true == false', async () => {
-          // Set BOOL
-          const bytes32Bytes = hex4Bytes('BOOL');
-          await app.setStorageBool(bytes32Bytes, true);
+      //   it('true == false', async () => {
+      //     // Set BOOL
+      //     const bytes32Bytes = hex4Bytes('BOOL');
+      //     await app.setStorageBool(bytes32Bytes, true);
 
-          // Set BOOL2
-          const bytes32Bytes2 = hex4Bytes('BOOL2');
-          await app.setStorageBool(bytes32Bytes2, false);
+      //     // Set BOOL2
+      //     const bytes32Bytes2 = hex4Bytes('BOOL2');
+      //     await app.setStorageBool(bytes32Bytes2, false);
 
-          /**
-           * The program is:
-           * `
-           *  opLoadLocalBool BOOL
-           *  opLoadLocalBool BOOL2
-           *  =
-           * `
-           */
-          const bytes = bytes32Bytes.substring(2, 10);
-          const bytes2 = bytes32Bytes2.substring(2, 10);
-          await ctx.setProgram(`0x1b02${bytes}1b02${bytes2}01`);
-          await app.execute(ctxAddr);
-          await checkStack(stack, 1, 0);
-        });
-      });
+      //     /**
+      //      * The program is:
+      //      * `
+      //      *  opLoadLocalBool BOOL
+      //      *  opLoadLocalBool BOOL2
+      //      *  =
+      //      * `
+      //      */
+      //     const bytes = bytes32Bytes.substring(2, 10);
+      //     const bytes2 = bytes32Bytes2.substring(2, 10);
+      //     await ctx.setProgram(`0x1b02${bytes}1b02${bytes2}01`);
+      //     await app.execute(ctxAddr);
+      //     await checkStack(stack, 1, 0);
+      //   });
+      // });
     });
 
     describe('Load remote', () => {

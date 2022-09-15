@@ -72,13 +72,9 @@ describe('Parser', () => {
       expect(await ctx.program()).to.equal(expected);
     });
 
-    it('loadLocal uint256 TIMESTAMP < loadLocal uint256 NEXT_MONTH', async () => {
-      await app.parse(
-        preprocessorAddr,
-        ctxAddr,
-        'loadLocal uint256 TIMESTAMP < loadLocal uint256 NEXT_MONTH'
-      );
-      const expected = '0x1b011b7b16d41b01a75b67d703';
+    it('var TIMESTAMP < var NEXT_MONTH', async () => {
+      await app.parse(preprocessorAddr, ctxAddr, 'var TIMESTAMP < var NEXT_MONTH');
+      const expected = '0x1b1b7b16d41ba75b67d703';
       expect(await ctx.program()).to.equal(expected);
     });
 
@@ -87,15 +83,14 @@ describe('Parser', () => {
         preprocessorAddr,
         ctxAddr,
         `
-          (loadLocal uint256 TIMESTAMP > loadLocal uint256 INIT)
+          (var TIMESTAMP > var INIT)
           and
-          (loadLocal uint256 TIMESTAMP < loadLocal uint256 EXPIRY)
+          (var TIMESTAMP < var EXPIRY)
           or
-          (loadLocal uint256 RISK != bool true)
+          (var RISK != bool true)
           `
       );
-      const expected =
-        '0x1b011b7b16d41b01b687035e041b011b7b16d41b019dc69bb503121b0155248f7c18011413';
+      const expected = '0x1b1b7b16d41bb687035e041b1b7b16d41b9dc69bb503121b55248f7c18011413';
       expect(await ctx.program()).to.equal(expected);
     });
 
@@ -195,32 +190,31 @@ describe('Parser', () => {
     });
   });
 
-  describe('setVariable', () => {
-    it('should set the global variable (uint256)', async () => {
-      const name = 'TEST_NUMBER';
-      expect(await app.isVariable('TEST_NUMBER')).to.be.equal(false);
-      expect(await app.savedProgram('TEST_NUMBER')).to.be.equal('0x');
-      await app.setVariableExt(ctxAddr, name, 'uint256');
-      expect(await app.isVariable('TEST_NUMBER')).to.be.equal(true);
-      /*
-        1b - opcode for loadLocal command
-        01 - branchCode for loadLocal command with uint256 type
-        1cc054ab - bytecode for a `TEST_NUMBER` name
-      */
-      expect(await app.savedProgram('TEST_NUMBER')).to.be.equal('0x1b011cc054ab');
-    });
+  // describe('setVariable', () => {
+  //   it('should set the global variable (uint256)', async () => {
+  //     const name = 'TEST_NUMBER';
+  //     expect(await app.isVariable('TEST_NUMBER')).to.be.equal(false);
+  //     expect(await app.savedProgram('TEST_NUMBER')).to.be.equal('0x');
+  //     await app.setVariableExt(ctxAddr, name, 'uint256');
+  //     expect(await app.isVariable('TEST_NUMBER')).to.be.equal(true);
+  //     /*
+  //       1b - opcode for `var` command
+  //       1cc054ab - bytecode for a `TEST_NUMBER` name
+  //     */
+  //     expect(await app.savedProgram('TEST_NUMBER')).to.be.equal('0x1b011cc054ab');
+  //   });
 
-    it('reverts if try to set empty global variable name', async () => {
-      expect(await app.isVariable('')).to.be.equal(false);
-      expect(await app.savedProgram('')).to.be.equal('0x');
-      await expect(app.setVariableExt(ctxAddr, '', 'uint256')).to.be.revertedWith('PRS2');
-      expect(await app.isVariable('')).to.be.equal(false);
-      expect(await app.savedProgram('')).to.be.equal('0x');
-    });
-  });
+  //   it('reverts if try to set empty global variable name', async () => {
+  //     expect(await app.isVariable('')).to.be.equal(false);
+  //     expect(await app.savedProgram('')).to.be.equal('0x');
+  //     await expect(app.setVariableExt(ctxAddr, '', 'uint256')).to.be.revertedWith('PRS2');
+  //     expect(await app.isVariable('')).to.be.equal(false);
+  //     expect(await app.savedProgram('')).to.be.equal('0x');
+  //   });
+  // });
 
-  describe('Load local variables without loadLocal opcode', async () => {
-    it('set two local variables, one of them using in the next command', async () => {
+  describe.skip('Load local variables without `var` opcode', async () => {
+    it.skip('set two local variables, one of them using in the next command', async () => {
       /*
         Example:
           uint256 6 setUint256 A
@@ -233,6 +227,7 @@ describe('Parser', () => {
         '6',
         'setUint256',
         'A',
+        'var',
         'A',
         'uint256',
         '2',
@@ -246,14 +241,12 @@ describe('Parser', () => {
 
       expect(await app.savedProgram('A')).to.be.equal(
         '0x' +
-          '1b' + // opcode for loadLocal command
-          '01' + // branchCode for loadLocal command with uint256 type
+          '1b' + // opcode for var command
           '03783fac' // bytecode for an `A` name
       );
       expect(await app.savedProgram('SUM')).to.be.equal(
         '0x' +
-          '1b' + // opcode for loadLocal command
-          '01' + // branchCode for loadLocal command with uint256 type
+          '1b' + // opcode for var command
           '2df384fb' // bytecode for a `SUM` name
       );
       expect(await ctx.program()).to.equal(
@@ -262,8 +255,7 @@ describe('Parser', () => {
           `${SIX}` + // 6
           '2e' + // setUint256
           '03783fac' + // bytecode for an `A` name
-          '1b' + // loadLocal
-          '01' + // branchCode for loadLocal command with uint256 type
+          '1b' + // var
           '03783fac' + // A
           '1a' + // uint256
           `${TWO}` +

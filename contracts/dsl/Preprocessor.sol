@@ -129,11 +129,11 @@ contract Preprocessor is IPreprocessor {
      * Example:
      * The user's DSL code string is
      * ```
-     * (loadLocal uint256 TIMESTAMP >    loadLocal uint256 INIT)
+     * (var TIMESTAMP > var INIT)
      * ```
      * The end result after executing a `split()` function is
      * ```
-     * ['loadLocal', 'uint256', 'TIMESTAMP', '>', 'loadLocal', 'uint256', 'INIT']
+     * ['var', 'TIMESTAMP', '>', 'var', 'INIT']
      * ```
      *
      * @param _program is a user's DSL code string
@@ -268,8 +268,7 @@ contract Preprocessor is IPreprocessor {
             /* else if (chunk.isValidVarName()) {
                 // Process variables with implicit types
                 result.push(chunk);
-                result.push('uint256');
-                result.push('loadLocal');
+                result.push('var');
             }*/
             else {
                 result.push(chunk);

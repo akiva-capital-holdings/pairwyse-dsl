@@ -73,7 +73,7 @@ describe('Simple Records in Agreement', () => {
       requiredRecords: [],
       signatories: [alice.address],
       transactionStr: 'sendEth RECEIVER 1000000000000000000',
-      conditionStrings: ['blockTimestamp > loadLocal uint256 LOCK_TIME'],
+      conditionStrings: ['blockTimestamp > var LOCK_TIME'],
       transactionCtx: transactionContext,
       conditionContexts: [conditionContext],
     });
@@ -152,25 +152,25 @@ describe('Simple Records in Agreement', () => {
       signatories: [alice.address],
       transactionStr: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAINING',
       conditionStrings: [
-        `loadLocal uint256 GP_INITIAL +
-        loadLocal uint256 LP_TOTAL >= loadLocal uint256 INITIAL_FUNDS_TARGET`,
-        `(loadLocal uint256 DEPOSIT_MIN_PERCENT * loadLocal uint256 LP_TOTAL
-            / loadLocal uint256 P1) setUint256 TWO_PERCENT`,
+        `var GP_INITIAL +
+        var LP_TOTAL >= var INITIAL_FUNDS_TARGET`,
+        `(var DEPOSIT_MIN_PERCENT * var LP_TOTAL
+            / var P1) setUint256 TWO_PERCENT`,
         `
-        (loadLocal uint256 TWO_PERCENT > loadLocal uint256 GP_INITIAL)
+        (var TWO_PERCENT > var GP_INITIAL)
         ifelse POS NEG
         end
         POS {
-          (loadLocal uint256 TWO_PERCENT - loadLocal uint256 GP_INITIAL
+          (var TWO_PERCENT - var GP_INITIAL
           ) setUint256 GP_REMAINING
         }
         NEG {
           0 setUint256 GP_REMAINING
         }`,
-        'TIME >= loadLocal uint256 LOW_LIM',
-        'TIME <= loadLocal uint256 UP_LIM',
+        'TIME >= var LOW_LIM',
+        'TIME <= var UP_LIM',
         `(balanceOf DAI TRANSACTIONS_CONT) >=
-            ((loadLocal uint256 INITIAL_FUNDS_TARGET * loadLocal uint256 P1) / 100)`,
+            ((var INITIAL_FUNDS_TARGET * var P1) / 100)`,
       ],
       transactionCtx: await ContextCont.deploy(),
       conditionContexts: [
@@ -222,7 +222,7 @@ describe('Simple Records in Agreement', () => {
       requiredRecords: [3],
       signatories: [bob.address],
       transactionStr: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
-      conditionStrings: ['blockTimestamp > loadLocal uint256 LOCK_TIME'],
+      conditionStrings: ['blockTimestamp > var LOCK_TIME'],
       transactionCtx: await ContextCont.deploy(),
       conditionContexts: [await ContextCont.deploy()],
     });
@@ -464,7 +464,7 @@ describe('Simple Records in Agreement', () => {
         requiredRecords: [],
         signatories: [bob.address],
         transactionStr: `transfer TOKEN_ADDR TOKEN_RECEIVER ${tenTokens}`,
-        conditionStrings: ['blockTimestamp > loadLocal uint256 LOCK_TIME'],
+        conditionStrings: ['blockTimestamp > var LOCK_TIME'],
         transactionCtx: await ContextCont.deploy(),
         conditionContexts: [await ContextCont.deploy()],
       });

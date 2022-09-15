@@ -457,6 +457,14 @@ contract Context is IContext {
             OpcodeLibNames.BranchingOpcodes
         );
 
+        addOpcode(
+            'var',
+            0x1b,
+            OtherOpcodes.opLoadLocalUint256.selector,
+            IParser.asmVar.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
         // Complex Opcodes with sub Opcodes (branches)
 
         /*
@@ -467,21 +475,21 @@ contract Context is IContext {
             Where `*_STORED_VALUE` parameters can be set by using `setLocalBool`
             or `setUint256` opcodes
         */
-        string memory name = 'loadLocal';
-        addOpcode(
-            name,
-            0x1b,
-            OtherOpcodes.opLoadLocalAny.selector,
-            IParser.asmLoadLocal.selector,
-            OpcodeLibNames.OtherOpcodes
-        );
-        // types that 'loadLocal' have for loading data
-        _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadLocalUint256.selector);
-        _addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadLocalBool.selector);
-        _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadLocalAddress.selector);
-        _addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadLocalBytes32.selector);
+        // string memory name = 'loadLocal';
+        // addOpcode(
+        //     name,
+        //     0x1b,
+        //     OtherOpcodes.opLoadLocalAny.selector,
+        //     IParser.asmVar.selector,
+        //     OpcodeLibNames.OtherOpcodes
+        // );
+        // // types that 'loadLocal' have for loading data
+        // _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadLocalUint256.selector);
+        // _addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadLocalBool.selector);
+        // _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadLocalAddress.selector);
+        // _addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadLocalBytes32.selector);
 
-        name = 'loadRemote';
+        string memory name = 'loadRemote';
         addOpcode(
             name,
             0x1c,
