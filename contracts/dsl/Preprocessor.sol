@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import { IContext } from './interfaces/IContext.sol';
 import { IPreprocessor } from './interfaces/IPreprocessor.sol';
 import { StringStack } from './helpers/StringStack.sol';
-// import { StringArray } from './helpers/StringArray.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 import { ErrorsPreprocessor } from './libs/Errors.sol';
 
@@ -24,7 +23,6 @@ import { ErrorsPreprocessor } from './libs/Errors.sol';
  */
 contract Preprocessor is IPreprocessor {
     using StringUtils for string;
-    // using StringUtils for uint256;
 
     // Note: temporary variable
     // param positional number -> parameter itself
@@ -215,11 +213,14 @@ contract Preprocessor is IPreprocessor {
         bool isName;
         bool loadRemoteFlag;
         bool directUseUint256;
+        bool isArrayStart;
+
         uint256 loadRemoteVarCount;
         uint256 currencyMultiplier;
+
         string memory chunk;
         string memory name;
-        // bool isArrayStart;
+
         // Cleanup
         delete result;
         _stack.clear();
@@ -239,33 +240,26 @@ contract Preprocessor is IPreprocessor {
             );
 
             // ---> start block for DSL arrays without types
-            // if (chunk.equal('[') && !isArrayStart) { // TODO: what if array can contain other arrays?
-            //     isArrayStart = true;
-            //     array = new StringArray();
-            //     continue;
-            // } else if (isArrayStart && array.getType().equal('it') && !chunk.equal(']')) {
-            //     string memory _type = _getArrayType(array, chunk);
-            //     array.setType(_type);
-            //     array.push(chunk);
-            //     continue;
-            // } else if (isArrayStart && !array.getType().equal('it') && !chunk.equal(']')) {
-            //     array.push(chunk);
-            //     continue;
-            // } else if (chunk.equal(']') && isArrayStart) {
-            //     if (array.length() != 0) {
+            // TODO: code for array tasks will be added below
+            if (chunk.equal('[') && !isArrayStart) {
+                isArrayStart = true;
+                continue;
+            } else if (isArrayStart && chunk.equal(']')) {
+                continue;
+            } else if (isArrayStart && !chunk.equal(']')) {
+                if (result.length > 0) {
+                    string memory _type = result[result.length - 1];
+                    result.pop();
+                    // TODO: move that to Parser or reorganise it to simple array structure?
+                    // EX. NUMBERS [1,2,3,4...]
+                    result.push('declare');
+                    result.push(_type);
+                    result.push(chunk);
+                }
 
-            //         result.push(array.getType());
-            //         result.push(array.length().toString());
-            //         for (uint256 _index; _index < array.length(); _index++) {
-            //             result.push(array.getItemByIndex(_index));
-            //         }
-            //         array.clear();
-            //     } else {
-            //         result.pop(); // remove the name of array from the comand list
-            //     }
-            //     isArrayStart = false;
-            //     continue;
-            // } // <--- end block for DSL arrays
+                isArrayStart = false;
+                continue;
+            } // <--- end block for DSL arrays
 
             // Replace alises with base commands
             if (_isAlias(_ctxAddr, chunk)) {

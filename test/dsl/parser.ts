@@ -448,12 +448,12 @@ describe('Parser', () => {
           '0x' +
             '31' + // declare
             '03' + // address
-            '1fff709e' + // bytecode for a `MARY` name
+            '5e315030' + // bytecode for a `MARY` name
             '1a' + // uint256
             `${number}` + // 6
             '1b' + // loadLocal
             '01' + // uint256
-            '5e315030' // TIMESTAMP
+            '1b7b16d4' // TIMESTAMP
         );
       });
 
