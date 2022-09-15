@@ -1541,5 +1541,47 @@ describe('Preprocessor', () => {
         ]);
       });
     });
+
+    describe('address type', () => {
+      it('declare array', async () => {
+        const input = `declare address REALTORS`;
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql(['declare', 'address', 'REALTORS']);
+      });
+
+      it('declare array between several commands', async () => {
+        const input = `uint256 2 declare address REALTORS bool false`;
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql(['uint256', '2', 'declare', 'address', 'REALTORS', 'bool', 'false']);
+      });
+
+      it('declare array just before a command', async () => {
+        const input = `declare address REALTORS bool false`;
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql(['declare', 'address', 'REALTORS', 'bool', 'false']);
+      });
+
+      it('declare array just after a command', async () => {
+        const input = `declare address REALTORS bool false`;
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql(['declare', 'address', 'REALTORS', 'bool', 'false']);
+      });
+
+      it('declare three arrays', async () => {
+        const input = `declare address REALTORS declare address OWNERS declare address DBs`;
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql([
+          'declare',
+          'address',
+          'REALTORS',
+          'declare',
+          'address',
+          'OWNERS',
+          'declare',
+          'address',
+          'DBs',
+        ]);
+      });
+    });
   });
 });
