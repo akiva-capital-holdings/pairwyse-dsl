@@ -12,6 +12,13 @@ Execute: `yarn hardhat compile`
 
 Run: `yarn hardhat node --network hardhat` to start a local node (in the separate terminal). Or use `yarn hardhat node --hostname 127.0.0.1 --port 7545` directly.
 
+### Deploy the contracts on remote node
+
+1. Open or create the .env file
+2. Make sure the value is filled `REMOTE_GANACHE_URL= http://192.168.221.1:8545`
+3. Open Pritunl and run VPN
+4. Run: `npx hardhat run --network remoteGanache scripts/deploy.preprocessor.ts` to run a script
+
 ### Deploy the contracts
 
 Run: `yarn hardhat run scripts/deploy.agreement.ts --network localhost` to run a script

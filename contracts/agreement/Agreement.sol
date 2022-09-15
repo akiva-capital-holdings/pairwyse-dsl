@@ -36,10 +36,19 @@ contract Agreement {
         string[] conditionStrings
     );
 
+    modifier isReserved(bytes32 position) {
+        bytes32 ETH_4_BYTES_HEX = 0xaaaebeba00000000000000000000000000000000000000000000000000000000;
+        bytes32 GWEI_4_BYTES_HEX = 0x0c93a5d800000000000000000000000000000000000000000000000000000000;
+        require(position != ETH_4_BYTES_HEX, 'AGR8'); // check that variable name is not 'ETH'
+        require(position != GWEI_4_BYTES_HEX, 'AGR8'); // check that variable name is not 'GWEI'
+        _;
+    }
+
     struct Record {
         uint256[] requiredRecords;
         address transactionContext;
         bool isExecuted;
+        bool isArchived;
         string transactionString;
     }
 
@@ -72,15 +81,19 @@ contract Agreement {
         return position.getStorageUint256();
     }
 
-    function setStorageBool(bytes32 position, bool data) external {
+    function setStorageBool(bytes32 position, bool data) external isReserved(position) {
         position.setStorageBool(data);
     }
 
-    function setStorageAddress(bytes32 position, address data) external {
+    function setStorageAddress(bytes32 position, address data) external isReserved(position) {
         position.setStorageAddress(data);
     }
 
-    function setStorageUint256(bytes32 position, uint256 data) external {
+    function setStorageBytes32(bytes32 position, bytes32 data) external isReserved(position) {
+        position.setStorageBytes32(data);
+    }
+
+    function setStorageUint256(bytes32 position, uint256 data) external isReserved(position) {
         position.setStorageUint256(data);
     }
 
@@ -91,6 +104,25 @@ contract Agreement {
      */
     function conditionContextsLen(uint256 _recordId) external view returns (uint256) {
         return conditionContexts[_recordId].length;
+    }
+
+    /**
+     * @dev archived any of the existing records by recordId.
+     * @param _recordId Record ID
+     */
+    function archiveRecord(uint256 _recordId) external {
+        require(txs[_recordId].transactionContext != address(0), ErrorsAgreement.AGR9);
+        txs[_recordId].isArchived = true;
+    }
+
+    /**
+     * @dev  unarchive any of the existing records by recordId
+     * @param _recordId Record ID
+     */
+    function unArchiveRecord(uint256 _recordId) external {
+        require(txs[_recordId].transactionContext != address(0), ErrorsAgreement.AGR9);
+        require(txs[_recordId].isArchived != false, ErrorsAgreement.AGR10);
+        txs[_recordId].isArchived = false;
     }
 
     /**
@@ -163,7 +195,7 @@ contract Agreement {
     ) internal {
         _checkSignatories(_signatories);
 
-        Record memory txn = Record(_requiredRecords, address(0), false, '');
+        Record memory txn = Record(_requiredRecords, address(0), false, false, '');
         signatories[_recordId] = _signatories;
         signatoriesLen[_recordId] = _signatories.length;
         txs[_recordId] = txn;
