@@ -64,6 +64,7 @@ const config: HardhatUserConfig = {
     remoteGanache: {
       url: REMOTE_GANACHE_URL || '',
       timeout: 1e9,
+      chainId: 31337,
       accounts: {
         mnemonic:
           REMOTE_GANACHE_MNEMONIC || 'test test test test test test test test test test test junk',
