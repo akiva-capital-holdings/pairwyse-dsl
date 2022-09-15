@@ -851,7 +851,7 @@ describe('DSL: basic', () => {
     await checkStackTailv2(stack, [parseEther('1000')]);
   });
 
-  describe('if-else statement', () => {
+  describe.skip('if-else statement', () => {
     it('simple; using `branch` keyword', async () => {
       await app.parse(
         `
@@ -969,7 +969,7 @@ describe('DSL: basic', () => {
     it('((F & F) | F) == F', async () => testCase(NEXT_MONTH, PREV_MONTH, ITS_RISKY, 0));
   });
 
-  describe('function without parameters, without return value', () => {
+  describe.skip('function without parameters, without return value', () => {
     it('func SUM_OF_NUMBERS stores a value of sum', async () => {
       const input = `
         func SUM_OF_NUMBERS endf

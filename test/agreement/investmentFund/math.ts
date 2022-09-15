@@ -13,7 +13,7 @@ import { ONE_DAY, ONE_MONTH, ONE_YEAR } from '../../utils/constants';
 
 dotenv.config();
 
-describe('Agreement: Investment Fund tests math', () => {
+describe.skip('Agreement: Investment Fund tests math', () => {
   let agreement: Agreement;
   let agreementAddr: string;
   let preprocessorAddr: string;

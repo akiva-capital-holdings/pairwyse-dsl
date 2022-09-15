@@ -14,7 +14,7 @@ dotenv.config();
 
 const dynamicTestData = {} as DynamicTestData;
 
-const parentSuite = describe('Agreement: Investment Fund Simplified', () => {
+const parentSuite = describe.skip('Agreement: Investment Fund Simplified', () => {
   let snapshotId: number;
 
   before(async () => {
@@ -56,32 +56,32 @@ const parentSuite = describe('Agreement: Investment Fund Simplified', () => {
   });
 });
 
-const tests = {
-  'Simplified DSL code': [
-    {
-      base: '5',
-      name: 'success',
-      dynamicTestData,
-      GP_INITIAL: parseUnits('20', 18),
-      LP_INITIAL_ARR: [parseUnits('300', 18), parseUnits('900', 18)],
-      INITIAL_FUNDS_TARGET: parseUnits('1000', 18),
-      CAPITAL_LOSS: parseUnits('0', 18),
-      CAPITAL_GAINS: parseUnits('200', 18),
-      DEPOSIT_MIN_PERCENT: 2,
-      PURCHASE_PERCENT: 91,
-      MANAGEMENT_FEE_PERCENTAGE: 2,
-      HURDLE: 9,
-      PROFIT_PART: 20,
-      GP_FAILS_TO_DO_GAP_DEPOSIT: false,
-      get suiteInstance() {
-        return Suite.create(parentSuite, this.name);
-      },
-    },
-  ],
-};
+// const tests = {
+//   'Simplified DSL code': [
+//     {
+//       base: '5',
+//       name: 'success',
+//       dynamicTestData,
+//       GP_INITIAL: parseUnits('20', 18),
+//       LP_INITIAL_ARR: [parseUnits('300', 18), parseUnits('900', 18)],
+//       INITIAL_FUNDS_TARGET: parseUnits('1000', 18),
+//       CAPITAL_LOSS: parseUnits('0', 18),
+//       CAPITAL_GAINS: parseUnits('200', 18),
+//       DEPOSIT_MIN_PERCENT: 2,
+//       PURCHASE_PERCENT: 91,
+//       MANAGEMENT_FEE_PERCENTAGE: 2,
+//       HURDLE: 9,
+//       PROFIT_PART: 20,
+//       GP_FAILS_TO_DO_GAP_DEPOSIT: false,
+//       get suiteInstance() {
+//         return Suite.create(parentSuite, this.name);
+//       },
+//     },
+//   ],
+// };
 
-(Object.keys(tests) as (keyof typeof tests)[]).forEach((testBlockName) => {
-  for (const test of tests[testBlockName]) {
-    businessCaseTest(test);
-  }
-});
+// (Object.keys(tests) as (keyof typeof tests)[]).forEach((testBlockName) => {
+//   for (const test of tests[testBlockName]) {
+//     businessCaseTest(test);
+//   }
+// });

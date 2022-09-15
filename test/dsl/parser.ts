@@ -232,7 +232,7 @@ describe('Parser', () => {
   });
 
   describe('Load local variables without loadLocal opcode', async () => {
-    it('set two local variables, one of them using in the next command', async () => {
+    it.skip('set two local variables, one of them using in the next command', async () => {
       /*
         Example:
           uint256 6 setUint256 A

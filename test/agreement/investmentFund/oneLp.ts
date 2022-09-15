@@ -72,22 +72,22 @@ const testNames = {
 };
 
 // Note: to disable any of the tests just comment out any test name from this array
-const enabledTests = [
-  testNames.scenario1,
-  testNames.scenario2,
-  testNames.scenario3,
-  testNames.scenario4,
-  testNames.scenario5,
-  testNames.scenario6,
-  testNames.scenario7,
-  testNames.scenario8,
-  testNames.scenario9,
-  testNames.scenario10,
-  testNames.scenario11,
-  testNames.scenario12,
-  testNames.scenario13,
-  testNames.scenario14,
-  testNames.scenario15,
+const enabledTests: string[] = [
+  // testNames.scenario1,
+  // testNames.scenario2,
+  // testNames.scenario3,
+  // testNames.scenario4,
+  // testNames.scenario5,
+  // testNames.scenario6,
+  // testNames.scenario7,
+  // testNames.scenario8,
+  // testNames.scenario9,
+  // testNames.scenario10,
+  // testNames.scenario11,
+  // testNames.scenario12,
+  // testNames.scenario13,
+  // testNames.scenario14,
+  // testNames.scenario15,
 ];
 
 const tests = {

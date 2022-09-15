@@ -241,7 +241,7 @@ describe('End-to-end', () => {
     expect(await ctx.program()).to.equal(expectedProgram);
   });
 
-  describe('functions', async () => {
+  describe.skip('functions', async () => {
     it('func SUM_OF_NUMBERS (get uint256 variables from storage)', async () => {
       const input = `
       6 8
@@ -361,7 +361,7 @@ describe('End-to-end', () => {
   });
 
   describe('Load local variables without loadLocal opcode', async () => {
-    it('set two local variables, one of them using in the next command', async () => {
+    it.skip('set two local variables, one of them using in the next command', async () => {
       const input = `
       uint256 6 setUint256 A
       (A + 2) setUint256 SUM
@@ -402,7 +402,7 @@ describe('End-to-end', () => {
       expect(await ctx.program()).to.equal(expectedProgram);
     });
 
-    it('updates A variable', async () => {
+    it.skip('updates A variable', async () => {
       const input = `
       uint256 6 setUint256 A
       (A + 2) setUint256 A

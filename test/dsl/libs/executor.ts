@@ -785,7 +785,7 @@ describe('Executor', () => {
       });
     });
 
-    describe.only('Load with type', () => {
+    describe('Load with type', () => {
       describe('uint256', () => {
         it('17 > 15', async () => {
           // Set NUMBER
