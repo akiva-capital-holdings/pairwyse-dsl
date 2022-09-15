@@ -355,9 +355,9 @@ describe('DSL: basic', () => {
     await checkStackTailv2(stack, [block.timestamp]);
   });
 
-  it('TIME', async () => {
-    // TIME is an alias for blockTimestamp
-    await app.parse('TIME');
+  it('time', async () => {
+    // time is an alias for blockTimestamp
+    await app.parse('time');
     await app.execute();
     const block = await ethers.provider.getBlock('latest');
     await checkStackTailv2(stack, [block.timestamp]);
@@ -411,20 +411,20 @@ describe('DSL: basic', () => {
       await checkStackTailv2(stack, [1]);
     });
 
-    it('var TIMESTAMP < var NEXT_MONTH', async () => {
+    it('var TMSTAMP < var NEXT_MONTH', async () => {
       await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
-      await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
+      await app.setStorageUint256(hex4Bytes('TMSTAMP'), lastBlockTimestamp);
 
-      await app.parse('var TIMESTAMP < var NEXT_MONTH');
+      await app.parse('var TMSTAMP < var NEXT_MONTH');
       await app.execute();
       await checkStackTailv2(stack, [1]);
     });
 
-    it('var TIMESTAMP > var NEXT_MONTH', async () => {
+    it('var TMSTAMP > var NEXT_MONTH', async () => {
       await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
-      await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
+      await app.setStorageUint256(hex4Bytes('TMSTAMP'), lastBlockTimestamp);
 
-      await app.parse('var TIMESTAMP > var NEXT_MONTH');
+      await app.parse('var TMSTAMP > var NEXT_MONTH');
       await app.execute();
       await checkStackTailv2(stack, [0]);
     });
@@ -568,11 +568,11 @@ describe('DSL: basic', () => {
       await checkStackTailv2(stack, [1]);
     });
 
-    it('var TIMESTAMP < loadRemote uint256 NEXT_MONTH', async () => {
+    it('var TMSTAMP < loadRemote uint256 NEXT_MONTH', async () => {
       await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
-      await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
+      await app.setStorageUint256(hex4Bytes('TMSTAMP'), lastBlockTimestamp);
 
-      await app.parse(`var TIMESTAMP < loadRemote uint256 NEXT_MONTH ${appAddrHex}`);
+      await app.parse(`var TMSTAMP < loadRemote uint256 NEXT_MONTH ${appAddrHex}`);
       await app.execute();
       await checkStackTailv2(stack, [1]);
     });
@@ -906,18 +906,18 @@ describe('DSL: basic', () => {
     });
   });
 
-  it('TIMESTAMP > PREV_MONTH', async () => {
+  it('TMSTAMP > PREV_MONTH', async () => {
     await app.setStorageUint256(hex4Bytes('PREV_MONTH'), PREV_MONTH);
-    await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
-    await app.parse('var TIMESTAMP > var PREV_MONTH');
+    await app.setStorageUint256(hex4Bytes('TMSTAMP'), lastBlockTimestamp);
+    await app.parse('var TMSTAMP > var PREV_MONTH');
     await app.execute();
     await checkStackTailv2(stack, [1]);
   });
 
-  it('TIMESTAMP < NEXT_MONTH', async () => {
+  it('TMSTAMP < NEXT_MONTH', async () => {
     await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
-    await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
-    await app.parse('(var TIMESTAMP) < (var NEXT_MONTH)');
+    await app.setStorageUint256(hex4Bytes('TMSTAMP'), lastBlockTimestamp);
+    await app.parse('(var TMSTAMP) < (var NEXT_MONTH)');
     await app.execute();
     await checkStackTailv2(stack, [1]);
   });
@@ -928,9 +928,9 @@ describe('DSL: basic', () => {
     await checkStackTailv2(stack, [1]);
   });
 
-  it('block number < TIME', async () => {
-    // TIME is an alias for blockTimestamp
-    await app.parse('blockNumber < TIME');
+  it('block number < time', async () => {
+    // time is an alias for blockTimestamp
+    await app.parse('blockNumber < time');
     await app.execute();
     await checkStackTailv2(stack, [1]);
   });
@@ -942,14 +942,14 @@ describe('DSL: basic', () => {
     async function testCase(INIT: number, EXPIRY: number, RISK: boolean, target: number) {
       await app.setStorageUint256(hex4Bytes('INIT'), INIT);
       await app.setStorageUint256(hex4Bytes('EXPIRY'), EXPIRY);
-      await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
+      await app.setStorageUint256(hex4Bytes('TMSTAMP'), lastBlockTimestamp);
       await app.setStorageBool(hex4Bytes('RISK'), RISK);
 
       await app.parse(
         `
-        (var TIMESTAMP > var INIT)
+        (var TMSTAMP > var INIT)
         and
-        (var TIMESTAMP < var EXPIRY)
+        (var TMSTAMP < var EXPIRY)
         or
         (var RISK != bool true)
         `

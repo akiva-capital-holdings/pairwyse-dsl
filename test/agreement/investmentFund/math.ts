@@ -148,13 +148,13 @@ describe('Agreement: Investment Fund tests math', () => {
         await dai.connect(alice).transfer(GP.address, GP_REMAINING_BN);
         await dai.connect(GP).approve(agreementAddr, GP_REMAINING_BN);
         console.log(`GP Gap Deposit = ${formatEther(GP_REMAINING_BN)} DAI`);
-        const GP_GAP_DEPOSIT_LOWER_TIME = NEXT_TWO_MONTH - ONE_DAY;
-        const GP_GAP_DEPOSIT_UPPER_TIME = NEXT_TWO_MONTH + ONE_DAY;
+        const GP_GAP_DEPOSIT_LOWER_TM = NEXT_TWO_MONTH - ONE_DAY;
+        const GP_GAP_DEPOSIT_UPPER_TM = NEXT_TWO_MONTH + ONE_DAY;
 
         // Note: we give GP 2 days time to obtain P1 - MAX_PERCENT, P2 = DEPOSIT_MIN_PERCENT:
         // a P1% / P2% ratio of LP / GP deposits
-        await agreement.setStorageUint256(hex4Bytes('LOW_LIM'), GP_GAP_DEPOSIT_LOWER_TIME);
-        await agreement.setStorageUint256(hex4Bytes('UP_LIM'), GP_GAP_DEPOSIT_UPPER_TIME);
+        await agreement.setStorageUint256(hex4Bytes('LOW_LIM'), GP_GAP_DEPOSIT_LOWER_TM);
+        await agreement.setStorageUint256(hex4Bytes('UP_LIM'), GP_GAP_DEPOSIT_UPPER_TM);
         await agreement.setStorageUint256(hex4Bytes('P1'), MAX_PERCENT);
 
         const txn3Hash = await changeTokenBalanceAndGetTxHash(
@@ -554,11 +554,11 @@ describe('Agreement: Investment Fund tests math', () => {
       agreementAddr
     );
 
-    const LAST_BLOCK_TIMESTAMP = (
+    const LAST_BLOCK_TMSTAMP = (
       await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
     ).timestamp;
-    NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
-    NEXT_TWO_MONTH = LAST_BLOCK_TIMESTAMP + 2 * ONE_MONTH;
+    NEXT_MONTH = LAST_BLOCK_TMSTAMP + ONE_MONTH;
+    NEXT_TWO_MONTH = LAST_BLOCK_TMSTAMP + 2 * ONE_MONTH;
 
     dai = await (await ethers.getContractFactory('Token'))
       .connect(alice)

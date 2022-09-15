@@ -41,12 +41,12 @@ const parentSuite = describe('Agreement: Investment Fund Simplified', () => {
       agreementAddr
     );
 
-    const LAST_BLOCK_TIMESTAMP = (
+    const LAST_BLOCK_TMSTAMP = (
       await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
     ).timestamp;
 
-    dynamicTestData.PLACEMENT_DATE = LAST_BLOCK_TIMESTAMP + ONE_MONTH; // NEXT_MONTH
-    dynamicTestData.CLOSING_DATE = LAST_BLOCK_TIMESTAMP + 2 * ONE_MONTH; // NEXT_TWO_MONTH
+    dynamicTestData.PLACEMENT_DATE = LAST_BLOCK_TMSTAMP + ONE_MONTH; // NEXT_MONTH
+    dynamicTestData.CLOSING_DATE = LAST_BLOCK_TMSTAMP + 2 * ONE_MONTH; // NEXT_TWO_MONTH
 
     snapshotId = await network.provider.send('evm_snapshot');
   });

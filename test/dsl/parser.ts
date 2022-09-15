@@ -72,9 +72,9 @@ describe('Parser', () => {
       expect(await ctx.program()).to.equal(expected);
     });
 
-    it('var TIMESTAMP < var NEXT_MONTH', async () => {
-      await app.parse(preprocessorAddr, ctxAddr, 'var TIMESTAMP < var NEXT_MONTH');
-      const expected = '0x1b1b7b16d41ba75b67d703';
+    it('var TMSTAMP < var NEXT_MONTH', async () => {
+      await app.parse(preprocessorAddr, ctxAddr, 'var TMSTAMP < var NEXT_MONTH');
+      const expected = '0x1bbddc72951ba75b67d703';
       expect(await ctx.program()).to.equal(expected);
     });
 
@@ -83,14 +83,14 @@ describe('Parser', () => {
         preprocessorAddr,
         ctxAddr,
         `
-          (var TIMESTAMP > var INIT)
+          (var TMSTAMP > var INIT)
           and
-          (var TIMESTAMP < var EXPIRY)
+          (var TMSTAMP < var EXPIRY)
           or
           (var RISK != bool true)
           `
       );
-      const expected = '0x1b1b7b16d41bb687035e041b1b7b16d41b9dc69bb503121b55248f7c18011413';
+      const expected = '0x1bbddc72951bb687035e041bbddc72951b9dc69bb503121b55248f7c18011413';
       expect(await ctx.program()).to.equal(expected);
     });
 
@@ -190,31 +190,8 @@ describe('Parser', () => {
     });
   });
 
-  // describe('setVariable', () => {
-  //   it('should set the global variable (uint256)', async () => {
-  //     const name = 'TEST_NUMBER';
-  //     expect(await app.isVariable('TEST_NUMBER')).to.be.equal(false);
-  //     expect(await app.savedProgram('TEST_NUMBER')).to.be.equal('0x');
-  //     await app.setVariableExt(ctxAddr, name, 'uint256');
-  //     expect(await app.isVariable('TEST_NUMBER')).to.be.equal(true);
-  //     /*
-  //       1b - opcode for `var` command
-  //       1cc054ab - bytecode for a `TEST_NUMBER` name
-  //     */
-  //     expect(await app.savedProgram('TEST_NUMBER')).to.be.equal('0x1b011cc054ab');
-  //   });
-
-  //   it('reverts if try to set empty global variable name', async () => {
-  //     expect(await app.isVariable('')).to.be.equal(false);
-  //     expect(await app.savedProgram('')).to.be.equal('0x');
-  //     await expect(app.setVariableExt(ctxAddr, '', 'uint256')).to.be.revertedWith('PRS2');
-  //     expect(await app.isVariable('')).to.be.equal(false);
-  //     expect(await app.savedProgram('')).to.be.equal('0x');
-  //   });
-  // });
-
-  describe.skip('Load local variables without `var` opcode', async () => {
-    it.skip('set two local variables, one of them using in the next command', async () => {
+  describe('Load local variables without `var` opcode', async () => {
+    it('set two local variables, one of them using in the next command', async () => {
       /*
         Example:
           uint256 6 setUint256 A
@@ -235,20 +212,8 @@ describe('Parser', () => {
         'setUint256',
         'SUM',
       ];
-      expect(await app.savedProgram('A')).to.be.equal('0x');
-      expect(await app.savedProgram('SUM')).to.be.equal('0x');
       await app.parseCodeExt(ctxAddr, code);
 
-      expect(await app.savedProgram('A')).to.be.equal(
-        '0x' +
-          '1b' + // opcode for var command
-          '03783fac' // bytecode for an `A` name
-      );
-      expect(await app.savedProgram('SUM')).to.be.equal(
-        '0x' +
-          '1b' + // opcode for var command
-          '2df384fb' // bytecode for a `SUM` name
-      );
       expect(await ctx.program()).to.equal(
         '0x' +
           '1a' + // uint256

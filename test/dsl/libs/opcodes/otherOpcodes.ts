@@ -129,13 +129,13 @@ describe('Other opcodes', () => {
       expect((await stack.seeLast()).toNumber()).to.be.approximately(lastBlockTimestamp, 1000);
     });
 
-    // Block TIME doesn't work because Hardhat doesn't return timestamp
-    it('TIME', async () => {
-      // TIME is an alias for blockTimestamp
+    // Block time doesn't work because Hardhat doesn't return timestamp
+    it('time', async () => {
+      // time is an alias for blockTimestamp
       const ctxStackAddress = await ctx.stack();
       StackCont.attach(ctxStackAddress);
 
-      // 0x30 is TIME
+      // 0x30 is time
       await ctx.setProgram('0x30');
 
       await app.opBlockTimestamp(ctxAddr);

@@ -76,11 +76,11 @@ describe('Preprocessor', () => {
         (var RISK != bool true)
       `,
         expected: [
-          'TIME',
+          'time',
           'var',
           'INIT',
           '>', // A
-          'TIME',
+          'time',
           'var',
           'EXPIRY',
           '<', // B
@@ -254,21 +254,21 @@ describe('Preprocessor', () => {
 
     it('complex expression', async () => {
       const program = `
-        (((var TIMESTAMP > var INIT)
+        (((var TMSTAMP > var INIT)
           and
-        (var TIMESTAMP < var EXPIRY))
+        (var TMSTAMP < var EXPIRY))
           or
         var RISK != bool true)`;
 
       const cmds = await app.callStatic.transform(ctxAddr, program);
       const expected = [
         'var',
-        'TIMESTAMP',
+        'TMSTAMP',
         'var',
         'INIT',
         '>',
         'var',
-        'TIMESTAMP',
+        'TMSTAMP',
         'var',
         'EXPIRY',
         '<',

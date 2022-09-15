@@ -312,9 +312,9 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
 
-        // Current block timestamp as seconds since unix epoch. Ex. `TIME <= FUTURE_TIME_VARIABLE`
+        // Current block timestamp as seconds since unix epoch. Ex. `time <= FUTURE_TM_VARIABLE`
         addOpcode(
-            'TIME',
+            'time',
             0x16,
             OtherOpcodes.opBlockTimestamp.selector,
             0x0,
@@ -506,14 +506,14 @@ contract Context is IContext {
         // Aliases
 
         /*
-            As the blockTimestamp is the current opcode the user can use TIME alias to
+            As the blockTimestamp is the current opcode the user can use time alias to
             simplify the DSL code string.
             Example of the base command:
                 `blockTimestamp < loadLocal uint256 FUND_INVESTMENT_DATE`
             Example of the alias of the base command:
-                `TIME < loadLocal uint256 FUND_INVESTMENT_DATE`
+                `time < loadLocal uint256 FUND_INVESTMENT_DATE`
         */
-        _addAlias('TIME', 'blockTimestamp');
+        _addAlias('time', 'blockTimestamp');
     }
 
     /**

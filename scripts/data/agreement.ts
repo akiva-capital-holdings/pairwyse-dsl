@@ -109,7 +109,7 @@ export const aliceBobAndCarl = (
         `,
     conditions: [
       `
-              TIME > var EXPIRY
+              time > var EXPIRY
           and (var OBLIGATIONS_SETTLED == bool false)
         `,
     ],
@@ -122,7 +122,7 @@ export const aliceBobAndCarl = (
     transaction: `transfer TOKEN_ADDR CARL ${tenTokens.toString()}`,
     conditions: [
       `
-              TIME > var EXPIRY
+              time > var EXPIRY
           and (var LENDER_WITHDRAW_INSURERS == bool false)
         `,
     ],
@@ -140,7 +140,7 @@ export const businessCaseSteps = (
     signatories: [GPAddr],
     transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_INITIAL',
     conditions: [
-      `(TIME < var PLACEMENT_DATE)
+      `(time < var PLACEMENT_DATE)
        and (
          var GP_INITIAL >=
         ((var INITIAL_FUNDS_TARGET * var DEPOSIT_MIN_PERCENT) / 100)
@@ -154,7 +154,7 @@ export const businessCaseSteps = (
     transaction: `(transferFromVar DAI LP TRANSACTIONS_CONT LP_INITIAL)
           and
         (var LP_TOTAL + var LP_INITIAL) setUint256 LP_TOTAL`,
-    conditions: ['TIME >= var PLACEMENT_DATE', 'TIME < var CLOSING_DATE'],
+    conditions: ['time >= var PLACEMENT_DATE', 'time < var CLOSING_DATE'],
   },
   {
     txId: index.concat('3'),
@@ -177,8 +177,8 @@ export const businessCaseSteps = (
       NEG {
         0 setUint256 GP_REMAINING
       }`,
-      'TIME >= var LOW_LIM',
-      'TIME <= var UP_LIM',
+      'time >= var LOW_LIM',
+      'time <= var UP_LIM',
       `(balanceOf DAI TRANSACTIONS_CONT) >=
           ((var INITIAL_FUNDS_TARGET * var P1) / 100)`,
     ],
@@ -201,8 +201,8 @@ export const businessCaseSteps = (
           + var GP_INITIAL)
          <
        (100 * var P2) * var LP_INITIAL`,
-      'TIME > var UP_LIM',
-      'TIME < var FUND_INVESTMENT_DATE',
+      'time > var UP_LIM',
+      'time < var FUND_INVESTMENT_DATE',
     ],
   },
   {
@@ -213,7 +213,7 @@ export const businessCaseSteps = (
     signatories: [GPAddr],
     transaction: 'transferVar DAI GP PURCHASE_AMOUNT',
     conditions: [
-      `(TIME >= var FUND_INVESTMENT_DATE)
+      `(time >= var FUND_INVESTMENT_DATE)
          and
        (100 * var PURCHASE_AMOUNT
          <= var PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,
@@ -229,7 +229,7 @@ export const businessCaseSteps = (
     signatories: [GPAddr],
     // TODO: swap ETH for DAI
     transaction: 'transferFromVar DAI WHALE TRANSACTIONS_CONT GP_PURCHASE_RETURN',
-    conditions: ['TIME >= var FUND_INVESTMENT_DATE + var ONE_YEAR'],
+    conditions: ['time >= var FUND_INVESTMENT_DATE + var ONE_YEAR'],
   },
   {
     txId: index.concat('71'),
@@ -382,7 +382,7 @@ export const businessCaseStepsSimplified = (
     signatories: [GPAddr],
     transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_INITIAL',
     conditions: [
-      `(TIME < var PLACEMENT_DATE)
+      `(time < var PLACEMENT_DATE)
        and (
          var GP_INITIAL >=
         ((var INITIAL_FUNDS_TARGET * var DEPOSIT_MIN_PERCENT) / 100)
@@ -396,7 +396,7 @@ export const businessCaseStepsSimplified = (
     transaction: `(transferFromVar DAI LP TRANSACTIONS_CONT LP_INITIAL)
           and
         (var LP_TOTAL + var LP_INITIAL) setUint256 LP_TOTAL`,
-    conditions: ['TIME >= var PLACEMENT_DATE', 'TIME < var CLOSING_DATE'],
+    conditions: ['time >= var PLACEMENT_DATE', 'time < var CLOSING_DATE'],
   },
   {
     txId: index.concat('3'),
@@ -419,8 +419,8 @@ export const businessCaseStepsSimplified = (
       NEG {
         0 setUint256 GP_REMAINING
       }`,
-      'TIME >= var LOW_LIM',
-      'TIME <= var UP_LIM',
+      'time >= var LOW_LIM',
+      'time <= var UP_LIM',
       `(balanceOf DAI TRANSACTIONS_CONT) >=
           ((var INITIAL_FUNDS_TARGET * var P1) / 100)`,
     ],
@@ -443,8 +443,8 @@ export const businessCaseStepsSimplified = (
           + var GP_INITIAL)
          <
        (100 * var P2) * var LP_INITIAL`,
-      'TIME > var UP_LIM',
-      'TIME < var FUND_INVESTMENT_DATE',
+      'time > var UP_LIM',
+      'time < var FUND_INVESTMENT_DATE',
     ],
   },
   {
@@ -455,7 +455,7 @@ export const businessCaseStepsSimplified = (
     signatories: [GPAddr],
     transaction: 'transferVar DAI GP PURCHASE_AMOUNT',
     conditions: [
-      `(TIME >= var FUND_INVESTMENT_DATE)
+      `(time >= var FUND_INVESTMENT_DATE)
          and
        (100 * var PURCHASE_AMOUNT
          <= var PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,
@@ -471,7 +471,7 @@ export const businessCaseStepsSimplified = (
     signatories: [GPAddr],
     // TODO: swap ETH for DAI
     transaction: 'transferFromVar DAI WHALE TRANSACTIONS_CONT GP_PURCHASE_RETURN',
-    conditions: ['TIME >= var FUND_INVESTMENT_DATE + var ONE_YEAR'],
+    conditions: ['time >= var FUND_INVESTMENT_DATE + var ONE_YEAR'],
   },
   {
     txId: index.concat('71'),
@@ -621,7 +621,7 @@ export const aliceAndAnybodySteps = (OtherSigners: string[], index: string) => [
     signatories: OtherSigners,
     transaction: 'transferVar DAI GP PURCHASE_AMOUNT',
     conditions: [
-      `(TIME >= var FUND_INVESTMENT_DATE)
+      `(time >= var FUND_INVESTMENT_DATE)
              and
        (100 * var PURCHASE_AMOUNT
         <= var PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,

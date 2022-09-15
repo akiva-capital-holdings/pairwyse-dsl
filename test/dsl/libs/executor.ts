@@ -258,13 +258,13 @@ describe('Executor', () => {
       await checkStack(stack, 1, 1);
     });
 
-    it('blockNumber < TIME', async () => {
+    it('blockNumber < time', async () => {
       /**
-       * TIME is an alias for blockTimestamp
+       * time is an alias for blockTimestamp
        * Program is:
        * `
        *  blockNumber
-       *  TIME
+       *  time
        *  <
        * `
        */
