@@ -347,17 +347,17 @@ contract Preprocessor is IPreprocessor {
         } else return multiplier = 0;
     }
 
-    function _getArrayType(StringArray _array, string memory _chunk)
-        internal
-        view
-        returns (string memory _type)
-    {
-        if (_chunk.mayBeNumber()) {
-            return 'uint256';
-        } else if (_array.getType().equal('implicitType')) {
-            revert('PPR1'); // wrong type of array
-        }
-    }
+    // function _getArrayType(StringArray _array, string memory _chunk)
+    //     internal
+    //     view
+    //     returns (string memory _type)
+    // {
+    //     if (_chunk.mayBeNumber()) {
+    //         return 'uint256';
+    //     } else if (_array.getType().equal('implicitType')) {
+    //         revert('PPR1'); // wrong type of array
+    //     }
+    // }
 
     /**
      * @dev As the string of values can be simple and complex for DSL this function returns a number in
