@@ -434,20 +434,20 @@ describe('DSL: basic', () => {
       await checkStackTailv2(stack, [1]);
     });
 
-    it('var TMSTAMP < var NEXT_MONTH', async () => {
+    it('var TIMESTAMP < var NEXT_MONTH', async () => {
       await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
-      await app.setStorageUint256(hex4Bytes('TMSTAMP'), lastBlockTimestamp);
+      await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
 
-      await app.parse('var TMSTAMP < var NEXT_MONTH');
+      await app.parse('var TIMESTAMP < var NEXT_MONTH');
       await app.execute();
       await checkStackTailv2(stack, [1]);
     });
 
-    it('var TMSTAMP > var NEXT_MONTH', async () => {
+    it('var TIMESTAMP > var NEXT_MONTH', async () => {
       await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
-      await app.setStorageUint256(hex4Bytes('TMSTAMP'), lastBlockTimestamp);
+      await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
 
-      await app.parse('var TMSTAMP > var NEXT_MONTH');
+      await app.parse('var TIMESTAMP > var NEXT_MONTH');
       await app.execute();
       await checkStackTailv2(stack, [0]);
     });
@@ -485,38 +485,6 @@ describe('DSL: basic', () => {
       await app.execute();
       await checkStackTailv2(stack, [0]);
     });
-
-    // describe('opLoadLocalAddress', () => {
-    //   it('addresses are equal', async () => {
-    //     await app.setStorageAddress(
-    //       hex4Bytes('ADDR'),
-    //       '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5'
-    //     );
-    //     await app.setStorageAddress(
-    //       hex4Bytes('ADDR2'),
-    //       '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5'
-    //     );
-
-    //     await app.parse('var ADDR == var ADDR2');
-    //     await app.execute();
-    //     await checkStackTailv2(stack, [1]);
-    //   });
-
-    //   it('addresses are not equal', async () => {
-    //     await app.setStorageAddress(
-    //       hex4Bytes('ADDR'),
-    //       '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5'
-    //     );
-    //     await app.setStorageAddress(
-    //       hex4Bytes('ADDR2'),
-    //       '0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836'
-    //     );
-
-    //     await app.parse('var ADDR == var ADDR2');
-    //     await app.execute();
-    //     await checkStackTailv2(stack, [0]);
-    //   });
-    // });
 
     describe('opLoadLocalBytes32', () => {
       it('bytes32 are equal', async () => {
@@ -591,11 +559,11 @@ describe('DSL: basic', () => {
       await checkStackTailv2(stack, [1]);
     });
 
-    it('var TMSTAMP < loadRemote uint256 NEXT_MONTH', async () => {
+    it('var TIMESTAMP < loadRemote uint256 NEXT_MONTH', async () => {
       await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
-      await app.setStorageUint256(hex4Bytes('TMSTAMP'), lastBlockTimestamp);
+      await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
 
-      await app.parse(`var TMSTAMP < loadRemote uint256 NEXT_MONTH ${appAddrHex}`);
+      await app.parse(`var TIMESTAMP < loadRemote uint256 NEXT_MONTH ${appAddrHex}`);
       await app.execute();
       await checkStackTailv2(stack, [1]);
     });
@@ -870,7 +838,7 @@ describe('DSL: basic', () => {
 
     await app.parse('balanceOf DAI USER');
     await app.execute();
-    // expect(await dai.balanceOf(user.address)).to.equal(parseEther('1000'));
+    expect(await dai.balanceOf(user.address)).to.equal(parseEther('1000'));
     await checkStackTailv2(stack, [parseEther('1000')]);
   });
 
@@ -929,18 +897,18 @@ describe('DSL: basic', () => {
     });
   });
 
-  it('TMSTAMP > PREV_MONTH', async () => {
+  it('TIMESTAMP > PREV_MONTH', async () => {
     await app.setStorageUint256(hex4Bytes('PREV_MONTH'), PREV_MONTH);
-    await app.setStorageUint256(hex4Bytes('TMSTAMP'), lastBlockTimestamp);
-    await app.parse('var TMSTAMP > var PREV_MONTH');
+    await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
+    await app.parse('var TIMESTAMP > var PREV_MONTH');
     await app.execute();
     await checkStackTailv2(stack, [1]);
   });
 
-  it('TMSTAMP < NEXT_MONTH', async () => {
+  it('TIMESTAMP < NEXT_MONTH', async () => {
     await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
-    await app.setStorageUint256(hex4Bytes('TMSTAMP'), lastBlockTimestamp);
-    await app.parse('(var TMSTAMP) < (var NEXT_MONTH)');
+    await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
+    await app.parse('(var TIMESTAMP) < (var NEXT_MONTH)');
     await app.execute();
     await checkStackTailv2(stack, [1]);
   });
@@ -965,14 +933,14 @@ describe('DSL: basic', () => {
     async function testCase(INIT: number, EXPIRY: number, RISK: boolean, target: number) {
       await app.setStorageUint256(hex4Bytes('INIT'), INIT);
       await app.setStorageUint256(hex4Bytes('EXPIRY'), EXPIRY);
-      await app.setStorageUint256(hex4Bytes('TMSTAMP'), lastBlockTimestamp);
+      await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
       await app.setStorageBool(hex4Bytes('RISK'), RISK);
 
       await app.parse(
         `
-        (var TMSTAMP > var INIT)
+        (var TIMESTAMP > var INIT)
         and
-        (var TMSTAMP < var EXPIRY)
+        (var TIMESTAMP < var EXPIRY)
         or
         (var RISK != bool true)
         `

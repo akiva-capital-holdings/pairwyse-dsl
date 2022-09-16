@@ -72,8 +72,8 @@ describe('Parser', () => {
       expect(await ctx.program()).to.equal(expected);
     });
 
-    it('var TMSTAMP < var NEXT_MONTH', async () => {
-      await app.parse(preprocessorAddr, ctxAddr, 'var TMSTAMP < var NEXT_MONTH');
+    it('var TIMESTAMP < var NEXT_MONTH', async () => {
+      await app.parse(preprocessorAddr, ctxAddr, 'var TIMESTAMP < var NEXT_MONTH');
       const expected = '0x1bbddc72951ba75b67d703';
       expect(await ctx.program()).to.equal(expected);
     });
@@ -81,13 +81,25 @@ describe('Parser', () => {
     it('AMOUNT > 5', async () => {
       await app.parse(preprocessorAddr, ctxAddr, 'AMOUNT > 5');
       expect(await ctx.program()).equal(
-        '0x1b1a3a187d1a000000000000000000000000000000000000000000000000000000000000000504'
+        '0x' +
+          '1b' + // variable opcode
+          '1a3a187d' + // bytes32('AMOUNT')
+          '1a' + // uint256 opcode
+          '0000000000000000000000000000000000000000000000000000000000000005' + // value
+          '04' // `>` opcode
       );
     });
 
     it('NUMBER > NUMBER2', async () => {
       await app.parse(preprocessorAddr, ctxAddr, 'NUMBER > NUMBER2');
-      expect(await ctx.program()).equal('0x1b545cbf771bb66353ab04');
+      expect(await ctx.program()).equal(
+        '0x' +
+          '1b' + // variable opcode
+          '545cbf77' + // bytes32('NUMBER')
+          '1b' + // variable opcode
+          'b66353ab' + //  bytes32('NUMBER2')
+          '04' // `>` opcode
+      );
     });
 
     it('((time > init) and (time < expiry)) or (risk != true)', async () => {
@@ -95,9 +107,9 @@ describe('Parser', () => {
         preprocessorAddr,
         ctxAddr,
         `
-          (var TMSTAMP > var INIT)
+          (var TIMESTAMP > var INIT)
           and
-          (var TMSTAMP < var EXPIRY)
+          (var TIMESTAMP < var EXPIRY)
           or
           (var RISK != bool true)
           `

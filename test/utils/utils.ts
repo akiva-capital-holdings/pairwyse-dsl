@@ -342,13 +342,13 @@ of the initial DAI funds target amount\x1b[0m
         await dai.connect(whale).transfer(GP.address, GP_REMAINING);
         await dai.connect(GP).approve(agreement.address, GP_REMAINING);
         console.log(`GP Gap Deposit = ${formatEther(GP_REMAINING)} DAI`);
-        const GP_GAP_DEPOSIT_LOWER_TM = CLOSING_DATE - ONE_DAY;
-        const GP_GAP_DEPOSIT_UPPER_TM = CLOSING_DATE + ONE_DAY;
+        const GP_GAP_DEPOSIT_LOWER_TIME = CLOSING_DATE - ONE_DAY;
+        const GP_GAP_DEPOSIT_UPPER_TIME = CLOSING_DATE + ONE_DAY;
 
         // Note: we give GP 2 days time to obtain P1 - MAX_PERCENT, P2 = DEPOSIT_MIN_PERCENT:
         // a P1% / P2% ratio of LP / GP deposits
-        await agreement.setStorageUint256(hex4Bytes('LOW_LIM'), GP_GAP_DEPOSIT_LOWER_TM);
-        await agreement.setStorageUint256(hex4Bytes('UP_LIM'), GP_GAP_DEPOSIT_UPPER_TM);
+        await agreement.setStorageUint256(hex4Bytes('LOW_LIM'), GP_GAP_DEPOSIT_LOWER_TIME);
+        await agreement.setStorageUint256(hex4Bytes('UP_LIM'), GP_GAP_DEPOSIT_UPPER_TIME);
         await agreement.setStorageUint256(hex4Bytes('P1'), MAX_PERCENT);
         const txn3Hash = await changeTokenBalanceAndGetTxHash(
           () => agreement.connect(GP).execute(txId),

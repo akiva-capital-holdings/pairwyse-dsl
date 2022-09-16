@@ -266,21 +266,21 @@ describe('Preprocessor', () => {
 
     it('complex expression', async () => {
       const program = `
-        (((var TMSTAMP > var INIT)
+        (((var TIMESTAMP > var INIT)
           and
-        (var TMSTAMP < var EXPIRY))
+        (var TIMESTAMP < var EXPIRY))
           or
         var RISK != bool true)`;
 
       const cmds = await app.callStatic.transform(ctxAddr, program);
       const expected = [
         'var',
-        'TMSTAMP',
+        'TIMESTAMP',
         'var',
         'INIT',
         '>',
         'var',
-        'TMSTAMP',
+        'TIMESTAMP',
         'var',
         'EXPIRY',
         '<',

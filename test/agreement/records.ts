@@ -29,10 +29,10 @@ describe('Simple Records in Agreement', () => {
   let records: Records[] = [];
 
   before(async () => {
-    const LAST_BLOCK_TMSTAMP = (
+    const LAST_BLOCK_TIMESTAMP = (
       await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
     ).timestamp;
-    NEXT_MONTH = LAST_BLOCK_TMSTAMP + ONE_MONTH;
+    NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
 
     [alice, bob, anybody] = await ethers.getSigners();
 
@@ -139,7 +139,7 @@ describe('Simple Records in Agreement', () => {
   it('record with one transaction', async () => {
     // Set variables
     await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
-    await app.setStorageUint256(hex4Bytes('LOCK_TM'), NEXT_MONTH);
+    await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
     const ContextMock = await ethers.getContractFactory('ContextMock');
     const transactionContext = await ContextMock.deploy();
@@ -152,7 +152,7 @@ describe('Simple Records in Agreement', () => {
       requiredRecords: [],
       signatories: [alice.address],
       transactionStr: 'sendEth RECEIVER 1000000000000000000',
-      conditionStrings: ['blockTimestamp > var LOCK_TM'],
+      conditionStrings: ['blockTimestamp > var LOCK_TIME'],
       transactionCtx: transactionContext,
       conditionContexts: [conditionContext],
     });
@@ -294,14 +294,14 @@ describe('Simple Records in Agreement', () => {
     await app.setStorageAddress(hex4Bytes('TOKEN_ADDR'), token.address);
     await app.setStorageAddress(hex4Bytes('BOB'), bob.address);
     await app.setStorageAddress(hex4Bytes('ALICE'), alice.address);
-    await app.setStorageUint256(hex4Bytes('LOCK_TM'), NEXT_MONTH);
+    await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
     records.push({
       recordId: 1,
       requiredRecords: [3],
       signatories: [bob.address],
       transactionStr: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
-      conditionStrings: ['blockTimestamp > var LOCK_TM'],
+      conditionStrings: ['blockTimestamp > var LOCK_TIME'],
       transactionCtx: await ContextCont.deploy(),
       conditionContexts: [await ContextCont.deploy()],
     });
@@ -442,7 +442,7 @@ describe('Simple Records in Agreement', () => {
   it('test more than one signatories', async () => {
     // Set variables
     await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
-    await app.setStorageUint256(hex4Bytes('LOCK_TM'), NEXT_MONTH);
+    await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
     records.push({
       recordId: 12,
@@ -525,7 +525,7 @@ describe('Simple Records in Agreement', () => {
       // Set variables
       await app.setStorageAddress(hex4Bytes('ETH_RECEIVER'), bob.address);
       await app.setStorageAddress(hex4Bytes('TOKEN_RECEIVER'), alice.address);
-      await app.setStorageUint256(hex4Bytes('LOCK_TM'), NEXT_MONTH);
+      await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
       await app.setStorageUint256(hex4Bytes('TOKEN_ADDR'), token.address);
 
       // Define Conditional Transactions
@@ -543,7 +543,7 @@ describe('Simple Records in Agreement', () => {
         requiredRecords: [],
         signatories: [bob.address],
         transactionStr: `transfer TOKEN_ADDR TOKEN_RECEIVER ${tenTokens}`,
-        conditionStrings: ['blockTimestamp > var LOCK_TM'],
+        conditionStrings: ['blockTimestamp > var LOCK_TIME'],
         transactionCtx: await ContextCont.deploy(),
         conditionContexts: [await ContextCont.deploy()],
       });

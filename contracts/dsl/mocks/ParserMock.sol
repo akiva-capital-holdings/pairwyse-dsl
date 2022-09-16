@@ -12,14 +12,6 @@ contract ParserMock is Parser, UnstructuredStorageMock {
         _parseCode(_ctxAddr, _code);
     }
 
-    // function setVariableExt(
-    //     address _ctxAddr,
-    //     string memory _name,
-    //     string memory _type
-    // ) external {
-    //     _setVariable(_ctxAddr, _name, _type);
-    // }
-
     function asmLoadRemoteExt(address _ctxAddr) external {
         asmLoadRemote(_ctxAddr);
     }

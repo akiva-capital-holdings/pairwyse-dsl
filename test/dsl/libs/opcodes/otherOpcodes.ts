@@ -280,46 +280,6 @@ describe('Other opcodes', () => {
     await checkStackTailv2(stack, [testValue]);
   });
 
-  // it('opLoadLocalBytes32', async () => {
-  //   const testValue = hex4Bytes('123456');
-  //   const bytes32TestValueName = hex4Bytes('BYTES');
-
-  //   await clientApp.setStorageBytes32(bytes32TestValueName, testValue);
-
-  //   const bytes = bytes32TestValueName.substring(2, 10);
-  //   await ctx.setProgram(`0x${bytes}`);
-
-  //   await app.opLoadLocalBytes32(ctxAddr);
-  //   await checkStackTailv2(stack, [testValue]);
-  // });
-
-  // it('opLoadLocalBool', async () => {
-  //   const testValue = true;
-  //   const bytes32TestValueName = hex4Bytes('BOOL');
-
-  //   await clientApp.setStorageBool(bytes32TestValueName, testValue);
-
-  //   const bool = bytes32TestValueName.substring(2, 10);
-  //   await ctx.setProgram(`0x${bool}`);
-
-  //   await app.opLoadLocalBool(ctxAddr);
-  //   await checkStackTailv2(stack, [+testValue]);
-  // });
-
-  // it('opLoadLocalAddress', async () => {
-  //   const [addr] = await ethers.getSigners();
-  //   const testValue = addr.address;
-  //   const bytes32TestValueName = hex4Bytes('ADDRESS');
-
-  //   await clientApp.setStorageAddress(bytes32TestValueName, testValue);
-
-  //   const address = bytes32TestValueName.substring(2, 10);
-  //   await ctx.setProgram(`0x${address}`);
-
-  //   await app.opLoadLocalAddress(ctxAddr);
-  //   await checkStackTailv2(stack, [testValue]);
-  // });
-
   it('opLoadRemoteUint256', async () => {
     const testValue = 1;
     const bytes32TestValueName = hex4Bytes('NUMBER');

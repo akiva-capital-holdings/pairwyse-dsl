@@ -34,10 +34,10 @@ describe('Agreement: Alice, Bob, Carl', () => {
 
     [alice, bob, carl, anybody] = await ethers.getSigners();
 
-    const LAST_BLOCK_TMSTAMP = (
+    const LAST_BLOCK_TIMESTAMP = (
       await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
     ).timestamp;
-    NEXT_MONTH = LAST_BLOCK_TMSTAMP + ONE_MONTH;
+    NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
   });
 
   beforeEach(async () => {
@@ -51,7 +51,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
   it('incorrect signatory', async () => {
     const txId = '1';
     const signatories = [alice.address];
-    const conditions = ['blockTimestamp > var LOCK_TM'];
+    const conditions = ['blockTimestamp > var LOCK_TIME'];
     const transaction = 'sendEth RECEIVER 1000000000000000000';
 
     await addSteps(
@@ -66,11 +66,11 @@ describe('Agreement: Alice, Bob, Carl', () => {
   it('one condition', async () => {
     // Set variables
     await agreement.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
-    await agreement.setStorageUint256(hex4Bytes('LOCK_TM'), NEXT_MONTH);
+    await agreement.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
     const txId = '1';
     const signatories = [alice.address];
-    const conditions = ['blockTimestamp > var LOCK_TM'];
+    const conditions = ['blockTimestamp > var LOCK_TIME'];
     const transaction = 'sendEth RECEIVER 1000000000000000000';
 
     await addSteps(
