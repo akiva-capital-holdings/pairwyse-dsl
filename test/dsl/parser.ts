@@ -74,8 +74,14 @@ describe('Parser', () => {
 
     it('var TIMESTAMP < var NEXT_MONTH', async () => {
       await app.parse(preprocessorAddr, ctxAddr, 'var TIMESTAMP < var NEXT_MONTH');
-      const expected = '0x1bbddc72951ba75b67d703';
-      expect(await ctx.program()).to.equal(expected);
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '1b' + // variable opcode
+          '1b7b16d4' + // bytes32('TIMESTAMP')
+          '1b' + // variable opcode
+          'a75b67d7' + // bytes32('NEXT_MONTH')
+          '03' // `<` opcode
+      );
     });
 
     it('AMOUNT > 5', async () => {
@@ -114,8 +120,26 @@ describe('Parser', () => {
           (var RISK != bool true)
           `
       );
-      const expected = '0x1bbddc72951bb687035e041bbddc72951b9dc69bb503121b55248f7c18011413';
-      expect(await ctx.program()).to.equal(expected);
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '1b' + // variable opcode
+          '1b7b16d4' + // bytes32('TIMESTAMP')
+          '1b' + // variable opcode
+          'b687035e' + // bytes32('INIT')
+          '04' + // `>` opcode
+          '1b' + // variable opcode
+          '1b7b16d4' + // bytes32('TIMESTAMP')
+          '1b' + // variable opcode
+          '9dc69bb5' + // bytes32('EXPIRY')
+          '03' + // `<` opcode
+          '12' + // `and` opcode
+          '1b' + // variable opcode
+          '55248f7c' + // bytes32('RISK')
+          '18' + // `bool` opcode
+          '01' + // true
+          '14' + // `!=` opcode
+          '13' // `or` opcode
+      );
     });
 
     it('should throw at unknownExpr', async () => {
