@@ -312,9 +312,9 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
 
-        // Current block timestamp as seconds since unix epoch. Ex. `TIME <= FUTURE_TIME_VARIABLE`
+        // Current block timestamp as seconds since unix epoch. Ex. `time <= FUTURE_TIME_VARIABLE`
         addOpcode(
-            'TIME',
+            'time',
             0x16,
             OtherOpcodes.opBlockTimestamp.selector,
             0x0,
@@ -457,31 +457,17 @@ contract Context is IContext {
             OpcodeLibNames.BranchingOpcodes
         );
 
-        // Complex Opcodes with sub Opcodes (branches)
-
-        /*
-            Types usage examples of loadLocal and loadRemote opcodes:
-                loadLocal uint256 NUMBER_STORED_VALUE
-                loadRemote bool ADDRESS_STORED_VALUE 9A676e781A523b5d0C0e43731313A708CB607508
-
-            Where `*_STORED_VALUE` parameters can be set by using `setLocalBool`
-            or `setUint256` opcodes
-        */
-        string memory name = 'loadLocal';
         addOpcode(
-            name,
+            'var',
             0x1b,
-            OtherOpcodes.opLoadLocalAny.selector,
-            IParser.asmLoadLocal.selector,
+            OtherOpcodes.opLoadLocalUint256.selector,
+            IParser.asmVar.selector,
             OpcodeLibNames.OtherOpcodes
         );
-        // types that 'loadLocal' have for loading data
-        _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadLocalUint256.selector);
-        _addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadLocalBool.selector);
-        _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadLocalAddress.selector);
-        _addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadLocalBytes32.selector);
 
-        name = 'loadRemote';
+        // Complex Opcodes with sub Opcodes (branches)
+
+        string memory name = 'loadRemote';
         addOpcode(
             name,
             0x1c,
@@ -498,14 +484,14 @@ contract Context is IContext {
         // Aliases
 
         /*
-            As the blockTimestamp is the current opcode the user can use TIME alias to
+            As the blockTimestamp is the current opcode the user can use time alias to
             simplify the DSL code string.
             Example of the base command:
                 `blockTimestamp < loadLocal uint256 FUND_INVESTMENT_DATE`
             Example of the alias of the base command:
-                `TIME < loadLocal uint256 FUND_INVESTMENT_DATE`
+                `time < loadLocal uint256 FUND_INVESTMENT_DATE`
         */
-        _addAlias('TIME', 'blockTimestamp');
+        _addAlias('time', 'blockTimestamp');
     }
 
     /**

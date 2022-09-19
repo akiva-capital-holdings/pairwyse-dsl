@@ -56,10 +56,10 @@ describe('DSL: math', () => {
       await expect(app.execute()).to.be.revertedWith('EXC3');
     });
 
-    it('division by zero error from loadLocal', async () => {
+    it('division by zero error from variables', async () => {
       await app.setStorageUint256(hex4Bytes('NUM1'), 10);
       await app.setStorageUint256(hex4Bytes('NUM2'), 0);
-      await app.parse('loadLocal uint256 NUM1 / loadLocal uint256 NUM2');
+      await app.parse('var NUM1 / var NUM2');
       await expect(app.execute()).to.be.revertedWith('EXC3');
     });
 
@@ -72,7 +72,7 @@ describe('DSL: math', () => {
 
       await app.setStorageUint256(hex4Bytes('NUM1'), 0);
       await app.setStorageUint256(hex4Bytes('NUM2'), 0);
-      await app.parse('loadLocal uint256 NUM1 / loadLocal uint256 NUM2');
+      await app.parse('var NUM1 / var NUM2');
       await expect(app.execute()).to.be.revertedWith('EXC3');
     });
 
@@ -86,10 +86,10 @@ describe('DSL: math', () => {
       await app.execute();
     });
 
-    it('should divide zero by number from loadLocal', async () => {
+    it('should divide zero by number from variables', async () => {
       await app.setStorageUint256(hex4Bytes('NUM1'), 0);
       await app.setStorageUint256(hex4Bytes('NUM2'), 1);
-      await app.parse('loadLocal uint256 NUM1 / loadLocal uint256 NUM2');
+      await app.parse('var NUM1 / var NUM2');
       await app.execute();
     });
   });
@@ -101,7 +101,7 @@ describe('DSL: math', () => {
 
       await app.setStorageUint256(hex4Bytes('NUM1'), 10);
       await app.setStorageUint256(hex4Bytes('NUM2'), 1000);
-      await app.parse('loadLocal uint256 NUM1 - loadLocal uint256 NUM2');
+      await app.parse('var NUM1 - var NUM2');
       await expect(app.execute()).to.be.revertedWith('EXC3');
     });
 
@@ -114,7 +114,7 @@ describe('DSL: math', () => {
 
       await app.setStorageUint256(hex4Bytes('NUM1'), 0);
       await app.setStorageUint256(hex4Bytes('NUM2'), 1);
-      await app.parse('loadLocal uint256 NUM1 - loadLocal uint256 NUM2');
+      await app.parse('var NUM1 - var NUM2');
       await expect(app.execute()).to.be.revertedWith('EXC3');
     });
 
@@ -127,7 +127,7 @@ describe('DSL: math', () => {
 
       await app.setStorageUint256(hex4Bytes('NUM1'), 0);
       await app.setStorageUint256(hex4Bytes('NUM2'), 0);
-      await app.parse('loadLocal uint256 NUM1 - loadLocal uint256 NUM2');
+      await app.parse('var NUM1 - var NUM2');
       await app.execute();
     });
   });
@@ -195,7 +195,7 @@ describe('DSL: math', () => {
 
       await app.setStorageUint256(hex4Bytes('NUM1'), 0);
       await app.setStorageUint256(hex4Bytes('NUM2'), 0);
-      await app.parse('loadLocal uint256 NUM1 + loadLocal uint256 NUM2');
+      await app.parse('var NUM1 + var NUM2');
       await app.execute();
     });
   });

@@ -20,9 +20,9 @@ interface IParser {
 
     function asmSetLocalBool() external;
 
-    function asmSetUint256(address _ctxAddr) external;
+    function asmSetUint256() external;
 
-    function asmLoadLocal(address _ctxAddr) external;
+    function asmVar() external;
 
     function asmLoadRemote(address _ctxAddr) external;
 

@@ -51,7 +51,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
   it('incorrect signatory', async () => {
     const txId = '1';
     const signatories = [alice.address];
-    const conditions = ['blockTimestamp > loadLocal uint256 LOCK_TIME'];
+    const conditions = ['blockTimestamp > var LOCK_TIME'];
     const transaction = 'sendEth RECEIVER 1000000000000000000';
 
     await addSteps(
@@ -70,7 +70,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
 
     const txId = '1';
     const signatories = [alice.address];
-    const conditions = ['blockTimestamp > loadLocal uint256 LOCK_TIME'];
+    const conditions = ['blockTimestamp > var LOCK_TIME'];
     const transaction = 'sendEth RECEIVER 1000000000000000000';
 
     await addSteps(
