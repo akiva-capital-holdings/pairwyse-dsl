@@ -36,6 +36,17 @@ library StringUtils {
         return r;
     }
 
+    // can be converted to hexadecimal string (without "0x" prefix) to raw bytes
+    function checkFromHex(string memory s) public pure returns (bool) {
+        bytes memory ss = bytes(s);
+        if (ss.length % 2 != 0) return false; // length must be even
+        bytes memory r = new bytes(ss.length / 2);
+        for (uint256 i = 0; i < ss.length / 2; ++i) {
+            r[i] = bytes1(fromHexChar(ss[2 * i]) * 16 + fromHexChar(ss[2 * i + 1]));
+        }
+        return true;
+    }
+
     /**
      * @dev Converts a `uint256` to its ASCII `string` decimal representation.
      */
@@ -70,6 +81,17 @@ library StringUtils {
             require(tmp >= 0x30 && tmp <= 0x39, ErrorsStringUtils.SUT3);
             value = value * 10 + (tmp - 0x30); // 0x30 ascii is '0'
         }
+    }
+
+    // if string decimal number cab be converted to uint256
+    function checkUint256(string memory s) public pure returns (bool) {
+        bytes memory b = bytes(s);
+        uint256 tmp;
+        for (uint256 i = 0; i < b.length; i++) {
+            tmp = uint8(b[i]);
+            if (!(tmp >= 0x30 && tmp <= 0x39)) return false;
+        }
+        return true;
     }
 
     // string decimal number with e symbol (1e18) to uint256 (in wei)

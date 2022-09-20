@@ -459,6 +459,15 @@ contract Context is IContext {
             OpcodeLibNames.BranchingOpcodes
         );
 
+        // Ex. `push USER_ADDR USERS`
+        addOpcode(
+            'push',
+            0x33,
+            OtherOpcodes.opPush.selector,
+            IParser.asmPush.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
         // Complex Opcodes with sub Opcodes (branches)
 
         /*
@@ -497,6 +506,7 @@ contract Context is IContext {
         _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
         _addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadRemoteBytes32.selector);
 
+
         // Ex. `declareArr uint256 BALANCES`
         name = 'declareArr';
         addOpcode(
@@ -509,7 +519,7 @@ contract Context is IContext {
         // types of arrays for declaration
         // TODO: use other selectors
         _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadLocalUint256.selector);
-        _addOpcodeBranch(name, 'address', 0x02, OtherOpcodes.opLoadLocalAddress.selector);
+        _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadLocalAddress.selector);
 
         // Aliases
 
@@ -751,18 +761,4 @@ contract Context is IContext {
     function _addAlias(string memory _baseCmd, string memory _alias) internal {
         aliases[_alias] = _baseCmd;
     }
-
-    // /**
-    //  * @dev Get position of the array by its name
-    //  */
-    // function getArrayPosition(string memory _name) public returns(bytes32) {
-    //     return arrays[_name];
-    // }
-
-    // *
-    //  * @dev Set position of the array by its name
-
-    // function setArrayPosition(string memory _name, bytes32 _position) public {
-    //     arrays[_name] = _position;
-    // }
 }
