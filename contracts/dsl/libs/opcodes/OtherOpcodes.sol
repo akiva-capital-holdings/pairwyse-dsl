@@ -89,10 +89,10 @@ library OtherOpcodes {
 
         (bool success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
-                'setStorageWithType(bytes32,uint256,bytes32)',
+                'setArrayToStorage(bytes32,bytes32,bytes32)',
                 _varNameB32,
-                0x2, // a type of variable for _varNameB32 name. always will be 0x2 for array names
-                _varType // type of the array
+                _varType, // type of the array
+                0x0 // next position
             )
         );
         require(success, ErrorsGeneralOpcodes.OP1);

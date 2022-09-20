@@ -497,8 +497,8 @@ contract Context is IContext {
         _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
         _addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadRemoteBytes32.selector);
 
-        // Ex. `declare BALANCES uint256`
-        name = 'declare';
+        // Ex. `declareArr uint256 BALANCES`
+        name = 'declareArr';
         addOpcode(
             name,
             0x31,
@@ -507,9 +507,9 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         // types of arrays for declaration
-        _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadRemoteUint256.selector);
-        // if there will be no other types exept uint256 and address, then TODO: `0x03 -> 0x02`
-        _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
+        // TODO: use other selectors
+        _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadLocalUint256.selector);
+        _addOpcodeBranch(name, 'address', 0x02, OtherOpcodes.opLoadLocalAddress.selector);
 
         // Aliases
 

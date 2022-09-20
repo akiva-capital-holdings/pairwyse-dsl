@@ -27,14 +27,14 @@ library UnstructuredStorage {
         }
     }
 
-    function getStorageWithType(bytes32 position) internal view returns (bytes memory) {
-        uint256 dataType;
+    function getArrayFromStorage(bytes32 position) internal view returns (bytes memory) {
+        bytes32 nextPosition;
         bytes32 data;
         assembly {
-            dataType := sload(position)
-            data := sload(add(position, 0x20)) // 0x20 is the size of dataType
+            data := sload(position)
+            nextPosition := sload(add(position, 0x20)) // 0x20 is the size of data
         }
-        return abi.encode(dataType, data);
+        return bytes.concat(data, nextPosition);
     }
 
     function setStorageBool(bytes32 position, bool data) internal {
@@ -61,14 +61,14 @@ library UnstructuredStorage {
         }
     }
 
-    function setStorageWithType(
+    function setArrayToStorage(
         bytes32 position,
-        uint256 dataType,
-        bytes32 data
+        bytes32 data,
+        bytes32 nextPosition
     ) internal {
         assembly {
-            sstore(position, dataType)
-            sstore(add(position, 0x20), data) // 0x20 is the size of dataType
+            sstore(position, data)
+            sstore(add(position, 0x20), nextPosition) // 0x20 is the size of data
         }
     }
 }

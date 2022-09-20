@@ -252,7 +252,7 @@ contract Preprocessor is IPreprocessor {
                     result.pop();
                     // TODO: move that to Parser or reorganise it to simple array structure?
                     // EX. NUMBERS [1,2,3,4...]
-                    result.push('declare');
+                    result.push('declareArr');
                     result.push(_type);
                     result.push(chunk);
                 }

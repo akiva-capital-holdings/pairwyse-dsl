@@ -22,16 +22,16 @@ contract UnstructuredStorageMock {
         return position.getStorageUint256();
     }
 
-    function getStorageWithType(bytes32 position) public view returns (bytes memory) {
-        return position.getStorageWithType();
+    function getArrayFromStorage(bytes32 position) public view returns (bytes memory) {
+        return position.getArrayFromStorage();
     }
 
-    function setStorageWithType(
+    function setArrayToStorage(
         bytes32 position,
-        uint256 dataType,
-        bytes32 data
+        bytes32 data,
+        bytes32 nextPosition
     ) public {
-        return position.setStorageWithType(dataType, data);
+        return position.setArrayToStorage(data, nextPosition);
     }
 
     function setStorageBool(bytes32 position, bool data) public {

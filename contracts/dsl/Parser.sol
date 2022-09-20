@@ -115,7 +115,7 @@ contract Parser is IParser {
      * ```
      */
     function asmDeclare(address _ctxAddr) public {
-        _parseBranchOf(_ctxAddr, 'declare'); // program += bytecode for type of array
+        _parseBranchOf(_ctxAddr, 'declareArr'); // program += bytecode for type of array
         _parseVariable(); // program += bytecode for `ARR_NAME`
     }
 

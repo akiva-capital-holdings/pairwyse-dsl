@@ -310,17 +310,17 @@ describe('Parser', () => {
 
   describe('DSL arrays', () => {
     describe('uint256 type', () => {
-      it('declare array', async () => {
-        await app.parseCodeExt(ctxAddr, ['declare', 'uint256', 'NUMBERS']);
+      it('declareArr array', async () => {
+        await app.parseCodeExt(ctxAddr, ['declareArr', 'uint256', 'NUMBERS']);
         expect(await ctx.program()).to.equal(
           '0x' +
-            '31' + // declare
+            '31' + // declareArr
             '01' + // uint256
             '1fff709e' // bytecode for a `NUMBERS` name
         );
       });
 
-      it('declare array only with additional code just before it', async () => {
+      it('declareArr array only with additional code just before it', async () => {
         const number = new Array(64).join('0') + 6;
         await app.parseCodeExt(ctxAddr, [
           'uint256',
@@ -328,7 +328,7 @@ describe('Parser', () => {
           'loadLocal',
           'uint256',
           'TIMESTAMP',
-          'declare',
+          'declareArr',
           'uint256',
           'NUMBERS',
         ]);
@@ -339,16 +339,16 @@ describe('Parser', () => {
             '1b' + // loadLocal
             '01' + // uint256
             '1b7b16d4' + // TIMESTAMP
-            '31' + // declare
+            '31' + // declareArr
             '01' + // uint256
             '1fff709e' // bytecode for a `NUMBERS` name
         );
       });
 
-      it('declare array only with additional code just after it', async () => {
+      it('declareArr array only with additional code just after it', async () => {
         const number = new Array(64).join('0') + 6;
         await app.parseCodeExt(ctxAddr, [
-          'declare',
+          'declareArr',
           'uint256',
           'NUMBERS',
           'uint256',
@@ -359,7 +359,7 @@ describe('Parser', () => {
         ]);
         expect(await ctx.program()).to.equal(
           '0x' +
-            '31' + // declare
+            '31' + // declareArr
             '01' + // uint256
             '1fff709e' + // bytecode for a `NUMBERS` name
             '1a' + // uint256
@@ -370,12 +370,12 @@ describe('Parser', () => {
         );
       });
 
-      it('declare array with additional code before and after it', async () => {
+      it('declareArr array with additional code before and after it', async () => {
         const number = new Array(64).join('0') + 6;
         await app.parseCodeExt(ctxAddr, [
           'uint256',
           '6',
-          'declare',
+          'declareArr',
           'uint256',
           'NUMBERS',
           'loadLocal',
@@ -386,7 +386,7 @@ describe('Parser', () => {
           '0x' +
             '1a' + // uint256
             `${number}` + // 6
-            '31' + // declare
+            '31' + // declareArr
             '01' + // uint256
             '1fff709e' + // bytecode for a `NUMBERS` name
             '1b' + // loadLocal
@@ -397,17 +397,17 @@ describe('Parser', () => {
     });
 
     describe('address type', () => {
-      it('declare array', async () => {
-        await app.parseCodeExt(ctxAddr, ['declare', 'address', 'MARY']);
+      it('declareArr array', async () => {
+        await app.parseCodeExt(ctxAddr, ['declareArr', 'address', 'MARY']);
         expect(await ctx.program()).to.equal(
           '0x' +
-            '31' + // declare
-            '03' + // address
+            '31' + // declareArr
+            '02' + // address
             '5e315030' // bytecode for a `MARY` name
         );
       });
 
-      it('declare array only with additional code just before it', async () => {
+      it('declareArr array only with additional code just before it', async () => {
         const number = new Array(64).join('0') + 6;
         await app.parseCodeExt(ctxAddr, [
           'uint256',
@@ -415,7 +415,7 @@ describe('Parser', () => {
           'loadLocal',
           'uint256',
           'TIMESTAMP',
-          'declare',
+          'declareArr',
           'address',
           'MARY',
         ]);
@@ -426,16 +426,16 @@ describe('Parser', () => {
             '1b' + // loadLocal
             '01' + // uint256
             '1b7b16d4' + // TIMESTAMP
-            '31' + // declare
-            '03' + // address
+            '31' + // declareArr
+            '02' + // address
             '5e315030' // bytecode for a `MARY` name
         );
       });
 
-      it('declare array only with additional code just after it', async () => {
+      it('declareArr array only with additional code just after it', async () => {
         const number = new Array(64).join('0') + 6;
         await app.parseCodeExt(ctxAddr, [
-          'declare',
+          'declareArr',
           'address',
           'MARY',
           'uint256',
@@ -446,8 +446,8 @@ describe('Parser', () => {
         ]);
         expect(await ctx.program()).to.equal(
           '0x' +
-            '31' + // declare
-            '03' + // address
+            '31' + // declareArr
+            '02' + // address
             '5e315030' + // bytecode for a `MARY` name
             '1a' + // uint256
             `${number}` + // 6
@@ -457,12 +457,12 @@ describe('Parser', () => {
         );
       });
 
-      it('declare array with additional code before and after it', async () => {
+      it('declareArr array with additional code before and after it', async () => {
         const number = new Array(64).join('0') + 6;
         await app.parseCodeExt(ctxAddr, [
           'uint256',
           '6',
-          'declare',
+          'declareArr',
           'address',
           'MARY',
           'loadLocal',
@@ -473,8 +473,8 @@ describe('Parser', () => {
           '0x' +
             '1a' + // uint256
             `${number}` + // 6
-            '31' + // declare
-            '03' + // address
+            '31' + // declareArr
+            '02' + // address
             '5e315030' + // bytecode for a `MARY` name
             '1b' + // loadLocal
             '01' + // uint256
