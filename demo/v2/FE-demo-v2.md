@@ -67,33 +67,6 @@ Node
 
 ![Agreement Creation](img/Agreement-creation.png)
 
-#### -> Agreement Update
-
-10. Go to `Update` tab
-11. Fill in the `Update` form:
-    - ID: `1`
-    - Agreement: the address of Agreement that you've deployed and remembered
-    - Signatories: copy & paste an `Alice (hardhat)` addess from MetaMask
-    - Conditions: `bool true`
-    - Transaction: `msgValue == 1000000000000000000`
-12. Hit `Request Approval` button
-13. Confirm all the transactions via MetaMask pop ups
-14. If you get `Agreement update transaction hash: ...` in the console than the Agreement update was successful
-
-![Agreement Update](img/Agreement-update.png)
-
-#### -> Agreement Execution
-
-15. Go to `Execution` tab
-16. Fill in the `Execution` form:
-    - ID: `1`
-    - Agreement: the address of Agreement that you've deployed and remembered
-    - Transaction Value (in Wei): `1000000000000000000`
-17. Hit `Execute` button
-18. Confirm the transaction via MetaMask pop up
-19. If you get `{ txHash: ... }` in the console than the Agreement execution was successful
-
-![Agreement Execution](img/Agreement-execution.png)
 
 #### -> Agreement Definition
 
@@ -108,20 +81,50 @@ Node
 
 ![Agreement Definition](img/Agreement-definition.png)
 
-#### -> Agreement Update
+#### -> Agreement Update (1)
+
+10. Go to `Update` tab
+11. Fill in the `Update` form:
+    - ID: `1`
+    - Agreement: the address of Agreement that you've deployed and remembered
+    - Required Transactions: <leave it blank>
+    - Signatories: copy & paste an `Alice (hardhat)` addess from MetaMask
+    - Conditions: `bool true`
+    - Transaction: `msgValue == 1e18`
+12. Hit `Request Approval` button
+13. Confirm all the transactions via MetaMask pop ups
+14. If you get `Agreement update transaction hash: ...` in the console than the Agreement update was successful
+
+![Agreement Update](img/Agreement-update.png)
+
+#### -> Agreement Update (2)
 
 25. Go to `Update` tab
 26. Fill in the `Update` form:
     - ID: `2`
     - Agreement: the address of Agreement that you've deployed and remembered
+    - Required Transactions: `1`
     - Signatories: copy & paste an `Alice (hardhat)` addess from MetaMask
     - Conditions: `bool true`
-    - Transaction: `sendEth BOB 1000000000000000000`
+    - Transaction: `sendEth BOB 1e18`
 27. Hit `Request Approval` button
 28. Confirm all the transactions via MetaMask pop ups
 29. If you get `Agreement update transaction hash: ...` in the console than the Agreement update was successful
 
-#### -> Agreement Execution
+#### -> Agreement Execution (1)
+
+15. Go to `Execution` tab
+16. Fill in the `Execution` form:
+    - ID: `1`
+    - Agreement: the address of Agreement that you've deployed and remembered
+    - Transaction Value (in Wei): `1000000000000000000`
+17. Hit `Execute` button
+18. Confirm the transaction via MetaMask pop up
+19. If you get `{ txHash: ... }` in the console than the Agreement execution was successful
+
+![Agreement Execution](img/Agreement-execution.png)
+
+#### -> Agreement Execution (2)
 
 30. Go to `Execution` tab
 31. Fill in the `Execution` form:
