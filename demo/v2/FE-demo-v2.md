@@ -21,7 +21,7 @@ Node
 4. `git checkout 40daf2a339f1e639e2d7961596bd55efd1eaca99`
 5. `yarn`
 6. In one terminal window: `npx hardhat node`
-7. In another terminal window: `npx hardhat run --network localhost scripts/deploy.demoV2.ts`. Remember the ContextFactory, Parser, and Preprocessor addresses that are displayed in the console. This script also have generated a new file: `scripts/agreement.bytecode`. The file contents Agreement bytecode; remember this bytecode.
+7. In another terminal window: `npx hardhat run --network localhost scripts/deploy.demoV2.ts`. Write down the ContextFactory, Parser, and Preprocessor addresses that are displayed in the console. This script also have generated a new file: `scripts/agreement.bytecode`. The file contents Agreement bytecode; copy this bytecode.
 
 ### Setup FE
 
@@ -32,11 +32,11 @@ Node
 5. `yarn`
 6. Modify `.env.locale`:
 
-   - Set `REACT_APP_PARSER` to Parser address that you've remembered
-   - Set `REACT_APP_PREPROCESSOR` to Preprocessor address that you've remembered
-   - Set `REACT_APP_CONTEXT_FACTORY` to ContextFactory address that you've remembered
+   - Set `REACT_APP_PARSER` to Parser address that you've written down
+   - Set `REACT_APP_PREPROCESSOR` to Preprocessor address that you've written down
+   - Set `REACT_APP_CONTEXT_FACTORY` to ContextFactory address that you've written down
 
-7. Copy a bytecode of Agreement that you've remembered and paste it in `src/data/agreement.json` file in the `bytecode` section.
+7. Copy a bytecode of Agreement that you've written down and paste it in `src/data/agreement.json` file in the `bytecode` section.
 
 8. `yarn start:locale`
 
@@ -72,7 +72,7 @@ Node
    - Agreement model: choose the only option available `Lending agreement with capital stack`
 7. Hit `Create Agreement` button
 8. Confirm the transaction via MetaMask pop up
-9. If you get a transaction ID in a status block located on the right of the screen than the transaction was successful
+9. The transaction is successful if you get a transaction ID in a status block located on the right of the screen
 
 ![Agreement Creation](img/Agreement-creation.png)
 
@@ -85,7 +85,7 @@ Node
     - Specifications: the address of `Bob (hardhat)` from the MetaMask
 12. Hit `Request Approval` button
 13. Confirm the transaction via MetaMask pop up
-14. If you get a transaction ID in a status block located on the right of the screen than the transaction was successful
+14. The transaction is successful if you get a transaction ID in a status block located on the right of the screen
 
 ![Agreement Definition](img/Agreement-definition.png)
 
@@ -101,7 +101,7 @@ Node
     - Transaction: `msgValue == 1e18`
 17. Hit `Request Approval` button
 18. Confirm all the transactions via MetaMask pop ups
-19. If you get a transaction ID in a status block located on the right of the screen than the transaction was successful
+19. The transaction is successful if you get a transaction ID in a status block located on the right of the screen
 
 ![Agreement Update](img/Agreement-update.png)
 
@@ -117,7 +117,7 @@ Node
     - Transaction: `sendEth BOB 1e18`
 22. Hit `Request Approval` button
 23. Confirm all the transactions via MetaMask pop ups
-24. If you get a transaction ID in a status block located on the right of the screen than the transaction was successful
+24. The transaction is successful if you get a transaction ID in a status block located on the right of the screen
 
 #### -> Agreement Execution
 
@@ -128,7 +128,7 @@ Node
     - Transaction Value (in Wei): `1000000000000000000`
 27. Hit `Execute` button
 28. Confirm the transaction via MetaMask pop up
-29. If you get a transaction ID in a status block located on the right of the screen than the transaction was successful
+29. The transaction is successful if you get a transaction ID in a status block located on the right of the screen
 
 ![Agreement Execution](img/Agreement-execution.png)
 
@@ -141,7 +141,7 @@ Node
     - Transaction Value (in Wei): leave this field empty
 32. Hit `Execute` button
 33. Confirm the transaction via MetaMask pop up
-34. If you get a transaction ID in a status block located on the right of the screen than the transaction was successful
+34. The transaction is successful if you get a transaction ID in a status block located on the right of the screen
 
 Now `Bob (hardhat)` balance should be increased by 1 ETH
 
