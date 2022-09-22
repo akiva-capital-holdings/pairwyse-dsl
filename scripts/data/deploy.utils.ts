@@ -102,7 +102,5 @@ export const deployAgreement = async () => {
   const agreement = await AgreementContract.deploy(parserAddr);
   await agreement.deployed();
 
-  console.log(`\x1b[32m Agreement address \x1b[0m\x1b[32m ${agreement.address}\x1b[0m`);
-
   return agreement.address;
 };

@@ -18,23 +18,27 @@ Node
 1. Open a new terminal window.
 2. `git clone https://github.com/akiva-capital-holdings/solidity-dsl.git`
 3. `cd solidity-dsl`
-4. `git checkout f6ca4e7f580bc97bf07f6d3dbc9fd3c31f20de96`
+4. `git checkout 2f2d5b7020fa9179adcd960fe79f737e19ffc9ca`
 5. `yarn`
 6. In one terminal window: `npx hardhat node`
-7. In another terminal window: `npx hardhat run --network localhost scripts/deploy.parser.ts`. Remember Parser address
-8. In another terminal window: `npx hardhat run --network localhost scripts/deploy.contextFactory.ts`. Remember ContextFactory address
+7. In another terminal window: `npx hardhat run --network localhost scripts/deploy.demoV2.ts`. Remember the ContextFactory, Parser, and Preprocessor addresses that are displayed in the console. This script also have generated a new file: `scripts/agreement.bytecode`. The file contents Agreement bytecode; remember this bytecode.
 
 ### Setup FE
 
 1. Open a new terminal window.
 2. `git clone https://github.com/akiva-capital-holdings/dsl-fe.git`
 3. `cd dsl-fe`
-4. `git checkout f57151d8bd5476c75a0dc920f2edafedcada7073`
+4. `git checkout e1533d71a1422ea8b8fae5b5828a6e31d5fb3a3f`
 5. `yarn`
 6. Modify `.env.locale`:
+
    - Set `REACT_APP_PARSER` to Parser address that you've remembered
+   - Set `REACT_APP_PREPROCESSOR` to Preprocessor address that you've remembered
    - Set `REACT_APP_CONTEXT_FACTORY` to ContextFactory address that you've remembered
-7. `yarn start:locale`
+
+7. Copy a bytecode of Agreement that you've remembered and paste it in `src/data/agreement.json` file in the `bytecode` section.
+
+8. `yarn start:locale`
 
 ### Setup MetaMask
 
@@ -47,6 +51,11 @@ Node
 3. Import a new account with private key `0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d`. Call it `Bob (hardhat)`
 
 ![MetaMask-Setup](img/MetaMask-setup.png)
+
+### Reset MetaMask nonce (needed for localhost)
+
+1. Go to Metamask -> Settings -> Advanced -> Click Reset Account -> Confirm the reset
+   ![MetaMask-Reset](img/MetaMask-reset.png)
 
 ### Interact with website
 
@@ -63,74 +72,76 @@ Node
    - Agreement model: choose the only option available `Lending agreement with capital stack`
 7. Hit `Create Agreement` button
 8. Confirm the transaction via MetaMask pop up
-9. Get a deployed Agreement address from the developers console. Remember this address
+9. If you get a transaction ID in a status block located on the right of the screen than the transaction was successful
 
 ![Agreement Creation](img/Agreement-creation.png)
 
-#### -> Agreement Update
-
-10. Go to `Update` tab
-11. Fill in the `Update` form:
-    - ID: `1`
-    - Agreement: the address of Agreement that you've deployed and remembered
-    - Signatories: copy & paste an `Alice (hardhat)` addess from MetaMask
-    - Conditions: `bool true`
-    - Transaction: `msgValue == 1000000000000000000`
-12. Hit `Request Approval` button
-13. Confirm all the transactions via MetaMask pop ups
-14. If you get `Agreement update transaction hash: ...` in the console than the Agreement update was successful
-
-![Agreement Update](img/Agreement-update.png)
-
-#### -> Agreement Execution
-
-15. Go to `Execution` tab
-16. Fill in the `Execution` form:
-    - ID: `1`
-    - Agreement: the address of Agreement that you've deployed and remembered
-    - Transaction Value (in Wei): `1000000000000000000`
-17. Hit `Execute` button
-18. Confirm the transaction via MetaMask pop up
-19. If you get `{ txHash: ... }` in the console than the Agreement execution was successful
-
-![Agreement Execution](img/Agreement-execution.png)
-
 #### -> Agreement Definition
 
-20. Go to `Definition` tab
-21. Fill in the `Definition` form:
-    - Agreement: the address of Agreement that you've deployed and remembered
+10. Go to `Definition` tab
+11. Fill in the `Definition` form:
+    - Agreement: should be pre-defined / do not modify
     - Definition: `BOB`
     - Specifications: the address of `Bob (hardhat)` from the MetaMask
-22. Hit `Request Approval` button
-23. Confirm the transaction via MetaMask pop up
-24. If you get `{ value: <<the address of 'Bob (hardhat)'>> }` then the Agreement definition was successful
+12. Hit `Request Approval` button
+13. Confirm the transaction via MetaMask pop up
+14. If you get a transaction ID in a status block located on the right of the screen than the transaction was successful
 
 ![Agreement Definition](img/Agreement-definition.png)
 
 #### -> Agreement Update
 
-25. Go to `Update` tab
-26. Fill in the `Update` form:
-    - ID: `2`
-    - Agreement: the address of Agreement that you've deployed and remembered
+15. Go to `Update` tab
+16. Fill in the `Update` form:
+    - ID: `1`
+    - Agreement: should be pre-defined / do not modify
+    - Required Transactions: leave this field empty
     - Signatories: copy & paste an `Alice (hardhat)` addess from MetaMask
     - Conditions: `bool true`
-    - Transaction: `sendEth BOB 1000000000000000000`
-27. Hit `Request Approval` button
-28. Confirm all the transactions via MetaMask pop ups
-29. If you get `Agreement update transaction hash: ...` in the console than the Agreement update was successful
+    - Transaction: `msgValue == 1e18`
+17. Hit `Request Approval` button
+18. Confirm all the transactions via MetaMask pop ups
+19. If you get a transaction ID in a status block located on the right of the screen than the transaction was successful
+
+![Agreement Update](img/Agreement-update.png)
+
+#### -> Agreement Update
+
+20. Go to `Update` tab
+21. Fill in the `Update` form:
+    - ID: `2`
+    - Agreement: should be pre-defined / do not modify
+    - Required Transactions: `1`
+    - Signatories: copy & paste an `Alice (hardhat)` addess from MetaMask
+    - Conditions: `bool true`
+    - Transaction: `sendEth BOB 1e18`
+22. Hit `Request Approval` button
+23. Confirm all the transactions via MetaMask pop ups
+24. If you get a transaction ID in a status block located on the right of the screen than the transaction was successful
+
+#### -> Agreement Execution
+
+25. Go to `Execution` tab
+26. Fill in the `Execution` form:
+    - ID: `1`
+    - Agreement: should be pre-defined / do not modify
+    - Transaction Value (in Wei): `1000000000000000000`
+27. Hit `Execute` button
+28. Confirm the transaction via MetaMask pop up
+29. If you get a transaction ID in a status block located on the right of the screen than the transaction was successful
+
+![Agreement Execution](img/Agreement-execution.png)
 
 #### -> Agreement Execution
 
 30. Go to `Execution` tab
 31. Fill in the `Execution` form:
     - ID: `2`
-    - Agreement: the address of Agreement that you've deployed and remembered
+    - Agreement: should be pre-defined / do not modify
     - Transaction Value (in Wei): leave this field empty
 32. Hit `Execute` button
 33. Confirm the transaction via MetaMask pop up
-34. If you get `{ txHash: ... }` in the console than the Agreement execution was successful
+34. If you get a transaction ID in a status block located on the right of the screen than the transaction was successful
 
 Now `Bob (hardhat)` balance should be increased by 1 ETH
 
