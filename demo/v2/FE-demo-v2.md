@@ -18,7 +18,7 @@ Node
 1. Open a new terminal window.
 2. `git clone https://github.com/akiva-capital-holdings/solidity-dsl.git`
 3. `cd solidity-dsl`
-4. `git checkout 2f2d5b7020fa9179adcd960fe79f737e19ffc9ca`
+4. `git checkout 40daf2a339f1e639e2d7961596bd55efd1eaca99`
 5. `yarn`
 6. In one terminal window: `npx hardhat node`
 7. In another terminal window: `npx hardhat run --network localhost scripts/deploy.demoV2.ts`. Remember the ContextFactory, Parser, and Preprocessor addresses that are displayed in the console. This script also have generated a new file: `scripts/agreement.bytecode`. The file contents Agreement bytecode; remember this bytecode.
