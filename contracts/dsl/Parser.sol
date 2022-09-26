@@ -120,54 +120,16 @@ contract Parser is IParser {
     }
 
     /**
-     * @dev Updates the program with the name(its position) of the array
+     * @dev Updates the program with the next item for the array
      *
      *  * Example of a command:
      * ```
-     * declare ARR_NAME
+     * push ITEM ARR_NAME
      * ```
      */
-    function asmPush(address _ctxAddr) public {
-        string memory variable = _nextCmd(); // uint256 or address
-        bytes1 _type;
-        bytes32 _value;
-        if (variable.checkUint256()) {
-            _type = IContext(_ctxAddr).branchCodes('declare', 'uint256');
-            _value = bytes32(variable.toUint256());
-        } else if (variable.checkFromHex()) {
-            _type = IContext(_ctxAddr).branchCodes('declare', 'address');
-            _value = bytes32(variable.fromHex());
-        } else {
-            revert('Wrong type');
-        }
-
-        variable = _nextCmd(); // variable name, ex: NUMBERS
-        bytes4 _arrNameB32 = bytes4(keccak256(abi.encodePacked(variable)));
-        (bool _success, bytes memory _data) = IContext(_ctxAddr).appAddr().call(
-            abi.encodeWithSignature('getStorageWithType(bytes32)', bytes32(_arrNameB32))
-        );
-        // TODO: check _type and revert if it does not match
-        require(_success, '23');
-
-        // get the length of array
-        (bool success, bytes memory data) = IContext(_ctxAddr).appAddr().call(
-            abi.encodeWithSignature('getArrLenght(bytes32)', variable)
-        );
-        require(success, '33');
-        uint256 newIndex = uint256(bytes32(data)) + 1;
-        // concat current arr name with its new index, ex. NUMBERS_1, NUMBERS_676
-        string memory _newName = variable.concat('_').concat(StringUtils.toString(newIndex));
-
-        // Load the type of array by it's hex
-
-        require(uint256(bytes32(_data)) != 0, 'arr does not exists');
-
-        program = bytes.concat(
-            program,
-            _value,
-            bytes4(keccak256(abi.encodePacked(_newName))), // new name
-            _arrNameB32 // arr name
-        );
+    function asmPush() public {
+        asmUint256(); // program += bytecode for ITEM (uint256, address, everything converts to uint256)
+        _parseVariable(); // program += bytecode for `NUMBER`
     }
 
     /**
@@ -430,7 +392,6 @@ contract Parser is IParser {
         } else {
             program = bytes.concat(program, opcode);
             bytes4 _selector = IContext(_ctxAddr).asmSelectors(cmd);
-            console.log(cmd);
             if (_selector != 0x0) {
                 (bool success, ) = address(this).delegatecall(
                     abi.encodeWithSelector(_selector, IContext(_ctxAddr))
@@ -510,23 +471,4 @@ contract Parser is IParser {
         // ex. savedProgram['NUMBER'] = 'loadLocal uint256 NUMBER'
         savedProgram[_name] = bytes.concat(type_, code_, name_);
     }
-
-    // function _loadArrayItem(address _ctxAddr,
-    //     string memory _name,
-    //     uint256 _index
-    // ) internal {
-
-    // (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
-    //     abi.encodeWithSignature('getStorageArrBytes32(bytes32)',
-    // IContext(_ctx).getArrayPosition(_name).values(_index))
-    // );
-    // require(success, ErrorsGeneralOpcodes.OP5);
-
-    // Convert bytes to bytes32
-    // assembly {
-    //     result := mload(add(data, 0x20))
-    // }
-    // bytes1 type_ =  IContext(_ctx).getArrayPosition(_name).getType();
-    // program = bytes.concat(program, type_, result);
-    // }
 }

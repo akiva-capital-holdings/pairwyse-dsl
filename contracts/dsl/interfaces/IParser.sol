@@ -50,5 +50,5 @@ interface IParser {
 
     function asmFunc() external;
 
-    function asmPush(address _ctxAddr) external;
+    function asmPush() external;
 }

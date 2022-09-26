@@ -84,27 +84,14 @@ library OtherOpcodes {
      * @dev insert an item to array
      */
     function opPush(address _ctx) public {
-        // bytes32 _varType = OpcodeHelpers.getNextBytes(_ctx, 1);
-        bytes32 _varValue = bytes32(OpcodeHelpers.getNextBytes(_ctx, 32));
-        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+        bytes32 _varValue = OpcodeHelpers.getNextBytes(_ctx, 32);
         bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
 
         (bool success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
-                'setStorageWithType(bytes32,bytes32,bytes32)',
-                _varNameB32, // new name for the item, ex. ARR_NAME1 or ARR_NAME456
-                _varValue, // value that pushes to the array,
-                0x0 // the next position of array is empty
-            )
-        );
-        require(success, ErrorsGeneralOpcodes.OP1);
-
-        // update previous object with a link for the current one
-        (success, ) = IContext(_ctx).appAddr().call(
-            abi.encodeWithSignature(
-                'updateStorageWithType(bytes32,bytes32)',
-                _arrNameB32, // new name for the item, ex. ARR_NAME1 or ARR_NAME456
-                _varNameB32 // the next position of array is updated
+                'addItem(bytes32,bytes32)',
+                _varValue, // value that pushes to the array
+                _arrNameB32 // new name for the item, ex. ARR_NAME1 or ARR_NAME456
             )
         );
         require(success, ErrorsGeneralOpcodes.OP1);
@@ -117,11 +104,12 @@ library OtherOpcodes {
         // https://github.com/ethereum/solidity/releases/tag/v0.8.5
         bytes32 _varType = OpcodeHelpers.getNextBytes(_ctx, 1);
         bytes32 _arrName = OpcodeHelpers.getNextBytes(_ctx, 4);
+
         (bool success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
                 'declare(bytes32,bytes32)',
-                _varNameB32,
-                _varType // type of the array
+                _varType, // type of the array
+                _arrName
             )
         );
         require(success, ErrorsGeneralOpcodes.OP1);
