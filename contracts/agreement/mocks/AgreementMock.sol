@@ -15,7 +15,7 @@ import { Executor } from '../../dsl/libs/Executor.sol';
 import { StringUtils } from '../../dsl/libs/StringUtils.sol';
 
 contract AgreementMock is Agreement {
-    constructor(address _parser) Agreement(_parser) {}
+    constructor(address _parser, address _safeAddr) Agreement(_parser, _safeAddr) {}
 
     function addRecordBlueprint(
         uint256 _recordId,
