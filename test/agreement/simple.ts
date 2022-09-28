@@ -12,11 +12,13 @@ import {
 } from '../../scripts/data/agreement';
 import { Agreement } from '../../typechain-types';
 import { anyone, ONE_DAY, ONE_MONTH } from '../utils/constants';
+import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
 
 describe('Agreement: Alice, Bob, Carl', () => {
   let agreement: Agreement;
   let agreementAddr: string;
   let preprocessorAddr: string;
+  let multisig: MultisigMock;
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
   let carl: SignerWithAddress;
@@ -28,7 +30,8 @@ describe('Agreement: Alice, Bob, Carl', () => {
   const tenTokens = parseEther('10');
 
   before(async () => {
-    agreementAddr = await deployAgreement();
+    multisig = await (await ethers.getContractFactory('MultisigMock')).deploy();
+    agreementAddr = await deployAgreement(multisig.address);
     preprocessorAddr = await deployPreprocessor();
     agreement = await ethers.getContractAt('Agreement', agreementAddr);
 
@@ -57,7 +60,8 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await addSteps(
       preprocessorAddr,
       [{ txId, requiredTxs: [], signatories, conditions, transaction }],
-      agreementAddr
+      agreementAddr,
+      multisig
     );
 
     await expect(agreement.connect(bob).execute(txId)).to.be.revertedWith('AGR1');
@@ -76,7 +80,8 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await addSteps(
       preprocessorAddr,
       [{ txId, requiredTxs: [], signatories, conditions, transaction }],
-      agreementAddr
+      agreementAddr,
+      multisig
     );
 
     // Top up contract
@@ -101,7 +106,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await agreement.setStorageAddress(hex4Bytes('BOB'), bob.address);
 
     // Update Agreement
-    await addSteps(preprocessorAddr, oneEthToBobSteps(alice), agreementAddr);
+    await addSteps(preprocessorAddr, oneEthToBobSteps(alice), agreementAddr, multisig);
 
     // Execute
     await expect(await agreement.connect(alice).execute(1, { value: oneEthBN })).changeEtherBalance(
@@ -119,7 +124,8 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await addSteps(
       preprocessorAddr,
       aliceAndBobSteps(alice, bob, oneEthBN, tenTokens),
-      agreementAddr
+      agreementAddr,
+      multisig
     );
 
     // Set variables
@@ -166,7 +172,8 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await addSteps(
       preprocessorAddr,
       aliceBobAndCarl(alice, bob, carl, oneEthBN, tenTokens),
-      agreementAddr
+      agreementAddr,
+      multisig
     );
 
     // Set variables
@@ -249,7 +256,12 @@ describe('Agreement: Alice, Bob, Carl', () => {
 
       const index = '4';
       const signatories = [anyone];
-      await addSteps(preprocessorAddr, aliceAndAnybodySteps(signatories, index), agreementAddr);
+      await addSteps(
+        preprocessorAddr,
+        aliceAndAnybodySteps(signatories, index),
+        agreementAddr,
+        multisig
+      );
 
       // Alice deposits 10 dai tokens to SC
       await daiToken.connect(alice).transfer(agreementAddr, tenTokens);

@@ -7,6 +7,7 @@ import { formatEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 import { Suite, Test } from 'mocha';
 import { Stack__factory, Stack, Context, ERC20 } from '../../typechain-types';
+import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
 import { DynamicTestData, OpConditionalTxFunc, TxObject } from '../types';
 import { ONE_DAY, ONE_MONTH, ONE_YEAR } from './constants';
 
@@ -169,7 +170,8 @@ export const changeTokenBalanceAndGetTxHash = async (
 export const addSteps = async (
   preprocessorAddr: string,
   steps: TxObject[],
-  agreementAddress: string
+  agreementAddress: string,
+  multisig: MultisigMock
 ) => {
   let transactionContext;
   const agreement = await ethers.getContractAt('Agreement', agreementAddress);
@@ -196,7 +198,9 @@ export const addSteps = async (
     console.log('\nTerm transaction');
     console.log(`\n\taddress: \x1b[35m${transactionContext.address}\x1b[0m`);
     console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
-    const { hash } = await agreement.update(
+
+    // Create Raw transaction
+    const { data } = await agreement.populateTransaction.update(
       step.txId,
       step.requiredTxs,
       step.signatories,
@@ -205,6 +209,10 @@ export const addSteps = async (
       transactionContext.address,
       cdCtxsAddrs
     );
+
+    // Send this raw transaction with Multisig contract
+    const { hash } = await multisig.executeTransaction(agreement.address, data, 0);
+
     console.log(`\nAgreement update transaction hash: \n\t\x1b[35m${hash}\x1b[0m`);
   }
 };
