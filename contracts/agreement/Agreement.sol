@@ -52,7 +52,6 @@ contract Agreement {
         string transactionString;
     }
 
-    uint256 public countofRecords;
     mapping(uint256 => Record) public txs; // txId => Record struct
     mapping(uint256 => address[]) public conditionContexts; // txId => condition Context
     mapping(uint256 => string[]) public conditionStrings; // txId => DSL condition as string
@@ -60,7 +59,7 @@ contract Agreement {
     mapping(uint256 => uint256) public signatoriesLen; // txId => signarories length
     // txId => (signatory => was tx executed by signatory)
     mapping(uint256 => mapping(address => bool)) public isExecutedBySignatory;
-    mapping(uint256 => uint256) public recordIds; // number => recordId
+    uint256[] public recordIds; // array of recordId
 
     /**
      * Sets parser address, creates new Context instance, and setups Context
@@ -127,20 +126,24 @@ contract Agreement {
         txs[_recordId].isArchived = false;
     }
 
-    function getActualRecords() external view returns (uint256[] memory) {
+    /**
+     * @dev Sorted all records and return array of active records in Agreement
+     * @return activeRecords array of active records in Agreement
+     */
+    function getActiveRecords() external view returns (uint256[] memory) {
         uint256 count = 0;
-        uint256[] memory actualRecords = new uint256[](_recordsLength());
-        for (uint256 i = 0; i <= countofRecords; i++) {
+        uint256[] memory activeRecords = new uint256[](_activeRecordsLength());
+        for (uint256 i = 0; i < recordIds.length; i++) {
             if (
                 !txs[recordIds[i]].isArchived &&
                 !txs[recordIds[i]].isExecuted &&
                 txs[recordIds[i]].transactionContext != address(0)
             ) {
-                actualRecords[count] = recordIds[i];
+                activeRecords[count] = recordIds[i];
                 count++;
             }
         }
-        return actualRecords;
+        return activeRecords;
     }
 
     /**
@@ -217,8 +220,7 @@ contract Agreement {
         signatories[_recordId] = _signatories;
         signatoriesLen[_recordId] = _signatories.length;
         txs[_recordId] = txn;
-        recordIds[countofRecords] = _recordId;
-        countofRecords++;
+        recordIds.push(_recordId);
     }
 
     /**
@@ -345,9 +347,13 @@ contract Agreement {
         return IContext(txn.transactionContext).stack().seeLast() == 0 ? false : true;
     }
 
-    function _recordsLength() internal view returns (uint256) {
+    /**
+     * @dev return length of active records for getActiveRecords
+     * @return count length of active records array
+     */
+    function _activeRecordsLength() internal view returns (uint256) {
         uint256 count = 0;
-        for (uint256 i = 0; i <= countofRecords; i++) {
+        for (uint256 i = 0; i < recordIds.length; i++) {
             if (
                 !txs[recordIds[i]].isArchived &&
                 !txs[recordIds[i]].isExecuted &&
