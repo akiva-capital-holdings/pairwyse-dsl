@@ -136,6 +136,75 @@ describe('Simple Records in Agreement', () => {
     }
   });
 
+  it('get actual record Id', async () => {
+    // // Set variables
+    // await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
+    // await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
+
+    const ContextMock = await ethers.getContractFactory('ContextMock');
+    const transactionContext = await ContextMock.deploy();
+    await transactionContext.setAppAddress(appAddr);
+    const conditionContext = await ContextMock.deploy();
+    await conditionContext.setAppAddress(appAddr);
+
+    records.push(
+      {
+        recordId: 96,
+        requiredRecords: [],
+        signatories: [alice.address],
+        transactionStr: 'sendEth RECEIVER 1000000000000000000',
+        conditionStrings: ['blockTimestamp > loadLocal uint256 LOCK_TIME'],
+        transactionCtx: transactionContext,
+        conditionContexts: [conditionContext],
+      },
+      {
+        recordId: 956,
+        requiredRecords: [],
+        signatories: [bob.address],
+        transactionStr: 'sendEth RECEIVER 1000000000000000000',
+        conditionStrings: ['blockTimestamp > loadLocal uint256 LOCK_TIME'],
+        transactionCtx: transactionContext,
+        conditionContexts: [conditionContext],
+      },
+      {
+        recordId: 11111,
+        requiredRecords: [],
+        signatories: [alice.address],
+        transactionStr: 'sendEth RECEIVER 1000000000000000000',
+        conditionStrings: ['blockTimestamp > loadLocal uint256 LOCK_TIME'],
+        transactionCtx: transactionContext,
+        conditionContexts: [conditionContext],
+      }
+    );
+
+    // Set conditional transaction
+    for (let i = 0; i < records.length; i++) {
+      const {
+        recordId,
+        requiredRecords,
+        signatories,
+        conditionContexts,
+        conditionStrings,
+        transactionCtx,
+        transactionStr,
+      } = records[i];
+
+      // Set conditional transaction
+      await app.addRecordBlueprint(recordId, requiredRecords, signatories);
+      for (let j = 0; j < conditionContexts.length; j++) {
+        await app.addRecordCondition(recordId, conditionStrings[j], conditionContexts[j].address);
+      }
+      await app.addRecordTransaction(recordId, transactionStr, transactionCtx.address);
+    }
+    // Should return all of record Ids
+    const actualRecords = await app.getActualRecords();
+    expect(actualRecords.map((v) => v.toNumber())).eql([96, 956, 11111]);
+    // Should return not archived record Ids [96, 956]
+    await app.archiveRecord(11111);
+    const notArchivedRecords = await app.getActualRecords();
+    expect(notArchivedRecords.map((v) => v.toNumber())).eql([96, 956]);
+  });
+
   it('record with one transaction', async () => {
     // Set variables
     await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);

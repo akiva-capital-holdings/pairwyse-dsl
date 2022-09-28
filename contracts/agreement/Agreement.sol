@@ -59,6 +59,7 @@ contract Agreement {
     mapping(uint256 => uint256) public signatoriesLen; // txId => signarories length
     // txId => (signatory => was tx executed by signatory)
     mapping(uint256 => mapping(address => bool)) public isExecutedBySignatory;
+    mapping(uint256 => uint256) public recordIds; // number => recordId
 
     /**
      * Sets parser address, creates new Context instance, and setups Context
@@ -123,6 +124,22 @@ contract Agreement {
         require(txs[_recordId].transactionContext != address(0), ErrorsAgreement.AGR9);
         require(txs[_recordId].isArchived != false, ErrorsAgreement.AGR10);
         txs[_recordId].isArchived = false;
+    }
+
+    function getActualRecords() external view returns (uint256[] memory) {
+        uint256 count = 0;
+        uint256[] memory actualRecords = new uint256[](_recordsLength());
+        for (uint256 i = 0; i <= countofRecords; i++) {
+            if (
+                !txs[recordIds[i]].isArchived &&
+                !txs[recordIds[i]].isExecuted &&
+                txs[recordIds[i]].transactionContext != address(0)
+            ) {
+                actualRecords[count] = recordIds[i];
+                count++;
+            }
+        }
+        return actualRecords;
     }
 
     /**
@@ -199,6 +216,8 @@ contract Agreement {
         signatories[_recordId] = _signatories;
         signatoriesLen[_recordId] = _signatories.length;
         txs[_recordId] = txn;
+        recordIds[countofRecords] = _recordId;
+        countofRecords++;
     }
 
     /**
@@ -323,5 +342,19 @@ contract Agreement {
         }
 
         return IContext(txn.transactionContext).stack().seeLast() == 0 ? false : true;
+    }
+
+    function _recordsLength() internal view returns (uint256) {
+        uint256 count = 0;
+        for (uint256 i = 0; i <= countofRecords; i++) {
+            if (
+                !txs[recordIds[i]].isArchived &&
+                !txs[recordIds[i]].isExecuted &&
+                txs[recordIds[i]].transactionContext != address(0)
+            ) {
+                count++;
+            }
+        }
+        return count;
     }
 }
