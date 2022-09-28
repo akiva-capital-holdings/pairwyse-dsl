@@ -52,6 +52,7 @@ contract Agreement {
         string transactionString;
     }
 
+    uint256 public countofRecords;
     mapping(uint256 => Record) public txs; // txId => Record struct
     mapping(uint256 => address[]) public conditionContexts; // txId => condition Context
     mapping(uint256 => string[]) public conditionStrings; // txId => DSL condition as string
