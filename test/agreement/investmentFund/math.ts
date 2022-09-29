@@ -10,6 +10,7 @@ import { Token } from '../../../typechain-types';
 import { Agreement } from '../../../typechain-types/agreement';
 import { deployAgreement, deployPreprocessor } from '../../../scripts/data/deploy.utils';
 import { ONE_DAY, ONE_MONTH, ONE_YEAR } from '../../utils/constants';
+import { MultisigMock } from '../../../typechain-types/agreement/mocks/MultisigMock';
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ describe('Agreement: Investment Fund tests math', () => {
   let agreement: Agreement;
   let agreementAddr: string;
   let preprocessorAddr: string;
+  let multisig: MultisigMock;
   let alice: SignerWithAddress;
   let GP: SignerWithAddress;
   let LPs: SignerWithAddress[];
@@ -542,7 +544,8 @@ describe('Agreement: Investment Fund tests math', () => {
   };
 
   before(async () => {
-    agreementAddr = await deployAgreement();
+    multisig = await (await ethers.getContractFactory('MultisigMock')).deploy();
+    agreementAddr = await deployAgreement(multisig.address);
     preprocessorAddr = await deployPreprocessor();
     agreement = await ethers.getContractAt('Agreement', agreementAddr);
     [alice, GP, ...LPs] = await ethers.getSigners();
@@ -551,7 +554,8 @@ describe('Agreement: Investment Fund tests math', () => {
     await addSteps(
       preprocessorAddr,
       businessCaseSteps(GP.address, [LPs[0].address, LPs[1].address], '6'),
-      agreementAddr
+      agreementAddr,
+      multisig
     );
 
     const LAST_BLOCK_TIMESTAMP = (

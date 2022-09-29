@@ -17,7 +17,8 @@ const parentSuite = describe('Agreement: Investment Fund', () => {
 
   before(async () => {
     // Deploy the contracts
-    const agreementAddr = await deployAgreement();
+    const multisig = await (await ethers.getContractFactory('MultisigMock')).deploy();
+    const agreementAddr = await deployAgreement(multisig.address);
     const preprocessorAddr = await deployPreprocessor();
     dynamicTestData.agreement = await ethers.getContractAt('Agreement', agreementAddr);
     [, , , dynamicTestData.whale, dynamicTestData.GP, ...dynamicTestData.LPs] =
@@ -32,7 +33,8 @@ const parentSuite = describe('Agreement: Investment Fund', () => {
     await addSteps(
       preprocessorAddr,
       businessCaseSteps(dynamicTestData.GP.address, [dynamicTestData.LPs[0].address], '4'),
-      agreementAddr
+      agreementAddr,
+      multisig
     );
 
     const LAST_BLOCK_TIMESTAMP = (

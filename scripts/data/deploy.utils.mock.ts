@@ -24,7 +24,7 @@ export const deployBaseMock = async () => {
   return [parserAddr, executorLibAddr, preprocessorAddr];
 };
 
-export const deployAgreementMock = async () => {
+export const deployAgreementMock = async (multisigAddr: string) => {
   const [
     comparisonOpcodesLibAddr,
     branchingOpcodesLibAddr,
@@ -43,7 +43,7 @@ export const deployAgreementMock = async () => {
       Executor: executorLibAddr,
     },
   });
-  const mock = await MockContract.deploy(parserAddr);
+  const mock = await MockContract.deploy(parserAddr, multisigAddr);
   await mock.deployed();
 
   console.log(`\x1b[32m AgreementMock address \x1b[0m\x1b[32m ${mock.address}\x1b[0m`);

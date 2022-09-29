@@ -80,7 +80,7 @@ export const deployBase = async () => {
   return [parserAddr, executorLibAddr, preprocessorAddr];
 };
 
-export const deployAgreement = async () => {
+export const deployAgreement = async (multisigAddr: string) => {
   const [
     comparisonOpcodesLibAddr,
     branchingOpcodesLibAddr,
@@ -99,7 +99,7 @@ export const deployAgreement = async () => {
       Executor: executorLibAddr,
     },
   });
-  const agreement = await AgreementContract.deploy(parserAddr);
+  const agreement = await AgreementContract.deploy(parserAddr, multisigAddr);
   await agreement.deployed();
 
   return agreement.address;

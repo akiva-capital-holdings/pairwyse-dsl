@@ -8,11 +8,13 @@ import { deployPreprocessor } from '../../scripts/data/deploy.utils';
 import { AgreementMock, ContextMock__factory } from '../../typechain-types';
 import { anyone, ONE_MONTH } from '../utils/constants';
 import { Records } from '../types';
+import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
 
 // TODO: rename everywhere in the project 'Conditional Transactions' to 'Records'
 
 describe('Simple Records in Agreement', () => {
   let app: AgreementMock;
+  let multisig: MultisigMock;
   let appAddr: string;
   let parser: ParserMock;
   let alice: SignerWithAddress;
@@ -28,7 +30,22 @@ describe('Simple Records in Agreement', () => {
 
   let records: Records[] = [];
 
+  const archiveRecord = async (_app: AgreementMock, _multisig: MultisigMock, _recordId: number) => {
+    const { data } = await app.populateTransaction.archiveRecord(_recordId);
+    await _multisig.executeTransaction(_app.address, data as string, 0);
+  };
+
+  const unarchiveRecord = async (
+    _app: AgreementMock,
+    _multisig: MultisigMock,
+    _recordId: number
+  ) => {
+    const { data } = await app.populateTransaction.unArchiveRecord(_recordId);
+    await _multisig.executeTransaction(_app.address, data as string, 0);
+  };
+
   before(async () => {
+    multisig = await (await ethers.getContractFactory('MultisigMock')).deploy();
     const LAST_BLOCK_TIMESTAMP = (
       await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
     ).timestamp;
@@ -37,7 +54,7 @@ describe('Simple Records in Agreement', () => {
     [alice, bob, anybody] = await ethers.getSigners();
 
     // Deploy contracts
-    appAddr = await deployAgreementMock();
+    appAddr = await deployAgreementMock(multisig.address);
     preprAddr = await deployPreprocessor();
     app = await ethers.getContractAt('AgreementMock', appAddr);
     ContextCont = await ethers.getContractFactory('ContextMock');
@@ -106,31 +123,35 @@ describe('Simple Records in Agreement', () => {
       expect(unArchivedRecord.isArchived).to.be.equal(false);
 
       // Check that record was actually archived
-      await app.archiveRecord(recordId);
+      await archiveRecord(app, multisig, recordId);
       const firstArchivedRecord = await app.txs(recordId);
       expect(firstArchivedRecord.isArchived).to.be.equal(true);
 
       // Check that record does not exist
-      await expect(app.archiveRecord(999)).to.be.revertedWith('AGR9');
+      // AGR9
+      await expect(archiveRecord(app, multisig, 999)).to.be.revertedWith('Delegate call failure');
 
       // Check that secondary archived record still archived
-      await app.archiveRecord(recordId);
+      await archiveRecord(app, multisig, recordId);
       const secondArchivedRecord = await app.txs(recordId);
       expect(secondArchivedRecord.isArchived).to.be.equal(true);
 
       // Check that record was actually unArchived
-      await app.unArchiveRecord(recordId);
+      await unarchiveRecord(app, multisig, recordId);
       const firstUnArchivedRecord = await app.txs(recordId);
       expect(firstUnArchivedRecord.isArchived).to.be.equal(false);
 
       // Check that secondary unAchived will reverted
-      await expect(app.unArchiveRecord(recordId)).to.be.revertedWith('AGR10');
+      await expect(unarchiveRecord(app, multisig, recordId)).to.be.revertedWith(
+        'Delegate call failure'
+      ); // AGR10
 
       // Check that record does not exist when unArchiveRecord
-      await expect(app.unArchiveRecord(999)).to.be.revertedWith('AGR9');
+      // AGR9
+      await expect(unarchiveRecord(app, multisig, 999)).to.be.revertedWith('Delegate call failure');
 
       // Check that third archived record was actually archived after unachived
-      await app.archiveRecord(recordId);
+      await archiveRecord(app, multisig, recordId);
       const thirdArchivedRecord = await app.txs(recordId);
       expect(thirdArchivedRecord.isArchived).to.be.equal(true);
     }
@@ -249,15 +270,15 @@ describe('Simple Records in Agreement', () => {
     });
 
     it('Should return record Ids [96, 956] when 11111 archibed', async () => {
-      await app.archiveRecord(11111);
+      await archiveRecord(app, multisig, 11111);
       const notArchivedRecords = await app.getActiveRecords();
       expect(notArchivedRecords.map((v) => v.toNumber())).eql([96, 956]);
     });
 
     it('Should return [] when all archibed', async () => {
-      await app.archiveRecord(96);
-      await app.archiveRecord(956);
-      await app.archiveRecord(11111);
+      await archiveRecord(app, multisig, 96);
+      await archiveRecord(app, multisig, 956);
+      await archiveRecord(app, multisig, 11111);
       const notArchivedRecords = await app.getActiveRecords();
       expect(notArchivedRecords).eql([]);
     });

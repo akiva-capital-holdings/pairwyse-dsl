@@ -11,12 +11,14 @@ library ErrorsAgreement {
     string constant AGR2 = 'AGR2'; // Agreement: not all required records are executed
     string constant AGR3 = 'AGR3'; // Agreement: record fulfilment error
     string constant AGR4 = 'AGR4'; // Agreement: signatures are invalid
-    string constant AGR5 = 'AGR5'; // Agreement: The transaction should have at least one condition
+    string constant AGR5 = 'AGR5'; // Agreement: the transaction should have at least one condition
     string constant AGR6 = 'AGR6'; // Agreement: not all record conditions are satisfied
     string constant AGR7 = 'AGR7'; // Agreement: record already was executed by this signatory
     string constant AGR8 = 'AGR8'; // Agreement: the variable name is reserved
     string constant AGR9 = 'AGR9'; // Agreement: this record does not exist
     string constant AGR10 = 'AGR10'; // Agreement: this record has not yet been archived
+    string constant AGR11 = 'AGR11'; // Agreement: not a GnosisSafe
+    string constant AGR12 = 'AGR12'; // Agreement: zero address
 }
 
 /**
