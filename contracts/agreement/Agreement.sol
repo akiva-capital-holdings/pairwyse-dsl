@@ -66,6 +66,7 @@ contract Agreement {
     mapping(uint256 => uint256) public signatoriesLen; // txId => signarories length
     // txId => (signatory => was tx executed by signatory)
     mapping(uint256 => mapping(address => bool)) public isExecutedBySignatory;
+    uint256[] public recordIds; // array of recordId
 
     /**
      * Sets parser address, creates new Context instance, and setups Context
@@ -141,6 +142,35 @@ contract Agreement {
         require(txs[_recordId].transactionContext != address(0), ErrorsAgreement.AGR9);
         require(txs[_recordId].isArchived != false, ErrorsAgreement.AGR10);
         txs[_recordId].isArchived = false;
+    }
+
+    /**
+     * @dev Sorted all records and return array of active records in Agreement
+     * @return activeRecords array of active records in Agreement
+     */
+    function getActiveRecords() external view returns (uint256[] memory) {
+        uint256 count = 0;
+        uint256[] memory activeRecords = new uint256[](_activeRecordsLength());
+        for (uint256 i = 0; i < recordIds.length; i++) {
+            if (
+                !txs[recordIds[i]].isArchived &&
+                !txs[recordIds[i]].isExecuted &&
+                txs[recordIds[i]].transactionContext != address(0)
+            ) {
+                activeRecords[count] = recordIds[i];
+                count++;
+            }
+        }
+        return activeRecords;
+    }
+
+    /**
+     * @dev Based on Record ID returns the number of condition strings
+     * @param _recordId Record ID
+     * @return Number of Condition strings of the Record
+     */
+    function conditionStringsLen(uint256 _recordId) external view returns (uint256) {
+        return conditionStrings[_recordId].length;
     }
 
     /**
@@ -261,6 +291,7 @@ contract Agreement {
         signatories[_recordId] = _signatories;
         signatoriesLen[_recordId] = _signatories.length;
         txs[_recordId] = txn;
+        recordIds.push(_recordId);
     }
 
     /**
@@ -346,5 +377,23 @@ contract Agreement {
         }
 
         return IContext(txn.transactionContext).stack().seeLast() == 0 ? false : true;
+    }
+
+    /**
+     * @dev return length of active records for getActiveRecords
+     * @return count length of active records array
+     */
+    function _activeRecordsLength() internal view returns (uint256) {
+        uint256 count = 0;
+        for (uint256 i = 0; i < recordIds.length; i++) {
+            if (
+                !txs[recordIds[i]].isArchived &&
+                !txs[recordIds[i]].isExecuted &&
+                txs[recordIds[i]].transactionContext != address(0)
+            ) {
+                count++;
+            }
+        }
+        return count;
     }
 }

@@ -90,7 +90,7 @@ describe('Simple Records in Agreement', () => {
       requiredRecords: [],
       signatories: [alice.address],
       transactionStr: 'sendEth RECEIVER 1000000000000000000',
-      conditionStrings: ['blockTimestamp > loadLocal uint256 LOCK_TIME'],
+      conditionStrings: ['blockTimestamp > var LOCK_TIME'],
       transactionCtx: transactionContext,
       conditionContexts: [conditionContext],
     });
@@ -155,6 +155,147 @@ describe('Simple Records in Agreement', () => {
       const thirdArchivedRecord = await app.txs(recordId);
       expect(thirdArchivedRecord.isArchived).to.be.equal(true);
     }
+  });
+
+  describe('Get actual record Id', () => {
+    before(async () => {
+      await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
+      await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
+
+      const ContextMock = await ethers.getContractFactory('ContextMock');
+      const transactionContext = await ContextMock.deploy();
+      await transactionContext.setAppAddress(appAddr);
+      const conditionContext = await ContextMock.deploy();
+      await conditionContext.setAppAddress(appAddr);
+
+      records.push(
+        {
+          recordId: 96,
+          requiredRecords: [],
+          signatories: [alice.address],
+          transactionStr: 'sendEth RECEIVER 1000000000000000000',
+          conditionStrings: ['blockTimestamp > var LOCK_TIME'],
+          transactionCtx: transactionContext,
+          conditionContexts: [conditionContext],
+        },
+        {
+          recordId: 956,
+          requiredRecords: [],
+          signatories: [alice.address],
+          transactionStr: 'sendEth RECEIVER 1000000000000000000',
+          conditionStrings: ['blockTimestamp > var LOCK_TIME'],
+          transactionCtx: transactionContext,
+          conditionContexts: [conditionContext],
+        },
+        {
+          recordId: 11111,
+          requiredRecords: [],
+          signatories: [alice.address],
+          transactionStr: 'sendEth RECEIVER 1000000000000000000',
+          conditionStrings: ['blockTimestamp > var LOCK_TIME'],
+          transactionCtx: transactionContext,
+          conditionContexts: [conditionContext],
+        }
+      );
+
+      // Set conditional transaction
+      for (let i = 0; i < records.length; i++) {
+        const {
+          recordId,
+          requiredRecords,
+          signatories,
+          conditionContexts,
+          conditionStrings,
+          transactionCtx,
+          transactionStr,
+        } = records[i];
+
+        // Set conditional transaction
+        await app.addRecordBlueprint(recordId, requiredRecords, signatories);
+        for (let j = 0; j < conditionContexts.length; j++) {
+          await app.addRecordCondition(recordId, conditionStrings[j], conditionContexts[j].address);
+        }
+        await app.addRecordTransaction(recordId, transactionStr, transactionCtx.address);
+
+        // Set msg senders
+        // TODO: do we really need kind of these tests if we will have Roles?
+        await transactionCtx.setMsgSender(alice.address);
+        await conditionContexts[0].setMsgSender(alice.address);
+
+        // Parse all conditions and a transaction
+        const condCtxLen = (await app.conditionContextsLen(recordId)).toNumber();
+
+        for (let j = 0; j < condCtxLen; j++) {
+          await parser.parse(
+            preprAddr,
+            await app.conditionContexts(recordId, j),
+            await app.conditionStrings(recordId, j)
+          );
+        }
+        await parser.parse(preprAddr, transactionCtx.address, transactionStr);
+
+        // Top up contract
+        await anybody.sendTransaction({ to: app.address, value: oneEth });
+
+        // Advance time
+        // await ethers.provider.send('evm_increaseTime', [ONE_MONTH + ONE_MONTH]);
+        await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
+        for (let j = 0; j < condCtxLen; j++) {
+          await parser.parse(
+            preprAddr,
+            await app.conditionContexts(recordId, j),
+            await app.conditionStrings(recordId, j)
+          );
+        }
+
+        // Validate again
+        expect(await app.callStatic.validateConditions(recordId, 0)).equal(true);
+      }
+    });
+
+    beforeEach(async () => {
+      // Make a snapshot
+      snapshotId = await network.provider.send('evm_snapshot');
+    });
+
+    afterEach(async () => {
+      records = [];
+      // Return to the snapshot
+      await network.provider.send('evm_revert', [snapshotId]);
+    });
+
+    it('Should return all of record Ids when all active', async () => {
+      const actualRecords = await app.getActiveRecords();
+      expect(actualRecords.map((v) => v.toNumber())).eql([96, 956, 11111]);
+    });
+
+    it('Should return record Ids [96, 956] when 11111 archibed', async () => {
+      await app.archiveRecord(11111);
+      const notArchivedRecords = await app.getActiveRecords();
+      expect(notArchivedRecords.map((v) => v.toNumber())).eql([96, 956]);
+    });
+
+    it('Should return [] when all archibed', async () => {
+      await app.archiveRecord(96);
+      await app.archiveRecord(956);
+      await app.archiveRecord(11111);
+      const notArchivedRecords = await app.getActiveRecords();
+      expect(notArchivedRecords).eql([]);
+    });
+
+    it('Should return [956, 11111] when 96 executed', async () => {
+      await app.fulfill(96, 0, alice.address);
+      const notArchivedRecords = await app.getActiveRecords();
+      expect(notArchivedRecords.map((v) => v.toNumber())).eql([956, 11111]);
+    });
+
+    it('Should return [] when all executed', async () => {
+      await app.fulfill(96, 0, alice.address);
+      await app.fulfill(956, 0, alice.address);
+      await app.fulfill(11111, 0, alice.address);
+      const notArchivedRecords = await app.getActiveRecords();
+      expect(notArchivedRecords).eql([]);
+    });
   });
 
   it('record with one transaction', async () => {
