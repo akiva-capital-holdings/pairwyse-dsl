@@ -10,7 +10,7 @@ import { ByteUtils } from './libs/ByteUtils.sol';
 import { Preprocessor } from './Preprocessor.sol';
 import { ErrorsParser } from './libs/Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 /**
  * @dev Parser of DSL code
@@ -24,7 +24,7 @@ import 'hardhat/console.sol';
  */
 contract Parser is IParser {
     using StringUtils for string;
-    // using StringUtils for uint256;
+    using StringUtils for bytes;
     using ByteUtils for bytes;
 
     // Note: temporary variables block
@@ -128,8 +128,17 @@ contract Parser is IParser {
      * ```
      */
     function asmPush() public {
-        asmUint256(); // program += bytecode for ITEM (uint256, address, everything converts to uint256)
-        _parseVariable(); // program += bytecode for `NUMBER`
+        string memory _value = _nextCmd();
+        bytes4 _arrNameB32 = bytes4(keccak256(abi.encodePacked(_nextCmd())));
+
+        if (_value.mayBeAddress()) {
+            bytes memory _sliced = bytes(_value).slice(2, 42); // without first `0x` symbols
+            program = bytes.concat(program, bytes32(_sliced.fromHexBytes()));
+        } else if (_value.mayBeNumber()) {
+            program = bytes.concat(program, bytes32(_value.toUint256()));
+        }
+
+        program = bytes.concat(program, _arrNameB32);
     }
 
     /**
@@ -268,6 +277,20 @@ contract Parser is IParser {
     function asmBalanceOf() public {
         _parseVariable(); // token address
         _parseVariable(); // user address
+    }
+
+    /**
+     * @dev Updates previous `program` with getting the length of the dsl array by its name
+     * The command return non zero value only if the array name was declared and have at least one value.
+     * Check: `declareArr` and `push` commands for DSL arrays
+     *
+     * Example of a command:
+     * ```
+     * lengthOf ARR_NAME
+     * ```
+     */
+    function asmLengthOf() public {
+        _parseVariable(); // array name
     }
 
     /**

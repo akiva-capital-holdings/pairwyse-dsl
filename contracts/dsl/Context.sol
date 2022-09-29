@@ -459,12 +459,21 @@ contract Context is IContext {
             OpcodeLibNames.BranchingOpcodes
         );
 
-        // Ex. `push USER_ADDR USERS`
+        // Ex. `push 0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc USERS`
         addOpcode(
             'push',
             0x33,
             OtherOpcodes.opPush.selector,
             IParser.asmPush.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
+        // Ex. `lengthOf PARTNERS`
+        addOpcode(
+            'lengthOf',
+            0x34,
+            OtherOpcodes.opLengthOf.selector,
+            IParser.asmLengthOf.selector,
             OpcodeLibNames.OtherOpcodes
         );
 
@@ -506,7 +515,6 @@ contract Context is IContext {
         _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
         _addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadRemoteBytes32.selector);
 
-
         // Ex. `declareArr uint256 BALANCES`
         name = 'declareArr';
         addOpcode(
@@ -517,9 +525,9 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         // types of arrays for declaration
-        // TODO: use other selectors
-        _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadLocalUint256.selector);
-        _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadLocalAddress.selector);
+        _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadRemoteUint256.selector);
+        // if there will be no other types exept uint256 and address, then TODO: `0x03 -> 0x02`
+        _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
 
         // Aliases
 

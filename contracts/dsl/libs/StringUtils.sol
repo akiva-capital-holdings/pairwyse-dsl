@@ -27,7 +27,12 @@ library StringUtils {
 
     // Convert an hexadecimal string (without "0x" prefix) to raw bytes
     function fromHex(string memory s) public pure returns (bytes memory) {
-        bytes memory ss = bytes(s);
+        return fromHexBytes(bytes(s));
+    }
+
+    // Convert an hexadecimal string in bytes (without "0x" prefix) to raw bytes
+    // TODO: move this to BytesUtils lib
+    function fromHexBytes(bytes memory ss) public pure returns (bytes memory) {
         require(ss.length % 2 == 0, ErrorsStringUtils.SUT2); // length must be even
         bytes memory r = new bytes(ss.length / 2);
         for (uint256 i = 0; i < ss.length / 2; ++i) {
@@ -111,6 +116,19 @@ library StringUtils {
         require(!equal(_string, ''), ErrorsStringUtils.SUT7);
         bytes1 _byte = bytes(_string)[0];
         return uint8(_byte) >= 48 && uint8(_byte) <= 57;
+    }
+
+    /**
+     * @dev If the string starts with `0x` symbols, so we assume that it's an address.
+     * @param _string is a current string for checking
+     * @return isAddress that is true if the string starts with `0x` symbols, otherwise is false
+     */
+    function mayBeAddress(string memory _string) public view returns (bool) {
+        require(!equal(_string, ''), ErrorsStringUtils.SUT7);
+        if (bytes(_string).length != 42) return false;
+        bytes1 _byte = bytes(_string)[0];
+        bytes1 _byte2 = bytes(_string)[1];
+        return uint8(_byte) == 48 && uint8(_byte2) == 120;
     }
 
     // Convert an hexadecimal character to their value

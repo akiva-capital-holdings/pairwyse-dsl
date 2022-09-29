@@ -87,11 +87,18 @@ library OtherOpcodes {
         bytes32 _varValue = OpcodeHelpers.getNextBytes(_ctx, 32);
         bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
 
-        (bool success, ) = IContext(_ctx).appAddr().call(
+        // check if the array exists
+        (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
+            abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
+        );
+        require(success, ErrorsGeneralOpcodes.OP1);
+        require(bytes32(data) != bytes32(0x0), 'Tries to put item to non existed array');
+
+        (success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
                 'addItem(bytes32,bytes32)',
                 _varValue, // value that pushes to the array
-                _arrNameB32 // new name for the item, ex. ARR_NAME1 or ARR_NAME456
+                _arrNameB32 // array name, ex. INDEX_LIST, PARTNERS
             )
         );
         require(success, ErrorsGeneralOpcodes.OP1);
@@ -213,6 +220,11 @@ library OtherOpcodes {
         );
         uint256 balance = IERC20(token).balanceOf(user);
         OpcodeHelpers.putToStack(_ctx, balance);
+    }
+
+    function opLengthOf(address _ctx) public {
+        uint256 _length = uint256(opLoadLocalGet(_ctx, 'getLength(bytes32)'));
+        OpcodeHelpers.putToStack(_ctx, _length);
     }
 
     function opTransferFromVar(address _ctx) public {
