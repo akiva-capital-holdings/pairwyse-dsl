@@ -217,6 +217,7 @@ contract Preprocessor is IPreprocessor {
 
         uint256 loadRemoteVarCount;
         uint256 currencyMultiplier;
+        uint256 insertStep;
 
         string memory chunk;
         string memory name;
@@ -259,7 +260,25 @@ contract Preprocessor is IPreprocessor {
 
                 isArrayStart = false;
                 continue;
-            } // <--- end block for DSL arrays
+            }
+
+            if (chunk.equal('insert') && insertStep != 1) {
+                insertStep = 1;
+                result.push('push');
+                continue;
+            } else if (insertStep == 1 && !chunk.equal('into')) {
+                insertStep = 2;
+                result.push(chunk);
+                continue;
+            } else if (insertStep == 2) {
+                if (!chunk.equal('into')) {
+                    result.push(chunk);
+                    insertStep = 0;
+                }
+                continue;
+            }
+
+            // <--- end block for DSL arrays
 
             // Replace alises with base commands
             if (_isAlias(_ctxAddr, chunk)) {
@@ -705,7 +724,12 @@ contract Preprocessor is IPreprocessor {
         returns (bool _isDirect)
     {
         _isDirect = _directUseUint256;
-        if (_chunk.equal('transferFrom') || _chunk.equal('sendEth') || _chunk.equal('transfer')) {
+        if (
+            _chunk.equal('transferFrom') ||
+            _chunk.equal('sendEth') ||
+            _chunk.equal('transfer') ||
+            _chunk.equal('get')
+        ) {
             _isDirect = true;
         }
     }

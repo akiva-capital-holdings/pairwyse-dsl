@@ -459,6 +459,36 @@ contract Context is IContext {
             OpcodeLibNames.BranchingOpcodes
         );
 
+        // Push to array
+        // Ex. `push 0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc USERS`
+        addOpcode(
+            'push',
+            0x33,
+            OtherOpcodes.opPush.selector,
+            IParser.asmPush.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
+        // Get length of array
+        // Ex. `lengthOf PARTNERS`
+        addOpcode(
+            'lengthOf',
+            0x34,
+            OtherOpcodes.opLengthOf.selector,
+            IParser.asmLengthOf.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
+        // Get element by index in the array
+        // Ex. `get 3 USERS`
+        addOpcode(
+            'get',
+            0x35,
+            OtherOpcodes.opGet.selector,
+            IParser.asmGet.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
         // Complex Opcodes with sub Opcodes (branches)
 
         /*
@@ -507,9 +537,10 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         // types of arrays for declaration
-        // TODO: use other selectors
-        _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadLocalUint256.selector);
-        _addOpcodeBranch(name, 'address', 0x02, OtherOpcodes.opLoadLocalAddress.selector);
+        // TODO: should be normal selectors here for getting values instead of mocked as `opLoadRemoteUint256`
+        _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadRemoteUint256.selector);
+        // if there will be no other types exept uint256 and address, then TODO: `0x03 -> 0x02`
+        _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
 
         // Aliases
 
@@ -751,18 +782,4 @@ contract Context is IContext {
     function _addAlias(string memory _baseCmd, string memory _alias) internal {
         aliases[_alias] = _baseCmd;
     }
-
-    // /**
-    //  * @dev Get position of the array by its name
-    //  */
-    // function getArrayPosition(string memory _name) public returns(bytes32) {
-    //     return arrays[_name];
-    // }
-
-    // *
-    //  * @dev Set position of the array by its name
-
-    // function setArrayPosition(string memory _name, bytes32 _position) public {
-    //     arrays[_name] = _position;
-    // }
 }
