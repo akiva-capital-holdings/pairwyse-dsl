@@ -211,6 +211,11 @@ contract Agreement {
         }
     }
 
+    /**
+     * Verify that the user who wants to execute the record is amoung the signatories for this Record
+     * @param _recordId ID of the record
+     * @return true if the user is allowed to execute the record, false - otherwise
+     */
     function _verify(uint256 _recordId) internal view returns (bool) {
         if (signatoriesLen[_recordId] == 1 && signatories[_recordId][0] == context.anyone()) {
             return true;
@@ -224,6 +229,11 @@ contract Agreement {
         return false;
     }
 
+    /**
+     * Check that all records required by this records were executed
+     * @param _recordId ID of the record
+     * @return true all the required records were executed, false - otherwise
+     */
     function _validateRequiredRecords(uint256 _recordId) internal view returns (bool) {
         Record memory txn = txs[_recordId];
         Record memory requiredRecord;
