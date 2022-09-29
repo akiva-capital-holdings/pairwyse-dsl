@@ -34,7 +34,6 @@ contract Parser is IParser {
     uint256 internal cmdIdx; // Current parsing index of DSL code
     mapping(string => uint256) public labelPos;
     mapping(string => bytes) public savedProgram;
-    mapping(string => bool) public isVariable;
 
     // Note: end of temporary variables block
 
@@ -102,8 +101,7 @@ contract Parser is IParser {
      * (uint256 5 + uint256 7) setUint256 VARNAME
      * ```
      */
-    function asmSetUint256(address _ctxAddr) public {
-        _setVariable(_ctxAddr, cmds[cmdIdx], 'uint256');
+    function asmSetUint256() public {
         _parseVariable();
     }
 
@@ -153,12 +151,11 @@ contract Parser is IParser {
      *
      * Example of command:
      * ```
-     * loadLocal uint256 NUMBER
+     * var NUMBER
      * ```
      */
-    function asmLoadLocal(address _ctxAddr) public {
-        _parseBranchOf(_ctxAddr, 'loadLocal'); // program += bytecode for `loadLocal uint256`
-        _parseVariable(); // program += bytecode for `NUMBER`
+    function asmVar() public {
+        _parseVariable();
     }
 
     /**
@@ -405,20 +402,17 @@ contract Parser is IParser {
         string storage cmd = _nextCmd();
 
         bytes1 opcode = IContext(_ctxAddr).opCodeByName(cmd);
-        require(
-            opcode != 0x0 || _isLabel(cmd) || isVariable[cmd],
-            string(abi.encodePacked('Parser: "', cmd, '" command is unknown'))
-        );
 
-        if (isVariable[cmd]) {
-            // if the variable was saved before its loading, so the concatenation
-            // will gather the current program and a prepared loading program for this variable
-            program = bytes.concat(program, savedProgram[cmd]);
-        } else if (_isLabel(cmd)) {
+        if (_isLabel(cmd)) {
             uint256 _branchLocation = program.length;
             bytes memory programBefore = program.slice(0, labelPos[cmd]);
             bytes memory programAfter = program.slice(labelPos[cmd] + 2, program.length);
             program = bytes.concat(programBefore, bytes2(uint16(_branchLocation)), programAfter);
+        } else if (cmd.isValidVarName()) {
+            opcode = IContext(_ctxAddr).opCodeByName('var');
+            program = bytes.concat(program, opcode, bytes4(keccak256(abi.encodePacked(cmd))));
+        } else if (opcode == 0x0) {
+            revert(string(abi.encodePacked('Parser: "', cmd, '" command is unknown')));
         } else {
             program = bytes.concat(program, opcode);
             bytes4 _selector = IContext(_ctxAddr).asmSelectors(cmd);
@@ -428,8 +422,8 @@ contract Parser is IParser {
                 );
                 require(success, ErrorsParser.PRS1);
             }
+            // if no selector then opcode without params
         }
-        // if no selector then opcode without params
     }
 
     /**
@@ -461,44 +455,5 @@ contract Parser is IParser {
      */
     function _parseAddress() internal {
         program = bytes.concat(program, _nextCmd().fromHex());
-    }
-
-    /**
-     * @dev Sets additional program for saved parameter, so it can be
-     * possible to load the variable directly.
-     *
-     *
-     * For example:
-     * The base command of loading stored NUMBER parameter can be used as
-     * ```
-     * (uint256 5 + uint256 7) setUint256 NUMBER
-     * (loadLocal uint256 NUMBER + 4) setUint256 NUMBER2
-     * ```
-     * so, _setVariable function participates in the simplification of loading NUMBER
-     *
-     * ```
-     * (uint256 5 + uint256 7) setUint256 NUMBER
-     * (NUMBER + 4) setUint256 NUMBER2
-     *
-     * @param _ctxAddr is a Context contract address
-     * @param _name is a name of a global variable for storing in the contract
-     * @param _type is a type of a global variable for storing
-     * ```
-     */
-    function _setVariable(
-        address _ctxAddr,
-        string memory _name,
-        string memory _type
-    ) internal {
-        require(!_name.equal(''), ErrorsParser.PRS2);
-        isVariable[_name] = true;
-
-        string memory _loadType = 'loadLocal';
-        bytes4 name_ = bytes4(keccak256(abi.encodePacked(_name)));
-        bytes1 type_ = IContext(_ctxAddr).opCodeByName(_loadType);
-        bytes1 code_ = IContext(_ctxAddr).branchCodes(_loadType, _type);
-
-        // ex. savedProgram['NUMBER'] = 'loadLocal uint256 NUMBER'
-        savedProgram[_name] = bytes.concat(type_, code_, name_);
     }
 }

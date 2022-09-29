@@ -1,8 +1,14 @@
 import { ethers } from 'hardhat';
 import fs from 'fs';
+import path from 'path';
 import { deployBase, deployOpcodeLibs } from './data/deploy.utils';
 
+/**
+ * Deploy libraries that are required by Agreement & generate Agreement bytecode with those
+ * libraries
+ */
 async function main() {
+  // Note: run this on the same node as Front End to actually deploy these libraries
   const [
     comparisonOpcodesLibAddr,
     branchingOpcodesLibAddr,
@@ -22,7 +28,7 @@ async function main() {
     },
   });
 
-  fs.writeFileSync('agreement.bytecode', AgreementContract.bytecode);
+  fs.writeFileSync(path.join(__dirname, 'agreement.bytecode'), AgreementContract.bytecode);
 }
 
 main();

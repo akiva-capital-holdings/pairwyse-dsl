@@ -26,6 +26,7 @@ contract Agreement {
     using UnstructuredStorage for bytes32;
     IParser public parser;
     IContext public context;
+    address public safeAddr;
 
     event NewTransaction(
         uint256 txId, // transaction ID
@@ -39,8 +40,14 @@ contract Agreement {
     modifier isReserved(bytes32 position) {
         bytes32 ETH_4_BYTES_HEX = 0xaaaebeba00000000000000000000000000000000000000000000000000000000;
         bytes32 GWEI_4_BYTES_HEX = 0x0c93a5d800000000000000000000000000000000000000000000000000000000;
-        require(position != ETH_4_BYTES_HEX, 'AGR8'); // check that variable name is not 'ETH'
-        require(position != GWEI_4_BYTES_HEX, 'AGR8'); // check that variable name is not 'GWEI'
+        require(position != ETH_4_BYTES_HEX, ErrorsAgreement.AGR8); // check that variable name is not 'ETH'
+        require(position != GWEI_4_BYTES_HEX, ErrorsAgreement.AGR8); // check that variable name is not 'GWEI'
+        _;
+    }
+
+    // Only GnosisSafe
+    modifier onlySafe() {
+        require(msg.sender == safeAddr, ErrorsAgreement.AGR11);
         _;
     }
 
@@ -48,6 +55,7 @@ contract Agreement {
         uint256[] requiredRecords;
         address transactionContext;
         bool isExecuted;
+        bool isArchived;
         string transactionString;
     }
 
@@ -58,11 +66,14 @@ contract Agreement {
     mapping(uint256 => uint256) public signatoriesLen; // txId => signarories length
     // txId => (signatory => was tx executed by signatory)
     mapping(uint256 => mapping(address => bool)) public isExecutedBySignatory;
+    uint256[] public recordIds; // array of recordId
 
     /**
      * Sets parser address, creates new Context instance, and setups Context
      */
-    constructor(address _parser) {
+    constructor(address _parser, address _safeAddr) {
+        require(_safeAddr != address(0), ErrorsAgreement.AGR12);
+        safeAddr = _safeAddr;
         parser = IParser(_parser);
         context = new Context();
         context.setAppAddress(address(this));
@@ -115,6 +126,45 @@ contract Agreement {
     }
 
     /**
+     * @dev archived any of the existing records by recordId.
+     * @param _recordId Record ID
+     */
+    function archiveRecord(uint256 _recordId) external onlySafe {
+        require(txs[_recordId].transactionContext != address(0), ErrorsAgreement.AGR9);
+        txs[_recordId].isArchived = true;
+    }
+
+    /**
+     * @dev  unarchive any of the existing records by recordId
+     * @param _recordId Record ID
+     */
+    function unArchiveRecord(uint256 _recordId) external onlySafe {
+        require(txs[_recordId].transactionContext != address(0), ErrorsAgreement.AGR9);
+        require(txs[_recordId].isArchived != false, ErrorsAgreement.AGR10);
+        txs[_recordId].isArchived = false;
+    }
+
+    /**
+     * @dev Sorted all records and return array of active records in Agreement
+     * @return activeRecords array of active records in Agreement
+     */
+    function getActiveRecords() external view returns (uint256[] memory) {
+        uint256 count = 0;
+        uint256[] memory activeRecords = new uint256[](_activeRecordsLength());
+        for (uint256 i = 0; i < recordIds.length; i++) {
+            if (
+                !txs[recordIds[i]].isArchived &&
+                !txs[recordIds[i]].isExecuted &&
+                txs[recordIds[i]].transactionContext != address(0)
+            ) {
+                activeRecords[count] = recordIds[i];
+                count++;
+            }
+        }
+        return activeRecords;
+    }
+
+    /**
      * @dev Parse DSL code from the user and set the program bytecode in Context contract
      * @param _code DSL code input from the user
      * @param _context Context address
@@ -136,7 +186,7 @@ contract Agreement {
         string[] memory _conditionStrings,
         address _transactionContext,
         address[] memory _conditionContexts
-    ) external {
+    ) external onlySafe {
         _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
         for (uint256 i = 0; i < _conditionContexts.length; i++) {
             _addRecordCondition(_recordId, _conditionStrings[i], _conditionContexts[i]);
@@ -162,6 +212,59 @@ contract Agreement {
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
+    /**********************
+     * Internal Functions *
+     *********************/
+
+    /**
+     * @dev Checks input _signatures that only one  'anyone' address exists in the
+     * list or that 'anyone' address does not exist in signatures at all
+     * @param _signatories the list of addresses
+     */
+    function _checkSignatories(address[] memory _signatories) internal view {
+        require(_signatories.length != 0, ErrorsAgreement.AGR4);
+        require(_signatories[0] != address(0), ErrorsAgreement.AGR4);
+        if (_signatories.length > 1) {
+            for (uint256 i = 0; i < _signatories.length; i++) {
+                require(_signatories[i] != address(0), ErrorsAgreement.AGR4);
+                require(_signatories[i] != context.anyone(), ErrorsAgreement.AGR4);
+            }
+        }
+    }
+
+    /**
+     * Verify that the user who wants to execute the record is amoung the signatories for this Record
+     * @param _recordId ID of the record
+     * @return true if the user is allowed to execute the record, false - otherwise
+     */
+    function _verify(uint256 _recordId) internal view returns (bool) {
+        if (signatoriesLen[_recordId] == 1 && signatories[_recordId][0] == context.anyone()) {
+            return true;
+        }
+
+        for (uint256 i = 0; i < signatoriesLen[_recordId]; i++) {
+            if (signatories[_recordId][i] == msg.sender) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check that all records required by this records were executed
+     * @param _recordId ID of the record
+     * @return true all the required records were executed, false - otherwise
+     */
+    function _validateRequiredRecords(uint256 _recordId) internal view returns (bool) {
+        Record memory txn = txs[_recordId];
+        Record memory requiredRecord;
+        for (uint256 i = 0; i < txn.requiredRecords.length; i++) {
+            requiredRecord = txs[txn.requiredRecords[i]];
+            if (!requiredRecord.isExecuted) return false;
+        }
+        return true;
+    }
+
     /**
      * @dev Define some basic values for a new Conditional Transaction
      * @param _recordId is the ID of a transaction
@@ -175,10 +278,11 @@ contract Agreement {
     ) internal {
         _checkSignatories(_signatories);
 
-        Record memory txn = Record(_requiredRecords, address(0), false, '');
+        Record memory txn = Record(_requiredRecords, address(0), false, false, '');
         signatories[_recordId] = _signatories;
         signatoriesLen[_recordId] = _signatories.length;
         txs[_recordId] = txn;
+        recordIds.push(_recordId);
     }
 
     /**
@@ -220,45 +324,6 @@ contract Agreement {
 
         txs[_recordId].transactionContext = _transactionContext;
         txs[_recordId].transactionString = _transactionString;
-    }
-
-    /**
-     * @dev Checks input _signatures that only one  'anyone' address exists in the
-     * list or that 'anyone' address does not exist in signatures at all
-     * @param _signatories the list of addresses
-     */
-    function _checkSignatories(address[] memory _signatories) internal view {
-        require(_signatories.length != 0, ErrorsAgreement.AGR4);
-        require(_signatories[0] != address(0), ErrorsAgreement.AGR4);
-        if (_signatories.length > 1) {
-            for (uint256 i = 0; i < _signatories.length; i++) {
-                require(_signatories[i] != address(0), ErrorsAgreement.AGR4);
-                require(_signatories[i] != context.anyone(), ErrorsAgreement.AGR4);
-            }
-        }
-    }
-
-    function _verify(uint256 _recordId) internal view returns (bool) {
-        if (signatoriesLen[_recordId] == 1 && signatories[_recordId][0] == context.anyone()) {
-            return true;
-        }
-
-        for (uint256 i = 0; i < signatoriesLen[_recordId]; i++) {
-            if (signatories[_recordId][i] == msg.sender) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function _validateRequiredRecords(uint256 _recordId) internal view returns (bool) {
-        Record memory txn = txs[_recordId];
-        Record memory requiredRecord;
-        for (uint256 i = 0; i < txn.requiredRecords.length; i++) {
-            requiredRecord = txs[txn.requiredRecords[i]];
-            if (!requiredRecord.isExecuted) return false;
-        }
-        return true;
     }
 
     function _validateConditions(uint256 _recordId, uint256 _msgValue) internal returns (bool) {
@@ -303,5 +368,23 @@ contract Agreement {
         }
 
         return IContext(txn.transactionContext).stack().seeLast() == 0 ? false : true;
+    }
+
+    /**
+     * @dev return length of active records for getActiveRecords
+     * @return count length of active records array
+     */
+    function _activeRecordsLength() internal view returns (uint256) {
+        uint256 count = 0;
+        for (uint256 i = 0; i < recordIds.length; i++) {
+            if (
+                !txs[recordIds[i]].isArchived &&
+                !txs[recordIds[i]].isExecuted &&
+                txs[recordIds[i]].transactionContext != address(0)
+            ) {
+                count++;
+            }
+        }
+        return count;
     }
 }

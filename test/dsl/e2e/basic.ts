@@ -366,9 +366,9 @@ describe('DSL: basic', () => {
     await checkStackTailv2(stack, [block.timestamp]);
   });
 
-  it('TIME', async () => {
-    // TIME is an alias for blockTimestamp
-    await app.parse('TIME');
+  it('time', async () => {
+    // time is an alias for blockTimestamp
+    await app.parse('time');
     await app.execute();
     const block = await ethers.provider.getBlock('latest');
     await checkStackTailv2(stack, [block.timestamp]);
@@ -395,20 +395,43 @@ describe('DSL: basic', () => {
     expect(await app.getStorageUint256(hex4Bytes('VAR'))).to.equal(21);
 
     await app.setStorageUint256(hex4Bytes('X'), 10);
-    await app.parse('(loadLocal uint256 X + 15) setUint256 VAR');
+    await app.parse('(var X + 15) setUint256 VAR');
     await app.execute();
     expect(await app.getStorageUint256(hex4Bytes('VAR'))).to.equal(25);
   });
 
-  describe('loadLocal', () => {
-    it('loadLocal uint256 NUMBER', async () => {
+  describe('variables', () => {
+    describe('implicit usage', () => {
+      it('NUMBER', async () => {
+        await app.setStorageUint256(hex4Bytes('NUMBER'), 777);
+        await app.parse('NUMBER');
+        await app.execute();
+        await checkStackTailv2(stack, [777]);
+      });
+
+      it('NUMBER (1000) > NUMBER2 (15)', async () => {
+        // Set NUMBER
+        const bytes32Number = hex4Bytes('NUMBER');
+        await app.setStorageUint256(bytes32Number, 1000);
+
+        // Set NUMBER2
+        const bytes32Number2 = hex4Bytes('NUMBER2');
+        await app.setStorageUint256(bytes32Number2, 15);
+
+        await app.parse('NUMBER > NUMBER2');
+        await app.execute();
+        await checkStackTailv2(stack, [1]);
+      });
+    });
+
+    it('var NUMBER', async () => {
       await app.setStorageUint256(hex4Bytes('NUMBER'), 777);
-      await app.parse('loadLocal uint256 NUMBER');
+      await app.parse('var NUMBER');
       await app.execute();
       await checkStackTailv2(stack, [777]);
     });
 
-    it('loadLocal uint256 NUMBER (1000) > loadLocal uint256 NUMBER2 (15)', async () => {
+    it('var NUMBER (1000) > var NUMBER2 (15)', async () => {
       // Set NUMBER
       const bytes32Number = hex4Bytes('NUMBER');
       await app.setStorageUint256(bytes32Number, 1000);
@@ -417,93 +440,61 @@ describe('DSL: basic', () => {
       const bytes32Number2 = hex4Bytes('NUMBER2');
       await app.setStorageUint256(bytes32Number2, 15);
 
-      await app.parse('loadLocal uint256 NUMBER > loadLocal uint256 NUMBER2');
+      await app.parse('var NUMBER > var NUMBER2');
       await app.execute();
       await checkStackTailv2(stack, [1]);
     });
 
-    it('loadLocal uint256 TIMESTAMP < loadLocal uint256 NEXT_MONTH', async () => {
+    it('var TIMESTAMP < var NEXT_MONTH', async () => {
       await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
       await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
 
-      await app.parse('loadLocal uint256 TIMESTAMP < loadLocal uint256 NEXT_MONTH');
+      await app.parse('var TIMESTAMP < var NEXT_MONTH');
       await app.execute();
       await checkStackTailv2(stack, [1]);
     });
 
-    it('loadLocal uint256 TIMESTAMP > loadLocal uint256 NEXT_MONTH', async () => {
+    it('var TIMESTAMP > var NEXT_MONTH', async () => {
       await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
       await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
 
-      await app.parse('loadLocal uint256 TIMESTAMP > loadLocal uint256 NEXT_MONTH');
+      await app.parse('var TIMESTAMP > var NEXT_MONTH');
       await app.execute();
       await checkStackTailv2(stack, [0]);
     });
 
-    it('loadLocal bool A (false)', async () => {
+    it('var A (false)', async () => {
       await app.setStorageBool(hex4Bytes('A'), false);
 
-      await app.parse('loadLocal bool A');
+      await app.parse('var A');
       await app.execute();
       await checkStackTailv2(stack, [0]);
     });
 
-    it('loadLocal bool B (true)', async () => {
+    it('var B (true)', async () => {
       await app.setStorageBool(hex4Bytes('B'), true);
 
-      await app.parse('loadLocal bool B');
+      await app.parse('var B');
       await app.execute();
       await checkStackTailv2(stack, [1]);
     });
 
-    it('loadLocal bool A (false) != loadLocal bool B (true)', async () => {
+    it('var A (false) != var B (true)', async () => {
       await app.setStorageBool(hex4Bytes('A'), false);
       await app.setStorageBool(hex4Bytes('B'), true);
 
-      await app.parse('loadLocal bool A != loadLocal bool B');
+      await app.parse('var A != var B');
       await app.execute();
       await checkStackTailv2(stack, [1]);
     });
 
-    it('NOR loadLocal bool A (false) != loadLocal bool B (true)', async () => {
+    it('NOR var A (false) != var B (true)', async () => {
       await app.setStorageBool(hex4Bytes('A'), false);
       await app.setStorageBool(hex4Bytes('B'), true);
 
-      await app.parse('! (loadLocal bool A != loadLocal bool B)');
+      await app.parse('! (var A != var B)');
       await app.execute();
       await checkStackTailv2(stack, [0]);
-    });
-
-    describe('opLoadLocalAddress', () => {
-      it('addresses are equal', async () => {
-        await app.setStorageAddress(
-          hex4Bytes('ADDR'),
-          '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5'
-        );
-        await app.setStorageAddress(
-          hex4Bytes('ADDR2'),
-          '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5'
-        );
-
-        await app.parse('loadLocal address ADDR == loadLocal address ADDR2');
-        await app.execute();
-        await checkStackTailv2(stack, [1]);
-      });
-
-      it('addresses are not equal', async () => {
-        await app.setStorageAddress(
-          hex4Bytes('ADDR'),
-          '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5'
-        );
-        await app.setStorageAddress(
-          hex4Bytes('ADDR2'),
-          '0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836'
-        );
-
-        await app.parse('loadLocal address ADDR == loadLocal address ADDR2');
-        await app.execute();
-        await checkStackTailv2(stack, [0]);
-      });
     });
 
     describe('opLoadLocalBytes32', () => {
@@ -517,7 +508,7 @@ describe('DSL: basic', () => {
           '0x1234500000000000000000000000000000000000000000000000000000000001'
         );
 
-        await app.parse('loadLocal bytes32 BYTES == loadLocal bytes32 BYTES2');
+        await app.parse('var BYTES == var BYTES2');
         await app.execute();
         await checkStackTailv2(stack, [1]);
       });
@@ -532,7 +523,7 @@ describe('DSL: basic', () => {
           '0x1234500000000000000000000000000000000000000000000000000000000011'
         );
 
-        await app.parse('loadLocal bytes32 BYTES == loadLocal bytes32 BYTES2');
+        await app.parse('var BYTES == var BYTES2');
         await app.execute();
         await checkStackTailv2(stack, [0]);
       });
@@ -547,7 +538,7 @@ describe('DSL: basic', () => {
           '0x0000000000000000000000000000000000000000000000000000000000000010'
         );
 
-        await app.parse('loadLocal bytes32 BYTES == loadLocal bytes32 BYTES2');
+        await app.parse('var BYTES == var BYTES2');
         await app.execute();
         await checkStackTailv2(stack, [0]);
       });
@@ -579,11 +570,11 @@ describe('DSL: basic', () => {
       await checkStackTailv2(stack, [1]);
     });
 
-    it('loadLocal uint256 TIMESTAMP < loadRemote uint256 NEXT_MONTH', async () => {
+    it('var TIMESTAMP < loadRemote uint256 NEXT_MONTH', async () => {
       await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
       await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
 
-      await app.parse(`loadLocal uint256 TIMESTAMP < loadRemote uint256 NEXT_MONTH ${appAddrHex}`);
+      await app.parse(`var TIMESTAMP < loadRemote uint256 NEXT_MONTH ${appAddrHex}`);
       await app.execute();
       await checkStackTailv2(stack, [1]);
     });
@@ -739,7 +730,7 @@ describe('DSL: basic', () => {
   it('msgSender', async () => {
     const [sender] = await ethers.getSigners();
     await app.setStorageAddress(hex4Bytes('SENDER'), sender.address);
-    await app.parse('loadLocal address SENDER == msgSender');
+    await app.parse('var SENDER == msgSender');
     await app.execute();
     await checkStackTailv2(stack, [1]);
   });
@@ -858,7 +849,7 @@ describe('DSL: basic', () => {
 
     await app.parse('balanceOf DAI USER');
     await app.execute();
-    // expect(await dai.balanceOf(user.address)).to.equal(parseEther('1000'));
+    expect(await dai.balanceOf(user.address)).to.equal(parseEther('1000'));
     await checkStackTailv2(stack, [parseEther('1000')]);
   });
 
@@ -920,7 +911,7 @@ describe('DSL: basic', () => {
   it('TIMESTAMP > PREV_MONTH', async () => {
     await app.setStorageUint256(hex4Bytes('PREV_MONTH'), PREV_MONTH);
     await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
-    await app.parse('loadLocal uint256 TIMESTAMP > loadLocal uint256 PREV_MONTH');
+    await app.parse('var TIMESTAMP > var PREV_MONTH');
     await app.execute();
     await checkStackTailv2(stack, [1]);
   });
@@ -928,7 +919,7 @@ describe('DSL: basic', () => {
   it('TIMESTAMP < NEXT_MONTH', async () => {
     await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
     await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
-    await app.parse('(loadLocal uint256 TIMESTAMP) < (loadLocal uint256 NEXT_MONTH)');
+    await app.parse('(var TIMESTAMP) < (var NEXT_MONTH)');
     await app.execute();
     await checkStackTailv2(stack, [1]);
   });
@@ -939,9 +930,9 @@ describe('DSL: basic', () => {
     await checkStackTailv2(stack, [1]);
   });
 
-  it('block number < TIME', async () => {
-    // TIME is an alias for blockTimestamp
-    await app.parse('blockNumber < TIME');
+  it('block number < time', async () => {
+    // time is an alias for blockTimestamp
+    await app.parse('blockNumber < time');
     await app.execute();
     await checkStackTailv2(stack, [1]);
   });
@@ -958,11 +949,11 @@ describe('DSL: basic', () => {
 
       await app.parse(
         `
-        (loadLocal uint256 TIMESTAMP > loadLocal uint256 INIT)
+        (var TIMESTAMP > var INIT)
         and
-        (loadLocal uint256 TIMESTAMP < loadLocal uint256 EXPIRY)
+        (var TIMESTAMP < var EXPIRY)
         or
-        (loadLocal bool RISK != bool true)
+        (var RISK != bool true)
         `
       );
       await app.execute();
@@ -1005,7 +996,7 @@ describe('DSL: basic', () => {
         SUM_OF_NUMBERS {
           (6 + 8) setUint256 SUM
           bool false
-          (loadLocal uint256 RES_1 / 2) setUint256 RES_2
+          (var RES_1 / 2) setUint256 RES_2
         }
 
         `;
@@ -1020,7 +1011,7 @@ describe('DSL: basic', () => {
       const input = `
         func SUM_OF_NUMBERS endf
 
-        (loadLocal uint256 RES_1 * 3) setUint256 RES_2
+        (var RES_1 * 3) setUint256 RES_2
         end
 
         SUM_OF_NUMBERS {
@@ -1066,11 +1057,11 @@ describe('DSL: basic', () => {
         end
 
         SUM_OF_NUMBERS {
-          (loadLocal uint256 A + loadLocal uint256 B) setUint256 SUM_RESULT
+          (var A + var B) setUint256 SUM_RESULT
         }
 
         MUL_NUMBERS {
-          (loadLocal uint256 A * loadLocal uint256 B) setUint256 MUL_RESULT
+          (var A * var B) setUint256 MUL_RESULT
         }
 
         44 setUint256 D
@@ -1086,12 +1077,12 @@ describe('DSL: basic', () => {
     });
   });
 
-  describe('Using stored variables without a loadLocal opcode', () => {
+  describe('Using stored variables without a `var` opcode', () => {
     it('get sum of numbers', async () => {
       const input = `
         uint256 6 setUint256 A
-        (A + 2) setUint256 SUM
-        (4 + SUM) setUint256 SUM2
+        (var A + 2) setUint256 SUM
+        (4 + var SUM) setUint256 SUM2
         `;
       await app.parse(input);
       await app.execute();
@@ -1108,7 +1099,7 @@ describe('DSL: basic', () => {
         end
 
         SUM_OF_NUMBERS {
-          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+          (var SUM_OF_NUMBERS_1 + var SUM_OF_NUMBERS_2) setUint256 SUM
         }
         `;
       await app.parse(input);
@@ -1123,7 +1114,7 @@ describe('DSL: basic', () => {
         end
 
         SUM_OF_NUMBERS {
-          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+          (var SUM_OF_NUMBERS_1 + var SUM_OF_NUMBERS_2) setUint256 SUM
         }
         `;
       await expect(app.parse(input)).to.be.revertedWith('PRP2');
@@ -1136,7 +1127,7 @@ describe('DSL: basic', () => {
         end
 
         SUM_OF_NUMBERS {
-          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+          (var SUM_OF_NUMBERS_1 + var SUM_OF_NUMBERS_2) setUint256 SUM
         }
         `;
       await expect(app.parse(input)).to.be.revertedWith('PRP1');
@@ -1149,7 +1140,7 @@ describe('DSL: basic', () => {
         end
 
         SUM_OF_NUMBERS {
-          (loadLocal uint256 SUM_1 + loadLocal uint256 SUM_2) setUint256 SUM
+          (var SUM_1 + var SUM_2) setUint256 SUM
         }
         `;
       await expect(app.parse(input)).to.be.revertedWith('SUT3');

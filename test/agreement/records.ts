@@ -8,11 +8,13 @@ import { deployPreprocessor } from '../../scripts/data/deploy.utils';
 import { AgreementMock, ContextMock__factory } from '../../typechain-types';
 import { anyone, ONE_MONTH } from '../utils/constants';
 import { Records } from '../types';
+import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
 
 // TODO: rename everywhere in the project 'Conditional Transactions' to 'Records'
 
 describe('Simple Records in Agreement', () => {
   let app: AgreementMock;
+  let multisig: MultisigMock;
   let appAddr: string;
   let parser: ParserMock;
   let alice: SignerWithAddress;
@@ -28,7 +30,22 @@ describe('Simple Records in Agreement', () => {
 
   let records: Records[] = [];
 
+  const archiveRecord = async (_app: AgreementMock, _multisig: MultisigMock, _recordId: number) => {
+    const { data } = await app.populateTransaction.archiveRecord(_recordId);
+    await _multisig.executeTransaction(_app.address, data as string, 0);
+  };
+
+  const unarchiveRecord = async (
+    _app: AgreementMock,
+    _multisig: MultisigMock,
+    _recordId: number
+  ) => {
+    const { data } = await app.populateTransaction.unArchiveRecord(_recordId);
+    await _multisig.executeTransaction(_app.address, data as string, 0);
+  };
+
   before(async () => {
+    multisig = await (await ethers.getContractFactory('MultisigMock')).deploy();
     const LAST_BLOCK_TIMESTAMP = (
       await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
     ).timestamp;
@@ -37,7 +54,7 @@ describe('Simple Records in Agreement', () => {
     [alice, bob, anybody] = await ethers.getSigners();
 
     // Deploy contracts
-    appAddr = await deployAgreementMock();
+    appAddr = await deployAgreementMock(multisig.address);
     preprAddr = await deployPreprocessor();
     app = await ethers.getContractAt('AgreementMock', appAddr);
     ContextCont = await ethers.getContractFactory('ContextMock');
@@ -57,6 +74,230 @@ describe('Simple Records in Agreement', () => {
     await network.provider.send('evm_revert', [snapshotId]);
   });
 
+  it('archived transaction', async () => {
+    // Set variables
+    await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
+    await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
+
+    const ContextMock = await ethers.getContractFactory('ContextMock');
+    const transactionContext = await ContextMock.deploy();
+    await transactionContext.setAppAddress(appAddr);
+    const conditionContext = await ContextMock.deploy();
+    await conditionContext.setAppAddress(appAddr);
+
+    records.push({
+      recordId: 96,
+      requiredRecords: [],
+      signatories: [alice.address],
+      transactionStr: 'sendEth RECEIVER 1000000000000000000',
+      conditionStrings: ['blockTimestamp > var LOCK_TIME'],
+      transactionCtx: transactionContext,
+      conditionContexts: [conditionContext],
+    });
+
+    // Set conditional transaction
+    for (let i = 0; i < records.length; i++) {
+      const {
+        recordId,
+        requiredRecords,
+        signatories,
+        conditionContexts,
+        conditionStrings,
+        transactionCtx,
+        transactionStr,
+      } = records[i];
+
+      // Set conditional transaction
+      await app.addRecordBlueprint(recordId, requiredRecords, signatories);
+      for (let j = 0; j < conditionContexts.length; j++) {
+        await app.addRecordCondition(recordId, conditionStrings[j], conditionContexts[j].address);
+      }
+      await app.addRecordTransaction(recordId, transactionStr, transactionCtx.address);
+
+      // Set msg senders
+      await transactionCtx.setMsgSender(alice.address);
+      await conditionContexts[0].setMsgSender(alice.address);
+
+      // Check that record unarchived yet
+      const unArchivedRecord = await app.txs(recordId);
+      expect(unArchivedRecord.isArchived).to.be.equal(false);
+
+      // Check that record was actually archived
+      await archiveRecord(app, multisig, recordId);
+      const firstArchivedRecord = await app.txs(recordId);
+      expect(firstArchivedRecord.isArchived).to.be.equal(true);
+
+      // Check that record does not exist
+      // AGR9
+      await expect(archiveRecord(app, multisig, 999)).to.be.revertedWith('Delegate call failure');
+
+      // Check that secondary archived record still archived
+      await archiveRecord(app, multisig, recordId);
+      const secondArchivedRecord = await app.txs(recordId);
+      expect(secondArchivedRecord.isArchived).to.be.equal(true);
+
+      // Check that record was actually unArchived
+      await unarchiveRecord(app, multisig, recordId);
+      const firstUnArchivedRecord = await app.txs(recordId);
+      expect(firstUnArchivedRecord.isArchived).to.be.equal(false);
+
+      // Check that secondary unAchived will reverted
+      await expect(unarchiveRecord(app, multisig, recordId)).to.be.revertedWith(
+        'Delegate call failure'
+      ); // AGR10
+
+      // Check that record does not exist when unArchiveRecord
+      // AGR9
+      await expect(unarchiveRecord(app, multisig, 999)).to.be.revertedWith('Delegate call failure');
+
+      // Check that third archived record was actually archived after unachived
+      await archiveRecord(app, multisig, recordId);
+      const thirdArchivedRecord = await app.txs(recordId);
+      expect(thirdArchivedRecord.isArchived).to.be.equal(true);
+    }
+  });
+
+  describe('Get actual record Id', () => {
+    before(async () => {
+      await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
+      await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
+
+      const ContextMock = await ethers.getContractFactory('ContextMock');
+      const transactionContext = await ContextMock.deploy();
+      await transactionContext.setAppAddress(appAddr);
+      const conditionContext = await ContextMock.deploy();
+      await conditionContext.setAppAddress(appAddr);
+
+      records.push(
+        {
+          recordId: 96,
+          requiredRecords: [],
+          signatories: [alice.address],
+          transactionStr: 'sendEth RECEIVER 1000000000000000000',
+          conditionStrings: ['blockTimestamp > var LOCK_TIME'],
+          transactionCtx: transactionContext,
+          conditionContexts: [conditionContext],
+        },
+        {
+          recordId: 956,
+          requiredRecords: [],
+          signatories: [alice.address],
+          transactionStr: 'sendEth RECEIVER 1000000000000000000',
+          conditionStrings: ['blockTimestamp > var LOCK_TIME'],
+          transactionCtx: transactionContext,
+          conditionContexts: [conditionContext],
+        },
+        {
+          recordId: 11111,
+          requiredRecords: [],
+          signatories: [alice.address],
+          transactionStr: 'sendEth RECEIVER 1000000000000000000',
+          conditionStrings: ['blockTimestamp > var LOCK_TIME'],
+          transactionCtx: transactionContext,
+          conditionContexts: [conditionContext],
+        }
+      );
+
+      // Set conditional transaction
+      for (let i = 0; i < records.length; i++) {
+        const {
+          recordId,
+          requiredRecords,
+          signatories,
+          conditionContexts,
+          conditionStrings,
+          transactionCtx,
+          transactionStr,
+        } = records[i];
+
+        // Set conditional transaction
+        await app.addRecordBlueprint(recordId, requiredRecords, signatories);
+        for (let j = 0; j < conditionContexts.length; j++) {
+          await app.addRecordCondition(recordId, conditionStrings[j], conditionContexts[j].address);
+        }
+        await app.addRecordTransaction(recordId, transactionStr, transactionCtx.address);
+
+        // Set msg senders
+        // TODO: do we really need kind of these tests if we will have Roles?
+        await transactionCtx.setMsgSender(alice.address);
+        await conditionContexts[0].setMsgSender(alice.address);
+
+        // Parse all conditions and a transaction
+        const condCtxLen = (await app.conditionContextsLen(recordId)).toNumber();
+
+        for (let j = 0; j < condCtxLen; j++) {
+          await parser.parse(
+            preprAddr,
+            await app.conditionContexts(recordId, j),
+            await app.conditionStrings(recordId, j)
+          );
+        }
+        await parser.parse(preprAddr, transactionCtx.address, transactionStr);
+
+        // Top up contract
+        await anybody.sendTransaction({ to: app.address, value: oneEth });
+
+        // Advance time
+        // await ethers.provider.send('evm_increaseTime', [ONE_MONTH + ONE_MONTH]);
+        await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
+        for (let j = 0; j < condCtxLen; j++) {
+          await parser.parse(
+            preprAddr,
+            await app.conditionContexts(recordId, j),
+            await app.conditionStrings(recordId, j)
+          );
+        }
+
+        // Validate again
+        expect(await app.callStatic.validateConditions(recordId, 0)).equal(true);
+      }
+    });
+
+    beforeEach(async () => {
+      // Make a snapshot
+      snapshotId = await network.provider.send('evm_snapshot');
+    });
+
+    afterEach(async () => {
+      records = [];
+      // Return to the snapshot
+      await network.provider.send('evm_revert', [snapshotId]);
+    });
+
+    it('Should return all of record Ids when all active', async () => {
+      const actualRecords = await app.getActiveRecords();
+      expect(actualRecords.map((v) => v.toNumber())).eql([96, 956, 11111]);
+    });
+
+    it('Should return record Ids [96, 956] when 11111 archibed', async () => {
+      await archiveRecord(app, multisig, 11111);
+      const notArchivedRecords = await app.getActiveRecords();
+      expect(notArchivedRecords.map((v) => v.toNumber())).eql([96, 956]);
+    });
+
+    it('Should return [] when all archibed', async () => {
+      await archiveRecord(app, multisig, 96);
+      await archiveRecord(app, multisig, 956);
+      await archiveRecord(app, multisig, 11111);
+      const notArchivedRecords = await app.getActiveRecords();
+      expect(notArchivedRecords).eql([]);
+    });
+
+    it('Should return [956, 11111] when 96 executed', async () => {
+      await app.fulfill(96, 0, alice.address);
+      const notArchivedRecords = await app.getActiveRecords();
+      expect(notArchivedRecords.map((v) => v.toNumber())).eql([956, 11111]);
+    });
+
+    it('Should return [] when all executed', async () => {
+      await app.fulfill(96, 0, alice.address);
+      await app.fulfill(956, 0, alice.address);
+      await app.fulfill(11111, 0, alice.address);
+      const notArchivedRecords = await app.getActiveRecords();
+      expect(notArchivedRecords).eql([]);
+    });
+  });
+
   it('record with one transaction', async () => {
     // Set variables
     await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
@@ -73,7 +314,7 @@ describe('Simple Records in Agreement', () => {
       requiredRecords: [],
       signatories: [alice.address],
       transactionStr: 'sendEth RECEIVER 1000000000000000000',
-      conditionStrings: ['blockTimestamp > loadLocal uint256 LOCK_TIME'],
+      conditionStrings: ['blockTimestamp > var LOCK_TIME'],
       transactionCtx: transactionContext,
       conditionContexts: [conditionContext],
     });
@@ -152,25 +393,25 @@ describe('Simple Records in Agreement', () => {
       signatories: [alice.address],
       transactionStr: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAINING',
       conditionStrings: [
-        `loadLocal uint256 GP_INITIAL +
-        loadLocal uint256 LP_TOTAL >= loadLocal uint256 INITIAL_FUNDS_TARGET`,
-        `(loadLocal uint256 DEPOSIT_MIN_PERCENT * loadLocal uint256 LP_TOTAL
-            / loadLocal uint256 P1) setUint256 TWO_PERCENT`,
+        `var GP_INITIAL +
+        var LP_TOTAL >= var INITIAL_FUNDS_TARGET`,
+        `(var DEPOSIT_MIN_PERCENT * var LP_TOTAL
+            / var P1) setUint256 TWO_PERCENT`,
         `
-        (loadLocal uint256 TWO_PERCENT > loadLocal uint256 GP_INITIAL)
+        (var TWO_PERCENT > var GP_INITIAL)
         ifelse POS NEG
         end
         POS {
-          (loadLocal uint256 TWO_PERCENT - loadLocal uint256 GP_INITIAL
+          (var TWO_PERCENT - var GP_INITIAL
           ) setUint256 GP_REMAINING
         }
         NEG {
           0 setUint256 GP_REMAINING
         }`,
-        'TIME >= loadLocal uint256 LOW_LIM',
-        'TIME <= loadLocal uint256 UP_LIM',
+        'time >= var LOW_LIM',
+        'time <= var UP_LIM',
         `(balanceOf DAI TRANSACTIONS_CONT) >=
-            ((loadLocal uint256 INITIAL_FUNDS_TARGET * loadLocal uint256 P1) / 100)`,
+            ((var INITIAL_FUNDS_TARGET * var P1) / 100)`,
       ],
       transactionCtx: await ContextCont.deploy(),
       conditionContexts: [
@@ -222,7 +463,7 @@ describe('Simple Records in Agreement', () => {
       requiredRecords: [3],
       signatories: [bob.address],
       transactionStr: `transferFrom TOKEN_ADDR BOB ALICE ${tenTokens.toString()}`,
-      conditionStrings: ['blockTimestamp > loadLocal uint256 LOCK_TIME'],
+      conditionStrings: ['blockTimestamp > var LOCK_TIME'],
       transactionCtx: await ContextCont.deploy(),
       conditionContexts: [await ContextCont.deploy()],
     });
@@ -464,7 +705,7 @@ describe('Simple Records in Agreement', () => {
         requiredRecords: [],
         signatories: [bob.address],
         transactionStr: `transfer TOKEN_ADDR TOKEN_RECEIVER ${tenTokens}`,
-        conditionStrings: ['blockTimestamp > loadLocal uint256 LOCK_TIME'],
+        conditionStrings: ['blockTimestamp > var LOCK_TIME'],
         transactionCtx: await ContextCont.deploy(),
         conditionContexts: [await ContextCont.deploy()],
       });

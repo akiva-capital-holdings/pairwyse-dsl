@@ -63,32 +63,29 @@ describe('Preprocessor', () => {
       },
       {
         name: 'simple',
-        expr: 'loadLocal address SENDER == msgSender',
-        expected: ['loadLocal', 'address', 'SENDER', 'msgSender', '=='],
+        expr: 'var SENDER == msgSender',
+        expected: ['var', 'SENDER', 'msgSender', '=='],
       },
       {
         name: 'complex',
         expr: `
-        (blockTimestamp > loadLocal uint256 INIT)
+        (blockTimestamp > var INIT)
           and
-        (blockTimestamp < loadLocal uint256 EXPIRY)
+        (blockTimestamp < var EXPIRY)
           or
-        (loadLocal bool RISK != bool true)
+        (var RISK != bool true)
       `,
         expected: [
-          'TIME',
-          'loadLocal',
-          'uint256',
+          'time',
+          'var',
           'INIT',
           '>', // A
-          'TIME',
-          'loadLocal',
-          'uint256',
+          'time',
+          'var',
           'EXPIRY',
           '<', // B
           'and',
-          'loadLocal',
-          'bool',
+          'var',
           'RISK',
           'bool',
           'true',
@@ -129,13 +126,15 @@ describe('Preprocessor', () => {
 
   describe('split', () => {
     it('simple case', async () => {
-      const res = await app.callStatic.split('loadLocal address SENDER == msgSender');
-      expect(res).to.eql(jsTransform('loadLocal address SENDER == msgSender'));
+      const input = 'var SENDER == msgSender';
+      const res = await app.callStatic.split(input);
+      expect(res).to.eql(jsTransform(input));
     });
 
     it('extra spaces', async () => {
-      const res = await app.callStatic.split('loadLocal      address SENDER == msgSender');
-      expect(res).to.eql(jsTransform('loadLocal      address SENDER == msgSender'));
+      const input = 'var      SENDER ==   msgSender';
+      const res = await app.callStatic.split(input);
+      expect(res).to.eql(jsTransform(input));
     });
 
     it('parenthesis', async () => {
@@ -145,13 +144,13 @@ describe('Preprocessor', () => {
 
     it('new line symbol', async () => {
       const res = await app.callStatic.split(`
-          loadLocal address SENDER
+          var SENDER
             ==
           msgSender
         `);
       expect(res).to.eql(
         jsTransform(`
-          loadLocal address SENDER
+          var SENDER
             ==
           msgSender
         `)
@@ -162,14 +161,14 @@ describe('Preprocessor', () => {
       const res = await app.callStatic.split(`
         (
           (
-            blockTimestamp > loadLocal uint256 INIT
+            blockTimestamp > var INIT
           )
             and
           (
-            blockTimestamp < loadLocal uint256 EXPIRY
+            blockTimestamp < var EXPIRY
               or
             (
-              loadLocal bool RISK != bool true
+              var RISK != bool true
             )
           )
         )
@@ -178,14 +177,14 @@ describe('Preprocessor', () => {
         jsTransform(`
         (
           (
-            blockTimestamp > loadLocal uint256 INIT
+            blockTimestamp > var INIT
           )
             and
           (
-            blockTimestamp < loadLocal uint256 EXPIRY
+            blockTimestamp < var EXPIRY
               or
             (
-              loadLocal bool RISK != bool true
+              var RISK != bool true
             )
           )
         )
@@ -267,37 +266,33 @@ describe('Preprocessor', () => {
 
     it('complex expression', async () => {
       const program = `
-        (((loadLocal uint256 TIMESTAMP >    loadLocal uint256 INIT)
+        (((var TIMESTAMP > var INIT)
           and
-        (loadLocal uint256 TIMESTAMP <   loadLocal uint256 EXPIRY))
+        (var TIMESTAMP < var EXPIRY))
           or
-        loadLocal bool RISK != bool true)`;
+        var RISK != bool true)`;
 
       const cmds = await app.callStatic.transform(ctxAddr, program);
-      expect(cmds).to.eql([
-        'loadLocal',
-        'uint256',
+      const expected = [
+        'var',
         'TIMESTAMP',
-        'loadLocal',
-        'uint256',
+        'var',
         'INIT',
         '>',
-        'loadLocal',
-        'uint256',
+        'var',
         'TIMESTAMP',
-        'loadLocal',
-        'uint256',
+        'var',
         'EXPIRY',
         '<',
         'and',
-        'loadLocal',
-        'bool',
+        'var',
         'RISK',
         'or',
         'bool',
         'true',
         '!=',
-      ]);
+      ];
+      expect(cmds).to.eql(expected);
     });
 
     it('if expression', async () => {
@@ -838,7 +833,7 @@ describe('Preprocessor', () => {
         end
 
         SUM_OF_NUMBERS {
-          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+          (var SUM_OF_NUMBERS_1 + var SUM_OF_NUMBERS_2) setUint256 SUM
         }
         `
       );
@@ -855,11 +850,9 @@ describe('Preprocessor', () => {
         'SUM_OF_NUMBERS',
         'end',
         'SUM_OF_NUMBERS',
-        'loadLocal',
-        'uint256',
+        'var',
         'SUM_OF_NUMBERS_1',
-        'loadLocal',
-        'uint256',
+        'var',
         'SUM_OF_NUMBERS_2',
         '+',
         'setUint256',
@@ -878,7 +871,7 @@ describe('Preprocessor', () => {
         end
 
         SUM_OF_NUMBERS {
-          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+          (var SUM_OF_NUMBERS_1 + var SUM_OF_NUMBERS_2) setUint256 SUM
         }
         `
         )
@@ -895,7 +888,7 @@ describe('Preprocessor', () => {
         end
 
         SUM_OF_NUMBERS {
-          (loadLocal uint256 SUM_OF_NUMBERS_1 + loadLocal uint256 SUM_OF_NUMBERS_2) setUint256 SUM
+          (var SUM_OF_NUMBERS_1 + var SUM_OF_NUMBERS_2) setUint256 SUM
         }
         `
         )

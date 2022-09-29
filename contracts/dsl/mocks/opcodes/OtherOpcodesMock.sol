@@ -7,10 +7,6 @@ import { UnstructuredStorageMock } from '../UnstructuredStorageMock.sol';
 contract OtherOpcodesMock is UnstructuredStorageMock {
     receive() external payable {}
 
-    function opLoadLocalAny(address _ctx) public {
-        OtherOpcodes.opLoadLocalAny(_ctx);
-    }
-
     function opLoadRemoteAny(address _ctx) public {
         OtherOpcodes.opLoadRemoteAny(_ctx);
     }
@@ -57,18 +53,6 @@ contract OtherOpcodesMock is UnstructuredStorageMock {
 
     function opLoadLocalUint256(address _ctx) public {
         OtherOpcodes.opLoadLocalUint256(_ctx);
-    }
-
-    function opLoadLocalBytes32(address _ctx) public {
-        OtherOpcodes.opLoadLocalBytes32(_ctx);
-    }
-
-    function opLoadLocalBool(address _ctx) public {
-        OtherOpcodes.opLoadLocalBool(_ctx);
-    }
-
-    function opLoadLocalAddress(address _ctx) public {
-        OtherOpcodes.opLoadLocalAddress(_ctx);
     }
 
     function opLoadRemoteUint256(address _ctx) public {

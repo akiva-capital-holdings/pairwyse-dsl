@@ -98,21 +98,21 @@ describe('Context', () => {
   describe('addOpcodeBranch', () => {
     it('error: empty opcode selector', async () => {
       await expect(
-        app.addOpcodeBranchExt('loadLocal', 'uint256', '0x01', '0x00000000')
+        app.addOpcodeBranchExt('loadRemote', 'uint256', '0x01', '0x00000000')
       ).to.be.revertedWith('CTX2');
     });
 
     it('error: duplicate opcode', async () => {
       await expect(
-        app.addOpcodeBranchExt('loadLocal', 'bool', '0x01', '0x00000002')
+        app.addOpcodeBranchExt('loadRemote', 'bool', '0x01', '0x00000002')
       ).to.be.revertedWith('CTX5');
       await expect(
-        app.addOpcodeBranchExt('loadLocal', 'uint256', '0x02', '0x00000002')
+        app.addOpcodeBranchExt('loadRemote', 'uint256', '0x02', '0x00000002')
       ).to.be.revertedWith('CTX5');
     });
 
     it('success', async () => {
-      const baseOpName = 'loadLocalNewTest'; // some branching witg different name
+      const baseOpName = 'loadRemoteNewTest'; // some branching witg different name
       const branchName = 'uint256';
       const branchCode = '0x81';
       const selector = '0x00000081';

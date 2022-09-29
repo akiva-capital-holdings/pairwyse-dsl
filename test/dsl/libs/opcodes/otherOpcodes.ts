@@ -69,10 +69,10 @@ describe('Other opcodes', () => {
     await stack.clear();
   });
 
-  it('opLoadLocalAny', async () => {
-    await ctx.setProgram('0x1a');
-    await expect(app.opLoadLocalAny(ctxAddr)).to.be.revertedWith('OPH1');
-  });
+  // it('opLoadLocalAny', async () => {
+  //   await ctx.setProgram('0x1a');
+  //   await expect(app.opLoadLocalAny(ctxAddr)).to.be.revertedWith('OPH1');
+  // });
 
   it('opLoadLocalGet', async () => {
     await ctx.setProgram('0x1a000000');
@@ -129,13 +129,13 @@ describe('Other opcodes', () => {
       expect((await stack.seeLast()).toNumber()).to.be.approximately(lastBlockTimestamp, 1000);
     });
 
-    // Block TIME doesn't work because Hardhat doesn't return timestamp
-    it('TIME', async () => {
-      // TIME is an alias for blockTimestamp
+    // Block time doesn't work because Hardhat doesn't return timestamp
+    it('time', async () => {
+      // time is an alias for blockTimestamp
       const ctxStackAddress = await ctx.stack();
       StackCont.attach(ctxStackAddress);
 
-      // 0x30 is TIME
+      // 0x30 is time
       await ctx.setProgram('0x30');
 
       await app.opBlockTimestamp(ctxAddr);
@@ -277,46 +277,6 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${number}`);
 
     await app.opLoadLocalUint256(ctxAddr);
-    await checkStackTailv2(stack, [testValue]);
-  });
-
-  it('opLoadLocalBytes32', async () => {
-    const testValue = hex4Bytes('123456');
-    const bytes32TestValueName = hex4Bytes('BYTES');
-
-    await clientApp.setStorageBytes32(bytes32TestValueName, testValue);
-
-    const bytes = bytes32TestValueName.substring(2, 10);
-    await ctx.setProgram(`0x${bytes}`);
-
-    await app.opLoadLocalBytes32(ctxAddr);
-    await checkStackTailv2(stack, [testValue]);
-  });
-
-  it('opLoadLocalBool', async () => {
-    const testValue = true;
-    const bytes32TestValueName = hex4Bytes('BOOL');
-
-    await clientApp.setStorageBool(bytes32TestValueName, testValue);
-
-    const bool = bytes32TestValueName.substring(2, 10);
-    await ctx.setProgram(`0x${bool}`);
-
-    await app.opLoadLocalBool(ctxAddr);
-    await checkStackTailv2(stack, [+testValue]);
-  });
-
-  it('opLoadLocalAddress', async () => {
-    const [addr] = await ethers.getSigners();
-    const testValue = addr.address;
-    const bytes32TestValueName = hex4Bytes('ADDRESS');
-
-    await clientApp.setStorageAddress(bytes32TestValueName, testValue);
-
-    const address = bytes32TestValueName.substring(2, 10);
-    await ctx.setProgram(`0x${address}`);
-
-    await app.opLoadLocalAddress(ctxAddr);
     await checkStackTailv2(stack, [testValue]);
   });
 

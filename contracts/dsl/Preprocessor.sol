@@ -131,11 +131,11 @@ contract Preprocessor is IPreprocessor {
      * Example:
      * The user's DSL code string is
      * ```
-     * (loadLocal uint256 TIMESTAMP >    loadLocal uint256 INIT)
+     * (var TIMESTAMP > var INIT)
      * ```
      * The end result after executing a `split()` function is
      * ```
-     * ['loadLocal', 'uint256', 'TIMESTAMP', '>', 'loadLocal', 'uint256', 'INIT']
+     * ['var', 'TIMESTAMP', '>', 'var', 'INIT']
      * ```
      *
      * @param _program is a user's DSL code string
