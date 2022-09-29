@@ -270,15 +270,15 @@ describe('Simple Records in Agreement', () => {
     });
 
     it('Should return record Ids [96, 956] when 11111 archibed', async () => {
-      await app.archiveRecord(11111);
+      await archiveRecord(app, multisig, 11111);
       const notArchivedRecords = await app.getActiveRecords();
       expect(notArchivedRecords.map((v) => v.toNumber())).eql([96, 956]);
     });
 
     it('Should return [] when all archibed', async () => {
-      await app.archiveRecord(96);
-      await app.archiveRecord(956);
-      await app.archiveRecord(11111);
+      await archiveRecord(app, multisig, 96);
+      await archiveRecord(app, multisig, 956);
+      await archiveRecord(app, multisig, 11111);
       const notArchivedRecords = await app.getActiveRecords();
       expect(notArchivedRecords).eql([]);
     });
