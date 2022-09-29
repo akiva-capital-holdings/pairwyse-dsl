@@ -2,8 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-import { ErrorsLinkedList } from '../libs/Errors.sol';
-
 // import 'hardhat/console.sol';
 
 // TODO: make a library
