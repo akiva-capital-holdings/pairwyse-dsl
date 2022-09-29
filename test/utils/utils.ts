@@ -211,7 +211,7 @@ export const addSteps = async (
     );
 
     // Send this raw transaction with Multisig contract
-    const { hash } = await multisig.executeTransaction(agreement.address, data, 0);
+    const { hash } = await multisig.executeTransaction(agreement.address, data as string, 0);
 
     console.log(`\nAgreement update transaction hash: \n\t\x1b[35m${hash}\x1b[0m`);
   }
@@ -462,21 +462,7 @@ up to 90% of total initiating funds'
         await dai.connect(whale).approve(agreement.address, GP_PURCHASE_RETURN);
         console.log(`Fund Investment Return = ${formatEther(GP_PURCHASE_RETURN)} DAI`);
 
-        const cashBalanceBefore = await dai.balanceOf(agreement.address);
         const txn6 = await agreement.connect(GP).execute(txId);
-        const cashBalanceAfter = await dai.balanceOf(agreement.address);
-
-        // TODO: balances should be equal
-        // console.log(cashBalanceBefore.toString());
-        // console.log(cashBalanceAfter.toString());
-        // console.log(CAPITAL_GAINS.toString());
-
-        // if (!cashBalanceAfter.eq(cashBalanceBefore.add(CAPITAL_GAINS))) {
-        //   console.log(`\x1b[33m
-        // Calculation balances error. Check if CAPITAL GAINS affect for cash balance\x1b[0m
-        //   `);
-        //   return;
-        // }
         console.log(`Cash Balance = ${formatEther(await dai.balanceOf(agreement.address))} DAI`);
         console.log(`signatory: \x1b[35m${GP.address}\x1b[0m`);
         console.log(`txn hash: \x1b[35m${txn6.hash}\x1b[0m`);
