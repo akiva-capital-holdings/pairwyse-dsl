@@ -123,7 +123,7 @@ library StringUtils {
      * @param _string is a current string for checking
      * @return isAddress that is true if the string starts with `0x` symbols, otherwise is false
      */
-    function mayBeAddress(string memory _string) public view returns (bool) {
+    function mayBeAddress(string memory _string) public pure returns (bool) {
         require(!equal(_string, ''), ErrorsStringUtils.SUT7);
         if (bytes(_string).length != 42) return false;
         bytes1 _byte = bytes(_string)[0];
