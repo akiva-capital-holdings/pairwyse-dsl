@@ -165,15 +165,6 @@ contract Agreement {
     }
 
     /**
-     * @dev Based on Record ID returns the number of condition strings
-     * @param _recordId Record ID
-     * @return Number of Condition strings of the Record
-     */
-    function conditionStringsLen(uint256 _recordId) external view returns (uint256) {
-        return conditionStrings[_recordId].length;
-    }
-
-    /**
      * @dev Parse DSL code from the user and set the program bytecode in Context contract
      * @param _code DSL code input from the user
      * @param _context Context address

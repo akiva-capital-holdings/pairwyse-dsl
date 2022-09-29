@@ -32,7 +32,7 @@ describe('Simple Records in Agreement', () => {
 
   const archiveRecord = async (_app: AgreementMock, _multisig: MultisigMock, _recordId: number) => {
     const { data } = await app.populateTransaction.archiveRecord(_recordId);
-    await _multisig.executeTransaction(_app.address, data, 0);
+    await _multisig.executeTransaction(_app.address, data as string, 0);
   };
 
   const unarchiveRecord = async (
@@ -41,7 +41,7 @@ describe('Simple Records in Agreement', () => {
     _recordId: number
   ) => {
     const { data } = await app.populateTransaction.unArchiveRecord(_recordId);
-    await _multisig.executeTransaction(_app.address, data, 0);
+    await _multisig.executeTransaction(_app.address, data as string, 0);
   };
 
   before(async () => {
