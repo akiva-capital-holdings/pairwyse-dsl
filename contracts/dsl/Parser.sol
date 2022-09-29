@@ -24,6 +24,7 @@ import { ErrorsParser } from './libs/Errors.sol';
  */
 contract Parser is IParser {
     using StringUtils for string;
+    // TODO: move using bytes from StringUtils to ByteUtils
     using StringUtils for bytes;
     using ByteUtils for bytes;
 

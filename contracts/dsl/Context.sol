@@ -525,6 +525,7 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         // types of arrays for declaration
+        // TODO: should be normal selectors here for getting values instead of mocked as `opLoadRemoteUint256`
         _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadRemoteUint256.selector);
         // if there will be no other types exept uint256 and address, then TODO: `0x03 -> 0x02`
         _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
