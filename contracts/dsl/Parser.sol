@@ -24,6 +24,8 @@ import { ErrorsParser } from './libs/Errors.sol';
  */
 contract Parser is IParser {
     using StringUtils for string;
+    // TODO: move using bytes from StringUtils to ByteUtils
+    using StringUtils for bytes;
     using ByteUtils for bytes;
 
     // Note: temporary variables block
@@ -103,6 +105,47 @@ contract Parser is IParser {
     function asmSetUint256(address _ctxAddr) public {
         _setVariable(_ctxAddr, cmds[cmdIdx], 'uint256');
         _parseVariable();
+    }
+
+    /**
+     * @dev Updates the program with the name(its position) of the array
+     *
+     *  * Example of a command:
+     * ```
+     * declare ARR_NAME
+     * ```
+     */
+    function asmDeclare(address _ctxAddr) public {
+        _parseBranchOf(_ctxAddr, 'declareArr'); // program += bytecode for type of array
+        _parseVariable(); // program += bytecode for `ARR_NAME`
+    }
+
+    function asmGet() public {
+        string memory _value = _nextCmd();
+        bytes4 _arrNameB32 = bytes4(keccak256(abi.encodePacked(_nextCmd())));
+        program = bytes.concat(program, bytes32(_value.toUint256()), _arrNameB32);
+    }
+
+    /**
+     * @dev Updates the program with the next item for the array
+     *
+     *  * Example of a command:
+     * ```
+     * push ITEM ARR_NAME
+     * ```
+     */
+    function asmPush() public {
+        string memory _value = _nextCmd();
+        bytes4 _arrNameB32 = bytes4(keccak256(abi.encodePacked(_nextCmd())));
+
+        if (_value.mayBeAddress()) {
+            bytes memory _sliced = bytes(_value).slice(2, 42); // without first `0x` symbols
+            program = bytes.concat(program, bytes32(_sliced.fromHexBytes()));
+        } else if (_value.mayBeNumber()) {
+            program = bytes.concat(program, bytes32(_value.toUint256()));
+        }
+
+        program = bytes.concat(program, _arrNameB32);
     }
 
     /**
@@ -244,6 +287,20 @@ contract Parser is IParser {
     }
 
     /**
+     * @dev Updates previous `program` with getting the length of the dsl array by its name
+     * The command return non zero value only if the array name was declared and have at least one value.
+     * Check: `declareArr` and `push` commands for DSL arrays
+     *
+     * Example of a command:
+     * ```
+     * lengthOf ARR_NAME
+     * ```
+     */
+    function asmLengthOf() public {
+        _parseVariable(); // array name
+    }
+
+    /**
      * @dev Updates previous `program` for positive and negative branch position
      *
      * Example of a command:
@@ -365,7 +422,6 @@ contract Parser is IParser {
         } else {
             program = bytes.concat(program, opcode);
             bytes4 _selector = IContext(_ctxAddr).asmSelectors(cmd);
-
             if (_selector != 0x0) {
                 (bool success, ) = address(this).delegatecall(
                     abi.encodeWithSelector(_selector, IContext(_ctxAddr))

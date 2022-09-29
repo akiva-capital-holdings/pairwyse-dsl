@@ -33,6 +33,8 @@ contract Preprocessor is IPreprocessor {
     // Stack with elements of type string that is used to temporarily store data of `infixToPostfix` function
     StringStack internal strStack;
 
+    // StringArray internal array;
+
     constructor() {
         strStack = new StringStack();
     }
@@ -153,7 +155,15 @@ contract Preprocessor is IPreprocessor {
                 continue;
             }
 
-            if (char.equal(' ') || char.equal('\n') || char.equal('(') || char.equal(')')) {
+            if (
+                char.equal(' ') ||
+                char.equal('\n') ||
+                char.equal('(') ||
+                char.equal(')') ||
+                char.equal('[') ||
+                char.equal(']') ||
+                char.equal(',')
+            ) {
                 if (buffer.length() > 0) {
                     result.push(buffer);
                     buffer = '';
@@ -162,7 +172,7 @@ contract Preprocessor is IPreprocessor {
                 buffer = buffer.concat(char);
             }
 
-            if (char.equal('(') || char.equal(')')) {
+            if (char.equal('(') || char.equal(')') || char.equal('[') || char.equal(']')) {
                 result.push(char);
             }
         }
@@ -203,8 +213,12 @@ contract Preprocessor is IPreprocessor {
         bool isName;
         bool loadRemoteFlag;
         bool directUseUint256;
+        bool isArrayStart;
+
         uint256 loadRemoteVarCount;
         uint256 currencyMultiplier;
+        uint256 insertStep;
+
         string memory chunk;
         string memory name;
 
@@ -225,6 +239,46 @@ contract Preprocessor is IPreprocessor {
                 loadRemoteVarCount,
                 chunk
             );
+
+            // ---> start block for DSL arrays without types
+            // TODO: code for array tasks will be added below
+            if (chunk.equal('[') && !isArrayStart) {
+                isArrayStart = true;
+                continue;
+            } else if (isArrayStart && chunk.equal(']')) {
+                continue;
+            } else if (isArrayStart && !chunk.equal(']')) {
+                if (result.length > 0) {
+                    string memory _type = result[result.length - 1];
+                    result.pop();
+                    // TODO: move that to Parser or reorganise it to simple array structure?
+                    // EX. NUMBERS [1,2,3,4...]
+                    result.push('declareArr');
+                    result.push(_type);
+                    result.push(chunk);
+                }
+
+                isArrayStart = false;
+                continue;
+            }
+
+            if (chunk.equal('insert') && insertStep != 1) {
+                insertStep = 1;
+                result.push('push');
+                continue;
+            } else if (insertStep == 1 && !chunk.equal('into')) {
+                insertStep = 2;
+                result.push(chunk);
+                continue;
+            } else if (insertStep == 2) {
+                if (!chunk.equal('into')) {
+                    result.push(chunk);
+                    insertStep = 0;
+                }
+                continue;
+            }
+
+            // <--- end block for DSL arrays
 
             // Replace alises with base commands
             if (_isAlias(_ctxAddr, chunk)) {
@@ -305,6 +359,18 @@ contract Preprocessor is IPreprocessor {
             return multiplier = 1000000000;
         } else return multiplier = 0;
     }
+
+    // function _getArrayType(StringArray _array, string memory _chunk)
+    //     internal
+    //     view
+    //     returns (string memory _type)
+    // {
+    //     if (_chunk.mayBeNumber()) {
+    //         return 'uint256';
+    //     } else if (_array.getType().equal('implicitType')) {
+    //         revert('PPR1'); // wrong type of array
+    //     }
+    // }
 
     /**
      * @dev As the string of values can be simple and complex for DSL this function returns a number in
@@ -658,7 +724,12 @@ contract Preprocessor is IPreprocessor {
         returns (bool _isDirect)
     {
         _isDirect = _directUseUint256;
-        if (_chunk.equal('transferFrom') || _chunk.equal('sendEth') || _chunk.equal('transfer')) {
+        if (
+            _chunk.equal('transferFrom') ||
+            _chunk.equal('sendEth') ||
+            _chunk.equal('transfer') ||
+            _chunk.equal('get')
+        ) {
             _isDirect = true;
         }
     }
