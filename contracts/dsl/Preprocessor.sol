@@ -724,7 +724,12 @@ contract Preprocessor is IPreprocessor {
         returns (bool _isDirect)
     {
         _isDirect = _directUseUint256;
-        if (_chunk.equal('transferFrom') || _chunk.equal('sendEth') || _chunk.equal('transfer')) {
+        if (
+            _chunk.equal('transferFrom') ||
+            _chunk.equal('sendEth') ||
+            _chunk.equal('transfer') ||
+            _chunk.equal('get')
+        ) {
             _isDirect = true;
         }
     }

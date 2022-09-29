@@ -52,5 +52,7 @@ interface IParser {
 
     function asmFunc() external;
 
+    function asmGet() external;
+
     function asmPush() external;
 }

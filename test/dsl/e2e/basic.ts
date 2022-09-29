@@ -1,7 +1,7 @@
 import { ethers, network } from 'hardhat';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { parseEther, parseUnits } from 'ethers/lib/utils';
+import { BigNumber } from 'ethers';
 import { App, Context, Stack } from '../../../typechain-types';
 import { checkStackTailv2, hex4Bytes } from '../../utils/utils';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
@@ -1254,10 +1254,10 @@ describe('DSL: basic', () => {
   });
 
   describe('arrays', () => {
-    const EMPTY_BYTES = '0x' + new Array(65).join('0');
-    const DECLARED_BYTES = '0x' + new Array(65).join('f');
-    const TYPE_BYTES_ADDRESS = '0x03' + new Array(63).join('0');
-    const TYPE_BYTES_UINT256 = '0x01' + new Array(63).join('0');
+    const EMPTY_BYTES = `0x${new Array(65).join('0')}`;
+    const DECLARED_BYTES = `0x${new Array(65).join('f')}`;
+    const TYPE_BYTES_ADDRESS = `0x03${new Array(63).join('0')}`;
+    const TYPE_BYTES_UINT256 = `0x01${new Array(63).join('0')}`;
 
     describe('declaration', () => {
       describe('uint256', () => {
@@ -1490,7 +1490,6 @@ describe('DSL: basic', () => {
     });
 
     describe('Push data', () => {
-      const EMPTY_BYTES = '0x' + new Array(65).join('0');
       // TODO: add checks for boundary values (zero, max, bad cases)
       describe('uint256', () => {
         it('should fail if try to push an item to non exist array', async () => {
@@ -1500,10 +1499,10 @@ describe('DSL: basic', () => {
         });
 
         it('should push an item to an empty array', async () => {
-          expect(await app.getItemByIndex(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           // just checking that the next value is also zero
-          expect(await app.getItemByIndex(1, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(1, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
 
           await app.parse(`
             uint256[] NUMBERS
@@ -1511,16 +1510,16 @@ describe('DSL: basic', () => {
           `);
           await app.execute();
 
-          expect(await app.getItemByIndex(0, hex4Bytes('NUMBERS'))).to.equal(
-            '0x' + new Array(62).join('0') + '541' // 1345
+          expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(
+            `0x${new Array(62).join('0')}541` // 1345
           );
-          expect(await app.getItemByIndex(1, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(1, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(1);
         });
 
         it('should push an item to the array even with additional code', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
-          expect(await app.getItemByIndex(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
           await app.parse(`
             (123e18) setUint256 SUM
             uint256[] NUMBERS
@@ -1531,15 +1530,15 @@ describe('DSL: basic', () => {
           expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(parseUnits('123', 18));
           expect(await app.getStorageUint256(hex4Bytes('B'))).to.equal(22);
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(1);
-          expect(await app.getItemByIndex(0, hex4Bytes('NUMBERS'))).to.equal(
-            '0x' + new Array(62).join('0') + '541' // 1345
+          expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(
+            `0x${new Array(62).join('0')}541` // 1345
           );
         });
 
         it('should push several values with additional code (two different arrays)', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
-          expect(await app.getItemByIndex(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
-          expect(await app.getItemByIndex(1, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(1, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
           await app.parse(`
             (123e18) setUint256 SUM
             uint256[] NUMBERS
@@ -1555,11 +1554,11 @@ describe('DSL: basic', () => {
             2 > 7
           `);
           await app.execute();
-          expect(await app.getItemByIndex(0, hex4Bytes('NUMBERS'))).to.equal(
-            '0x' + new Array(62).join('0') + '541' // 1345
+          expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(
+            `0x${new Array(62).join('0')}541` // 1345
           );
-          expect(await app.getItemByIndex(1, hex4Bytes('NUMBERS'))).to.equal(
-            '0x' + new Array(62).join('0') + '5b9' // 1465
+          expect(await app.get(1, hex4Bytes('NUMBERS'))).to.equal(
+            `0x${new Array(62).join('0')}5b9` // 1465
           );
 
           expect(await app.getLength(hex4Bytes('INDEXES'))).to.equal(3);
@@ -1567,21 +1566,15 @@ describe('DSL: basic', () => {
           expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(parseUnits('123', 18));
           expect(await app.getStorageUint256(hex4Bytes('B'))).to.equal(22);
 
-          expect(await app.getItemByIndex(0, hex4Bytes('INDEXES'))).to.equal(
-            '0x' + new Array(64).join('0') + '1'
-          );
-          expect(await app.getItemByIndex(1, hex4Bytes('INDEXES'))).to.equal(
-            '0x' + new Array(64).join('0') + '3'
-          );
-          expect(await app.getItemByIndex(2, hex4Bytes('INDEXES'))).to.equal(
-            '0x' + new Array(64).join('0') + '2'
-          );
+          expect(await app.get(0, hex4Bytes('INDEXES'))).to.equal(`0x${new Array(64).join('0')}1`);
+          expect(await app.get(1, hex4Bytes('INDEXES'))).to.equal(`0x${new Array(64).join('0')}3`);
+          expect(await app.get(2, hex4Bytes('INDEXES'))).to.equal(`0x${new Array(64).join('0')}2`);
         });
 
         it('should push several values with additional code (declaration mixed with inserting)', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
-          expect(await app.getItemByIndex(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
-          expect(await app.getItemByIndex(1, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(1, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
           await app.parse(`
             (123e18) setUint256 SUM
             uint256[] NUMBERS
@@ -1596,11 +1589,11 @@ describe('DSL: basic', () => {
           `);
           await app.execute();
 
-          expect(await app.getItemByIndex(0, hex4Bytes('NUMBERS'))).to.equal(
-            '0x' + new Array(62).join('0') + '541' // 1345
+          expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(
+            `0x${new Array(62).join('0')}541` // 1345
           );
-          expect(await app.getItemByIndex(1, hex4Bytes('NUMBERS'))).to.equal(
-            '0x' + new Array(62).join('0') + '5b9' // 1465
+          expect(await app.get(1, hex4Bytes('NUMBERS'))).to.equal(
+            `0x${new Array(62).join('0')}5b9` // 1465
           );
 
           expect(await app.getLength(hex4Bytes('INDEXES'))).to.equal(2);
@@ -1608,12 +1601,8 @@ describe('DSL: basic', () => {
           expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(parseUnits('123', 18));
           expect(await app.getStorageUint256(hex4Bytes('B'))).to.equal(22);
 
-          expect(await app.getItemByIndex(0, hex4Bytes('INDEXES'))).to.equal(
-            '0x' + new Array(64).join('0') + '1'
-          );
-          expect(await app.getItemByIndex(1, hex4Bytes('INDEXES'))).to.equal(
-            '0x' + new Array(64).join('0') + '3'
-          );
+          expect(await app.get(0, hex4Bytes('INDEXES'))).to.equal(`0x${new Array(64).join('0')}1`);
+          expect(await app.get(1, hex4Bytes('INDEXES'))).to.equal(`0x${new Array(64).join('0')}3`);
         });
       });
 
@@ -1626,9 +1615,9 @@ describe('DSL: basic', () => {
 
         it('should push an item to an empty array', async () => {
           expect(await app.getLength(hex4Bytes('OWNERS'))).to.equal(0);
-          expect(await app.getItemByIndex(0, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(0, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
           // just checking that the next value is also zero
-          expect(await app.getItemByIndex(1, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(1, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
 
           await app.parse(`
             address[] OWNERS
@@ -1636,16 +1625,16 @@ describe('DSL: basic', () => {
           `);
           await app.execute();
 
-          expect(await app.getItemByIndex(0, hex4Bytes('OWNERS'))).to.equal(
-            '0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc' + new Array(25).join('0')
+          expect(await app.get(0, hex4Bytes('OWNERS'))).to.equal(
+            `0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
           );
-          expect(await app.getItemByIndex(1, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(1, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
           expect(await app.getLength(hex4Bytes('OWNERS'))).to.equal(1);
         });
 
         it('should push an item to the array even with additional code', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
-          expect(await app.getItemByIndex(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
           await app.parse(`
             (123e18) setUint256 SUM
             address[] OWNERS
@@ -1656,8 +1645,8 @@ describe('DSL: basic', () => {
           expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(parseUnits('123', 18));
           expect(await app.getStorageUint256(hex4Bytes('B'))).to.equal(22);
           expect(await app.getLength(hex4Bytes('OWNERS'))).to.equal(1);
-          expect(await app.getItemByIndex(0, hex4Bytes('OWNERS'))).to.equal(
-            '0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc' + new Array(25).join('0')
+          expect(await app.get(0, hex4Bytes('OWNERS'))).to.equal(
+            `0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
           );
         });
 
@@ -1665,11 +1654,11 @@ describe('DSL: basic', () => {
           // should be zero initial values
           expect(await app.getLength(hex4Bytes('OWNERS'))).to.equal(0);
           expect(await app.getLength(hex4Bytes('PARTNERS'))).to.equal(0);
-          expect(await app.getItemByIndex(0, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
-          expect(await app.getItemByIndex(1, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
-          expect(await app.getItemByIndex(2, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
-          expect(await app.getItemByIndex(0, hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
-          expect(await app.getItemByIndex(1, hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(0, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(1, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(2, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(0, hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(1, hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
 
           await app.parse(`
             (123e18) setUint256 SUM
@@ -1690,11 +1679,11 @@ describe('DSL: basic', () => {
           `);
           await app.execute();
 
-          expect(await app.getItemByIndex(0, hex4Bytes('PARTNERS'))).to.equal(
-            '0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc' + new Array(25).join('0')
+          expect(await app.get(0, hex4Bytes('PARTNERS'))).to.equal(
+            `0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
           );
-          expect(await app.getItemByIndex(1, hex4Bytes('PARTNERS'))).to.equal(
-            '0xf9f8a90ede3d84c7c0166bd84a4635e4675accfc' + new Array(25).join('0')
+          expect(await app.get(1, hex4Bytes('PARTNERS'))).to.equal(
+            `0xf9f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
           );
 
           expect(await app.getLength(hex4Bytes('OWNERS'))).to.equal(3);
@@ -1702,26 +1691,27 @@ describe('DSL: basic', () => {
           expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(parseUnits('123', 18));
           expect(await app.getStorageUint256(hex4Bytes('B'))).to.equal(22);
 
-          expect(await app.getItemByIndex(0, hex4Bytes('OWNERS'))).to.equal(
-            '0xe6f8a90ede3d84c7c0166bd84a4635e4675accfc' + new Array(25).join('0')
+          expect(await app.get(0, hex4Bytes('OWNERS'))).to.equal(
+            `0xe6f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
           );
-          expect(await app.getItemByIndex(1, hex4Bytes('OWNERS'))).to.equal(
-            '0xe8f8a90ede3d84c7c0166bd84a4635e4675accfc' + new Array(25).join('0')
+          expect(await app.get(1, hex4Bytes('OWNERS'))).to.equal(
+            `0xe8f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
           );
-          expect(await app.getItemByIndex(2, hex4Bytes('OWNERS'))).to.equal(
-            '0xe9f8a90ede3d84c7c0166bd84a4635e4675accfc' + new Array(25).join('0')
+          expect(await app.get(2, hex4Bytes('OWNERS'))).to.equal(
+            `0xe9f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
           );
         });
 
-        it('should push several values with additional code (declaration mixed with inserting)', async () => {
+        it('push several values with additional code \
+(declaration mixed with inserting)', async () => {
           // should be zero initial values
           expect(await app.getLength(hex4Bytes('OWNERS'))).to.equal(0);
           expect(await app.getLength(hex4Bytes('PARTNERS'))).to.equal(0);
-          expect(await app.getItemByIndex(0, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
-          expect(await app.getItemByIndex(1, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
-          expect(await app.getItemByIndex(2, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
-          expect(await app.getItemByIndex(0, hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
-          expect(await app.getItemByIndex(1, hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(0, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(1, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(2, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(0, hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(1, hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
 
           await app.parse(`
             (123e18) setUint256 SUM
@@ -1748,35 +1738,36 @@ describe('DSL: basic', () => {
           expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(parseUnits('123', 18));
           expect(await app.getStorageUint256(hex4Bytes('B'))).to.equal(22);
 
-          expect(await app.getItemByIndex(0, hex4Bytes('PARTNERS'))).to.equal(
-            '0xf9f8a90ede3d84c7c0166bd84a4635e4675accfc' + new Array(25).join('0')
+          expect(await app.get(0, hex4Bytes('PARTNERS'))).to.equal(
+            `0xf9f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
           );
-          expect(await app.getItemByIndex(1, hex4Bytes('PARTNERS'))).to.equal(
-            '0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc' + new Array(25).join('0')
+          expect(await app.get(1, hex4Bytes('PARTNERS'))).to.equal(
+            `0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
           );
 
-          expect(await app.getItemByIndex(0, hex4Bytes('OWNERS'))).to.equal(
-            '0xe6f8a90ede3d84c7c0166bd84a4635e4675accfc' + new Array(25).join('0')
+          expect(await app.get(0, hex4Bytes('OWNERS'))).to.equal(
+            `0xe6f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
           );
-          expect(await app.getItemByIndex(1, hex4Bytes('OWNERS'))).to.equal(
-            '0xe9f8a90ede3d84c7c0166bd84a4635e4675accfc' + new Array(25).join('0')
+          expect(await app.get(1, hex4Bytes('OWNERS'))).to.equal(
+            `0xe9f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
           );
-          expect(await app.getItemByIndex(2, hex4Bytes('OWNERS'))).to.equal(
-            '0xe8f8a90ede3d84c7c0166bd84a4635e4675accfc' + new Array(25).join('0')
+          expect(await app.get(2, hex4Bytes('OWNERS'))).to.equal(
+            `0xe8f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
           );
         });
       });
 
       describe('mixed types(uint256 + address)', () => {
-        it('should push several values with additional code (declaration mixed with inserting)', async () => {
+        it('should push several values with additional code \
+(declaration mixed with inserting)', async () => {
           // should be zero initial values
           expect(await app.getLength(hex4Bytes('INDEXES'))).to.equal(0);
           expect(await app.getLength(hex4Bytes('PARTNERS'))).to.equal(0);
-          expect(await app.getItemByIndex(0, hex4Bytes('INDEXES'))).to.equal(EMPTY_BYTES);
-          expect(await app.getItemByIndex(1, hex4Bytes('INDEXES'))).to.equal(EMPTY_BYTES);
-          expect(await app.getItemByIndex(2, hex4Bytes('INDEXES'))).to.equal(EMPTY_BYTES);
-          expect(await app.getItemByIndex(0, hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
-          expect(await app.getItemByIndex(1, hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(0, hex4Bytes('INDEXES'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(1, hex4Bytes('INDEXES'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(2, hex4Bytes('INDEXES'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(0, hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(1, hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
 
           await app.parse(`
             (123e18) setUint256 SUM
@@ -1800,19 +1791,40 @@ describe('DSL: basic', () => {
           expect(await app.getStorageUint256(hex4Bytes('SUM'))).to.equal(parseUnits('123', 18));
           expect(await app.getStorageUint256(hex4Bytes('B'))).to.equal(22);
 
-          expect(await app.getItemByIndex(0, hex4Bytes('PARTNERS'))).to.equal(
-            '0xe8f8a90ede3d84c7c0166bd84a4635e4675accfc' + new Array(25).join('0')
+          expect(await app.get(0, hex4Bytes('PARTNERS'))).to.equal(
+            `0xe8f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
           );
-          expect(await app.getItemByIndex(1, hex4Bytes('PARTNERS'))).to.equal(
-            '0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc' + new Array(25).join('0')
+          expect(await app.get(1, hex4Bytes('PARTNERS'))).to.equal(
+            `0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
           );
-          expect(await app.getItemByIndex(0, hex4Bytes('INDEXES'))).to.equal(
-            '0x' + new Array(64).join('0') + '1'
-          );
-          expect(await app.getItemByIndex(1, hex4Bytes('INDEXES'))).to.equal(
-            '0x' + new Array(64).join('0') + '3'
-          );
+          expect(await app.get(0, hex4Bytes('INDEXES'))).to.equal(`0x${new Array(64).join('0')}1`);
+          expect(await app.get(1, hex4Bytes('INDEXES'))).to.equal(`0x${new Array(64).join('0')}3`);
         });
+      });
+    });
+
+    describe('Get element by index', () => {
+      it('get element in arrays with different types after inserting values', async () => {
+        await app.parse(`
+          uint256[] NUMBERS
+          address[] INDEXES
+          insert 0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc into INDEXES
+          insert 1345 into NUMBERS
+          insert 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc into INDEXES
+          insert 0x17f8a90ede3d84c7c0166bd84a4635e4675accfc into INDEXES
+          insert 1465 into NUMBERS
+          get 1 NUMBERS
+          get 0 NUMBERS
+          get 9999 INDEXES
+          get 2 INDEXES
+          `);
+        await app.execute();
+        await checkStackTailv2(stack, [
+          1465,
+          1345,
+          0,
+          BigNumber.from('0x17f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000'),
+        ]);
       });
     });
 
@@ -1835,7 +1847,7 @@ describe('DSL: basic', () => {
         await checkStackTailv2(stack, [0]);
       });
 
-      it('should return zero length of arrays with different types(uint256 + address)', async () => {
+      it('return zero length of arrays with different types(uint256 + address)', async () => {
         await app.parse(`
           uint256[] NUMBERS
           address[] INDEXES
@@ -1862,7 +1874,7 @@ describe('DSL: basic', () => {
         await checkStackTailv2(stack, [3, 2]);
       });
 
-      it('should return length of arrays with different types (mixed with additional code))', async () => {
+      it('return length of arrays with different types (mixed with additional code))', async () => {
         await app.parse(`
           uint256[] NUMBERS
           address[] INDEXES

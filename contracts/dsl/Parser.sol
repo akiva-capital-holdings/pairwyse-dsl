@@ -120,6 +120,12 @@ contract Parser is IParser {
         _parseVariable(); // program += bytecode for `ARR_NAME`
     }
 
+    function asmGet() public {
+        string memory _value = _nextCmd();
+        bytes4 _arrNameB32 = bytes4(keccak256(abi.encodePacked(_nextCmd())));
+        program = bytes.concat(program, bytes32(_value.toUint256()), _arrNameB32);
+    }
+
     /**
      * @dev Updates the program with the next item for the array
      *

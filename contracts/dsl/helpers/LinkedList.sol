@@ -2,8 +2,11 @@
 
 pragma solidity ^0.8.0;
 
+import { ErrorsLinkedList } from '../libs/Errors.sol';
+
 // import 'hardhat/console.sol';
 
+// TODO: make a library
 contract LinkedList {
     /* Important!
     As the contract is working directly with storage pointers, so
@@ -28,6 +31,9 @@ contract LinkedList {
         }
     */
 
+    // TODO: move all variables to Context
+    bytes32 public constant EMPTY = bytes32(type(uint256).max);
+
     // arr name => head to array (positions to the first element in arrays)
     mapping(bytes32 => bytes32) private heads;
     mapping(bytes32 => bytes32) private types; // arr name => type to array
@@ -37,9 +43,72 @@ contract LinkedList {
      * @dev Returns length of the array
      * @param _arrName is a bytecode of the array name
      */
-    function getType(bytes32 _arrName) public view returns (bytes32) {
+    function getType(bytes32 _arrName) external view returns (bytes32) {
         // TODO: should we return bytes1 type here or just name of type (uint256, address)
         return types[_arrName];
+    }
+
+    /**
+     * @dev Returns length of the array
+     * @param _arrName is a bytecode of the array name
+     */
+    function getLength(bytes32 _arrName) external view returns (uint256) {
+        return lengths[_arrName];
+    }
+
+    /**
+     * @dev Returns the item data from the array by its index
+     * @param _index is an index of the item in the array that starts from 0
+     * @param _arrName is a bytecode of the array name
+     * @return data is a bytecode of the item from the array or empty bytes if no item exists by this index
+     */
+    function get(uint256 _index, bytes32 _arrName) public view returns (bytes32 data) {
+        uint256 count;
+        bytes32 currentPosition = heads[_arrName];
+
+        while (count++ < _index) {
+            (currentPosition) = _getNextPosition(currentPosition);
+        }
+        (data, ) = _getData(currentPosition);
+    }
+
+    /**
+     * @dev Declares the new array in dependence of its type
+     * @param _type is a bytecode type of the array. Bytecode of each type can be find in Context contract
+     * @param _arrName is a bytecode of the array name
+     */
+    function declare(bytes32 _type, bytes32 _arrName) external {
+        types[_arrName] = _type;
+        heads[_arrName] = EMPTY;
+    }
+
+    /**
+     * @dev Pushed item to the end of the array. Increases the length of the array
+     * @param _item is a bytecode type of the array. Bytecode of each type can be find in Context contract
+     * @param _arrName is a bytecode of the array name
+     */
+    function addItem(bytes32 _item, bytes32 _arrName) external {
+        bytes32 previousPosition;
+        bytes32 nodePtr = _getEmptyMemoryPosition();
+
+        if (heads[_arrName] == EMPTY) {
+            // creates the first position in array for the first item
+            heads[_arrName] = nodePtr;
+            _insertItem(nodePtr, _item);
+        } else {
+            // add the new data to existing _position in the array
+            bytes32 currentPosition = getHead(_arrName);
+
+            while (currentPosition != EMPTY) {
+                previousPosition = currentPosition;
+                (, currentPosition) = _getData(currentPosition);
+            }
+
+            _insertItem(nodePtr, _item);
+            // In previous stored item in the array it creates new position(link) to the new item
+            _updateLinkToNextItem(previousPosition, nodePtr);
+        }
+        lengths[_arrName]++;
     }
 
     /**
@@ -51,70 +120,6 @@ contract LinkedList {
      */
     function getHead(bytes32 _arrName) public view returns (bytes32) {
         return heads[_arrName];
-    }
-
-    /**
-     * @dev Returns length of the array
-     * @param _arrName is a bytecode of the array name
-     */
-    function getLength(bytes32 _arrName) public view returns (uint256) {
-        return lengths[_arrName];
-    }
-
-    /**
-     * @dev Returns the item data from the array by its index
-     * @param _index is an index of the item in the array that starts from 0
-     * @param _arrName is a bytecode of the array name
-     * @return data is a bytecode of the item from the array
-     */
-    function getItemByIndex(uint256 _index, bytes32 _arrName) public view returns (bytes32 data) {
-        uint256 count;
-        bytes32 currentPosition = heads[_arrName];
-
-        while (count < _index) {
-            count++;
-            currentPosition = _getNextPosition(currentPosition);
-        }
-        (data, ) = _getData(currentPosition);
-    }
-
-    /**
-     * @dev Declares the new array in dependence of its type
-     * @param _type is a bytecode type of the array. Bytecode of each type can be find in Context contract
-     * @param _arrName is a bytecode of the array name
-     */
-    function declare(bytes32 _type, bytes32 _arrName) public {
-        types[_arrName] = _type;
-        heads[_arrName] = bytes32(type(uint256).max);
-    }
-
-    /**
-     * @dev Adds item in the array by provided name of the array. Increases the length of array
-     * @param _item is a bytecode type of the array. Bytecode of each type can be find in Context contract
-     * @param _arrName is a bytecode of the array name
-     */
-    function addItem(bytes32 _item, bytes32 _arrName) public {
-        bytes32 previousPosition;
-        bytes32 nodePtr = _getEmptyMemoryPosition();
-
-        if (heads[_arrName] == bytes32(type(uint256).max)) {
-            // creates the first position in array for the first item
-            heads[_arrName] = nodePtr;
-            _insertItem(nodePtr, _item);
-        } else {
-            // add the new data to existing _position in the array
-            bytes32 currentPosition = getHead(_arrName);
-
-            while (currentPosition != bytes32(type(uint256).max)) {
-                previousPosition = currentPosition;
-                (, currentPosition) = _getData(currentPosition);
-            }
-
-            _insertItem(nodePtr, _item);
-            // In previous stored item in the array it creates new position(link) to the new item
-            _updateLinkToNextItem(previousPosition, nodePtr);
-        }
-        lengths[_arrName]++;
     }
 
     /**

@@ -459,6 +459,7 @@ contract Context is IContext {
             OpcodeLibNames.BranchingOpcodes
         );
 
+        // Push to array
         // Ex. `push 0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc USERS`
         addOpcode(
             'push',
@@ -468,12 +469,23 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
 
+        // Get length of array
         // Ex. `lengthOf PARTNERS`
         addOpcode(
             'lengthOf',
             0x34,
             OtherOpcodes.opLengthOf.selector,
             IParser.asmLengthOf.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
+        // Get element by index in the array
+        // Ex. `get 3 USERS`
+        addOpcode(
+            'get',
+            0x35,
+            OtherOpcodes.opGet.selector,
+            IParser.asmGet.selector,
             OpcodeLibNames.OtherOpcodes
         );
 

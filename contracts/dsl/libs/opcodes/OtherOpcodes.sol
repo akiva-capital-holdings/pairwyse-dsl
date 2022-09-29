@@ -81,7 +81,35 @@ library OtherOpcodes {
     }
 
     /**
-     * @dev insert an item to array
+     * @dev Gets an element by its index in the array
+     * @param _ctx Context contract instance address
+     */
+    function opGet(address _ctx) public {
+        uint256 _index = opUint256Get(_ctx);
+        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+
+        // check if the array exists
+        (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
+            abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
+        );
+
+        require(success, ErrorsGeneralOpcodes.OP1);
+        require(bytes32(data) != bytes32(0x0), 'Tries to get item from non existing array'); // TODO: move to Errors lib
+        (success, data) = IContext(_ctx).appAddr().call(
+            abi.encodeWithSignature(
+                'get(uint256,bytes32)',
+                _index, // index of the searched item
+                _arrNameB32 // array name, ex. INDEX_LIST, PARTNERS
+            )
+        );
+        require(success, ErrorsGeneralOpcodes.OP1);
+
+        OpcodeHelpers.putToStack(_ctx, uint256(bytes32(data)));
+    }
+
+    /**
+     * @dev Inserts an item to array
+     * @param _ctx Context contract instance address
      */
     function opPush(address _ctx) public {
         bytes32 _varValue = OpcodeHelpers.getNextBytes(_ctx, 32);
@@ -92,7 +120,7 @@ library OtherOpcodes {
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
-        require(bytes32(data) != bytes32(0x0), 'Tries to put item to non existed array');
+        require(bytes32(data) != bytes32(0x0), 'Tries to put item to non existed array'); // TODO: move to Errors lib
 
         (success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
@@ -106,6 +134,7 @@ library OtherOpcodes {
 
     /**
      * @dev Declares an empty array
+     * @param _ctx Context contract instance address
      */
     function opDeclare(address _ctx) public {
         // https://github.com/ethereum/solidity/releases/tag/v0.8.5
