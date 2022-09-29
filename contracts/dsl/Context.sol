@@ -23,8 +23,6 @@ import { ErrorsContext } from './libs/Errors.sol';
 contract Context is IContext {
     // The address that is used to symbolyze any signer inside Conditional Transaction
     address public constant anyone = 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF;
-    // mapping(string => bytes32) public arrays;
-    // mapping(string => bool) public isArray;
 
     // stack is used by Opcode libraries like `libs/opcodes/*`
     // to store and analyze values and removing after usage
@@ -499,7 +497,6 @@ contract Context is IContext {
             Where `*_STORED_VALUE` parameters can be set by using `setLocalBool`
             or `setUint256` opcodes
         */
-        string memory name = 'loadLocal';
         addOpcode(
             'var',
             0x1b,
@@ -507,8 +504,6 @@ contract Context is IContext {
             IParser.asmVar.selector,
             OpcodeLibNames.OtherOpcodes
         );
-
-        // Complex Opcodes with sub Opcodes (branches)
 
         string memory name = 'loadRemote';
         addOpcode(
