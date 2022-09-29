@@ -457,6 +457,46 @@ contract Context is IContext {
             OpcodeLibNames.BranchingOpcodes
         );
 
+        // Push to array
+        // Ex. `push 0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc USERS`
+        addOpcode(
+            'push',
+            0x33,
+            OtherOpcodes.opPush.selector,
+            IParser.asmPush.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
+        // Get length of array
+        // Ex. `lengthOf PARTNERS`
+        addOpcode(
+            'lengthOf',
+            0x34,
+            OtherOpcodes.opLengthOf.selector,
+            IParser.asmLengthOf.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
+        // Get element by index in the array
+        // Ex. `get 3 USERS`
+        addOpcode(
+            'get',
+            0x35,
+            OtherOpcodes.opGet.selector,
+            IParser.asmGet.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
+        // Complex Opcodes with sub Opcodes (branches)
+
+        /*
+            Types usage examples of loadLocal and loadRemote opcodes:
+                loadLocal uint256 NUMBER_STORED_VALUE
+                loadRemote bool ADDRESS_STORED_VALUE 9A676e781A523b5d0C0e43731313A708CB607508
+
+            Where `*_STORED_VALUE` parameters can be set by using `setLocalBool`
+            or `setUint256` opcodes
+        */
         addOpcode(
             'var',
             0x1b,
@@ -464,8 +504,6 @@ contract Context is IContext {
             IParser.asmVar.selector,
             OpcodeLibNames.OtherOpcodes
         );
-
-        // Complex Opcodes with sub Opcodes (branches)
 
         string memory name = 'loadRemote';
         addOpcode(
@@ -480,6 +518,21 @@ contract Context is IContext {
         _addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadRemoteBool.selector);
         _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
         _addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadRemoteBytes32.selector);
+
+        // Ex. `declareArr uint256 BALANCES`
+        name = 'declareArr';
+        addOpcode(
+            name,
+            0x31,
+            OtherOpcodes.opDeclare.selector,
+            IParser.asmDeclare.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+        // types of arrays for declaration
+        // TODO: should be normal selectors here for getting values instead of mocked as `opLoadRemoteUint256`
+        _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadRemoteUint256.selector);
+        // if there will be no other types exept uint256 and address, then TODO: `0x03 -> 0x02`
+        _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
 
         // Aliases
 

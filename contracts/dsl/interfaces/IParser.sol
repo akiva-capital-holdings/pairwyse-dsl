@@ -26,6 +26,8 @@ interface IParser {
 
     function asmLoadRemote(address _ctxAddr) external;
 
+    function asmDeclare(address _ctxAddr) external;
+
     function asmBool() external;
 
     function asmUint256() external;
@@ -40,6 +42,8 @@ interface IParser {
 
     function asmBalanceOf() external;
 
+    function asmLengthOf() external;
+
     function asmTransferFromVar() external;
 
     function asmIfelse() external;
@@ -47,4 +51,8 @@ interface IParser {
     function asmIf() external;
 
     function asmFunc() external;
+
+    function asmGet() external;
+
+    function asmPush() external;
 }

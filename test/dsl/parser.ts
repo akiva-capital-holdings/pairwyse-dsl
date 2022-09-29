@@ -312,4 +312,178 @@ describe('Parser', () => {
     });
     // TODO: add for other types
   });
+
+  describe('DSL arrays', () => {
+    describe('declare array', () => {
+      describe('uint256 type', () => {
+        it('simple array', async () => {
+          await app.parseCodeExt(ctxAddr, ['declareArr', 'uint256', 'NUMBERS']);
+          expect(await ctx.program()).to.equal(
+            '0x' +
+              '31' + // declareArr
+              '01' + // uint256
+              '1fff709e' // bytecode for a `NUMBERS` name
+          );
+        });
+
+        it('only with additional code just before it', async () => {
+          const number = new Array(64).join('0') + 6;
+          await app.parseCodeExt(ctxAddr, [
+            'uint256',
+            '6',
+            'var',
+            'TIMESTAMP',
+            'declareArr',
+            'uint256',
+            'NUMBERS',
+          ]);
+          expect(await ctx.program()).to.equal(
+            '0x' +
+              '1a' + // uint256
+              `${number}` + // 6
+              '1b' + // var
+              '1b7b16d4' + // TIMESTAMP
+              '31' + // declareArr
+              '01' + // uint256
+              '1fff709e' // bytecode for a `NUMBERS` name
+          );
+        });
+
+        it('only with additional code just after it', async () => {
+          const number = new Array(64).join('0') + 6;
+          await app.parseCodeExt(ctxAddr, [
+            'declareArr',
+            'uint256',
+            'NUMBERS',
+            'uint256',
+            '6',
+            'var',
+            'TIMESTAMP',
+          ]);
+          expect(await ctx.program()).to.equal(
+            '0x' +
+              '31' + // declareArr
+              '01' + // uint256
+              '1fff709e' + // bytecode for a `NUMBERS` name
+              '1a' + // uint256
+              `${number}` + // 6
+              '1b' + // var
+              '1b7b16d4' // TIMESTAMP
+          );
+        });
+
+        it('with additional code before and after it', async () => {
+          const number = new Array(64).join('0') + 6;
+          await app.parseCodeExt(ctxAddr, [
+            'uint256',
+            '6',
+            'declareArr',
+            'uint256',
+            'NUMBERS',
+            'var',
+            'TIMESTAMP',
+          ]);
+          expect(await ctx.program()).to.equal(
+            '0x' +
+              '1a' + // uint256
+              `${number}` + // 6
+              '31' + // declareArr
+              '01' + // uint256
+              '1fff709e' + // bytecode for a `NUMBERS` name
+              '1b' + // var
+              '1b7b16d4' // TIMESTAMP
+          );
+        });
+      });
+
+      describe('address type', () => {
+        it('declare simple array', async () => {
+          await app.parseCodeExt(ctxAddr, ['declareArr', 'address', 'MARY']);
+          expect(await ctx.program()).to.equal(
+            '0x' +
+              '31' + // declareArr
+              '03' + // address
+              '5e315030' // bytecode for a `MARY` name
+          );
+        });
+
+        it('only with additional code just before it', async () => {
+          const number = new Array(64).join('0') + 6;
+          await app.parseCodeExt(ctxAddr, [
+            'uint256',
+            '6',
+            'var',
+            'TIMESTAMP',
+            'declareArr',
+            'address',
+            'MARY',
+          ]);
+          expect(await ctx.program()).to.equal(
+            '0x' +
+              '1a' + // uint256
+              `${number}` + // 6
+              '1b' + // var
+              '1b7b16d4' + // TIMESTAMP
+              '31' + // declareArr
+              '03' + // address
+              '5e315030' // bytecode for a `MARY` name
+          );
+        });
+
+        it('only with additional code just after it', async () => {
+          const number = new Array(64).join('0') + 6;
+          await app.parseCodeExt(ctxAddr, [
+            'declareArr',
+            'address',
+            'MARY',
+            'uint256',
+            '6',
+            'var',
+            'TIMESTAMP',
+          ]);
+          expect(await ctx.program()).to.equal(
+            '0x' +
+              '31' + // declareArr
+              '03' + // address
+              '5e315030' + // bytecode for a `MARY` name
+              '1a' + // uint256
+              `${number}` + // 6
+              '1b' + // var
+              '1b7b16d4' // TIMESTAMP
+          );
+        });
+
+        it('with additional code before and after it', async () => {
+          const number = new Array(64).join('0') + 6;
+          await app.parseCodeExt(ctxAddr, [
+            'uint256',
+            '6',
+            'declareArr',
+            'address',
+            'MARY',
+            'var',
+            'TIMESTAMP',
+          ]);
+          expect(await ctx.program()).to.equal(
+            '0x' +
+              '1a' + // uint256
+              `${number}` + // 6
+              '31' + // declareArr
+              '03' + // address
+              '5e315030' + // bytecode for a `MARY` name
+              '1b' + // var
+              '1b7b16d4' // TIMESTAMP
+          );
+        });
+      });
+    });
+
+    describe('insert item into array', () => {
+      describe('uint256', () => {
+        it('simple array', async () => {});
+
+        it('with additional dsl code before declaration and after inserting', async () => {});
+      });
+    });
+  });
 });
