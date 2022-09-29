@@ -331,8 +331,7 @@ describe('Parser', () => {
           await app.parseCodeExt(ctxAddr, [
             'uint256',
             '6',
-            'loadLocal',
-            'uint256',
+            'var',
             'TIMESTAMP',
             'declareArr',
             'uint256',
@@ -342,8 +341,7 @@ describe('Parser', () => {
             '0x' +
               '1a' + // uint256
               `${number}` + // 6
-              '1b' + // loadLocal
-              '01' + // uint256
+              '1b' + // var
               '1b7b16d4' + // TIMESTAMP
               '31' + // declareArr
               '01' + // uint256
@@ -359,8 +357,7 @@ describe('Parser', () => {
             'NUMBERS',
             'uint256',
             '6',
-            'loadLocal',
-            'uint256',
+            'var',
             'TIMESTAMP',
           ]);
           expect(await ctx.program()).to.equal(
@@ -370,8 +367,7 @@ describe('Parser', () => {
               '1fff709e' + // bytecode for a `NUMBERS` name
               '1a' + // uint256
               `${number}` + // 6
-              '1b' + // loadLocal
-              '01' + // uint256
+              '1b' + // var
               '1b7b16d4' // TIMESTAMP
           );
         });
@@ -384,8 +380,7 @@ describe('Parser', () => {
             'declareArr',
             'uint256',
             'NUMBERS',
-            'loadLocal',
-            'uint256',
+            'var',
             'TIMESTAMP',
           ]);
           expect(await ctx.program()).to.equal(
@@ -395,8 +390,7 @@ describe('Parser', () => {
               '31' + // declareArr
               '01' + // uint256
               '1fff709e' + // bytecode for a `NUMBERS` name
-              '1b' + // loadLocal
-              '01' + // uint256
+              '1b' + // var
               '1b7b16d4' // TIMESTAMP
           );
         });
@@ -418,8 +412,7 @@ describe('Parser', () => {
           await app.parseCodeExt(ctxAddr, [
             'uint256',
             '6',
-            'loadLocal',
-            'uint256',
+            'var',
             'TIMESTAMP',
             'declareArr',
             'address',
@@ -429,8 +422,7 @@ describe('Parser', () => {
             '0x' +
               '1a' + // uint256
               `${number}` + // 6
-              '1b' + // loadLocal
-              '01' + // uint256
+              '1b' + // var
               '1b7b16d4' + // TIMESTAMP
               '31' + // declareArr
               '03' + // address
@@ -446,8 +438,7 @@ describe('Parser', () => {
             'MARY',
             'uint256',
             '6',
-            'loadLocal',
-            'uint256',
+            'var',
             'TIMESTAMP',
           ]);
           expect(await ctx.program()).to.equal(
@@ -457,8 +448,7 @@ describe('Parser', () => {
               '5e315030' + // bytecode for a `MARY` name
               '1a' + // uint256
               `${number}` + // 6
-              '1b' + // loadLocal
-              '01' + // uint256
+              '1b' + // var
               '1b7b16d4' // TIMESTAMP
           );
         });
@@ -471,8 +461,7 @@ describe('Parser', () => {
             'declareArr',
             'address',
             'MARY',
-            'loadLocal',
-            'uint256',
+            'var',
             'TIMESTAMP',
           ]);
           expect(await ctx.program()).to.equal(
@@ -482,8 +471,7 @@ describe('Parser', () => {
               '31' + // declareArr
               '03' + // address
               '5e315030' + // bytecode for a `MARY` name
-              '1b' + // loadLocal
-              '01' + // uint256
+              '1b' + // var
               '1b7b16d4' // TIMESTAMP
           );
         });
