@@ -52,7 +52,6 @@ contract Agreement {
     }
 
     struct Record {
-        uint256[] requiredRecords;
         address transactionContext;
         bool isExecuted;
         bool isArchived;
@@ -63,7 +62,7 @@ contract Agreement {
     mapping(uint256 => address[]) public conditionContexts; // txId => condition Context
     mapping(uint256 => string[]) public conditionStrings; // txId => DSL condition as string
     mapping(uint256 => address[]) public signatories; // txId => signatories
-    mapping(uint256 => uint256) public signatoriesLen; // txId => signarories length
+    mapping(uint256 => uint256[]) public requiredRecords; // txId => requiredRecords[]
     // txId => (signatory => was tx executed by signatory)
     mapping(uint256 => mapping(address => bool)) public isExecutedBySignatory;
     uint256[] public recordIds; // array of recordId
@@ -117,6 +116,24 @@ contract Agreement {
     }
 
     /**
+     * @dev Based on Record ID returns the number of signatures
+     * @param _recordId Record ID
+     * @return Number of signatures in txs
+     */
+    function signatoriesLen(uint256 _recordId) external view returns (uint256) {
+        return signatories[_recordId].length;
+    }
+
+    /**
+     * @dev Based on Record ID returns the number of required records
+     * @param _recordId Record ID
+     * @return Number of required records in txs
+     */
+    function requiredRecordsLen(uint256 _recordId) external view returns (uint256) {
+        return requiredRecords[_recordId].length;
+    }
+
+    /**
      * @dev Based on Record ID returns the number of condition strings
      * @param _recordId Record ID
      * @return Number of Condition strings of the Record
@@ -150,7 +167,7 @@ contract Agreement {
      */
     function getActiveRecords() external view returns (uint256[] memory) {
         uint256 count = 0;
-        uint256[] memory activeRecords = new uint256[](_activeRecordsLength());
+        uint256[] memory activeRecords = new uint256[](_activeRecordsLen());
         for (uint256 i = 0; i < recordIds.length; i++) {
             if (
                 !txs[recordIds[i]].isArchived &&
@@ -209,6 +226,31 @@ contract Agreement {
         require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
     }
 
+    /**
+     * @dev return valuses for preview record before execution
+     * @param _recordId Record ID
+     * @return txsRequiredRecords array of required records in the record
+     * @return txsSignatories array of signatories in the record
+     * @return txsConditions array of conditions in the record
+     * @return txsTransaction string of transaction
+     */
+    function getRecord(uint256 _recordId)
+        external
+        view
+        returns (
+            uint256[] memory txsRequiredRecords,
+            address[] memory txsSignatories,
+            string[] memory txsConditions,
+            string memory txsTransaction
+        )
+    {
+        txsRequiredRecords = requiredRecords[_recordId];
+        txsSignatories = signatories[_recordId];
+        txsConditions = conditionStrings[_recordId];
+        txsTransaction = txs[_recordId].transactionString;
+        return (txsRequiredRecords, txsSignatories, txsConditions, txsTransaction);
+    }
+
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
@@ -238,11 +280,12 @@ contract Agreement {
      * @return true if the user is allowed to execute the record, false - otherwise
      */
     function _verify(uint256 _recordId) internal view returns (bool) {
-        if (signatoriesLen[_recordId] == 1 && signatories[_recordId][0] == context.anyone()) {
+        address[] memory signatoriesOfRecord = signatories[_recordId];
+        if (signatoriesOfRecord.length == 1 && signatoriesOfRecord[0] == context.anyone()) {
             return true;
         }
 
-        for (uint256 i = 0; i < signatoriesLen[_recordId]; i++) {
+        for (uint256 i = 0; i < signatoriesOfRecord.length; i++) {
             if (signatories[_recordId][i] == msg.sender) {
                 return true;
             }
@@ -256,10 +299,10 @@ contract Agreement {
      * @return true all the required records were executed, false - otherwise
      */
     function _validateRequiredRecords(uint256 _recordId) internal view returns (bool) {
-        Record memory txn = txs[_recordId];
+        uint256[] memory txsRecuiredRecords = requiredRecords[_recordId];
         Record memory requiredRecord;
-        for (uint256 i = 0; i < txn.requiredRecords.length; i++) {
-            requiredRecord = txs[txn.requiredRecords[i]];
+        for (uint256 i = 0; i < txsRecuiredRecords.length; i++) {
+            requiredRecord = txs[txsRecuiredRecords[i]];
             if (!requiredRecord.isExecuted) return false;
         }
         return true;
@@ -277,10 +320,9 @@ contract Agreement {
         address[] memory _signatories
     ) internal {
         _checkSignatories(_signatories);
-
-        Record memory txn = Record(_requiredRecords, address(0), false, false, '');
+        Record memory txn = Record(address(0), false, false, '');
         signatories[_recordId] = _signatories;
-        signatoriesLen[_recordId] = _signatories.length;
+        requiredRecords[_recordId] = _requiredRecords;
         txs[_recordId] = txn;
         recordIds.push(_recordId);
     }
@@ -359,11 +401,11 @@ contract Agreement {
         // Check is tx was executed by all signatories
         uint256 executionProgress;
         address[] memory signatoriesOfRecord = signatories[_recordId];
-        for (uint256 i = 0; i < signatoriesLen[_recordId]; i++) {
+        for (uint256 i = 0; i < signatoriesOfRecord.length; i++) {
             if (isExecutedBySignatory[_recordId][signatoriesOfRecord[i]]) executionProgress++;
         }
         // If all signatories have executed the transaction - mark the tx as executed
-        if (executionProgress == signatoriesLen[_recordId]) {
+        if (executionProgress == signatoriesOfRecord.length) {
             txs[_recordId].isExecuted = true;
         }
 
@@ -374,7 +416,7 @@ contract Agreement {
      * @dev return length of active records for getActiveRecords
      * @return count length of active records array
      */
-    function _activeRecordsLength() internal view returns (uint256) {
+    function _activeRecordsLen() internal view returns (uint256) {
         uint256 count = 0;
         for (uint256 i = 0; i < recordIds.length; i++) {
             if (

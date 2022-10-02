@@ -12,7 +12,7 @@ import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock
 
 // TODO: rename everywhere in the project 'Conditional Transactions' to 'Records'
 
-describe('Simple Records in Agreement', () => {
+describe.only('Simple Records in Agreement', () => {
   let app: AgreementMock;
   let multisig: MultisigMock;
   let appAddr: string;
@@ -72,6 +72,61 @@ describe('Simple Records in Agreement', () => {
     records = [];
     // Return to the snapshot
     await network.provider.send('evm_revert', [snapshotId]);
+  });
+
+  it.only('get record', async () => {
+    // Set variables
+    await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
+    await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
+
+    const ContextMock = await ethers.getContractFactory('ContextMock');
+    const transactionContext = await ContextMock.deploy();
+    await transactionContext.setAppAddress(appAddr);
+    const conditionContext = await ContextMock.deploy();
+    await conditionContext.setAppAddress(appAddr);
+
+    records.push({
+      recordId: 96,
+      requiredRecords: [1, 29, 18],
+      signatories: [alice.address],
+      transactionStr: 'sendEth RECEIVER 1000000000000000000',
+      conditionStrings: ['blockTimestamp > var LOCK_TIME'],
+      transactionCtx: transactionContext,
+      conditionContexts: [conditionContext],
+    });
+
+    // Set conditional transaction
+    for (let i = 0; i < records.length; i++) {
+      const {
+        recordId,
+        requiredRecords,
+        signatories,
+        conditionContexts,
+        conditionStrings,
+        transactionCtx,
+        transactionStr,
+      } = records[i];
+
+      // Set conditional transaction
+      await app.addRecordBlueprint(recordId, requiredRecords, signatories);
+      for (let j = 0; j < conditionContexts.length; j++) {
+        await app.addRecordCondition(recordId, conditionStrings[j], conditionContexts[j].address);
+      }
+      await app.addRecordTransaction(recordId, transactionStr, transactionCtx.address);
+
+      // Set msg senders
+      await transactionCtx.setMsgSender(alice.address);
+      await conditionContexts[0].setMsgSender(alice.address);
+      // Get Records Value
+      const record = await app.getRecord(96);
+      await expect(record.txsRequiredRecords.map((v) => v.toNumber())).eql([1, 29, 18]);
+      await expect(record.txsSignatories[0]).to.be.equal(alice.address);
+      await expect(record.txsConditions[0]).to.be.equal('blockTimestamp > var LOCK_TIME');
+      await expect(record.txsTransaction).to.be.equal('sendEth RECEIVER 1000000000000000000');
+      // Get Values Length
+      await expect(await app.signatoriesLen(96)).to.be.equal(1);
+      await expect(await app.requiredRecordsLen(96)).to.be.equal(3);
+    }
   });
 
   it('archived transaction', async () => {
