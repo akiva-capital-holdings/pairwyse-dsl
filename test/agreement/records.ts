@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
 import { ParserMock } from '../../typechain-types/dsl/mocks';
-import { hex4Bytes } from '../utils/utils';
+import { addSteps, hex4Bytes } from '../utils/utils';
 import { deployAgreementMock, deployParserMock } from '../../scripts/data/deploy.utils.mock';
 import { deployPreprocessor } from '../../scripts/data/deploy.utils';
 import { AgreementMock, ContextMock__factory } from '../../typechain-types';
@@ -12,7 +12,7 @@ import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock
 
 // TODO: rename everywhere in the project 'Conditional Transactions' to 'Records'
 
-describe.only('Simple Records in Agreement', () => {
+describe('Simple Records in Agreement', () => {
   let app: AgreementMock;
   let multisig: MultisigMock;
   let appAddr: string;
@@ -74,59 +74,30 @@ describe.only('Simple Records in Agreement', () => {
     await network.provider.send('evm_revert', [snapshotId]);
   });
 
-  it.only('get record', async () => {
-    // Set variables
-    await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
-    await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
+  it('get record', async () => {
+    const txId = '96';
+    const requiredTxs = [1, 29, 18];
+    const signatories = [alice.address, bob.address];
+    const transaction = 'sendEth RECEIVER 1000000000000000000';
+    const conditions = ['blockTimestamp > var LOCK_TIME', 'bool true'];
+    await addSteps(
+      preprAddr,
+      [{ txId, requiredTxs, signatories, conditions, transaction }],
+      appAddr,
+      multisig
+    );
 
-    const ContextMock = await ethers.getContractFactory('ContextMock');
-    const transactionContext = await ContextMock.deploy();
-    await transactionContext.setAppAddress(appAddr);
-    const conditionContext = await ContextMock.deploy();
-    await conditionContext.setAppAddress(appAddr);
+    // Get Records Value
+    const record = await app.getRecord(96);
+    expect(record.txsRequiredRecords.map((v) => v.toNumber())).eql([1, 29, 18]);
+    expect(record.txsSignatories).eql([alice.address, bob.address]);
+    expect(record.txsConditions).eql(['blockTimestamp > var LOCK_TIME', 'bool true']);
+    expect(record.txsTransaction).to.be.equal('sendEth RECEIVER 1000000000000000000');
 
-    records.push({
-      recordId: 96,
-      requiredRecords: [1, 29, 18],
-      signatories: [alice.address],
-      transactionStr: 'sendEth RECEIVER 1000000000000000000',
-      conditionStrings: ['blockTimestamp > var LOCK_TIME'],
-      transactionCtx: transactionContext,
-      conditionContexts: [conditionContext],
-    });
-
-    // Set conditional transaction
-    for (let i = 0; i < records.length; i++) {
-      const {
-        recordId,
-        requiredRecords,
-        signatories,
-        conditionContexts,
-        conditionStrings,
-        transactionCtx,
-        transactionStr,
-      } = records[i];
-
-      // Set conditional transaction
-      await app.addRecordBlueprint(recordId, requiredRecords, signatories);
-      for (let j = 0; j < conditionContexts.length; j++) {
-        await app.addRecordCondition(recordId, conditionStrings[j], conditionContexts[j].address);
-      }
-      await app.addRecordTransaction(recordId, transactionStr, transactionCtx.address);
-
-      // Set msg senders
-      await transactionCtx.setMsgSender(alice.address);
-      await conditionContexts[0].setMsgSender(alice.address);
-      // Get Records Value
-      const record = await app.getRecord(96);
-      await expect(record.txsRequiredRecords.map((v) => v.toNumber())).eql([1, 29, 18]);
-      await expect(record.txsSignatories[0]).to.be.equal(alice.address);
-      await expect(record.txsConditions[0]).to.be.equal('blockTimestamp > var LOCK_TIME');
-      await expect(record.txsTransaction).to.be.equal('sendEth RECEIVER 1000000000000000000');
-      // Get Values Length
-      await expect(await app.signatoriesLen(96)).to.be.equal(1);
-      await expect(await app.requiredRecordsLen(96)).to.be.equal(3);
-    }
+    // Get Values Length
+    expect(await app.signatoriesLen(96)).to.be.equal(2);
+    expect(await app.requiredRecordsLen(96)).to.be.equal(3);
+    expect(await app.conditionStringsLen(96)).to.be.equal(2);
   });
 
   it('archived transaction', async () => {

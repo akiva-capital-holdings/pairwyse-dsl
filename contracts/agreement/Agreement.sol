@@ -299,10 +299,10 @@ contract Agreement {
      * @return true all the required records were executed, false - otherwise
      */
     function _validateRequiredRecords(uint256 _recordId) internal view returns (bool) {
-        uint256[] memory txsRecuiredRecords = requiredRecords[_recordId];
+        uint256[] memory txsRequiredRecords = requiredRecords[_recordId];
         Record memory requiredRecord;
-        for (uint256 i = 0; i < txsRecuiredRecords.length; i++) {
-            requiredRecord = txs[txsRecuiredRecords[i]];
+        for (uint256 i = 0; i < txsRequiredRecords.length; i++) {
+            requiredRecord = txs[txsRequiredRecords[i]];
             if (!requiredRecord.isExecuted) return false;
         }
         return true;
