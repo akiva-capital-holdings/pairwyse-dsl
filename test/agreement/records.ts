@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
 import { ParserMock } from '../../typechain-types/dsl/mocks';
-import { hex4Bytes } from '../utils/utils';
+import { addSteps, hex4Bytes } from '../utils/utils';
 import { deployAgreementMock, deployParserMock } from '../../scripts/data/deploy.utils.mock';
 import { deployPreprocessor } from '../../scripts/data/deploy.utils';
 import { AgreementMock, ContextMock__factory } from '../../typechain-types';
@@ -72,6 +72,32 @@ describe('Simple Records in Agreement', () => {
     records = [];
     // Return to the snapshot
     await network.provider.send('evm_revert', [snapshotId]);
+  });
+
+  it('get record', async () => {
+    const txId = '96';
+    const requiredTxs = [1, 29, 18];
+    const signatories = [alice.address, bob.address];
+    const transaction = 'sendEth RECEIVER 1000000000000000000';
+    const conditions = ['blockTimestamp > var LOCK_TIME', 'bool true'];
+    await addSteps(
+      preprAddr,
+      [{ txId, requiredTxs, signatories, conditions, transaction }],
+      appAddr,
+      multisig
+    );
+
+    // Get Records Value
+    const record = await app.getRecord(96);
+    expect(record.txsRequiredRecords.map((v) => v.toNumber())).eql([1, 29, 18]);
+    expect(record.txsSignatories).eql([alice.address, bob.address]);
+    expect(record.txsConditions).eql(['blockTimestamp > var LOCK_TIME', 'bool true']);
+    expect(record.txsTransaction).to.be.equal('sendEth RECEIVER 1000000000000000000');
+
+    // Get Values Length
+    expect(await app.signatoriesLen(96)).to.be.equal(2);
+    expect(await app.requiredRecordsLen(96)).to.be.equal(3);
+    expect(await app.conditionStringsLen(96)).to.be.equal(2);
   });
 
   it('archived transaction', async () => {
