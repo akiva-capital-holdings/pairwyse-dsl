@@ -1,5 +1,7 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
+import { BigNumber } from 'ethers';
+
 import { E2EApp, Context, Preprocessor, Stack } from '../../../typechain-types';
 import { checkStackTailv2, hex4Bytes, hex4BytesShort } from '../../utils/utils';
 import { deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
@@ -353,6 +355,183 @@ describe('End-to-end', () => {
         '2df384fb' + // SUM
         '24'; // end
       expect(await ctx.program()).to.equal(expectedProgram);
+    });
+  });
+
+  describe('Arrays', async () => {
+    it('get empty items from arrays with different types', async () => {
+      const input = `
+      uint256[] NUMBERS
+      address[] INDEXES
+      lengthOf INDEXES
+      lengthOf NUMBERS
+      get 0 NUMBERS
+      get 0 INDEXES
+      `;
+      const code = await preprocessor.callStatic.transform(ctxAddr, input);
+      const expectedCode = [
+        'declareArr',
+        'uint256',
+        'NUMBERS',
+        'declareArr',
+        'address',
+        'INDEXES',
+        'lengthOf',
+        'INDEXES',
+        'lengthOf',
+        'NUMBERS',
+        'get',
+        '0',
+        'NUMBERS',
+        'get',
+        '0',
+        'INDEXES',
+      ];
+      expect(code).to.eql(expectedCode);
+
+      // to Parser
+      const NUMBER = new Array(62).join('0') + 541;
+      const ONE = new Array(64).join('0') + 1;
+      const ZERO = new Array(65).join('0');
+      await app.parseCode(code);
+      const expectedProgram =
+        '0x' +
+        '31' + // declareArr
+        '01' + // uint256
+        '1fff709e' + // bytecode for NUMBERS
+        '31' + // declareArr
+        '03' + // address
+        '257b3678' + // bytecode for INDEXES
+        '34' + // lengthOf
+        '257b3678' + // bytecode for INDEXES
+        '34' + // lengthOf
+        '1fff709e' + // bytecode for NUMBERS
+        '35' + // get
+        `${ZERO}` + // 0 index
+        '1fff709e' + // bytecode for NUMBERS
+        '35' + // get
+        `${ZERO}` + // 1 index
+        `257b3678`; // bytecode for INDEXES
+      expect(await ctx.program()).to.equal(expectedProgram);
+
+      // Execute and check
+      await checkStackTailv2(stack, []);
+
+      await app.execute();
+      const StackCont = await ethers.getContractFactory('Stack');
+      const contextStackAddress = await ctx.stack();
+      stack = StackCont.attach(contextStackAddress);
+
+      expect(await app.get(0, hex4Bytes('INDEXES'))).to.equal(`0x${new Array(65).join('0')}`);
+      expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(`0x${new Array(65).join('0')}`);
+
+      await checkStackTailv2(stack, []);
+    });
+
+    it('get items from arrays with different types', async () => {
+      const input = `
+      uint256[] NUMBERS
+      address[] INDEXES
+      insert 0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc into INDEXES
+      insert 1345 into NUMBERS
+      insert 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc into INDEXES
+      lengthOf INDEXES
+      lengthOf NUMBERS
+      get 0 NUMBERS
+      get 1 INDEXES
+      `;
+      const code = await preprocessor.callStatic.transform(ctxAddr, input);
+      const expectedCode = [
+        'declareArr',
+        'uint256',
+        'NUMBERS',
+        'declareArr',
+        'address',
+        'INDEXES',
+        'push',
+        '0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc',
+        'INDEXES',
+        'push',
+        '1345',
+        'NUMBERS',
+        'push',
+        '0x47f8a90ede3d84c7c0166bd84a4635e4675accfc',
+        'INDEXES',
+        'lengthOf',
+        'INDEXES',
+        'lengthOf',
+        'NUMBERS',
+        'get',
+        '0',
+        'NUMBERS',
+        'get',
+        '1',
+        'INDEXES',
+      ];
+      expect(code).to.eql(expectedCode);
+
+      // to Parser
+      const NUMBER = new Array(62).join('0') + 541;
+      const ONE = new Array(64).join('0') + 1;
+      const ZERO = new Array(65).join('0');
+      await app.parseCode(code);
+      const expectedProgram =
+        '0x' +
+        '31' + // declareArr
+        '01' + // uint256
+        '1fff709e' + // bytecode for NUMBERS
+        '31' + // declareArr
+        '03' + // address
+        '257b3678' + // bytecode for INDEXES
+        '33' + // push
+        'e7f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // first address
+        '257b3678' + // bytecode for INDEXES
+        '33' + // push
+        `${NUMBER}` + // 1345 in dec or 541 in hex
+        '1fff709e' + // bytecode for NUMBERS
+        '33' + // push
+        '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // second address
+        '257b3678' + // bytecode for INDEXES
+        '34' + // lengthOf
+        '257b3678' + // bytecode for INDEXES
+        '34' + // lengthOf
+        '1fff709e' + // bytecode for NUMBERS
+        '35' + // get
+        `${ZERO}` + // 0 index
+        '1fff709e' + // bytecode for NUMBERS
+        '35' + // get
+        `${ONE}` + // 1 index
+        `257b3678`; // bytecode for INDEXES
+      expect(await ctx.program()).to.equal(expectedProgram);
+
+      // Execute and check
+      await checkStackTailv2(stack, []);
+
+      await app.execute();
+      const StackCont = await ethers.getContractFactory('Stack');
+      const contextStackAddress = await ctx.stack();
+      stack = StackCont.attach(contextStackAddress);
+
+      /*
+        lengthOf INDEXES -> 2 in the stack
+        lengthOf NUMBERS -> 1 in the stack
+        0 item in NUMBERS -> 1345 in the stack
+        1 item in INDEXES -> 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc in the stack
+      */
+      expect(await app.get(0, hex4Bytes('INDEXES'))).to.equal(
+        `0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
+      );
+      expect(await app.get(1, hex4Bytes('INDEXES'))).to.equal(
+        `0x47f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
+      );
+      expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(`0x${new Array(62).join('0')}541`);
+
+      await checkStackTailv2(stack, [
+        2,
+        1,
+        1345,
+        BigNumber.from('0x47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000'),
+      ]);
     });
   });
 

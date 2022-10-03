@@ -88,7 +88,7 @@ library OtherOpcodes {
         );
 
         require(success, ErrorsGeneralOpcodes.OP1);
-        require(bytes32(data) != bytes32(0x0), 'Tries to get item from non existing array'); // TODO: move to Errors lib
+        require(bytes32(data) != bytes32(0x0), ErrorsGeneralOpcodes.OP2);
         (success, data) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
                 'get(uint256,bytes32)',
@@ -114,7 +114,7 @@ library OtherOpcodes {
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
-        require(bytes32(data) != bytes32(0x0), 'Tries to put item to non existed array'); // TODO: move to Errors lib
+        require(bytes32(data) != bytes32(0x0), ErrorsGeneralOpcodes.OP2);
 
         (success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
