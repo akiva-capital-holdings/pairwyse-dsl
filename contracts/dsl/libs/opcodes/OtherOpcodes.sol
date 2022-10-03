@@ -114,7 +114,7 @@ library OtherOpcodes {
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
-        require(bytes32(data) != bytes32(0x0), ErrorsGeneralOpcodes.OP2);
+        require(bytes32(data) != bytes32(0x0), ErrorsGeneralOpcodes.OP4);
 
         (success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
