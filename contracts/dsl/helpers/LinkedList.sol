@@ -65,7 +65,7 @@ contract LinkedList {
         bytes32 currentPosition = heads[_arrName];
 
         while (count++ < _index) {
-            (currentPosition) = _getNextPosition(currentPosition);
+            (, currentPosition) = _getData(currentPosition);
         }
         (data, ) = _getData(currentPosition);
     }
@@ -159,7 +159,7 @@ contract LinkedList {
     function _getEmptyMemoryPosition() internal view returns (bytes32 position) {
         assembly {
             position := sload(0x40) // free storage pointer, mload - free memory pointer
-            // TODO: make it dinamicly as  _position := msize() but in the storage.
+            // TODO: make it dynamically as  _position := msize() but in the storage.
             // kinda get the highest available block of memory
         }
     }
@@ -167,7 +167,6 @@ contract LinkedList {
     /**
      * @dev Returns the value of current position and the position(nextPosition)
      * to the next object in array
-     * TODO: simplify _getData() and _getNextPosition() functions
      * @param _position is a current item position in the array
      * @return data is a current data stored in the _position
      * @return nextPosition is a next position to the next item in the array
@@ -182,17 +181,5 @@ contract LinkedList {
             nextPosition := sload(add(_position, 0x20)) // 0x20 is the size from data
         }
         return (data, nextPosition);
-    }
-
-    /**
-     * @dev Returns the next position in the array related to provided (current) one.
-     * TODO: simplify _getData() and _getNextPosition() functions
-     * @param _position is a current item position in the array
-     * @return nextPosition is a next position to the next item in the array
-     */
-    function _getNextPosition(bytes32 _position) internal view returns (bytes32 nextPosition) {
-        assembly {
-            nextPosition := sload(add(_position, 0x20))
-        }
     }
 }

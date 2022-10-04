@@ -47,7 +47,9 @@ library ErrorsStack {
  */
 library ErrorsGeneralOpcodes {
     string constant OP1 = 'OP1'; // Opcodes: opSetLocal call not success
+    string constant OP2 = 'OP2'; // Opcodes: tries to get an item from non-existing array
     string constant OP3 = 'OP3'; // Opcodes: opLoadRemote call not success
+    string constant OP4 = 'OP4'; // Opcodes: tries to put an item to non-existing array
     string constant OP5 = 'OP5'; // Opcodes: opLoadLocal call not success
 }
 

@@ -5,11 +5,12 @@ import { Preprocessor } from '../Preprocessor.sol';
 import { ParserMock } from '../mocks/ParserMock.sol';
 import { IContext } from '../interfaces/IContext.sol';
 import { Executor } from '../libs/Executor.sol';
+import { LinkedList } from '../helpers/LinkedList.sol';
 import { UnstructuredStorageMock } from '../mocks/UnstructuredStorageMock.sol';
 
 // import "hardhat/console.sol";
 
-contract E2EApp is UnstructuredStorageMock {
+contract E2EApp is UnstructuredStorageMock, LinkedList {
     address public preprocessor;
     address public parser;
     address public context;
