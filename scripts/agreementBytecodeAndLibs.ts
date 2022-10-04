@@ -1,6 +1,6 @@
-import { ethers } from 'hardhat';
 import fs from 'fs';
 import path from 'path';
+import * as hre from 'hardhat';
 import { deployBase, deployOpcodeLibs } from './data/deploy.utils';
 
 /**
@@ -8,17 +8,19 @@ import { deployBase, deployOpcodeLibs } from './data/deploy.utils';
  * libraries
  */
 async function main() {
+  console.log(`Deploying from address ${(await hre.ethers.getSigners())[0].address}`);
+
   // Note: run this on the same node as Front End to actually deploy these libraries
   const [
     comparisonOpcodesLibAddr,
     branchingOpcodesLibAddr,
     logicalOpcodesLibAddr,
     otherOpcodesLibAddr,
-  ] = await deployOpcodeLibs();
+  ] = await deployOpcodeLibs(hre);
 
-  const [, executorLibAddr] = await deployBase();
+  const [, executorLibAddr] = await deployBase(hre);
 
-  const AgreementContract = await ethers.getContractFactory('Agreement', {
+  const AgreementContract = await hre.ethers.getContractFactory('Agreement', {
     libraries: {
       ComparisonOpcodes: comparisonOpcodesLibAddr,
       BranchingOpcodes: branchingOpcodesLibAddr,

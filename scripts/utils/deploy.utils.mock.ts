@@ -1,40 +1,38 @@
 import '@nomiclabs/hardhat-ethers';
-import * as hre from 'hardhat';
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { deployExecutor, deployOpcodeLibs, deployPreprocessor } from './deploy.utils';
 
-const { ethers } = hre;
-
-export const deployParserMock = async () => {
+export const deployParserMock = async (hre: HardhatRuntimeEnvironment) => {
   // Deploy libraries
-  const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
-  const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
+  const stringLib = await (await hre.ethers.getContractFactory('StringUtils')).deploy();
+  const byteLib = await (await hre.ethers.getContractFactory('ByteUtils')).deploy();
 
-  const ParserMockContract = await ethers.getContractFactory('ParserMock', {
+  const ParserMockContract = await hre.ethers.getContractFactory('ParserMock', {
     libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
   });
   const parser = await ParserMockContract.deploy();
   return parser.address;
 };
 
-export const deployBaseMock = async () => {
-  const parserAddr = await deployParserMock();
-  const executorLibAddr = await deployExecutor();
-  const preprocessorAddr = await deployPreprocessor();
+export const deployBaseMock = async (hre: HardhatRuntimeEnvironment) => {
+  const parserAddr = await deployParserMock(hre);
+  const executorLibAddr = await deployExecutor(hre);
+  const preprocessorAddr = await deployPreprocessor(hre);
 
   return [parserAddr, executorLibAddr, preprocessorAddr];
 };
 
-export const deployAgreementMock = async (multisigAddr: string) => {
+export const deployAgreementMock = async (hre: HardhatRuntimeEnvironment, multisigAddr: string) => {
   const [
     comparisonOpcodesLibAddr,
     branchingOpcodesLibAddr,
     logicalOpcodesLibAddr,
     otherOpcodesLibAddr,
-  ] = await deployOpcodeLibs();
+  ] = await deployOpcodeLibs(hre);
 
-  const [parserAddr, executorLibAddr] = await deployBaseMock();
+  const [parserAddr, executorLibAddr] = await deployBaseMock(hre);
 
-  const MockContract = await ethers.getContractFactory('AgreementMock', {
+  const MockContract = await hre.ethers.getContractFactory('AgreementMock', {
     libraries: {
       ComparisonOpcodes: comparisonOpcodesLibAddr,
       BranchingOpcodes: branchingOpcodesLibAddr,

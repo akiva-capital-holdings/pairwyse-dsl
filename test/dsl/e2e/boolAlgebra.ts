@@ -1,7 +1,9 @@
-import { ethers } from 'hardhat';
-import { deployBase, deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
+import * as hre from 'hardhat';
+import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 import { App, Context, Stack } from '../../../typechain-types';
 import { checkStackTailv2 } from '../../utils/utils';
+
+const { ethers } = hre;
 
 describe('Boolean Algebra', () => {
   let stack: Stack;
@@ -15,9 +17,9 @@ describe('Boolean Algebra', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
-    ] = await deployOpcodeLibs();
+    ] = await deployOpcodeLibs(hre);
 
-    const [parserAddr, executorLibAddr, preprAddr] = await deployBase();
+    const [parserAddr, executorLibAddr, preprAddr] = await deployBase(hre);
 
     // Deploy Context
     ctx = await (await ethers.getContractFactory('Context')).deploy();
