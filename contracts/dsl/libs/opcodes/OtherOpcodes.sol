@@ -102,6 +102,31 @@ library OtherOpcodes {
     }
 
     /**
+     * @dev Inserts items to structure
+     */
+    function opStruct(address _ctx) public {
+        bytes32 _structNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+
+        // TODO: simplify
+        while (uint256(_varNameB32 >> 224) != 3409547233) {
+            // searching endStruct opcode
+            bytes32 _value = OpcodeHelpers.getNextBytes(_ctx, 32);
+
+            (bool success, ) = IContext(_ctx).appAddr().call(
+                abi.encodeWithSignature(
+                    'addItem(bytes32,bytes32,bytes32)',
+                    _structNameB32,
+                    _varNameB32,
+                    _value
+                )
+            );
+            require(success, ErrorsGeneralOpcodes.OP1);
+            _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+        }
+    }
+
+    /**
      * @dev Inserts an item to array
      * @param _ctx Context contract instance address
      */

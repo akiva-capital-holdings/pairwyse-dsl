@@ -505,6 +505,14 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
 
+        addOpcode(
+            'struct',
+            0x36,
+            OtherOpcodes.opStruct.selector,
+            IParser.asmStruct.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
         string memory name = 'loadRemote';
         addOpcode(
             name,

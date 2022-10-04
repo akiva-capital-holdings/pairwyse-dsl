@@ -120,8 +120,8 @@ contract Parser is IParser {
 
     function asmGet() public {
         string memory _value = _nextCmd();
-        bytes4 _arrNameB32 = bytes4(keccak256(abi.encodePacked(_nextCmd())));
-        program = bytes.concat(program, bytes32(_value.toUint256()), _arrNameB32);
+        bytes4 _arrName = bytes4(keccak256(abi.encodePacked(_nextCmd())));
+        program = bytes.concat(program, bytes32(_value.toUint256()), _arrName);
     }
 
     /**
@@ -134,7 +134,7 @@ contract Parser is IParser {
      */
     function asmPush() public {
         string memory _value = _nextCmd();
-        bytes4 _arrNameB32 = bytes4(keccak256(abi.encodePacked(_nextCmd())));
+        bytes4 _arrName = bytes4(keccak256(abi.encodePacked(_nextCmd())));
 
         if (_value.mayBeAddress()) {
             bytes memory _sliced = bytes(_value).slice(2, 42); // without first `0x` symbols
@@ -143,7 +143,7 @@ contract Parser is IParser {
             program = bytes.concat(program, bytes32(_value.toUint256()));
         }
 
-        program = bytes.concat(program, _arrNameB32);
+        program = bytes.concat(program, _arrName);
     }
 
     /**
@@ -360,6 +360,24 @@ contract Parser is IParser {
     function asmFunc() public {
         labelPos[_nextCmd()] = program.length; // `name of function` position
         program = bytes.concat(program, bytes2(0)); // placeholder for `name of function` offset
+    }
+
+    function asmStruct() public {
+        // EX. `struct BOB balance 456 account 0x345...`
+        _parseVariable(); // parse the name of structure - `BOB`
+        do {
+            _parseVariable(); // parse the name of variable - `balance`, `account`
+            string memory _value = _nextCmd(); // parse the value of `balance` variable - `456`, `0x345...`
+            if (_value.mayBeAddress()) {
+                bytes memory _sliced = bytes(_value).slice(2, 42); // without first `0x` symbols
+                program = bytes.concat(program, bytes32(_sliced.fromHexBytes()));
+            } else if (_value.mayBeNumber()) {
+                program = bytes.concat(program, bytes32(_value.toUint256()));
+            }
+        } while (!(cmds[cmdIdx].equal('endStruct')));
+
+        _parseVariable(); // parse the 'endStruct' - 0x656e64537472756374
+        // TODO: remove from list?
     }
 
     /**

@@ -1754,4 +1754,117 @@ describe('Preprocessor', () => {
       });
     });
   });
+
+  describe('Structs', () => {
+    describe('uint256 type', () => {
+      it('should return a simple struct with one uint256 parameter', async () => {
+        const input = 'struct BOB {balance: 456}';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql(['struct', 'BOB', 'balance', '456', 'endStruct']);
+      });
+
+      it('should return a simple struct with two uint256 parameters', async () => {
+        const input = 'struct BOB {balance: 456, lastPayment: 1000}';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql([
+          'struct',
+          'BOB',
+          'balance',
+          '456',
+          'lastPayment',
+          '1000',
+          'endStruct',
+        ]);
+      });
+    });
+
+    describe('address type', () => {
+      it('should return a simple struct with one address parameter', async () => {
+        const input = 'struct BOB { account: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc }';
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql([
+          'struct',
+          'BOB',
+          'account',
+          '0x47f8a90ede3d84c7c0166bd84a4635e4675accfc',
+          'endStruct',
+        ]);
+      });
+
+      it('should return a simple struct with two address parameters', async () => {
+        const input = `struct BOB {myAccount: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc, wifesAccount: 0x27f8a90ede3d84c7c0166bd84a4635e4675accfc}`;
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+        expect(cmds).to.eql([
+          'struct',
+          'BOB',
+          'myAccount',
+          '0x47f8a90ede3d84c7c0166bd84a4635e4675accfc', // a. as a marker of address type of variable
+          'wifesAccount',
+          '0x27f8a90ede3d84c7c0166bd84a4635e4675accfc',
+          'endStruct',
+        ]);
+      });
+    });
+
+    describe('mixed types', () => {
+      it('complex struct with different types', async () => {
+        const input = `
+            uint256 4567
+            struct Bob {
+              account: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc,
+              lastPayment: 1000
+            }
+            blockTimestamp < loadLocal uint256 EXPIRY
+              or
+            (
+              loadLocal bool RISK != bool true
+            )
+          `;
+        const res = await app.callStatic.split(input);
+        expect(res).to.eql([
+          'uint256',
+          '4567',
+          'struct',
+          'Bob',
+          'account',
+          '0x47f8a90ede3d84c7c0166bd84a4635e4675accfc',
+          'lastPayment',
+          '1000',
+          'endStruct',
+          'blockTimestamp',
+          '<',
+          'loadLocal',
+          'uint256',
+          'EXPIRY',
+          'or',
+          '(',
+          'loadLocal',
+          'bool',
+          'RISK',
+          '!=',
+          'bool',
+          'true',
+          ')',
+        ]);
+      });
+
+      it('simple struct with uint256 and address parameters', async () => {
+        const input = `
+            struct Bob {
+              account: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc,
+              lastPayment: 1000
+            }`;
+        const res = await app.callStatic.split(input);
+        expect(res).to.eql([
+          'struct',
+          'Bob',
+          'account',
+          '0x47f8a90ede3d84c7c0166bd84a4635e4675accfc',
+          'lastPayment',
+          '1000',
+          'endStruct',
+        ]);
+      });
+    });
+  });
 });

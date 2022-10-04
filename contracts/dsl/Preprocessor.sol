@@ -144,16 +144,32 @@ contract Preprocessor is IPreprocessor {
     function split(string memory _program) public returns (string[] memory) {
         delete result;
         string memory buffer;
+        bool isStructStart;
 
         for (uint256 i = 0; i < _program.length(); i++) {
             string memory char = _program.char(i);
 
             // if-else conditions parsing
             if (char.equal('{')) continue;
-            if (char.equal('}')) {
+
+            // ---> start block for DSL struct without types
+            if ((char.equal(':') || char.equal(',')) && isStructStart) {
+                result.push(buffer);
+                buffer = '';
+                continue;
+            } else if (char.equal('{')) continue;
+
+            if (isStructStart && char.equal('}')) {
+                if (!(buffer.equal('') || buffer.equal(' '))) result.push(buffer);
+                result.push('endStruct');
+                buffer = '';
+                isStructStart = false;
+                continue;
+            } else if (char.equal('}')) {
                 result.push('end');
                 continue;
             }
+            // <--- end block for DSL struct without types
 
             if (
                 char.equal(' ') ||
@@ -174,6 +190,9 @@ contract Preprocessor is IPreprocessor {
 
             if (char.equal('(') || char.equal(')') || char.equal('[') || char.equal(']')) {
                 result.push(char);
+            }
+            if (result.length > 0 && !isStructStart && result[result.length - 1].equal('struct')) {
+                isStructStart = true;
             }
         }
 
@@ -209,15 +228,7 @@ contract Preprocessor is IPreprocessor {
         string[] memory _code,
         StringStack _stack
     ) public returns (string[] memory) {
-        bool isFunc;
-        bool isName;
-        bool loadRemoteFlag;
-        bool directUseUint256;
-        bool isArrayStart;
-
-        uint256 loadRemoteVarCount;
-        uint256 currencyMultiplier;
-        uint256 insertStep;
+        PreprocessorInfo memory s;
 
         string memory chunk;
         string memory name;
@@ -229,25 +240,27 @@ contract Preprocessor is IPreprocessor {
         // Infix to postfix
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
-            currencyMultiplier = 0;
+
+            if (chunk.equal('struct')) s.isStructStart = true;
+            if (chunk.equal('endStruct')) s.isStructStart = false;
 
             // returns true if the chunk can use uint256 directly
-            directUseUint256 = _isDirectUseUint256(directUseUint256, chunk);
+            s.directUseUint256 = _isDirectUseUint256(s.directUseUint256, s.isStructStart, chunk);
             // checks and updates if the chunk can use uint256 or it's loadRemote opcode
-            (loadRemoteFlag, loadRemoteVarCount) = _updateRemoteParams(
-                loadRemoteFlag,
-                loadRemoteVarCount,
+            (s.loadRemoteFlag, s.loadRemoteVarCount) = _updateRemoteParams(
+                s.loadRemoteFlag,
+                s.loadRemoteVarCount,
                 chunk
             );
 
             // ---> start block for DSL arrays without types
             // TODO: code for array tasks will be added below
-            if (chunk.equal('[') && !isArrayStart) {
-                isArrayStart = true;
+            if (chunk.equal('[') && !s.isArrayStart) {
+                s.isArrayStart = true;
                 continue;
-            } else if (isArrayStart && chunk.equal(']')) {
+            } else if (s.isArrayStart && chunk.equal(']')) {
                 continue;
-            } else if (isArrayStart && !chunk.equal(']')) {
+            } else if (s.isArrayStart && !chunk.equal(']')) {
                 if (result.length > 0) {
                     string memory _type = result[result.length - 1];
                     result.pop();
@@ -258,26 +271,25 @@ contract Preprocessor is IPreprocessor {
                     result.push(chunk);
                 }
 
-                isArrayStart = false;
+                s.isArrayStart = false;
                 continue;
             }
 
-            if (chunk.equal('insert') && insertStep != 1) {
-                insertStep = 1;
+            if (chunk.equal('insert') && s.insertStep != 1) {
+                s.insertStep = 1;
                 result.push('push');
                 continue;
-            } else if (insertStep == 1 && !chunk.equal('into')) {
-                insertStep = 2;
+            } else if (s.insertStep == 1 && !chunk.equal('into')) {
+                s.insertStep = 2;
                 result.push(chunk);
                 continue;
-            } else if (insertStep == 2) {
+            } else if (s.insertStep == 2) {
                 if (!chunk.equal('into')) {
                     result.push(chunk);
-                    insertStep = 0;
+                    s.insertStep = 0;
                 }
                 continue;
             }
-
             // <--- end block for DSL arrays
 
             // Replace alises with base commands
@@ -301,39 +313,45 @@ contract Preprocessor is IPreprocessor {
                     result.push(_stack.pop());
                 }
                 _stack.pop(); // remove '(' that is left
-            } else if (!loadRemoteFlag && chunk.mayBeNumber() && !isFunc && !directUseUint256) {
-                if (i + 1 <= _code.length - 1) {
-                    currencyMultiplier = _multiplier(_code[i + 1]);
-                }
+            } else if (
+                !s.loadRemoteFlag && chunk.mayBeNumber() && !s.isFunc && !s.directUseUint256
+            ) {
                 _updateUINT256param();
-                result.push(_parseNumber(chunk, currencyMultiplier));
-            } else if (chunk.mayBeNumber() && !isFunc && directUseUint256) {
                 if (i + 1 <= _code.length - 1) {
-                    currencyMultiplier = _multiplier(_code[i + 1]);
+                    result.push(_parseChunk(chunk, _getMultiplier(_code[i + 1])));
+                } else {
+                    result.push(_parseChunk(chunk, 0));
                 }
-                directUseUint256 = false;
-                result.push(_parseNumber(chunk, currencyMultiplier));
+            } else if (
+                !chunk.mayBeAddress() && chunk.mayBeNumber() && !s.isFunc && s.directUseUint256
+            ) {
+                s.directUseUint256 = false;
+                if (i + 1 <= _code.length - 1) {
+                    result.push(_parseChunk(chunk, _getMultiplier(_code[i + 1])));
+                } else {
+                    result.push(_parseChunk(chunk, 0));
+                }
             } else if (chunk.equal('func')) {
                 // if the chunk is 'func' then `Functions block` will occur
-                isFunc = true;
-            } else if (isFunc && !isName) {
+                s.isFunc = true;
+            } else if (s.isFunc && !s.isName) {
                 // `Functions block` started
                 // if was not set the name for a function
-                (isFunc, isName, name) = _parceFuncMainData(chunk, name, isFunc, isName);
-            } else if (isFunc && isName) {
+                (s.isFunc, s.isName, name) = _parseFuncMainData(chunk, name, s.isFunc, s.isName);
+            } else if (s.isFunc && s.isName) {
                 // `Functions block` finished
                 // if it was already set the name for a function
-                isName = false;
-                isFunc = _parceFuncParams(chunk, name, isFunc);
+                s.isName = false;
+                s.isFunc = _parseFuncParams(chunk, name, s.isFunc);
             } else if (_isCurrencySymbol(chunk)) {
                 // we've already transformed the number before the keyword
                 // so we can safely skip the chunk
                 continue;
             } else {
                 result.push(chunk);
-                if (loadRemoteVarCount == 4) {
-                    loadRemoteFlag = false;
-                    loadRemoteVarCount = 0;
+                if (s.loadRemoteVarCount == 4) {
+                    s.loadRemoteFlag = false;
+                    s.loadRemoteVarCount = 0;
                 }
             }
         }
@@ -341,7 +359,6 @@ contract Preprocessor is IPreprocessor {
         while (_stack.length() > 0) {
             result.push(_stack.pop());
         }
-
         return result;
     }
 
@@ -350,27 +367,30 @@ contract Preprocessor is IPreprocessor {
      * If it is Ether, then it returns 1000000000000000000,
      * If it is GWEI, then it returns 1000000000
      * @param _chunk is a command from DSL command list
-     * @return multiplier returns the corresponding multiplier.
+     * @return returns the corresponding multiplier.
      */
-    function _multiplier(string memory _chunk) internal pure returns (uint256 multiplier) {
+    function _getMultiplier(string memory _chunk) internal pure returns (uint256) {
         if (_chunk.equal('ETH')) {
-            return multiplier = 1000000000000000000;
+            return 1000000000000000000;
         } else if (_chunk.equal('GWEI')) {
-            return multiplier = 1000000000;
-        } else return multiplier = 0;
+            return 1000000000;
+        } else return 0;
     }
 
-    // function _getArrayType(StringArray _array, string memory _chunk)
-    //     internal
-    //     view
-    //     returns (string memory _type)
-    // {
-    //     if (_chunk.mayBeNumber()) {
-    //         return 'uint256';
-    //     } else if (_array.getType().equal('implicitType')) {
-    //         revert('PPR1'); // wrong type of array
-    //     }
-    // }
+    /**
+     * @dev returned parsed chunk, values can be address with 0x parameter or be uint256 type
+     * @param _chunk provided string
+     * @param _currencyMultiplier provided number of the multiplier
+     * @return updated _chunk value in dependence on its type
+     */
+    function _parseChunk(string memory _chunk, uint256 _currencyMultiplier)
+        internal
+        pure
+        returns (string memory)
+    {
+        if (_chunk.mayBeAddress()) return _chunk;
+        return _parseNumber(_chunk, _currencyMultiplier);
+    }
 
     /**
      * @dev As the string of values can be simple and complex for DSL this function returns a number in
@@ -378,11 +398,10 @@ contract Preprocessor is IPreprocessor {
      * For example:
      * `uint256 1000000` - simple
      * `uint256 1e6 - complex`
-     * @param _chunk provided number by the user
+     * @param _chunk provided number
      * @param _currencyMultiplier provided number of the multiplier
      * @return updatedChunk amount in Wei of provided _chunk value
      */
-
     function _parseNumber(string memory _chunk, uint256 _currencyMultiplier)
         internal
         pure
@@ -435,7 +454,7 @@ contract Preprocessor is IPreprocessor {
      * @param _currentName is a current name of function
      * @param _isFunc describes if the func opcode was occured
      */
-    function _parceFuncParams(
+    function _parseFuncParams(
         string memory _chunk,
         string memory _currentName,
         bool _isFunc
@@ -467,7 +486,7 @@ contract Preprocessor is IPreprocessor {
      * @return isName the new state of _isName for function processing
      * @return name the new name of the function
      */
-    function _parceFuncMainData(
+    function _parseFuncMainData(
         string memory _chunk,
         string memory _currentName,
         bool _isFunc,
@@ -718,17 +737,18 @@ contract Preprocessor is IPreprocessor {
      * @param _chunk is a current chunk from the outer function
      * @return _isDirect is true if a chunk is matched one from the opcode list, otherwise is false
      */
-    function _isDirectUseUint256(bool _directUseUint256, string memory _chunk)
-        internal
-        pure
-        returns (bool _isDirect)
-    {
+    function _isDirectUseUint256(
+        bool _directUseUint256,
+        bool _isStruct,
+        string memory _chunk
+    ) internal pure returns (bool _isDirect) {
         _isDirect = _directUseUint256;
         if (
             _chunk.equal('transferFrom') ||
             _chunk.equal('sendEth') ||
             _chunk.equal('transfer') ||
-            _chunk.equal('get')
+            _chunk.equal('get') ||
+            _isStruct
         ) {
             _isDirect = true;
         }

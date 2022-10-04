@@ -2,9 +2,10 @@
 pragma solidity ^0.8.0;
 
 import { UnstructuredStorageMock } from '../../dsl/mocks/UnstructuredStorageMock.sol';
+import { StructType } from '../helpers/StructType.sol';
 import { Parser } from '../Parser.sol';
 
-contract ParserMock is Parser, UnstructuredStorageMock {
+contract ParserMock is Parser, UnstructuredStorageMock, StructType {
     // solhint-disable-next-line no-empty-blocks
     constructor() {}
 

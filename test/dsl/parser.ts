@@ -369,7 +369,7 @@ describe('Parser', () => {
           expect(await ctx.program()).to.equal(
             '0x' +
               '31' + // declareArr
-              '01' + // uint256
+              '01' + // uint256 type
               '1fff709e' + // bytecode for a `NUMBERS` name
               '1a' + // uint256
               `${number}` + // 6
@@ -394,7 +394,7 @@ describe('Parser', () => {
               '1a' + // uint256
               `${number}` + // 6
               '31' + // declareArr
-              '01' + // uint256
+              '01' + // uint256 type
               '1fff709e' + // bytecode for a `NUMBERS` name
               '1b' + // var
               '1b7b16d4' // TIMESTAMP
@@ -408,7 +408,7 @@ describe('Parser', () => {
           expect(await ctx.program()).to.equal(
             '0x' +
               '31' + // declareArr
-              '03' + // address
+              '03' + // address type
               '5e315030' // bytecode for a `MARY` name
           );
         });
@@ -431,7 +431,7 @@ describe('Parser', () => {
               '1b' + // var
               '1b7b16d4' + // TIMESTAMP
               '31' + // declareArr
-              '03' + // address
+              '03' + // address type
               '5e315030' // bytecode for a `MARY` name
           );
         });
@@ -647,6 +647,90 @@ describe('Parser', () => {
           `${ONE}` + // 1 index
           `257b3678`; // bytecode for INDEXES
         expect(await ctx.program()).to.equal(expectedProgram);
+      });
+    });
+
+    describe.only('Structs', () => {
+      describe('uint256', () => {
+        it('insert number', async () => {
+          const number = new Array(64).join('0') + 3;
+
+          await app.parseCodeExt(ctxAddr, ['struct', 'BOB', 'balance', '3', 'endStruct']);
+          expect(await ctx.program()).to.equal(
+            '0x' +
+              '36' + // struct opcode
+              '29d93e4f' + // BOB
+              'ea06f38f' + // balance
+              `${number}` + // 3
+              'cb398fe1' // endStruct
+          );
+        });
+
+        it('get number', async () => {});
+
+        it('use number after getting', async () => {});
+      });
+
+      describe('address', () => {
+        it('insert address', async () => {
+          await app.parseCodeExt(ctxAddr, [
+            'struct',
+            'BOB',
+            'account',
+            '0x47f8a90ede3d84c7c0166bd84a4635e4675accfc',
+            'endStruct',
+          ]);
+          expect(await ctx.program()).to.equal(
+            '0x' +
+              '36' + // struct opcode
+              '29d93e4f' + // BOB
+              'd844bb55' + // account
+              `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // addres without 0x
+              'cb398fe1' // endStruct
+          );
+        });
+
+        it('get address', async () => {});
+        it('use address after getting', async () => {});
+      });
+
+      describe('mixed types', () => {
+        it('insert empty value should not cause errors', async () => {
+          await app.parseCodeExt(ctxAddr, ['struct', 'BOB', 'endStruct']);
+          expect(await ctx.program()).to.equal(
+            '0x' +
+              '36' + // struct opcode
+              '29d93e4f' + // BOB
+              'cb398fe1' // endStruct
+          );
+        });
+
+        it('insert address and number', async () => {
+          const number = new Array(64).join('0') + 9;
+          await app.parseCodeExt(ctxAddr, [
+            'struct',
+            'BOB',
+            'account',
+            '0x47f8a90ede3d84c7c0166bd84a4635e4675accfc',
+            'tax',
+            '9',
+            'endStruct',
+          ]);
+          expect(await ctx.program()).to.equal(
+            '0x' +
+              '36' + // struct opcode
+              '29d93e4f' + // BOB
+              'd844bb55' + // account
+              `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // addres without 0x
+              '3c4a4bdf' + // tax
+              `${number}` + // 9
+              'cb398fe1' // endStruct
+          );
+        });
+
+        it('get address and number', async () => {});
+
+        it('use address and number after getting', async () => {});
       });
     });
   });
