@@ -125,7 +125,7 @@ library OtherOpcodes {
                 )
             );
             require(success, ErrorsGeneralOpcodes.OP1);
-
+            IContext(_ctx).setStructVar(bytes4(_varNameB32));
             // get the next variable name in struct
             _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
         }

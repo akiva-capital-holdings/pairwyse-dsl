@@ -389,6 +389,7 @@ contract Parser is IParser {
             string memory _name = _nextCmd();
             // create the struct name of variable - `BOB.balance`, `BOB.account`
             _name = _structName.concat('.').concat(_name);
+
             program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(_name))));
 
             // parse the value of `balance` variable - `456`, `0x345...`
@@ -446,20 +447,23 @@ contract Parser is IParser {
         string storage cmd = _nextCmd();
 
         bytes1 opcode = IContext(_ctxAddr).opCodeByName(cmd);
+        // TODO: simplify
+        bytes4 _selector = bytes4(keccak256(abi.encodePacked(cmd)));
+        bool isStructVar = IContext(_ctxAddr).isStructVar(_selector);
 
         if (_isLabel(cmd)) {
             uint256 _branchLocation = program.length;
             bytes memory programBefore = program.slice(0, labelPos[cmd]);
             bytes memory programAfter = program.slice(labelPos[cmd] + 2, program.length);
             program = bytes.concat(programBefore, bytes2(uint16(_branchLocation)), programAfter);
-        } else if (cmd.isValidVarName()) {
+        } else if (cmd.isValidVarName() || isStructVar) {
             opcode = IContext(_ctxAddr).opCodeByName('var');
-            program = bytes.concat(program, opcode, bytes4(keccak256(abi.encodePacked(cmd))));
+            program = bytes.concat(program, opcode, _selector);
         } else if (opcode == 0x0) {
             revert(string(abi.encodePacked('Parser: "', cmd, '" command is unknown')));
         } else {
             program = bytes.concat(program, opcode);
-            bytes4 _selector = IContext(_ctxAddr).asmSelectors(cmd);
+            _selector = IContext(_ctxAddr).asmSelectors(cmd);
             if (_selector != 0x0) {
                 (bool success, ) = address(this).delegatecall(
                     abi.encodeWithSelector(_selector, IContext(_ctxAddr))

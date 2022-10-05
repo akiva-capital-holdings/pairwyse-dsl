@@ -712,9 +712,39 @@ describe('End-to-end', () => {
         expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(3);
       });
 
-      it('get number', async () => {});
+      it('use number after getting', async () => {
+        const number = new Array(64).join('0') + 3;
+        const input = `
+        struct BOB {
+          lastPayment: 3
+        }
 
-      it('use number after getting', async () => {});
+        BOB.lastPayment > 2
+        `;
+        const code = await preprocessor.callStatic.transform(ctxAddr, input);
+        const expectedCode = [
+          'struct',
+          'BOB',
+          'lastPayment',
+          '3',
+          'endStruct',
+          'BOB.lastPayment',
+          'uint256',
+          '2',
+          '>',
+        ];
+        expect(code).to.eql(expectedCode);
+
+        // to Parser
+        await app.parseCode(code);
+        expect(await ctx.program()).to.equal(
+          '0x' +
+            '36' + // struct opcode
+            '4a871642' + // BOB.lastPayment
+            `${number}` + // 3
+            'cb398fe1' // endStruct
+        );
+      });
     });
 
     describe('address', () => {
