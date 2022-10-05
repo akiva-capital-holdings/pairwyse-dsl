@@ -1755,7 +1755,7 @@ describe('Preprocessor', () => {
     });
   });
 
-  describe('Structs', () => {
+  describe.only('Structs', () => {
     describe('uint256 type', () => {
       it('should return a simple struct with one uint256 parameter', async () => {
         const input = 'struct BOB {balance: 456}';

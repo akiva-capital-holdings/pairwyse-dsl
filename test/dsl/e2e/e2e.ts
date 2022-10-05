@@ -1,4 +1,4 @@
-import { ethers } from 'hardhat';
+import { ethers, network } from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
@@ -6,6 +6,7 @@ import { E2EApp, Context, Preprocessor, Stack } from '../../../typechain-types';
 import { checkStackTailv2, hex4Bytes, hex4BytesShort } from '../../utils/utils';
 import { deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
 import { deployBaseMock } from '../../../scripts/data/deploy.utils.mock';
+import { BigNumber } from 'ethers';
 
 async function getChainId() {
   return ethers.provider.getNetwork().then((network) => network.chainId);
@@ -20,6 +21,7 @@ describe('End-to-end', () => {
   let NEXT_MONTH: number;
   let PREV_MONTH: number;
   let lastBlockTimestamp: number;
+  let snapshotId: number;
 
   before(async () => {
     lastBlockTimestamp = (
@@ -62,6 +64,14 @@ describe('End-to-end', () => {
     ).deploy(parserAddr, preprAddr, ctxAddr);
 
     await ctx.setAppAddress(app.address);
+  });
+
+  beforeEach(async () => {
+    snapshotId = await network.provider.send('evm_snapshot');
+  });
+
+  afterEach(async () => {
+    await network.provider.send('evm_revert', [snapshotId]);
   });
 
   describe('blockChainId < var VAR', () => {
@@ -674,6 +684,119 @@ describe('End-to-end', () => {
       await checkStackTailv2(stack, [0]);
       expect(await app.getStorageUint256(hex4Bytes('A'))).equal(6);
       expect(await app.getStorageBool(hex4Bytes('A'))).equal(true);
+    });
+  });
+
+  describe.only('Structs', () => {
+    describe('uint256', () => {
+      it('store number', async () => {
+        const number = new Array(64).join('0') + 3;
+        const input = `struct BOB { lastPayment: 3 }`;
+        const code = await preprocessor.callStatic.transform(ctxAddr, input);
+        const expectedCode = ['struct', 'BOB', 'lastPayment', '3', 'endStruct'];
+        expect(code).to.eql(expectedCode);
+
+        // to Parser
+        await app.parseCode(code);
+        expect(await ctx.program()).to.equal(
+          '0x' +
+            '36' + // struct opcode
+            '4a871642' + // BOB.lastPayment
+            `${number}` + // 3
+            'cb398fe1' // endStruct
+        );
+
+        // Execute and check
+        expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(0);
+        await app.execute();
+        expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(3);
+      });
+
+      it('get number', async () => {});
+
+      it('use number after getting', async () => {});
+    });
+
+    describe('address', () => {
+      it('store address', async () => {
+        const input = `struct BOB { account: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc }`;
+        const code = await preprocessor.callStatic.transform(ctxAddr, input);
+        const expectedCode = [
+          'struct',
+          'BOB',
+          'account',
+          '0x47f8a90ede3d84c7c0166bd84a4635e4675accfc',
+          'endStruct',
+        ];
+        expect(code).to.eql(expectedCode);
+
+        // to Parser
+        await app.parseCode(code);
+        expect(await ctx.program()).to.equal(
+          '0x' +
+            '36' + // struct opcode
+            '2215b81f' + // BOB.account
+            `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the address for account
+            'cb398fe1' // endStruct
+        );
+
+        // Execute and check
+        expect(await app.getStorageUint256(hex4Bytes('BOB.account'))).equal(0);
+        await app.execute();
+        expect(await app.getStorageUint256(hex4Bytes('BOB.account'))).equal(
+          BigNumber.from('0x47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000')
+        );
+      });
+
+      //   it('get address', async () => {});
+      //   it('use address after getting', async () => {});
+    });
+
+    describe('mixed types', () => {
+      it('store address and uint256 in struct', async () => {
+        const number = new Array(64).join('0') + 3;
+        const input = `
+        struct BOB {
+          account: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc,
+          lastPayment: 3
+        }`;
+        const code = await preprocessor.callStatic.transform(ctxAddr, input);
+        const expectedCode = [
+          'struct',
+          'BOB',
+          'account',
+          '0x47f8a90ede3d84c7c0166bd84a4635e4675accfc',
+          'lastPayment',
+          '3',
+          'endStruct',
+        ];
+        expect(code).to.eql(expectedCode);
+
+        // to Parser
+        await app.parseCode(code);
+        expect(await ctx.program()).to.equal(
+          '0x' +
+            '36' + // struct opcode
+            '2215b81f' + // BOB.account
+            `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the address for account
+            '4a871642' + // BOB.lastPayment
+            `${number}` + // 3
+            'cb398fe1' // endStruct
+        );
+
+        // Execute and check
+        expect(await app.getStorageUint256(hex4Bytes('BOB.account'))).equal(0);
+        expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(0);
+        await app.execute();
+        expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(3);
+        expect(await app.getStorageUint256(hex4Bytes('BOB.account'))).equal(
+          BigNumber.from('0x47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000')
+        );
+      });
+
+      //   it('get address and number', async () => {});
+
+      //   it('use address and number after getting', async () => {});
     });
   });
 });

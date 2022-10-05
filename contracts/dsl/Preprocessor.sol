@@ -161,6 +161,8 @@ contract Preprocessor is IPreprocessor {
 
             if (isStructStart && char.equal('}')) {
                 if (!(buffer.equal('') || buffer.equal(' '))) result.push(buffer);
+                // `endStruct` word is used as an indicator for the ending
+                // loop for the structs parameters
                 result.push('endStruct');
                 buffer = '';
                 isStructStart = false;

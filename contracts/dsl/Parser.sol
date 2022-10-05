@@ -10,7 +10,7 @@ import { ByteUtils } from './libs/ByteUtils.sol';
 import { Preprocessor } from './Preprocessor.sol';
 import { ErrorsParser } from './libs/Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Parser of DSL code
@@ -33,7 +33,6 @@ contract Parser is IParser {
     string[] internal cmds; // DSL code in postfix form (input from Preprocessor)
     uint256 internal cmdIdx; // Current parsing index of DSL code
     mapping(string => uint256) public labelPos;
-    mapping(string => bytes) public savedProgram;
 
     // Note: end of temporary variables block
 
@@ -362,22 +361,49 @@ contract Parser is IParser {
         program = bytes.concat(program, bytes2(0)); // placeholder for `name of function` offset
     }
 
+    /**
+     * @dev Updates previous `program` for DSL struct.
+     * This function rebuilds variable parameters using a name of the structure, dot symbol
+     * and the name of each parameter in the structure
+     *
+     * Example of DSL command:
+     * ```
+     * struct BOB {
+     *   account: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc,
+     *   lastPayment: 3
+     * }
+     * ```
+     *
+     * Example of commands that uses for this functions:
+     * `cmds = ['struct', 'BOB', 'lastPayment', '3', 'account', '0x47f..', 'endStruct']`
+     *
+     * `endStruct` word is used as an indicator for the ending loop for the structs parameters
+     */
     function asmStruct() public {
-        // EX. `struct BOB balance 456 account 0x345...`
-        _parseVariable(); // parse the name of structure - `BOB`
+        // parse the name of structure - `BOB`
+        string memory _structName = _nextCmd();
+
+        // parsing name/value parameters till found the 'endStruct' word
         do {
-            _parseVariable(); // parse the name of variable - `balance`, `account`
-            string memory _value = _nextCmd(); // parse the value of `balance` variable - `456`, `0x345...`
+            // parse the name of variable - `balance`, `account`
+            string memory _name = _nextCmd();
+            // create the struct name of variable - `BOB.balance`, `BOB.account`
+            _name = _structName.concat('.').concat(_name);
+            program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(_name))));
+
+            // parse the value of `balance` variable - `456`, `0x345...`
+            string memory _value = _nextCmd();
+
             if (_value.mayBeAddress()) {
-                bytes memory _sliced = bytes(_value).slice(2, 42); // without first `0x` symbols
+                // remove first `0x` symbols
+                bytes memory _sliced = bytes(_value).slice(2, 42);
                 program = bytes.concat(program, bytes32(_sliced.fromHexBytes()));
             } else if (_value.mayBeNumber()) {
                 program = bytes.concat(program, bytes32(_value.toUint256()));
             }
         } while (!(cmds[cmdIdx].equal('endStruct')));
 
-        _parseVariable(); // parse the 'endStruct' - 0x656e64537472756374
-        // TODO: remove from list?
+        _parseVariable(); // parse the 'endStruct' word
     }
 
     /**
