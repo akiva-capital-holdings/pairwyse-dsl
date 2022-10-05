@@ -24,7 +24,7 @@ import { StringUtils } from '../dsl/libs/StringUtils.sol';
  */
 contract Agreement {
     using UnstructuredStorage for bytes32;
-    IParser public parser;
+    IParser public parser; // TODO: We can get rid of this dependency
     IContext public context;
     address public safeAddr;
 

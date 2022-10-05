@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 
 import { HardhatUserConfig } from 'hardhat/config';
 import './tasks/deploy';
+import './tasks/interact';
 import '@typechain/hardhat';
 import '@nomiclabs/hardhat-ethers';
 import '@nomiclabs/hardhat-waffle';
