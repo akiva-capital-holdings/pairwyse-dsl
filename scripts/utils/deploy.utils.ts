@@ -112,7 +112,6 @@ export const deployAgreement = async (hre: HardhatRuntimeEnvironment, multisigAd
   // Save Agreement bytecode into a file
   const toFile = {
     date: getPrettyDateTime(),
-    networkName: hre.network.name,
     chainId: await getChainId(hre),
     bytecode: AgreementContract.bytecode,
   };
@@ -121,7 +120,10 @@ export const deployAgreement = async (hre: HardhatRuntimeEnvironment, multisigAd
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir);
   }
-  fs.writeFileSync(path.join(outputDir, 'agreement.json'), JSON.stringify(toFile, null, 4));
+  fs.writeFileSync(
+    path.join(outputDir, `agreement.${hre.network.name}.json`),
+    JSON.stringify(toFile, null, 2)
+  );
 
   return agreement.address;
 };
