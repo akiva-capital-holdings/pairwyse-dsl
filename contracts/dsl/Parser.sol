@@ -379,7 +379,7 @@ contract Parser is IParser {
      *
      * `endStruct` word is used as an indicator for the ending loop for the structs parameters
      */
-    function asmStruct() public {
+    function asmStruct(address _ctxAddr) public {
         // parse the name of structure - `BOB`
         string memory _structName = _nextCmd();
 
@@ -389,7 +389,7 @@ contract Parser is IParser {
             string memory _name = _nextCmd();
             // create the struct name of variable - `BOB.balance`, `BOB.account`
             _name = _structName.concat('.').concat(_name);
-
+            IContext(_ctxAddr).setStructVar(_name); // TODO: check with Misha
             program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(_name))));
 
             // parse the value of `balance` variable - `456`, `0x345...`
@@ -449,7 +449,7 @@ contract Parser is IParser {
         bytes1 opcode = IContext(_ctxAddr).opCodeByName(cmd);
         // TODO: simplify
         bytes4 _selector = bytes4(keccak256(abi.encodePacked(cmd)));
-        bool isStructVar = IContext(_ctxAddr).isStructVar(_selector);
+        bool isStructVar = IContext(_ctxAddr).isStructVar(cmd);
 
         if (_isLabel(cmd)) {
             uint256 _branchLocation = program.length;

@@ -58,7 +58,7 @@ contract Context is IContext {
     mapping(string => mapping(string => bytes1)) public branchCodes;
     // alias -> base command
     mapping(string => string) public aliases;
-    mapping(bytes4 => bool) public isStructVar;
+    mapping(string => bool) public isStructVar;
 
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), ErrorsContext.CTX1);
@@ -721,7 +721,7 @@ contract Context is IContext {
      *
      * @param _varName is the name of structure variable, ex. `BOB.account`
      */
-    function setStructVar(bytes4 _varName) public {
+    function setStructVar(string memory _varName) public {
         isStructVar[_varName] = true;
     }
 

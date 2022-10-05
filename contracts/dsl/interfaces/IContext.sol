@@ -94,7 +94,7 @@ interface IContext {
 
     function setMsgValue(uint256 _msgValue) external;
 
-    function setStructVar(bytes4 _varName) external;
+    function setStructVar(string memory _varName) external;
 
-    function isStructVar(bytes4 _varName) external view returns (bool);
+    function isStructVar(string memory _varName) external view returns (bool);
 }

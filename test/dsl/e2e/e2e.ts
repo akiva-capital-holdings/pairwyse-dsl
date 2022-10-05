@@ -712,8 +712,9 @@ describe('End-to-end', () => {
         expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(3);
       });
 
-      it('use number after getting', async () => {
+      it.only('use number after getting', async () => {
         const number = new Array(64).join('0') + 3;
+        const two = new Array(64).join('0') + 2;
         const input = `
         struct BOB {
           lastPayment: 3
@@ -742,8 +743,20 @@ describe('End-to-end', () => {
             '36' + // struct opcode
             '4a871642' + // BOB.lastPayment
             `${number}` + // 3
-            'cb398fe1' // endStruct
+            'cb398fe1' + // endStruct
+            '1b' + // var
+            '4a871642' + // BOB.lastPayment
+            '1a' + // uint256
+            `${two}` + // 2
+            '04' // >
         );
+
+        // Execute and check
+        await app.execute();
+        const StackCont = await ethers.getContractFactory('Stack');
+        const contextStackAddress = await ctx.stack();
+        stack = StackCont.attach(contextStackAddress);
+        await checkStackTailv2(stack, [1]);
       });
     });
 
