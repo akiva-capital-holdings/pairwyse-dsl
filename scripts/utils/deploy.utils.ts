@@ -1,5 +1,7 @@
-import '@nomiclabs/hardhat-ethers';
+import fs from 'fs';
+import path from 'path';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { getChainId, getPrettyDateTime } from '../../utils/utils';
 
 export const deployOpcodeLibs = async (hre: HardhatRuntimeEnvironment) => {
   const opcodeHelpersLib = await (await hre.ethers.getContractFactory('OpcodeHelpers')).deploy();
@@ -106,6 +108,20 @@ export const deployAgreement = async (hre: HardhatRuntimeEnvironment, multisigAd
   });
   const agreement = await AgreementContract.deploy(parserAddr, multisigAddr);
   await agreement.deployed();
+
+  // Save Agreement bytecode into a file
+  const toFile = {
+    date: getPrettyDateTime(),
+    networkName: hre.network.name,
+    chainId: await getChainId(hre),
+    bytecode: AgreementContract.bytecode,
+  };
+
+  const outputDir = path.join(__dirname, '..', '..', 'output');
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir);
+  }
+  fs.writeFileSync(path.join(outputDir, 'agreement.json'), JSON.stringify(toFile, null, 4));
 
   return agreement.address;
 };

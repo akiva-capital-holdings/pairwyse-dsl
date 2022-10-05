@@ -6,12 +6,9 @@ import { E2EApp, Context, Preprocessor, Stack } from '../../../typechain-types';
 import { checkStackTailv2, hex4Bytes, hex4BytesShort } from '../../utils/utils';
 import { deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 import { deployBaseMock } from '../../../scripts/utils/deploy.utils.mock';
+import { getChainId } from '../../../utils/utils';
 
 const { ethers } = hre;
-
-async function getChainId() {
-  return ethers.provider.getNetwork().then((network) => network.chainId);
-}
 
 describe('End-to-end', () => {
   let stack: Stack;
@@ -68,7 +65,7 @@ describe('End-to-end', () => {
 
   describe('blockChainId < var VAR', () => {
     it('blockChainId < var VAR', async () => {
-      const chainId = await getChainId();
+      const chainId = await getChainId(hre);
       const varHashPadded = hex4Bytes('VAR');
       const varHash = varHashPadded.slice(2, 2 + 8);
       const varValue = chainId + 1;
@@ -392,8 +389,6 @@ describe('End-to-end', () => {
       expect(code).to.eql(expectedCode);
 
       // to Parser
-      const NUMBER = new Array(62).join('0') + 541;
-      const ONE = new Array(64).join('0') + 1;
       const ZERO = new Array(65).join('0');
       await app.parseCode(code);
       const expectedProgram =
