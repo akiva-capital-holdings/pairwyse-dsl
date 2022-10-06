@@ -491,8 +491,8 @@ contract Context is IContext {
         // Complex Opcodes with sub Opcodes (branches)
 
         /*
-            Types usage examples of loadLocal and loadRemote opcodes:
-                loadLocal uint256 NUMBER_STORED_VALUE
+            Types usage examples of var and loadRemote opcodes:
+                var NUMBER_STORED_VALUE
                 loadRemote bool ADDRESS_STORED_VALUE 9A676e781A523b5d0C0e43731313A708CB607508
 
             Where `*_STORED_VALUE` parameters can be set by using `setLocalBool`
@@ -549,9 +549,9 @@ contract Context is IContext {
             As the blockTimestamp is the current opcode the user can use time alias to
             simplify the DSL code string.
             Example of the base command:
-                `blockTimestamp < loadLocal uint256 FUND_INVESTMENT_DATE`
+                `blockTimestamp < var FUND_INVESTMENT_DATE`
             Example of the alias of the base command:
-                `time < loadLocal uint256 FUND_INVESTMENT_DATE`
+                `time < var FUND_INVESTMENT_DATE`
         */
         _addAlias('time', 'blockTimestamp');
     }
