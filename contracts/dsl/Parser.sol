@@ -10,7 +10,7 @@ import { ByteUtils } from './libs/ByteUtils.sol';
 import { Preprocessor } from './Preprocessor.sol';
 import { ErrorsParser } from './libs/Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 /**
  * @dev Parser of DSL code
