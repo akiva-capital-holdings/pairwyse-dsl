@@ -1808,7 +1808,7 @@ describe('Preprocessor', () => {
 
     describe('mixed types', () => {
       it.skip('complex struct with different types', async () => {
-        // TODO: something weird with operators for `Bob.lastPayment > 1`.
+        // TODO: "FOR MISHA" something weird with operators for `Bob.lastPayment > 1`.
         // Only with structure operators are changed their place for in the list of commands
         const input = `
             uint256 4567
