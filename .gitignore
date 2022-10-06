@@ -6,6 +6,7 @@ typechain
 typechain-types
 *.log
 deployments
+output
 
 #Hardhat files
 cache

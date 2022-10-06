@@ -11,7 +11,9 @@
   },
   "include": [
     "./scripts",
+    "./tasks",
     "./test",
+    "./utils",
     "./typechain-types",
     "./demo"
   ],

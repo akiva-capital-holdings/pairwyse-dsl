@@ -1,10 +1,12 @@
-import { ethers, network } from 'hardhat';
+import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { parseEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
 import { App, Context, Stack } from '../../../typechain-types';
 import { checkStackTailv2, hex4Bytes } from '../../utils/utils';
-import { deployBase, deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
+import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
+
+const { ethers, network } = hre;
 
 describe('DSL: basic', () => {
   let stack: Stack;
@@ -33,9 +35,9 @@ describe('DSL: basic', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
-    ] = await deployOpcodeLibs();
+    ] = await deployOpcodeLibs(hre);
 
-    const [parserAddr, executorLibAddr, preprAddr] = await deployBase();
+    const [parserAddr, executorLibAddr, preprAddr] = await deployBase(hre);
 
     // Deploy Context & setup
     ctx = await (await ethers.getContractFactory('Context')).deploy();

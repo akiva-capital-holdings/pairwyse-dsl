@@ -1,10 +1,11 @@
-/* eslint-disable camelcase */
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
-import { deployBase, deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
+import * as hre from 'hardhat';
+import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 import { Context, Stack, ExecutorMock } from '../../../typechain-types';
 import { checkStack, checkStackTailv2, hex4Bytes } from '../../utils/utils';
+
+const { ethers } = hre;
 
 describe('Executor', () => {
   let ctx: Context;
@@ -22,8 +23,8 @@ describe('Executor', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
-    ] = await deployOpcodeLibs();
-    const [, executorLibAddr] = await deployBase();
+    ] = await deployOpcodeLibs(hre);
+    const [, executorLibAddr] = await deployBase(hre);
 
     // Deploy ExecutorMock
     app = await (

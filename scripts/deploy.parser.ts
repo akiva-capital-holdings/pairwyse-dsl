@@ -1,20 +1,10 @@
 import * as hre from 'hardhat';
+import { deployParser } from './utils/deploy.utils';
 
-const { ethers } = hre;
-
-async function main() {
-  // Deploy libraries
-  const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
-  const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
-
-  // Deploy Parser
-  const Parser = await ethers.getContractFactory('Parser', {
-    libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
-  });
-  const parser = await Parser.deploy();
-  await parser.deployed();
-
-  console.log(`\x1b[42m Parser address \x1b[0m\x1b[32m ${parser.address}\x1b[0m`);
+export async function main() {
+  console.log(`Deploying from address ${(await hre.ethers.getSigners())[0].address}`);
+  const parserAddr = await deployParser(hre);
+  console.log(`\x1b[42m Parser address \x1b[0m\x1b[32m ${parserAddr}\x1b[0m`);
 }
 
 main();

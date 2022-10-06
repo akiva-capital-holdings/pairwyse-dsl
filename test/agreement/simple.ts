@@ -1,9 +1,9 @@
-import { ethers, network } from 'hardhat';
+import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
 import { addSteps, hex4Bytes } from '../utils/utils';
-import { deployAgreement, deployPreprocessor } from '../../scripts/data/deploy.utils';
+import { deployAgreement, deployPreprocessor } from '../../scripts/utils/deploy.utils';
 import {
   aliceAndBobSteps,
   aliceBobAndCarl,
@@ -13,6 +13,8 @@ import {
 import { Agreement } from '../../typechain-types';
 import { anyone, ONE_DAY, ONE_MONTH } from '../utils/constants';
 import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
+
+const { ethers, network } = hre;
 
 describe('Agreement: Alice, Bob, Carl', () => {
   let agreement: Agreement;
@@ -31,8 +33,8 @@ describe('Agreement: Alice, Bob, Carl', () => {
 
   before(async () => {
     multisig = await (await ethers.getContractFactory('MultisigMock')).deploy();
-    agreementAddr = await deployAgreement(multisig.address);
-    preprocessorAddr = await deployPreprocessor();
+    agreementAddr = await deployAgreement(hre, multisig.address);
+    preprocessorAddr = await deployPreprocessor(hre);
     agreement = await ethers.getContractAt('Agreement', agreementAddr);
 
     [alice, bob, carl, anybody] = await ethers.getSigners();

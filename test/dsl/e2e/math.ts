@@ -1,10 +1,12 @@
-import { ethers, network } from 'hardhat';
+import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { App } from '../../../typechain-types';
 import { hex4Bytes } from '../../utils/utils';
-import { deployBaseMock } from '../../../scripts/data/deploy.utils.mock';
+import { deployBaseMock } from '../../../scripts/utils/deploy.utils.mock';
 import { ContextMock } from '../../../typechain-types/dsl/mocks';
-import { deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
+import { deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
+
+const { ethers, network } = hre;
 
 describe('DSL: math', () => {
   let ctx: ContextMock;
@@ -18,9 +20,9 @@ describe('DSL: math', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
-    ] = await deployOpcodeLibs();
+    ] = await deployOpcodeLibs(hre);
 
-    const [parserAddr, executorLibAddr, preprAddr] = await deployBaseMock();
+    const [parserAddr, executorLibAddr, preprAddr] = await deployBaseMock(hre);
 
     // Deploy Context & setup
     ctx = await (await ethers.getContractFactory('ContextMock')).deploy();

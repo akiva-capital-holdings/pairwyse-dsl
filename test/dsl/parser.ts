@@ -1,9 +1,11 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ethers, network } from 'hardhat';
-import { deployBaseMock } from '../../scripts/data/deploy.utils.mock';
+import * as hre from 'hardhat';
+import { deployBaseMock } from '../../scripts/utils/deploy.utils.mock';
 import { Context, ParserMock } from '../../typechain-types';
 import { hex4Bytes } from '../utils/utils';
+
+const { ethers, network } = hre;
 
 describe('Parser', () => {
   let sender: SignerWithAddress;
@@ -18,7 +20,7 @@ describe('Parser', () => {
   before(async () => {
     [sender] = await ethers.getSigners();
 
-    [appAddr /* parser address */, , preprocessorAddr] = await deployBaseMock();
+    [appAddr /* parser address */, , preprocessorAddr] = await deployBaseMock(hre);
     app = await ethers.getContractAt('ParserMock', appAddr);
     appAddrHex = appAddr.slice(2);
 
@@ -645,7 +647,7 @@ describe('Parser', () => {
           '1fff709e' + // bytecode for NUMBERS
           '35' + // get
           `${ONE}` + // 1 index
-          `257b3678`; // bytecode for INDEXES
+          '257b3678'; // bytecode for INDEXES
         expect(await ctx.program()).to.equal(expectedProgram);
       });
     });

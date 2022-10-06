@@ -1,15 +1,14 @@
-import { ethers } from 'hardhat';
+import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
 import { E2EApp, Context, Preprocessor, Stack } from '../../../typechain-types';
 import { checkStackTailv2, hex4Bytes, hex4BytesShort } from '../../utils/utils';
-import { deployOpcodeLibs } from '../../../scripts/data/deploy.utils';
-import { deployBaseMock } from '../../../scripts/data/deploy.utils.mock';
+import { deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
+import { deployBaseMock } from '../../../scripts/utils/deploy.utils.mock';
+import { getChainId } from '../../../utils/utils';
 
-async function getChainId() {
-  return ethers.provider.getNetwork().then((network) => network.chainId);
-}
+const { ethers } = hre;
 
 describe('End-to-end', () => {
   let stack: Stack;
@@ -38,9 +37,9 @@ describe('End-to-end', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
-    ] = await deployOpcodeLibs();
+    ] = await deployOpcodeLibs(hre);
 
-    const [parserAddr, executorLibAddr, preprAddr] = await deployBaseMock();
+    const [parserAddr, executorLibAddr, preprAddr] = await deployBaseMock(hre);
     preprocessor = await ethers.getContractAt('Preprocessor', preprAddr);
 
     // Deploy Context & setup
@@ -66,7 +65,7 @@ describe('End-to-end', () => {
 
   describe('blockChainId < var VAR', () => {
     it('blockChainId < var VAR', async () => {
-      const chainId = await getChainId();
+      const chainId = await getChainId(hre);
       const varHashPadded = hex4Bytes('VAR');
       const varHash = varHashPadded.slice(2, 2 + 8);
       const varValue = chainId + 1;
@@ -390,8 +389,6 @@ describe('End-to-end', () => {
       expect(code).to.eql(expectedCode);
 
       // to Parser
-      const NUMBER = new Array(62).join('0') + 541;
-      const ONE = new Array(64).join('0') + 1;
       const ZERO = new Array(65).join('0');
       await app.parseCode(code);
       const expectedProgram =
@@ -411,7 +408,7 @@ describe('End-to-end', () => {
         '1fff709e' + // bytecode for NUMBERS
         '35' + // get
         `${ZERO}` + // 1 index
-        `257b3678`; // bytecode for INDEXES
+        '257b3678'; // bytecode for INDEXES
       expect(await ctx.program()).to.equal(expectedProgram);
 
       // Execute and check
@@ -501,7 +498,7 @@ describe('End-to-end', () => {
         '1fff709e' + // bytecode for NUMBERS
         '35' + // get
         `${ONE}` + // 1 index
-        `257b3678`; // bytecode for INDEXES
+        '257b3678'; // bytecode for INDEXES
       expect(await ctx.program()).to.equal(expectedProgram);
 
       // Execute and check

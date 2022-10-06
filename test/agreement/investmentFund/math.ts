@@ -1,4 +1,4 @@
-import { ethers, network } from 'hardhat';
+import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { formatEther, parseUnits } from 'ethers/lib/utils';
@@ -8,10 +8,11 @@ import { addSteps, changeTokenBalanceAndGetTxHash, hex4Bytes } from '../../utils
 import { businessCaseSteps } from '../../../scripts/data/agreement';
 import { Token } from '../../../typechain-types';
 import { Agreement } from '../../../typechain-types/agreement';
-import { deployAgreement, deployPreprocessor } from '../../../scripts/data/deploy.utils';
+import { deployAgreement, deployPreprocessor } from '../../../scripts/utils/deploy.utils';
 import { ONE_DAY, ONE_MONTH, ONE_YEAR } from '../../utils/constants';
 import { MultisigMock } from '../../../typechain-types/agreement/mocks/MultisigMock';
 
+const { ethers, network } = hre;
 dotenv.config();
 
 describe('Agreement: Investment Fund tests math', () => {
@@ -545,8 +546,8 @@ describe('Agreement: Investment Fund tests math', () => {
 
   before(async () => {
     multisig = await (await ethers.getContractFactory('MultisigMock')).deploy();
-    agreementAddr = await deployAgreement(multisig.address);
-    preprocessorAddr = await deployPreprocessor();
+    agreementAddr = await deployAgreement(hre, multisig.address);
+    preprocessorAddr = await deployPreprocessor(hre);
     agreement = await ethers.getContractAt('Agreement', agreementAddr);
     [alice, GP, ...LPs] = await ethers.getSigners();
 

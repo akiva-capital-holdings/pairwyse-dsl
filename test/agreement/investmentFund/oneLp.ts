@@ -1,13 +1,14 @@
-import { ethers, network } from 'hardhat';
+import * as hre from 'hardhat';
 import { parseUnits } from 'ethers/lib/utils';
 import { Suite } from 'mocha';
 import dotenv from 'dotenv';
 import { addSteps, businessCaseTest } from '../../utils/utils';
 import { businessCaseSteps } from '../../../scripts/data/agreement';
-import { deployAgreement, deployPreprocessor } from '../../../scripts/data/deploy.utils';
+import { deployAgreement, deployPreprocessor } from '../../../scripts/utils/deploy.utils';
 import { ONE_MONTH } from '../../utils/constants';
 import { DynamicTestData } from '../../types';
 
+const { ethers, network } = hre;
 dotenv.config();
 
 const dynamicTestData = {} as DynamicTestData;
@@ -18,8 +19,8 @@ const parentSuite = describe('Agreement: Investment Fund', () => {
   before(async () => {
     // Deploy the contracts
     const multisig = await (await ethers.getContractFactory('MultisigMock')).deploy();
-    const agreementAddr = await deployAgreement(multisig.address);
-    const preprocessorAddr = await deployPreprocessor();
+    const agreementAddr = await deployAgreement(hre, multisig.address);
+    const preprocessorAddr = await deployPreprocessor(hre);
     dynamicTestData.agreement = await ethers.getContractAt('Agreement', agreementAddr);
     [, , , dynamicTestData.whale, dynamicTestData.GP, ...dynamicTestData.LPs] =
       await ethers.getSigners();
