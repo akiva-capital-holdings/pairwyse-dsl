@@ -1,4 +1,4 @@
-import { ethers, network } from 'hardhat';
+import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
@@ -8,7 +8,7 @@ import { deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 import { deployBaseMock } from '../../../scripts/utils/deploy.utils.mock';
 import { getChainId } from '../../../utils/utils';
 
-const { ethers } = hre;
+const { ethers, network } = hre;
 
 describe('End-to-end', () => {
   let stack: Stack;
@@ -687,7 +687,7 @@ describe('End-to-end', () => {
     describe('uint256', () => {
       it('store number', async () => {
         const number = new Array(64).join('0') + 3;
-        const input = `struct BOB { lastPayment: 3 }`;
+        const input = 'struct BOB { lastPayment: 3 }';
         const code = await preprocessor.callStatic.transform(ctxAddr, input);
         const expectedCode = ['struct', 'BOB', 'lastPayment', '3', 'endStruct'];
         expect(code).to.eql(expectedCode);
@@ -757,14 +757,14 @@ describe('End-to-end', () => {
             '1a' + // uint256
             `${one}` + // 1
             '04' + // >
-            `2e` + // setUint256
+            '2e' + // setUint256
             'cf239df2' + // RESULT_AFTER
             '1b' + // var
             '4a871642' + // BOB.lastPayment
             '1a' + // uint256
             `${two}` + // 1
             '28' + // *
-            `2e` + // setUint256
+            '2e' + // setUint256
             '4a871642' // BOB.lastPayment
         );
 
@@ -783,7 +783,7 @@ describe('End-to-end', () => {
 
     describe('address', () => {
       it('store address', async () => {
-        const input = `struct BOB { account: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc }`;
+        const input = 'struct BOB { account: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc }';
         const code = await preprocessor.callStatic.transform(ctxAddr, input);
         const expectedCode = [
           'struct',
@@ -800,7 +800,7 @@ describe('End-to-end', () => {
           '0x' +
             '36' + // struct opcode
             '2215b81f' + // BOB.account
-            `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the address for account
+            '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
             'cb398fe1' // endStruct
         );
 
@@ -865,15 +865,15 @@ describe('End-to-end', () => {
           '0x' +
             '36' + // struct opcode
             '2215b81f' + // BOB.account
-            `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the BOB account
+            '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // BOB account
             'cb398fe1' + // endStruct
             '36' + // struct opcode
             '22a4c6e2' + // ALICA.account
-            '67f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the ALICA account
+            '67f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // ALICA account
             'cb398fe1' + // endStruct
             '36' + // struct opcode
             'c475c91c' + // MAX.account
-            '67f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the MAX account
+            '67f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // MAX account
             'cb398fe1' + // endStruct
             '1b' + // var
             '2215b81f' + // BOB.account
@@ -886,7 +886,7 @@ describe('End-to-end', () => {
             '22a4c6e2' + // ALICA.account
             '1b' + // var
             'c475c91c' + // MAX.account
-            '01' + // ==
+            '01' + // equal opcode
             '2e' + // setUint256
             '842db530' // RESULT_2
         );
@@ -935,7 +935,7 @@ describe('End-to-end', () => {
           '0x' +
             '36' + // struct opcode
             '2215b81f' + // BOB.account
-            `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the address for account
+            '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
             '4a871642' + // BOB.lastPayment
             `${number}` + // 3
             'cb398fe1' // endStruct
