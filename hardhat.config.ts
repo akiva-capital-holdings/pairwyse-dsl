@@ -1,6 +1,8 @@
 import * as dotenv from 'dotenv';
 
-import { HardhatUserConfig, task } from 'hardhat/config';
+import { HardhatUserConfig } from 'hardhat/config';
+import './tasks/deploy';
+import './tasks/interact';
 import '@typechain/hardhat';
 import '@nomiclabs/hardhat-ethers';
 import '@nomiclabs/hardhat-waffle';
@@ -21,6 +23,7 @@ const {
   REMOTE_GANACHE_URL,
   REMOTE_GANACHE_MNEMONIC,
   ROPSTEN_URL,
+  RINKEBY_URL,
   PRIVATE_KEY,
   TENDERLY_FORK_URL,
   REPORT_GAS,
@@ -30,16 +33,6 @@ const {
   TENDERLY_USERNAME,
   TENDERLY_FORK_ID,
 } = process.env;
-
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
-  const accounts = await hre.ethers.getSigners();
-
-  for (const account of accounts) {
-    console.log(account.address);
-  }
-});
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -72,6 +65,10 @@ const config: HardhatUserConfig = {
     },
     ropsten: {
       url: ROPSTEN_URL || '',
+      accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+    },
+    rinkeby: {
+      url: RINKEBY_URL || '',
       accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
     },
     tenderly: {

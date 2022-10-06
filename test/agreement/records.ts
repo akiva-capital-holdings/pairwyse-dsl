@@ -1,15 +1,16 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { ethers, network } from 'hardhat';
+import * as hre from 'hardhat';
 import { ParserMock } from '../../typechain-types/dsl/mocks';
 import { addSteps, hex4Bytes } from '../utils/utils';
-import { deployAgreementMock, deployParserMock } from '../../scripts/data/deploy.utils.mock';
-import { deployPreprocessor } from '../../scripts/data/deploy.utils';
+import { deployAgreementMock, deployParserMock } from '../../scripts/utils/deploy.utils.mock';
+import { deployPreprocessor } from '../../scripts/utils/deploy.utils';
 import { AgreementMock, ContextMock__factory } from '../../typechain-types';
 import { anyone, ONE_MONTH } from '../utils/constants';
 import { Records } from '../types';
 import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
 
+const { ethers, network } = hre;
 // TODO: rename everywhere in the project 'Conditional Transactions' to 'Records'
 
 describe('Simple Records in Agreement', () => {
@@ -54,12 +55,12 @@ describe('Simple Records in Agreement', () => {
     [alice, bob, anybody] = await ethers.getSigners();
 
     // Deploy contracts
-    appAddr = await deployAgreementMock(multisig.address);
-    preprAddr = await deployPreprocessor();
+    appAddr = await deployAgreementMock(hre, multisig.address);
+    preprAddr = await deployPreprocessor(hre);
     app = await ethers.getContractAt('AgreementMock', appAddr);
     ContextCont = await ethers.getContractFactory('ContextMock');
 
-    const parserAddr = await deployParserMock();
+    const parserAddr = await deployParserMock(hre);
     parser = await ethers.getContractAt('ParserMock', parserAddr);
   });
 

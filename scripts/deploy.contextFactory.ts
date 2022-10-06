@@ -1,14 +1,10 @@
 import * as hre from 'hardhat';
-
-const { ethers } = hre;
+import { deployContextFactory } from './utils/deploy.utils';
 
 async function deploy() {
-  // Deploy ContextFactory
-  const ContextFactory = await ethers.getContractFactory('ContextFactory');
-  const contextFactory = await ContextFactory.deploy();
-  await contextFactory.deployed();
-
-  console.log(`\x1b[42m ContextFactory address \x1b[0m\x1b[32m ${contextFactory.address}\x1b[0m`);
+  console.log(`Deploying from address ${(await hre.ethers.getSigners())[0].address}`);
+  const factoryAddr = await deployContextFactory(hre);
+  console.log(`\x1b[42m ContextFactory address \x1b[0m\x1b[32m ${factoryAddr}\x1b[0m`);
 }
 
 deploy();
