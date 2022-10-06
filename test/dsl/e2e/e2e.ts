@@ -1,4 +1,4 @@
-import * as hre from 'hardhat';
+import { ethers, network } from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
@@ -19,6 +19,7 @@ describe('End-to-end', () => {
   let NEXT_MONTH: number;
   let PREV_MONTH: number;
   let lastBlockTimestamp: number;
+  let snapshotId: number;
 
   before(async () => {
     lastBlockTimestamp = (
@@ -61,6 +62,14 @@ describe('End-to-end', () => {
     ).deploy(parserAddr, preprAddr, ctxAddr);
 
     await ctx.setAppAddress(app.address);
+  });
+
+  beforeEach(async () => {
+    snapshotId = await network.provider.send('evm_snapshot');
+  });
+
+  afterEach(async () => {
+    await network.provider.send('evm_revert', [snapshotId]);
   });
 
   describe('blockChainId < var VAR', () => {
@@ -671,6 +680,314 @@ describe('End-to-end', () => {
       await checkStackTailv2(stack, [0]);
       expect(await app.getStorageUint256(hex4Bytes('A'))).equal(6);
       expect(await app.getStorageBool(hex4Bytes('A'))).equal(true);
+    });
+  });
+
+  describe('Structs', () => {
+    describe('uint256', () => {
+      it('store number', async () => {
+        const number = new Array(64).join('0') + 3;
+        const input = `struct BOB { lastPayment: 3 }`;
+        const code = await preprocessor.callStatic.transform(ctxAddr, input);
+        const expectedCode = ['struct', 'BOB', 'lastPayment', '3', 'endStruct'];
+        expect(code).to.eql(expectedCode);
+
+        // to Parser
+        await app.parseCode(code);
+        expect(await ctx.program()).to.equal(
+          '0x' +
+            '36' + // struct opcode
+            '4a871642' + // BOB.lastPayment
+            `${number}` + // 3
+            'cb398fe1' // endStruct
+        );
+
+        // Execute and check
+        expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(0);
+        await app.execute();
+        expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(3);
+      });
+
+      it('use number after getting', async () => {
+        const tempZero = new Array(64).join('0');
+        const one = tempZero + 1;
+        const two = tempZero + 2;
+        const three = tempZero + 3;
+
+        const input = `
+        struct BOB {
+          lastPayment: 3
+        }
+
+        (BOB.lastPayment > 1) setUint256 RESULT_AFTER
+        (BOB.lastPayment * 2) setUint256 BOB.lastPayment
+        `;
+        const code = await preprocessor.callStatic.transform(ctxAddr, input);
+        const expectedCode = [
+          'struct',
+          'BOB',
+          'lastPayment',
+          '3',
+          'endStruct',
+          'BOB.lastPayment',
+          'uint256',
+          '1',
+          '>',
+          'setUint256',
+          'RESULT_AFTER',
+          'BOB.lastPayment',
+          'uint256',
+          '2',
+          '*',
+          'setUint256',
+          'BOB.lastPayment',
+        ];
+        expect(code).to.eql(expectedCode);
+
+        // to Parser
+        await app.parseCode(code);
+        expect(await ctx.program()).to.equal(
+          '0x' +
+            '36' + // struct opcode
+            '4a871642' + // BOB.lastPayment
+            `${three}` + // 3
+            'cb398fe1' + // endStruct
+            '1b' + // var
+            '4a871642' + // BOB.lastPayment
+            '1a' + // uint256
+            `${one}` + // 1
+            '04' + // >
+            `2e` + // setUint256
+            'cf239df2' + // RESULT_AFTER
+            '1b' + // var
+            '4a871642' + // BOB.lastPayment
+            '1a' + // uint256
+            `${two}` + // 1
+            '28' + // *
+            `2e` + // setUint256
+            '4a871642' // BOB.lastPayment
+        );
+
+        // Execute and check
+        expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(0);
+        expect(await app.getStorageUint256(hex4Bytes('RESULT_AFTER'))).equal(0);
+        await app.execute();
+        const StackCont = await ethers.getContractFactory('Stack');
+        const contextStackAddress = await ctx.stack();
+        stack = StackCont.attach(contextStackAddress);
+        await checkStackTailv2(stack, [1, 1]);
+        expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(6);
+        expect(await app.getStorageUint256(hex4Bytes('RESULT_AFTER'))).equal(1);
+      });
+    });
+
+    describe('address', () => {
+      it('store address', async () => {
+        const input = `struct BOB { account: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc }`;
+        const code = await preprocessor.callStatic.transform(ctxAddr, input);
+        const expectedCode = [
+          'struct',
+          'BOB',
+          'account',
+          '0x47f8a90ede3d84c7c0166bd84a4635e4675accfc',
+          'endStruct',
+        ];
+        expect(code).to.eql(expectedCode);
+
+        // to Parser
+        await app.parseCode(code);
+        expect(await ctx.program()).to.equal(
+          '0x' +
+            '36' + // struct opcode
+            '2215b81f' + // BOB.account
+            `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the address for account
+            'cb398fe1' // endStruct
+        );
+
+        // Execute and check
+        expect(await app.getStorageUint256(hex4Bytes('BOB.account'))).equal(0);
+        await app.execute();
+        expect(await app.getStorageUint256(hex4Bytes('BOB.account'))).equal(
+          BigNumber.from('0x47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000')
+        );
+      });
+
+      it('use address after getting', async () => {
+        const input = `
+          struct BOB {
+            account: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc
+          }
+
+          struct ALICA {
+            account: 0x67f8a90ede3d84c7c0166bd84a4635e4675accfc
+          }
+
+          struct MAX {
+            account: 0x67f8a90ede3d84c7c0166bd84a4635e4675accfc
+          }
+
+          (BOB.account != ALICA.account) setUint256 RESULT_1
+          (ALICA.account == MAX.account) setUint256 RESULT_2
+          `;
+        const code = await preprocessor.callStatic.transform(ctxAddr, input);
+        const expectedCode = [
+          'struct',
+          'BOB',
+          'account',
+          '0x47f8a90ede3d84c7c0166bd84a4635e4675accfc',
+          'endStruct',
+          'struct',
+          'ALICA',
+          'account',
+          '0x67f8a90ede3d84c7c0166bd84a4635e4675accfc',
+          'endStruct',
+          'struct',
+          'MAX',
+          'account',
+          '0x67f8a90ede3d84c7c0166bd84a4635e4675accfc',
+          'endStruct',
+          'BOB.account',
+          'ALICA.account',
+          '!=',
+          'setUint256',
+          'RESULT_1',
+          'ALICA.account',
+          'MAX.account',
+          '==',
+          'setUint256',
+          'RESULT_2',
+        ];
+        expect(code).to.eql(expectedCode);
+
+        // to Parser
+        await app.parseCode(code);
+        expect(await ctx.program()).to.equal(
+          '0x' +
+            '36' + // struct opcode
+            '2215b81f' + // BOB.account
+            `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the BOB account
+            'cb398fe1' + // endStruct
+            '36' + // struct opcode
+            '22a4c6e2' + // ALICA.account
+            '67f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the ALICA account
+            'cb398fe1' + // endStruct
+            '36' + // struct opcode
+            'c475c91c' + // MAX.account
+            '67f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the MAX account
+            'cb398fe1' + // endStruct
+            '1b' + // var
+            '2215b81f' + // BOB.account
+            '1b' + // var
+            '22a4c6e2' + // ALICA.account
+            '14' + // !=
+            '2e' + // setUint256
+            '11ae1785' + // RESULT_1
+            '1b' + // var
+            '22a4c6e2' + // ALICA.account
+            '1b' + // var
+            'c475c91c' + // MAX.account
+            '01' + // ==
+            '2e' + // setUint256
+            '842db530' // RESULT_2
+        );
+
+        // Execute and check
+        expect(await app.getStorageUint256(hex4Bytes('RESULT_1'))).equal(0);
+        expect(await app.getStorageUint256(hex4Bytes('RESULT_2'))).equal(0);
+        await app.execute();
+        expect(await app.getStorageUint256(hex4Bytes('BOB.account'))).equal(
+          BigNumber.from('0x47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000')
+        );
+        expect(await app.getStorageUint256(hex4Bytes('ALICA.account'))).equal(
+          BigNumber.from('0x67f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000')
+        );
+        expect(await app.getStorageUint256(hex4Bytes('MAX.account'))).equal(
+          BigNumber.from('0x67f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000')
+        );
+        expect(await app.getStorageUint256(hex4Bytes('RESULT_1'))).equal(1);
+        expect(await app.getStorageUint256(hex4Bytes('RESULT_2'))).equal(1);
+      });
+    });
+
+    describe('mixed types', () => {
+      it('store address and uint256 in struct', async () => {
+        const number = new Array(64).join('0') + 3;
+        const input = `
+        struct BOB {
+          account: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc,
+          lastPayment: 3
+        }`;
+        const code = await preprocessor.callStatic.transform(ctxAddr, input);
+        const expectedCode = [
+          'struct',
+          'BOB',
+          'account',
+          '0x47f8a90ede3d84c7c0166bd84a4635e4675accfc',
+          'lastPayment',
+          '3',
+          'endStruct',
+        ];
+        expect(code).to.eql(expectedCode);
+
+        // to Parser
+        await app.parseCode(code);
+        expect(await ctx.program()).to.equal(
+          '0x' +
+            '36' + // struct opcode
+            '2215b81f' + // BOB.account
+            `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the address for account
+            '4a871642' + // BOB.lastPayment
+            `${number}` + // 3
+            'cb398fe1' // endStruct
+        );
+
+        // Execute and check
+        expect(await app.getStorageUint256(hex4Bytes('BOB.account'))).equal(0);
+        expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(0);
+        await app.execute();
+        expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(3);
+        expect(await app.getStorageUint256(hex4Bytes('BOB.account'))).equal(
+          BigNumber.from('0x47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000')
+        );
+      });
+
+      it('use address and number after getting', async () => {
+        const input = `
+          struct BOB {
+            account: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc
+            lastPayment: 3
+          }
+
+          struct ALICA {
+            account: 0x67f8a90ede3d84c7c0166bd84a4635e4675accfc
+            lastPayment: 0
+            totalEarn: 100
+          }
+
+          (ALICA.totalEarn > (BOB.lastPayment + ALICA.lastPayment)) setUint256 RESULT_1
+          (BOB.account != ALICA.account) setUint256 RESULT_2
+          (ALICA.lastPayment == BOB.lastPayment) setUint256 RESULT_3
+          `;
+        const code = await preprocessor.callStatic.transform(ctxAddr, input);
+
+        // to Parser
+        await app.parseCode(code);
+
+        // Execute and check
+        expect(await app.getStorageUint256(hex4Bytes('RESULT_1'))).equal(0);
+        expect(await app.getStorageUint256(hex4Bytes('RESULT_2'))).equal(0);
+        expect(await app.getStorageUint256(hex4Bytes('RESULT_3'))).equal(0);
+        await app.execute();
+        expect(await app.getStorageUint256(hex4Bytes('BOB.account'))).equal(
+          BigNumber.from('0x47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000')
+        );
+        expect(await app.getStorageUint256(hex4Bytes('ALICA.account'))).equal(
+          BigNumber.from('0x67f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000')
+        );
+        expect(await app.getStorageUint256(hex4Bytes('RESULT_1'))).equal(1);
+        expect(await app.getStorageUint256(hex4Bytes('RESULT_2'))).equal(1);
+        expect(await app.getStorageUint256(hex4Bytes('RESULT_3'))).equal(0);
+      });
     });
   });
 });

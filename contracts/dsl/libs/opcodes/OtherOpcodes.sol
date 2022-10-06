@@ -102,6 +102,36 @@ library OtherOpcodes {
     }
 
     /**
+     * @dev Inserts items to DSL structures using mixed variable name (ex. `BOB.account`).
+     * Struct variable names already contain a name of a DSL structure, `.` dot symbol, the name of
+     * variable. `endStruct` word (0xcb398fe1) is used as an indicator for the ending loop for
+     * the structs parameters
+     * @param _ctx Context contract instance address
+     */
+    function opStruct(address _ctx) public {
+        // get the first variable name
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+
+        while (bytes4(_varNameB32) != 0xcb398fe1) {
+            // searching endStruct opcode
+            // get variable value for current _varNameB32
+            bytes32 _value = OpcodeHelpers.getNextBytes(_ctx, 32);
+
+            (bool success, ) = IContext(_ctx).appAddr().call(
+                abi.encodeWithSignature(
+                    'setStorageUint256(bytes32,uint256)',
+                    _varNameB32,
+                    uint256(_value)
+                )
+            );
+            require(success, ErrorsGeneralOpcodes.OP1);
+
+            // get the next variable name in struct
+            _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+        }
+    }
+
+    /**
      * @dev Inserts an item to array
      * @param _ctx Context contract instance address
      */

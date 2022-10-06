@@ -126,6 +126,7 @@ library StringUtils {
     function mayBeAddress(string memory _string) public pure returns (bool) {
         require(!equal(_string, ''), ErrorsStringUtils.SUT7);
         if (bytes(_string).length != 42) return false;
+
         bytes1 _byte = bytes(_string)[0];
         bytes1 _byte2 = bytes(_string)[1];
         return uint8(_byte) == 48 && uint8(_byte2) == 120;

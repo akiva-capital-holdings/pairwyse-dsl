@@ -58,6 +58,7 @@ contract Context is IContext {
     mapping(string => mapping(string => bytes1)) public branchCodes;
     // alias -> base command
     mapping(string => string) public aliases;
+    mapping(string => bool) public isStructVar;
 
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), ErrorsContext.CTX1);
@@ -490,8 +491,8 @@ contract Context is IContext {
         // Complex Opcodes with sub Opcodes (branches)
 
         /*
-            Types usage examples of loadLocal and loadRemote opcodes:
-                loadLocal uint256 NUMBER_STORED_VALUE
+            Types usage examples of var and loadRemote opcodes:
+                var NUMBER_STORED_VALUE
                 loadRemote bool ADDRESS_STORED_VALUE 9A676e781A523b5d0C0e43731313A708CB607508
 
             Where `*_STORED_VALUE` parameters can be set by using `setLocalBool`
@@ -502,6 +503,14 @@ contract Context is IContext {
             0x1b,
             OtherOpcodes.opLoadLocalUint256.selector,
             IParser.asmVar.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
+        addOpcode(
+            'struct',
+            0x36,
+            OtherOpcodes.opStruct.selector,
+            IParser.asmStruct.selector,
             OpcodeLibNames.OtherOpcodes
         );
 
@@ -540,9 +549,9 @@ contract Context is IContext {
             As the blockTimestamp is the current opcode the user can use time alias to
             simplify the DSL code string.
             Example of the base command:
-                `blockTimestamp < loadLocal uint256 FUND_INVESTMENT_DATE`
+                `blockTimestamp < var FUND_INVESTMENT_DATE`
             Example of the alias of the base command:
-                `time < loadLocal uint256 FUND_INVESTMENT_DATE`
+                `time < var FUND_INVESTMENT_DATE`
         */
         _addAlias('time', 'blockTimestamp');
     }
@@ -705,6 +714,15 @@ contract Context is IContext {
      */
     function setMsgValue(uint256 _msgValue) public {
         msgValue = _msgValue;
+    }
+
+    /**
+     * @dev Sets structure variable state to true
+     *
+     * @param _varName is the name of structure variable, ex. `BOB.account`
+     */
+    function setStructVar(string memory _varName) public {
+        isStructVar[_varName] = true;
     }
 
     /**

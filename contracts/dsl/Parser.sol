@@ -33,7 +33,6 @@ contract Parser is IParser {
     string[] internal cmds; // DSL code in postfix form (input from Preprocessor)
     uint256 internal cmdIdx; // Current parsing index of DSL code
     mapping(string => uint256) public labelPos;
-    mapping(string => bytes) public savedProgram;
 
     // Note: end of temporary variables block
 
@@ -120,8 +119,8 @@ contract Parser is IParser {
 
     function asmGet() public {
         string memory _value = _nextCmd();
-        bytes4 _arrNameB32 = bytes4(keccak256(abi.encodePacked(_nextCmd())));
-        program = bytes.concat(program, bytes32(_value.toUint256()), _arrNameB32);
+        bytes4 _arrName = bytes4(keccak256(abi.encodePacked(_nextCmd())));
+        program = bytes.concat(program, bytes32(_value.toUint256()), _arrName);
     }
 
     /**
@@ -134,7 +133,7 @@ contract Parser is IParser {
      */
     function asmPush() public {
         string memory _value = _nextCmd();
-        bytes4 _arrNameB32 = bytes4(keccak256(abi.encodePacked(_nextCmd())));
+        bytes4 _arrName = bytes4(keccak256(abi.encodePacked(_nextCmd())));
 
         if (_value.mayBeAddress()) {
             bytes memory _sliced = bytes(_value).slice(2, 42); // without first `0x` symbols
@@ -143,7 +142,7 @@ contract Parser is IParser {
             program = bytes.concat(program, bytes32(_value.toUint256()));
         }
 
-        program = bytes.concat(program, _arrNameB32);
+        program = bytes.concat(program, _arrName);
     }
 
     /**
@@ -363,6 +362,52 @@ contract Parser is IParser {
     }
 
     /**
+     * @dev Updates previous `program` for DSL struct.
+     * This function rebuilds variable parameters using a name of the structure, dot symbol
+     * and the name of each parameter in the structure
+     *
+     * Example of DSL command:
+     * ```
+     * struct BOB {
+     *   account: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc,
+     *   lastPayment: 3
+     * }
+     * ```
+     *
+     * Example of commands that uses for this functions:
+     * `cmds = ['struct', 'BOB', 'lastPayment', '3', 'account', '0x47f..', 'endStruct']`
+     *
+     * `endStruct` word is used as an indicator for the ending loop for the structs parameters
+     */
+    function asmStruct(address _ctxAddr) public {
+        // parse the name of structure - `BOB`
+        string memory _structName = _nextCmd();
+
+        // parsing name/value parameters till found the 'endStruct' word
+        do {
+            // parse the name of variable - `balance`, `account`
+            string memory _name = _nextCmd();
+            // create the struct name of variable - `BOB.balance`, `BOB.account`
+            _name = _structName.concat('.').concat(_name);
+            IContext(_ctxAddr).setStructVar(_name); // TODO: check with Misha
+            program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(_name))));
+
+            // parse the value of `balance` variable - `456`, `0x345...`
+            string memory _value = _nextCmd();
+
+            if (_value.mayBeAddress()) {
+                // remove first `0x` symbols
+                bytes memory _sliced = bytes(_value).slice(2, 42);
+                program = bytes.concat(program, bytes32(_sliced.fromHexBytes()));
+            } else if (_value.mayBeNumber()) {
+                program = bytes.concat(program, bytes32(_value.toUint256()));
+            }
+        } while (!(cmds[cmdIdx].equal('endStruct')));
+
+        _parseVariable(); // parse the 'endStruct' word
+    }
+
+    /**
      * Internal functions
      */
 
@@ -402,20 +447,23 @@ contract Parser is IParser {
         string storage cmd = _nextCmd();
 
         bytes1 opcode = IContext(_ctxAddr).opCodeByName(cmd);
+        // TODO: simplify
+        bytes4 _selector = bytes4(keccak256(abi.encodePacked(cmd)));
+        bool isStructVar = IContext(_ctxAddr).isStructVar(cmd);
 
         if (_isLabel(cmd)) {
             uint256 _branchLocation = program.length;
             bytes memory programBefore = program.slice(0, labelPos[cmd]);
             bytes memory programAfter = program.slice(labelPos[cmd] + 2, program.length);
             program = bytes.concat(programBefore, bytes2(uint16(_branchLocation)), programAfter);
-        } else if (cmd.isValidVarName()) {
+        } else if (cmd.isValidVarName() || isStructVar) {
             opcode = IContext(_ctxAddr).opCodeByName('var');
-            program = bytes.concat(program, opcode, bytes4(keccak256(abi.encodePacked(cmd))));
+            program = bytes.concat(program, opcode, _selector);
         } else if (opcode == 0x0) {
             revert(string(abi.encodePacked('Parser: "', cmd, '" command is unknown')));
         } else {
             program = bytes.concat(program, opcode);
-            bytes4 _selector = IContext(_ctxAddr).asmSelectors(cmd);
+            _selector = IContext(_ctxAddr).asmSelectors(cmd);
             if (_selector != 0x0) {
                 (bool success, ) = address(this).delegatecall(
                     abi.encodeWithSelector(_selector, IContext(_ctxAddr))

@@ -28,6 +28,20 @@ interface IPreprocessor {
         string value;
     }
 
+    // to avoid the stack too deep error this struct helps store more variables
+    struct PreprocessorInfo {
+        bool isFunc;
+        bool isName;
+        bool loadRemoteFlag;
+        bool directUseUint256;
+        bool isArrayStart;
+        bool isStructStart;
+        uint256 loadRemoteVarCount;
+        uint256 currencyMultiplier;
+        uint256 insertStep;
+        string name;
+    }
+
     function transform(address _ctxAddr, string memory _program) external returns (string[] memory);
 
     function cleanString(string memory _program)

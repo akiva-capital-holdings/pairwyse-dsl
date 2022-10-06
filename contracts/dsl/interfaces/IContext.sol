@@ -93,4 +93,8 @@ interface IContext {
     function setMsgSender(address _msgSender) external;
 
     function setMsgValue(uint256 _msgValue) external;
+
+    function setStructVar(string memory _varName) external;
+
+    function isStructVar(string memory _varName) external view returns (bool);
 }
