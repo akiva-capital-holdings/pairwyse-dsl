@@ -233,7 +233,6 @@ contract Preprocessor is IPreprocessor {
         PreprocessorInfo memory s;
 
         string memory chunk;
-        string memory name;
 
         // Cleanup
         delete result;
@@ -243,8 +242,16 @@ contract Preprocessor is IPreprocessor {
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
 
-            if (chunk.equal('struct')) s.isStructStart = true;
-            if (chunk.equal('endStruct')) s.isStructStart = false;
+            if (chunk.equal('struct')) {
+                s.isStructStart = true;
+                result.push(chunk);
+                continue;
+            }
+            if (chunk.equal('endStruct')) {
+                s.isStructStart = false;
+                result.push(chunk);
+                continue;
+            }
 
             // returns true if the chunk can use uint256 directly
             s.directUseUint256 = _isDirectUseUint256(s.directUseUint256, s.isStructStart, chunk);
@@ -339,12 +346,17 @@ contract Preprocessor is IPreprocessor {
             } else if (s.isFunc && !s.isName) {
                 // `Functions block` started
                 // if was not set the name for a function
-                (s.isFunc, s.isName, name) = _parseFuncMainData(chunk, name, s.isFunc, s.isName);
+                (s.isFunc, s.isName, s.name) = _parseFuncMainData(
+                    chunk,
+                    s.name,
+                    s.isFunc,
+                    s.isName
+                );
             } else if (s.isFunc && s.isName) {
                 // `Functions block` finished
                 // if it was already set the name for a function
                 s.isName = false;
-                s.isFunc = _parseFuncParams(chunk, name, s.isFunc);
+                s.isFunc = _parseFuncParams(chunk, s.name, s.isFunc);
             } else if (_isCurrencySymbol(chunk)) {
                 // we've already transformed the number before the keyword
                 // so we can safely skip the chunk

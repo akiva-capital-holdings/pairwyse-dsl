@@ -39,6 +39,7 @@ interface IPreprocessor {
         uint256 loadRemoteVarCount;
         uint256 currencyMultiplier;
         uint256 insertStep;
+        string name;
     }
 
     function transform(address _ctxAddr, string memory _program) external returns (string[] memory);
