@@ -28,8 +28,8 @@ contract Agreement {
     IContext public context;
     address public safeAddr;
 
-    event NewTransaction(
-        uint256 txId, // transaction ID
+    event NewRecord(
+        uint256 recordId, // recordId ID
         uint256[] requiredRecords, // required transactions that have to be executed
         address[] signatories, // addresses that can execute the transaction
         string transaction, // DSL code string ex. `uint256 5 > uint256 3`
@@ -52,18 +52,18 @@ contract Agreement {
     }
 
     struct Record {
-        address transactionContext;
+        address recordContext;
         bool isExecuted;
         bool isArchived;
         string transactionString;
     }
 
-    mapping(uint256 => Record) public txs; // txId => Record struct
-    mapping(uint256 => address[]) public conditionContexts; // txId => condition Context
-    mapping(uint256 => string[]) public conditionStrings; // txId => DSL condition as string
-    mapping(uint256 => address[]) public signatories; // txId => signatories
-    mapping(uint256 => uint256[]) public requiredRecords; // txId => requiredRecords[]
-    // txId => (signatory => was tx executed by signatory)
+    mapping(uint256 => Record) public txs; // recordId => Record struct
+    mapping(uint256 => address[]) public conditionContexts; // recordId => condition Context
+    mapping(uint256 => string[]) public conditionStrings; // recordId => DSL condition as string
+    mapping(uint256 => address[]) public signatories; // recordId => signatories
+    mapping(uint256 => uint256[]) public requiredRecords; // recordId => requiredRecords[]
+    // recordId => (signatory => was tx executed by signatory)
     mapping(uint256 => mapping(address => bool)) public isExecutedBySignatory;
     uint256[] public recordIds; // array of recordId
 
@@ -147,7 +147,7 @@ contract Agreement {
      * @param _recordId Record ID
      */
     function archiveRecord(uint256 _recordId) external onlySafe {
-        require(txs[_recordId].transactionContext != address(0), ErrorsAgreement.AGR9);
+        require(txs[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         txs[_recordId].isArchived = true;
     }
 
@@ -156,7 +156,7 @@ contract Agreement {
      * @param _recordId Record ID
      */
     function unArchiveRecord(uint256 _recordId) external onlySafe {
-        require(txs[_recordId].transactionContext != address(0), ErrorsAgreement.AGR9);
+        require(txs[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         require(txs[_recordId].isArchived != false, ErrorsAgreement.AGR10);
         txs[_recordId].isArchived = false;
     }
@@ -172,7 +172,7 @@ contract Agreement {
             if (
                 !txs[recordIds[i]].isArchived &&
                 !txs[recordIds[i]].isExecuted &&
-                txs[recordIds[i]].transactionContext != address(0)
+                txs[recordIds[i]].recordContext != address(0)
             ) {
                 activeRecords[count] = recordIds[i];
                 count++;
@@ -201,16 +201,16 @@ contract Agreement {
         address[] memory _signatories,
         string memory _transactionString,
         string[] memory _conditionStrings,
-        address _transactionContext,
+        address _recordContext,
         address[] memory _conditionContexts
     ) external onlySafe {
         _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
         for (uint256 i = 0; i < _conditionContexts.length; i++) {
             _addRecordCondition(_recordId, _conditionStrings[i], _conditionContexts[i]);
         }
-        _addRecordTransaction(_recordId, _transactionString, _transactionContext);
+        _addRecordTransaction(_recordId, _transactionString, _recordContext);
 
-        emit NewTransaction(
+        emit NewRecord(
             _recordId,
             _requiredRecords,
             _signatories,
@@ -356,15 +356,15 @@ contract Agreement {
     function _addRecordTransaction(
         uint256 _recordId,
         string memory _transactionString,
-        address _transactionContext
+        address _recordContext
     ) internal {
         require(conditionStrings[_recordId].length > 0, ErrorsAgreement.AGR5);
-        IContext(_transactionContext).setComparisonOpcodesAddr(address(ComparisonOpcodes));
-        IContext(_transactionContext).setBranchingOpcodesAddr(address(BranchingOpcodes));
-        IContext(_transactionContext).setLogicalOpcodesAddr(address(LogicalOpcodes));
-        IContext(_transactionContext).setOtherOpcodesAddr(address(OtherOpcodes));
+        IContext(_recordContext).setComparisonOpcodesAddr(address(ComparisonOpcodes));
+        IContext(_recordContext).setBranchingOpcodesAddr(address(BranchingOpcodes));
+        IContext(_recordContext).setLogicalOpcodesAddr(address(LogicalOpcodes));
+        IContext(_recordContext).setOtherOpcodesAddr(address(OtherOpcodes));
 
-        txs[_recordId].transactionContext = _transactionContext;
+        txs[_recordId].recordContext = _recordContext;
         txs[_recordId].transactionString = _transactionString;
     }
 
@@ -394,8 +394,8 @@ contract Agreement {
 
         require(!isExecutedBySignatory[_recordId][_signatory], ErrorsAgreement.AGR7);
 
-        IContext(txn.transactionContext).setMsgValue(_msgValue);
-        Executor.execute(address(txn.transactionContext));
+        IContext(txn.recordContext).setMsgValue(_msgValue);
+        Executor.execute(address(txn.recordContext));
         isExecutedBySignatory[_recordId][_signatory] = true;
 
         // Check is tx was executed by all signatories
@@ -409,7 +409,7 @@ contract Agreement {
             txs[_recordId].isExecuted = true;
         }
 
-        return IContext(txn.transactionContext).stack().seeLast() == 0 ? false : true;
+        return IContext(txn.recordContext).stack().seeLast() == 0 ? false : true;
     }
 
     /**
@@ -422,7 +422,7 @@ contract Agreement {
             if (
                 !txs[recordIds[i]].isArchived &&
                 !txs[recordIds[i]].isExecuted &&
-                txs[recordIds[i]].transactionContext != address(0)
+                txs[recordIds[i]].recordContext != address(0)
             ) {
                 count++;
             }
