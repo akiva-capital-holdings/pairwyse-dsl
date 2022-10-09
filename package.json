@@ -17,6 +17,14 @@
     "coverage": "yarn hardhat coverage",
     "prepare": "husky install"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.(js|jsx)": ["npm run lint:write", "git add"]
+  },
   "dependencies": {
     "hardhat": "^2.10.1",
     "hardhat-contract-sizer": "^2.6.1"
