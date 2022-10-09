@@ -1,5 +1,5 @@
 import * as hre from 'hardhat';
-import { deployPreprocessor } from './data/deploy.utils';
+import { deployPreprocessor } from './utils/deploy.utils';
 
 async function main() {
   console.log(`Deploying from address ${(await hre.ethers.getSigners())[0].address}`);
