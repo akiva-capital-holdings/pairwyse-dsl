@@ -8,7 +8,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
@@ -156,6 +156,67 @@ library OtherOpcodes {
 
             // get the next variable name in struct
             _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+        }
+    }
+
+    function opForLoop(address _ctx) public {
+        console.log('opForLoop');
+        // Ex. [('for'), 'LP_INITIAL', 'in', 'LPS_INITIAL']
+        bytes32 loopVarName = OpcodeHelpers.getNextBytes(_ctx, 4);
+        console.logBytes32(loopVarName);
+        // OpcodeHelpers.nextBytes(_ctx, 32); // skip `in` keyword as it is useless
+        bytes32 arrName = OpcodeHelpers.getNextBytes(_ctx, 4);
+        console.logBytes32(arrName);
+
+        // check if the array exists
+        (bool success1, bytes memory data1) = IContext(_ctx).appAddr().call(
+            abi.encodeWithSignature('getType(bytes32)', arrName)
+        );
+        // TODO: these errors are as strings because I wanna check are the error names correct
+        require(success1, 'ErrorsGeneralOpcodes.OP1');
+        require(bytes32(data1) != bytes32(0x0), 'ErrorsGeneralOpcodes.OP4');
+
+        /**
+         * Get array length
+         */
+        // Load local variable by it's hex
+        (bool success2, bytes memory data2) = IContext(_ctx).appAddr().call(
+            abi.encodeWithSignature('getLength(bytes32)', arrName)
+        );
+        require(success2, 'ErrorsGeneralOpcodes.OP5');
+
+        // Convert bytes to bytes32
+        bytes32 result;
+        assembly {
+            result := mload(add(data2, 0x20))
+        }
+        uint256 arrLength = uint256(result);
+        console.log(arrLength); // 3
+
+        /**
+         * opGet
+         */
+        for (uint256 i = 0; i < arrLength; i++) {
+            console.log('i =', i);
+
+            (bool success3, bytes memory data3) = IContext(_ctx).appAddr().call(
+                abi.encodeWithSignature(
+                    'get(uint256,bytes32)',
+                    i, // index of the searched item
+                    arrName // array name, ex. INDEX_LIST, PARTNERS
+                )
+            );
+            require(success3, 'ErrorsGeneralOpcodes.OP1');
+
+            address element; // element by index `i` from the array
+
+            assembly {
+                element := mload(add(data3, 20))
+            }
+            // 0: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+            // 1: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+            // 2: 0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc
+            console.log(element);
         }
     }
 

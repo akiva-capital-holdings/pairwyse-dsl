@@ -2,6 +2,7 @@ import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { E2EApp, Context, Preprocessor, Stack } from '../../../typechain-types';
 import { checkStackTail, hex4Bytes, hex4BytesShort } from '../../utils/utils';
 import { deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
@@ -11,6 +12,9 @@ import { getChainId } from '../../../utils/utils';
 const { ethers, network } = hre;
 
 describe('End-to-end', () => {
+  let alice: SignerWithAddress;
+  let bob: SignerWithAddress;
+  let carl: SignerWithAddress;
   let stack: Stack;
   let preprocessor: Preprocessor;
   let ctx: Context;
@@ -22,6 +26,7 @@ describe('End-to-end', () => {
   let snapshotId: number;
 
   before(async () => {
+    [alice, bob, carl] = await ethers.getSigners();
     lastBlockTimestamp = (
       await ethers.provider.getBlock(
         // eslint-disable-next-line no-underscore-dangle
@@ -1500,6 +1505,50 @@ describe('End-to-end', () => {
         expect(await app.getStorageUint256(hex4Bytes('MAX.lastPayment'))).equal(170);
         expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(3);
       });
+    });
+  });
+
+  describe.only('For-loops', () => {
+    before(async () => {
+      // Create an array for the usage in for-loops
+      const input = `
+      uint256[] LPS_INITIAL
+      insert ${alice.address} into LPS_INITIAL
+      insert ${bob.address} into LPS_INITIAL
+      insert ${carl.address} into LPS_INITIAL
+      `;
+      const code = await preprocessor.callStatic.transform(ctxAddr, input);
+      await app.parseCode(code);
+      await app.execute();
+    });
+
+    it.only('Simple for loop', async () => {
+      const input = `
+        for LP_INITIAL in LPS_INITIAL {
+          bool true
+        }
+      `;
+      // Set necessary variables
+      // await app.setStorageUint256(hex4Bytes('LPS_INITIAL'), varValue);
+
+      // Preprocessing
+      const code = await preprocessor.callStatic.transform(ctxAddr, input);
+      expect(code).eql(['for', 'LP_INITIAL', 'in', 'LPS_INITIAL', 'bool', 'true', 'end']);
+
+      // Parsing
+      await app.parseCode(code);
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '37' + // for
+          'c5bc3efa' + // hex4Bytes('LP_INITIAL')
+          'a0c9d042' + // hex4Bytes('LPS_INITIAL')
+          '18' + // bool
+          '01' + // true
+          '24' // end
+      );
+
+      // Execution
+      await app.execute();
     });
   });
 });
