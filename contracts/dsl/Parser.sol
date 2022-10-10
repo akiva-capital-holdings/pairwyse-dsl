@@ -297,6 +297,19 @@ contract Parser is IParser {
     }
 
     /**
+     * @dev Updates previous `program` with the name of the dsl array that will
+     * be used to sum uin256 variables
+     *
+     * Example of a command:
+     * ```
+     * sumOf ARR_NAME
+     * ```
+     */
+    function asmSumOf() public {
+        _parseVariable(); // array name
+    }
+
+    /**
      * @dev Updates previous `program` for positive and negative branch position
      *
      * Example of a command:

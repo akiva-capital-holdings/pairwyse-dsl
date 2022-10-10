@@ -51,6 +51,7 @@ library ErrorsGeneralOpcodes {
     string constant OP3 = 'OP3'; // Opcodes: opLoadRemote call not success
     string constant OP4 = 'OP4'; // Opcodes: tries to put an item to non-existing array
     string constant OP5 = 'OP5'; // Opcodes: opLoadLocal call not success
+    string constant OP6 = 'OP6'; // Opcodes: array is empty
 }
 
 /**

@@ -1605,6 +1605,28 @@ describe('DSL: basic', () => {
         });
       });
 
+      describe('sumOf', () => {
+        it('should sum several values with additional code', async () => {
+          expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
+          expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.get(1, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
+          await app.parse(`
+            3 setUint256 SUM
+            uint256[] NUMBERS
+            insert 1345 into NUMBERS
+            uint256[] INDEXES
+            insert 1 into INDEXES
+            insert 1465 into NUMBERS
+            insert 3 into INDEXES
+            bool false
+            sumOf INDEXES
+            sumOf NUMBERS
+          `);
+          await app.execute();
+          await checkStackTailv2(stack, [1, 0, 4, 2810]);
+        });
+      });
+
       describe('address', () => {
         it.skip('should fail if try to push an item to non exist array', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
@@ -1757,8 +1779,7 @@ describe('DSL: basic', () => {
       });
 
       describe.skip('mixed types(uint256 + address)', () => {
-        it('should push several values with additional code \
-(declaration mixed with inserting)', async () => {
+        it('should push several values with additional code (declaration + inserting)', async () => {
           // should be zero initial values
           expect(await app.getLength(hex4Bytes('INDEXES'))).to.equal(0);
           expect(await app.getLength(hex4Bytes('PARTNERS'))).to.equal(0);

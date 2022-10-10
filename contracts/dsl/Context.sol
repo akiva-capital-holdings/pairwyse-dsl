@@ -488,6 +488,16 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
 
+        // Sums all elements in an array
+        // Ex. `sumOf ARR_NAME`
+        addOpcode(
+            'sumOf',
+            0x37,
+            OtherOpcodes.opSumOf.selector,
+            IParser.asmSumOf.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
         // Complex Opcodes with sub Opcodes (branches)
 
         /*

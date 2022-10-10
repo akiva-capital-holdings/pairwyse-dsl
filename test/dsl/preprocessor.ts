@@ -1486,56 +1486,57 @@ describe('Preprocessor', () => {
       arrays functionality
     */
     describe('uint256 type', () => {
-      it.skip('declare array', async () => {
-        const input = 'declareArr uint256 BALANCES';
-        const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql(['declareArr', 'uint256', 'BALANCES']);
+      describe('sumOf', () => {
+        it('sum several values', async () => {
+          const input = `
+            uint256[] NUMBERS
+            insert 1345 into NUMBERS
+            uint256[] INDEXES
+            insert 1 into INDEXES
+            insert 1465 into NUMBERS
+            insert 3 into INDEXES
+            sumOf INDEXES
+            sumOf NUMBERS
+          `;
+
+          const code = await app.callStatic.transform(ctxAddr, input);
+          const expectedCode = [
+            'declareArr',
+            'uint256',
+            'NUMBERS',
+            'push',
+            '1345',
+            'NUMBERS',
+            'declareArr',
+            'uint256',
+            'INDEXES',
+            'push',
+            '1',
+            'INDEXES',
+            'push',
+            '1465',
+            'NUMBERS',
+            'push',
+            '3',
+            'INDEXES',
+            'sumOf',
+            'INDEXES',
+            'sumOf',
+            'NUMBERS',
+          ];
+          expect(code).to.eql(expectedCode);
+        });
       });
 
-      it('declare array between several commands', async () => {
-        const input = 'uint256 2 declareArr uint256 BALANCES bool false';
-        const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql(['uint256', '2', 'declareArr', 'uint256', 'BALANCES', 'bool', 'false']);
-      });
-
-      it.skip('declare array just before a command', async () => {
-        const input = 'declareArr uint256 BALANCES bool false';
-        const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql(['declareArr', 'uint256', 'BALANCES', 'bool', 'false']);
-      });
-
-      it.skip('declare array just after a command', async () => {
-        const input = 'declareArr uint256 BALANCES bool false';
-        const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql(['declareArr', 'uint256', 'BALANCES', 'bool', 'false']);
-      });
-
-      it.skip('declare three arrays', async () => {
-        const input =
-          'declareArr uint256 BALANCES declareArr uint256 VALUES declareArr uint256 INDEXES';
-        const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql([
-          'declareArr',
-          'uint256',
-          'BALANCES',
-          'declareArr',
-          'uint256',
-          'VALUES',
-          'declareArr',
-          'uint256',
-          'INDEXES',
-        ]);
-      });
-
-      describe('Simplified version', () => {
+      describe('declareArr', () => {
         it.skip('declare array', async () => {
-          const input = 'uint256[] BALANCES';
+          const input = 'declareArr uint256 BALANCES';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql(['declareArr', 'uint256', 'BALANCES']);
         });
 
         it('declare array between several commands', async () => {
-          const input = 'uint256 2 uint256[] BALANCES bool false';
+          const input = 'uint256 2 declareArr uint256 BALANCES bool false';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql([
             'uint256',
@@ -1549,19 +1550,20 @@ describe('Preprocessor', () => {
         });
 
         it.skip('declare array just before a command', async () => {
-          const input = 'uint256[]  BALANCES bool false';
+          const input = 'declareArr uint256 BALANCES bool false';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql(['declareArr', 'uint256', 'BALANCES', 'bool', 'false']);
         });
 
         it.skip('declare array just after a command', async () => {
-          const input = 'uint256[] BALANCES bool false';
+          const input = 'declareArr uint256 BALANCES bool false';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql(['declareArr', 'uint256', 'BALANCES', 'bool', 'false']);
         });
 
         it.skip('declare three arrays', async () => {
-          const input = 'uint256[] BALANCES declareArr uint256 VALUES declareArr uint256 INDEXES';
+          const input =
+            'declareArr uint256 BALANCES declareArr uint256 VALUES declareArr uint256 INDEXES';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql([
             'declareArr',
@@ -1575,60 +1577,69 @@ describe('Preprocessor', () => {
             'INDEXES',
           ]);
         });
+
+        describe('Simplified version', () => {
+          it.skip('declare array', async () => {
+            const input = 'uint256[] BALANCES';
+            const cmds = await app.callStatic.transform(ctxAddr, input);
+            expect(cmds).to.eql(['declareArr', 'uint256', 'BALANCES']);
+          });
+
+          it('declare array between several commands', async () => {
+            const input = 'uint256 2 uint256[] BALANCES bool false';
+            const cmds = await app.callStatic.transform(ctxAddr, input);
+            expect(cmds).to.eql([
+              'uint256',
+              '2',
+              'declareArr',
+              'uint256',
+              'BALANCES',
+              'bool',
+              'false',
+            ]);
+          });
+
+          it.skip('declare array just before a command', async () => {
+            const input = 'uint256[]  BALANCES bool false';
+            const cmds = await app.callStatic.transform(ctxAddr, input);
+            expect(cmds).to.eql(['declareArr', 'uint256', 'BALANCES', 'bool', 'false']);
+          });
+
+          it.skip('declare array just after a command', async () => {
+            const input = 'uint256[] BALANCES bool false';
+            const cmds = await app.callStatic.transform(ctxAddr, input);
+            expect(cmds).to.eql(['declareArr', 'uint256', 'BALANCES', 'bool', 'false']);
+          });
+
+          it.skip('declare three arrays', async () => {
+            const input = 'uint256[] BALANCES declareArr uint256 VALUES declareArr uint256 INDEXES';
+            const cmds = await app.callStatic.transform(ctxAddr, input);
+            expect(cmds).to.eql([
+              'declareArr',
+              'uint256',
+              'BALANCES',
+              'declareArr',
+              'uint256',
+              'VALUES',
+              'declareArr',
+              'uint256',
+              'INDEXES',
+            ]);
+          });
+        });
       });
     });
 
     describe('address type', () => {
-      it.skip('declare array', async () => {
-        const input = 'declareArr address REALTORS';
-        const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql(['declareArr', 'address', 'REALTORS']);
-      });
-
-      it('declare array between several commands', async () => {
-        const input = 'uint256 2 declareArr address REALTORS bool false';
-        const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql(['uint256', '2', 'declareArr', 'address', 'REALTORS', 'bool', 'false']);
-      });
-
-      it.skip('declare array just before a command', async () => {
-        const input = 'declareArr address REALTORS bool false';
-        const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql(['declareArr', 'address', 'REALTORS', 'bool', 'false']);
-      });
-
-      it.skip('declare array just after a command', async () => {
-        const input = 'declareArr address REALTORS bool false';
-        const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql(['declareArr', 'address', 'REALTORS', 'bool', 'false']);
-      });
-
-      it.skip('declare three arrays', async () => {
-        const input =
-          'declareArr address REALTORS declareArr address OWNERS declareArr address DBs';
-        const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql([
-          'declareArr',
-          'address',
-          'REALTORS',
-          'declareArr',
-          'address',
-          'OWNERS',
-          'declareArr',
-          'address',
-          'DBs',
-        ]);
-      });
-
-      describe('Simplified version', () => {
+      describe('declareArr', () => {
         it.skip('declare array', async () => {
-          const input = 'address[] REALTORS';
+          const input = 'declareArr address REALTORS';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql(['declareArr', 'address', 'REALTORS']);
         });
 
         it('declare array between several commands', async () => {
-          const input = 'uint256 2 address[] REALTORS bool false';
+          const input = 'uint256 2 declareArr address REALTORS bool false';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql([
             'uint256',
@@ -1642,19 +1653,20 @@ describe('Preprocessor', () => {
         });
 
         it.skip('declare array just before a command', async () => {
-          const input = 'address[] REALTORS bool false';
+          const input = 'declareArr address REALTORS bool false';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql(['declareArr', 'address', 'REALTORS', 'bool', 'false']);
         });
 
         it.skip('declare array just after a command', async () => {
-          const input = 'address[] REALTORS bool false';
+          const input = 'declareArr address REALTORS bool false';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql(['declareArr', 'address', 'REALTORS', 'bool', 'false']);
         });
 
         it.skip('declare three arrays', async () => {
-          const input = 'address[] REALTORS address[] OWNERS address[] DBs';
+          const input =
+            'declareArr address REALTORS declareArr address OWNERS declareArr address DBs';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql([
             'declareArr',
@@ -1668,89 +1680,141 @@ describe('Preprocessor', () => {
             'DBs',
           ]);
         });
+
+        describe('Simplified version', () => {
+          it.skip('declare array', async () => {
+            const input = 'address[] REALTORS';
+            const cmds = await app.callStatic.transform(ctxAddr, input);
+            expect(cmds).to.eql(['declareArr', 'address', 'REALTORS']);
+          });
+
+          it('declare array between several commands', async () => {
+            const input = 'uint256 2 address[] REALTORS bool false';
+            const cmds = await app.callStatic.transform(ctxAddr, input);
+            expect(cmds).to.eql([
+              'uint256',
+              '2',
+              'declareArr',
+              'address',
+              'REALTORS',
+              'bool',
+              'false',
+            ]);
+          });
+
+          it.skip('declare array just before a command', async () => {
+            const input = 'address[] REALTORS bool false';
+            const cmds = await app.callStatic.transform(ctxAddr, input);
+            expect(cmds).to.eql(['declareArr', 'address', 'REALTORS', 'bool', 'false']);
+          });
+
+          it.skip('declare array just after a command', async () => {
+            const input = 'address[] REALTORS bool false';
+            const cmds = await app.callStatic.transform(ctxAddr, input);
+            expect(cmds).to.eql(['declareArr', 'address', 'REALTORS', 'bool', 'false']);
+          });
+
+          it.skip('declare three arrays', async () => {
+            const input = 'address[] REALTORS address[] OWNERS address[] DBs';
+            const cmds = await app.callStatic.transform(ctxAddr, input);
+            expect(cmds).to.eql([
+              'declareArr',
+              'address',
+              'REALTORS',
+              'declareArr',
+              'address',
+              'OWNERS',
+              'declareArr',
+              'address',
+              'DBs',
+            ]);
+          });
+        });
       });
     });
 
     describe('Simplified version mix type of arrays', () => {
-      it.skip('declare four arrays', async () => {
-        const input = 'address[] REALTORS uint256[] NUMBERS address[] DBs uint256[] INDEXES';
-        const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql([
-          'declareArr',
-          'address',
-          'REALTORS',
-          'declareArr',
-          'uint256',
-          'NUMBERS',
-          'declareArr',
-          'address',
-          'DBs',
-          'declareArr',
-          'uint256',
-          'INDEXES',
-        ]);
-      });
+      describe('declareArr', () => {
+        it.skip('declare four arrays', async () => {
+          const input = 'address[] REALTORS uint256[] NUMBERS address[] DBs uint256[] INDEXES';
+          const cmds = await app.callStatic.transform(ctxAddr, input);
+          expect(cmds).to.eql([
+            'declareArr',
+            'address',
+            'REALTORS',
+            'declareArr',
+            'uint256',
+            'NUMBERS',
+            'declareArr',
+            'address',
+            'DBs',
+            'declareArr',
+            'uint256',
+            'INDEXES',
+          ]);
+        });
 
-      it.skip('declare two arrays with differen types, between additional code', async () => {
-        const input = `
-          uint256 6
-          address[] REALTORS
-          uint256[] NUMBERS
-          bool true`;
-        const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql([
-          'uint256',
-          '6',
-          'declareArr',
-          'address',
-          'REALTORS',
-          'declareArr',
-          'uint256',
-          'NUMBERS',
-          'bool',
-          'true',
-        ]);
-      });
+        it.skip('declare two arrays with differen types, between additional code', async () => {
+          const input = `
+            uint256 6
+            address[] REALTORS
+            uint256[] NUMBERS
+            bool true`;
+          const cmds = await app.callStatic.transform(ctxAddr, input);
+          expect(cmds).to.eql([
+            'uint256',
+            '6',
+            'declareArr',
+            'address',
+            'REALTORS',
+            'declareArr',
+            'uint256',
+            'NUMBERS',
+            'bool',
+            'true',
+          ]);
+        });
 
-      it.skip('declare another two arrays with differen types, between additional code', async () => {
-        const input = `
-          uint256 6
-          uint256[] NUMBERS
-          address[] ADDRESSES
-          bool true`;
-        const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql([
-          'uint256',
-          '6',
-          'declareArr',
-          'uint256',
-          'NUMBERS',
-          'declareArr',
-          'address',
-          'ADDRESSES',
-          'bool',
-          'true',
-        ]);
-      });
+        it.skip('declare another two arrays with differen types, between additional code', async () => {
+          const input = `
+            uint256 6
+            uint256[] NUMBERS
+            address[] ADDRESSES
+            bool true`;
+          const cmds = await app.callStatic.transform(ctxAddr, input);
+          expect(cmds).to.eql([
+            'uint256',
+            '6',
+            'declareArr',
+            'uint256',
+            'NUMBERS',
+            'declareArr',
+            'address',
+            'ADDRESSES',
+            'bool',
+            'true',
+          ]);
+        });
 
-      it('declare arrays with differen types, that include additional code inside', async () => {
-        const input = `
-          uint256[] NUMBERS
-          uint256 6
-          TIME
-          address[] ADDRESSES`;
-        const cmds = await app.callStatic.transform(ctxAddr, input);
-        expect(cmds).to.eql([
-          'declareArr',
-          'uint256',
-          'NUMBERS',
-          'uint256',
-          '6',
-          'TIME',
-          'declareArr',
-          'address',
-          'ADDRESSES',
-        ]);
+        it('declare arrays with differen types, that include additional code inside', async () => {
+          const input = `
+            uint256[] NUMBERS
+            uint256 6
+            TIME
+            address[] ADDRESSES`;
+          const cmds = await app.callStatic.transform(ctxAddr, input);
+          expect(cmds).to.eql([
+            'declareArr',
+            'uint256',
+            'NUMBERS',
+            'uint256',
+            '6',
+            'TIME',
+            'declareArr',
+            'address',
+            'ADDRESSES',
+          ]);
+        });
       });
     });
   });

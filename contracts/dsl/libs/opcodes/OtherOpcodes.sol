@@ -102,6 +102,50 @@ library OtherOpcodes {
     }
 
     /**
+     * @dev Sums uin256 elements from the array (array name should be provided)
+     * @param _ctx Context contract instance address
+     */
+    function opSumOf(address _ctx) public {
+        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+        bool success;
+        bytes memory data;
+
+        // check if the array exists
+        (success, data) = IContext(_ctx).appAddr().call(
+            abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
+        );
+        require(success, ErrorsGeneralOpcodes.OP1);
+        // check that type of the array is `uint256`
+        require(
+            bytes1(data) == bytes1(IContext(_ctx).branchCodes('declareArr', 'uint256')),
+            ErrorsGeneralOpcodes.OP2
+        );
+
+        // get array's length
+        (success, data) = IContext(_ctx).appAddr().call(
+            abi.encodeWithSignature('getLength(bytes32)', _arrNameB32)
+        );
+        require(success, ErrorsGeneralOpcodes.OP1);
+
+        // sum items and store into the stack
+        uint256 total;
+        bytes memory item;
+        for (uint256 i = 0; i < uint256(bytes32(data)); i++) {
+            (success, item) = IContext(_ctx).appAddr().call(
+                abi.encodeWithSignature(
+                    'get(uint256,bytes32)',
+                    i, // index of the searched item
+                    _arrNameB32 // array name, ex. INDEX_LIST, PARTNERS
+                )
+            );
+            require(success, ErrorsGeneralOpcodes.OP1);
+            total += uint256(bytes32(item));
+        }
+
+        OpcodeHelpers.putToStack(_ctx, total);
+    }
+
+    /**
      * @dev Inserts items to DSL structures using mixed variable name (ex. `BOB.account`).
      * Struct variable names already contain a name of a DSL structure, `.` dot symbol, the name of
      * variable. `endStruct` word (0xcb398fe1) is used as an indicator for the ending loop for

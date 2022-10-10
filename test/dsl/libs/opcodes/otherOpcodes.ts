@@ -7,7 +7,7 @@ import {
   Stack,
   OtherOpcodesMock,
   ERC20Mintable,
-  UnstructuredStorageMock,
+  BaseStorage,
 } from '../../../../typechain-types';
 import {
   checkStack,
@@ -21,12 +21,13 @@ describe('Other opcodes', () => {
   let StackCont: Stack__factory;
   /* eslint-enable camelcase */
   let app: OtherOpcodesMock;
-  let clientApp: UnstructuredStorageMock;
+  let clientApp: BaseStorage;
   let ctx: Context;
   let ctxAddr: string;
   let stack: Stack;
   let testERC20: ERC20Mintable;
   const testAmount = '1000';
+  const zero32bytes = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
   before(async () => {
     StackCont = await ethers.getContractFactory('Stack');
@@ -54,7 +55,7 @@ describe('Other opcodes', () => {
     stack = await ethers.getContractAt('Stack', stackAddr);
 
     // Deploy Storage contract to simulate another app (needed for testing loadRemote opcodes)
-    clientApp = await (await ethers.getContractFactory('UnstructuredStorageMock')).deploy();
+    clientApp = await (await ethers.getContractFactory('BaseStorage')).deploy();
 
     // Setup
     await ctx.setAppAddress(clientApp.address);
@@ -360,7 +361,7 @@ describe('Other opcodes', () => {
 
     const bytes32TestAddressName = hex4Bytes('ADDRESS');
 
-    await app.setStorageAddress(bytes32TestAddressName, testAddress);
+    await clientApp.setStorageAddress(bytes32TestAddressName, testAddress);
 
     const address = bytes32TestAddressName.substring(2, 10);
     await ctx.setProgram(`0x${address}${fundAmountHex}`);
@@ -541,7 +542,7 @@ describe('Other opcodes', () => {
     const bytes = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${bytes}`);
 
-    await app.setStorageBytes32(bytes32TestValueName, testValue);
+    await clientApp.setStorageBytes32(bytes32TestValueName, testValue);
     await app.opLoadLocal(ctxAddr, testSignature);
 
     checkStackTailv2(stack, [testValue]);
@@ -558,5 +559,57 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${bytes}${clientApp.address.substring(2)}`);
     await app.opLoadRemote(ctxAddr, testSignature);
     await checkStackTailv2(stack, [testValue]);
+  });
+
+  it.skip('opDeclare', async () => {
+    // TODO: should be fixed
+    const name = hex4Bytes('NUMBERS');
+
+    await ctx.setProgram(
+      '0x' +
+        '31' + // declareArr
+        '01' + // uint256
+        '1fff709e' // bytecode for NUMBERS`
+    );
+    expect(await clientApp.getType(name)).to.be.equal(zero32bytes);
+    await app.opDeclare(ctxAddr);
+    expect(await clientApp.getType(name)).to.be.equal(
+      '0x0100000000000000000000000000000000000000000000000000000000000000'
+    );
+  });
+
+  it.skip('opPush', async () => {
+    // TODO: should be fixed
+    const name = hex4Bytes('NUMBERS');
+    // simplify
+    const type = '0x0100000000000000000000000000000000000000000000000000000000000000'; // uint256
+    await clientApp.declare(type, name);
+    const number = new Array(64).join('0') + 3;
+    await ctx.setProgram(
+      '0x' +
+        '33' + // push
+        `${number}` + // first number
+        '1fff709e' // bytecode for NUMBERS
+    );
+    expect(await clientApp.getLength(name)).to.be.equal(0);
+    await app.opPush(ctxAddr);
+    expect(await clientApp.getLength(name)).to.be.equal(1);
+    expect(await clientApp.get(0, name)).to.be.equal(number);
+  });
+
+  it.skip('opGet', async () => {
+    // TODO: should be fixed
+  });
+
+  it.skip('opSumOf', async () => {
+    // TODO: should be fixed
+  });
+
+  it.skip('opStruct', async () => {
+    // TODO: should be fixed
+  });
+
+  it.skip('opLengthOf', async () => {
+    // TODO: should be fixed
   });
 });

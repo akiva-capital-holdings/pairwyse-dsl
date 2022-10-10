@@ -44,6 +44,8 @@ interface IParser {
 
     function asmLengthOf() external;
 
+    function asmSumOf() external;
+
     function asmTransferFromVar() external;
 
     function asmIfelse() external;
