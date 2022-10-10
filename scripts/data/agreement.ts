@@ -138,6 +138,7 @@ export const businessCaseSteps = (
     txId: index.concat('1'),
     requiredTxs: [],
     signatories: [GPAddr],
+    // TODO: replace TRANSACTIONS_CONT name with AGREEMENT
     transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_INITIAL',
     conditions: [
       `(time < var PLACEMENT_DATE)

@@ -488,6 +488,25 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
 
+        // Creates structs
+        // Ex. `struct BOB { address: 0x123...456, lastDeposit: 3 }`
+        // Ex. `BOB.lastDeposit >= 5`
+        addOpcode(
+            'struct',
+            0x36,
+            OtherOpcodes.opStruct.selector,
+            IParser.asmStruct.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
+        addOpcode(
+            'for',
+            0x37,
+            OtherOpcodes.opForLoop.selector,
+            IParser.asmForLoop.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
         // Complex Opcodes with sub Opcodes (branches)
 
         /*
@@ -503,14 +522,6 @@ contract Context is IContext {
             0x1b,
             OtherOpcodes.opLoadLocalUint256.selector,
             IParser.asmVar.selector,
-            OpcodeLibNames.OtherOpcodes
-        );
-
-        addOpcode(
-            'struct',
-            0x36,
-            OtherOpcodes.opStruct.selector,
-            IParser.asmStruct.selector,
             OpcodeLibNames.OtherOpcodes
         );
 
