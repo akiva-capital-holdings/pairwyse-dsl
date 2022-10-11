@@ -550,6 +550,14 @@ describe('End-to-end', () => {
           const StackCont = await ethers.getContractFactory('Stack');
           const contextStackAddress = await ctx.stack();
           stack = StackCont.attach(contextStackAddress);
+
+          /*
+            setUint256 SUM -> 1 in the stack
+            bool false -> 0 in the stack
+            setUint256 SUM1 -> 1 in the stack
+            setUint256 SUM2 -> 1 in the stack
+            comparison result for `sumOf INDEXES > sumOf NUMBERS` is false -> 0 in the stack
+          */
           await checkStackTailv2(stack, [1, 0, 1, 1, 0]);
           expect(await app.getStorageUint256(hex4Bytes('SUM1'))).equal(4);
           expect(await app.getStorageUint256(hex4Bytes('SUM2'))).equal(2810);
@@ -717,12 +725,6 @@ describe('End-to-end', () => {
         const contextStackAddress = await ctx.stack();
         stack = StackCont.attach(contextStackAddress);
 
-        /*
-          lengthOf INDEXES -> 2 in the stack
-          lengthOf NUMBERS -> 1 in the stack
-          0 item in NUMBERS -> 1345 in the stack
-          1 item in INDEXES -> 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc in the stack
-        */
         expect(await app.get(0, hex4Bytes('INDEXES'))).to.equal(
           `0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc${new Array(25).join('0')}`
         );
@@ -731,6 +733,12 @@ describe('End-to-end', () => {
         );
         expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(`0x${new Array(62).join('0')}541`);
 
+        /*
+          lengthOf INDEXES -> 2 in the stack
+          lengthOf NUMBERS -> 1 in the stack
+          0 item in NUMBERS -> 1345 in the stack
+          1 item in INDEXES -> 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc in the stack
+        */
         await checkStackTailv2(stack, [
           2,
           1,

@@ -156,9 +156,9 @@ library OtherOpcodes {
         // get the first variable name
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
 
+        // till found the `endStruct` opcode
         while (bytes4(_varNameB32) != 0xcb398fe1) {
-            // searching endStruct opcode
-            // get variable value for current _varNameB32
+            // get a variable value for current _varNameB32
             bytes32 _value = OpcodeHelpers.getNextBytes(_ctx, 32);
 
             (bool success, ) = IContext(_ctx).appAddr().call(

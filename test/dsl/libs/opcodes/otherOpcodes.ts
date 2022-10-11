@@ -1,5 +1,7 @@
-import { expect } from 'chai';
 import { ethers } from 'hardhat';
+import { expect } from 'chai';
+import { BigNumber } from 'ethers';
+
 /* eslint-disable camelcase */
 import {
   Stack__factory,
@@ -26,8 +28,10 @@ describe('Other opcodes', () => {
   let ctxAddr: string;
   let stack: Stack;
   let testERC20: ERC20Mintable;
+  let uint256type: string;
+  let addressType: string;
   const testAmount = '1000';
-  const zero32bytes = '0x0000000000000000000000000000000000000000000000000000000000000000';
+  const zero32bytes = '0x' + new Array(65).join('0');
 
   before(async () => {
     StackCont = await ethers.getContractFactory('Stack');
@@ -63,6 +67,9 @@ describe('Other opcodes', () => {
 
     // Deploy test ERC20 and mint some to ctx
     testERC20 = await (await ethers.getContractFactory('ERC20Mintable')).deploy('Test', 'TST');
+
+    uint256type = await ctx.branchCodes('declareArr', 'uint256');
+    addressType = await ctx.branchCodes('declareArr', 'address');
   });
 
   afterEach(async () => {
@@ -561,55 +568,156 @@ describe('Other opcodes', () => {
     await checkStackTailv2(stack, [testValue]);
   });
 
-  it.skip('opDeclare', async () => {
-    // TODO: should be fixed
-    const name = hex4Bytes('NUMBERS');
+  it('opStruct', async () => {
+    const LAST_PAYMENT = hex4Bytes('BOB.lastPayment');
+    const ACCOUNT = hex4Bytes('BOB.account');
+    const ADDRESS = '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000';
+    const THREE = new Array(64).join('0') + 3;
+    const ZERO = new Array(65).join('0');
 
     await ctx.setProgram(
       '0x' +
-        '31' + // declareArr
-        '01' + // uint256
-        '1fff709e' // bytecode for NUMBERS`
+        '4a871642' + // BOB.lastPayment
+        `${THREE}` + // 3
+        '2215b81f' + // BOB.account
+        `${ADDRESS}` + // the address for account
+        'cb398fe1' // endStruct
     );
-    expect(await clientApp.getType(name)).to.be.equal(zero32bytes);
-    await app.opDeclare(ctxAddr);
-    expect(await clientApp.getType(name)).to.be.equal(
-      '0x0100000000000000000000000000000000000000000000000000000000000000'
-    );
+
+    expect(await clientApp.getStorageUint256(LAST_PAYMENT)).equal(0);
+    expect(await clientApp.getStorageUint256(ACCOUNT)).equal(BigNumber.from(zero32bytes));
+    await app.opStruct(ctxAddr);
+    expect(await clientApp.getStorageUint256(LAST_PAYMENT)).equal(3);
+    expect(await clientApp.getStorageUint256(ACCOUNT)).equal(BigNumber.from(`0x${ADDRESS}`));
   });
 
-  it.skip('opPush', async () => {
-    // TODO: should be fixed
-    const name = hex4Bytes('NUMBERS');
-    // simplify
-    const type = '0x0100000000000000000000000000000000000000000000000000000000000000'; // uint256
-    await clientApp.declare(type, name);
-    const number = new Array(64).join('0') + 3;
-    await ctx.setProgram(
-      '0x' +
-        '33' + // push
-        `${number}` + // first number
-        '1fff709e' // bytecode for NUMBERS
-    );
-    expect(await clientApp.getLength(name)).to.be.equal(0);
-    await app.opPush(ctxAddr);
-    expect(await clientApp.getLength(name)).to.be.equal(1);
-    expect(await clientApp.get(0, name)).to.be.equal(number);
-  });
+  describe('Arrays', () => {
+    const zero62 = new Array(63).join('0');
+    const ONE = new Array(64).join('0') + 1;
+    const THREE = new Array(64).join('0') + 3;
+    const FIVE = new Array(64).join('0') + 5;
+    const NUMBERS = hex4Bytes('NUMBERS');
+    const PARTNERS = hex4Bytes('PARTNERS');
+    const ADDRESS_MARY = 'e7f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000';
+    const ADDRESS_MAX = 'f7f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000';
 
-  it.skip('opGet', async () => {
-    // TODO: should be fixed
-  });
+    it('opDeclare', async () => {
+      await ctx.setProgram(
+        '0x' +
+          '01' + // uint256
+          '1fff709e' // bytecode for NUMBERS
+      );
+      expect(await clientApp.getType(NUMBERS)).to.be.equal(zero32bytes);
+      await app.opDeclare(ctxAddr);
+      expect(await clientApp.getType(NUMBERS)).to.be.equal(
+        '0x0100000000000000000000000000000000000000000000000000000000000000'
+      );
+    });
 
-  it.skip('opSumOf', async () => {
-    // TODO: should be fixed
-  });
+    it('opPush', async () => {
+      await clientApp.declare(`${uint256type}${zero62}`, NUMBERS);
+      await clientApp.declare(`${addressType}${zero62}`, PARTNERS);
 
-  it.skip('opStruct', async () => {
-    // TODO: should be fixed
-  });
+      expect(await clientApp.getLength(NUMBERS)).to.be.equal(0);
 
-  it.skip('opLengthOf', async () => {
-    // TODO: should be fixed
+      await ctx.setProgram(
+        '0x' +
+          `${THREE}` + // 3
+          '1fff709e' // bytecode for NUMBERS
+      );
+
+      await app.opPush(ctxAddr);
+
+      expect(await clientApp.getLength(NUMBERS)).to.be.equal(1);
+      expect(await clientApp.getLength(PARTNERS)).to.be.equal(0);
+      expect(await clientApp.get(0, NUMBERS)).to.be.equal(`0x${THREE}`);
+      expect(await clientApp.get(0, PARTNERS)).to.be.equal(`${zero32bytes}`);
+
+      await ctx.setProgram(
+        '0x' +
+          `${ADDRESS_MARY}` + // an address
+          '3c8423ff' // bytecode for PARTNERS
+      );
+      await app.opPush(ctxAddr);
+
+      expect(await clientApp.getLength(PARTNERS)).to.be.equal(1);
+      expect(await clientApp.getLength(NUMBERS)).to.be.equal(1);
+      expect(await clientApp.get(0, PARTNERS)).to.be.equal(`0x${ADDRESS_MARY}`);
+      expect(await clientApp.get(0, NUMBERS)).to.be.equal(`0x${THREE}`);
+    });
+
+    it('opGet', async () => {
+      await clientApp.declare(`${uint256type}${zero62}`, NUMBERS);
+      await clientApp.declare(`${addressType}${zero62}`, PARTNERS);
+
+      await clientApp.addItem(`0x${THREE}`, NUMBERS);
+      await clientApp.addItem(`0x${ADDRESS_MARY}`, PARTNERS);
+
+      await ctx.setProgram(
+        `${zero32bytes}` + // 0x + 0 index
+          '1fff709e' // bytecode for NUMBERS
+      );
+
+      checkStackTailv2(stack, []);
+      await app.opGet(ctxAddr);
+      // returned 3 as a value stored in NUMBERS with 0 index
+      checkStackTailv2(stack, [3]);
+
+      await ctx.setProgram(
+        `${zero32bytes}` + // 0x + 0 index
+          '3c8423ff' // bytecode for PARTNERS
+      );
+      await app.opGet(ctxAddr);
+
+      checkStackTailv2(stack, [
+        3, // already stored 3 as a value stored in NUMBERS with 0 index
+        BigNumber.from(`0x${ADDRESS_MARY}`), // a number from ADDRESS_MARY address
+      ]);
+    });
+
+    it('opSumOf', async () => {
+      await clientApp.declare(`${uint256type}${zero62}`, NUMBERS);
+      await clientApp.addItem(`0x${THREE}`, NUMBERS);
+      await clientApp.addItem(`0x${FIVE}`, NUMBERS);
+
+      await ctx.setProgram(
+        '0x1fff709e' // bytecode for NUMBERS
+      );
+
+      checkStackTailv2(stack, []);
+      await app.opSumOf(ctxAddr);
+      // returned 8 as a result of sum for two values (3 and 5) that stored in NUMBERS
+      checkStackTailv2(stack, [8]);
+    });
+
+    it('opLengthOf', async () => {
+      await clientApp.declare(`${uint256type}${zero62}`, NUMBERS);
+      await clientApp.declare(`${addressType}${zero62}`, PARTNERS);
+
+      await clientApp.addItem(`0x${THREE}`, NUMBERS);
+      await clientApp.addItem(`0x${FIVE}`, NUMBERS);
+      await clientApp.addItem(`0x${ONE}`, NUMBERS);
+      await clientApp.addItem(`0x${ADDRESS_MARY}`, PARTNERS);
+      await clientApp.addItem(`0x${ADDRESS_MAX}`, PARTNERS);
+
+      await ctx.setProgram(
+        '0x1fff709e' // bytecode for NUMBERS
+      );
+
+      checkStackTailv2(stack, []);
+      await app.opLengthOf(ctxAddr);
+      // returned 3 as a length of items that stored in NUMBERS
+      checkStackTailv2(stack, [3]);
+
+      await ctx.setProgram(
+        '0x3c8423ff' // bytecode for PARTNERS
+      );
+      await app.opLengthOf(ctxAddr);
+
+      checkStackTailv2(stack, [
+        3, // already stored 3 as a length of items that stored in NUMBERS
+        2, // returned 2 as a length of items that stored in PARTNERS
+      ]);
+    });
   });
 });
