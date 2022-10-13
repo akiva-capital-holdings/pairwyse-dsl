@@ -387,10 +387,6 @@ describe('End-to-end', () => {
 
           // to Parser
           await app.parseCode(code);
-          const one = new Array(64).join('0') + 1;
-          const three = new Array(64).join('0') + 3;
-          const number1 = new Array(62).join('0') + 541;
-          const number2 = new Array(62).join('0') + '5b9';
           const expectedProgram =
             '0x' +
             '31' + // declareArr
@@ -420,10 +416,6 @@ describe('End-to-end', () => {
 
           // to Parser
           await app.parseCode(code);
-          const one = new Array(64).join('0') + 1;
-          const three = new Array(64).join('0') + 3;
-          const number1 = new Array(62).join('0') + 541;
-          const number2 = new Array(62).join('0') + '5b9';
           const expectedProgram =
             '0x' +
             '31' + // declareArr
@@ -503,7 +495,7 @@ describe('End-to-end', () => {
           const one = new Array(64).join('0') + 1;
           const three = new Array(64).join('0') + 3;
           const number1 = new Array(62).join('0') + 541;
-          const number2 = new Array(62).join('0') + '5b9';
+          const number2 = `${new Array(62).join('0')}5b9`;
           const expectedProgram =
             '0x' + //
             '1a' + // uint256
@@ -1008,7 +1000,8 @@ describe('End-to-end', () => {
           '0x' +
             '36' + // struct opcode
             '2215b81f' + // BOB.account
-            '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
+            // the address for account
+            '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' +
             'cb398fe1' // endStruct
         );
 
@@ -1143,7 +1136,8 @@ describe('End-to-end', () => {
           '0x' +
             '36' + // struct opcode
             '2215b81f' + // BOB.account
-            '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
+            // the address for account
+            '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' +
             '4a871642' + // BOB.lastPayment
             `${number}` + // 3
             'cb398fe1' // endStruct

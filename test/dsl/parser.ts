@@ -441,7 +441,7 @@ describe('Parser', () => {
             const one = new Array(64).join('0') + 1;
             const three = new Array(64).join('0') + 3;
             const number1 = new Array(62).join('0') + 541;
-            const number2 = new Array(62).join('0') + '5b9';
+            const number2 = `${new Array(62).join('0')}5b9`;
             expect(await ctx.program()).to.equal(
               '0x' + //
                 '1a' + // uint256
@@ -804,14 +804,14 @@ describe('Parser', () => {
               '1a' + // uint256
               `${one}` + // 1
               '04' + // >
-              `2e` + // setUint256
+              '2e' + // setUint256
               'cf239df2' + // RESULT_AFTER
               '1b' + // var
               '4a871642' + // BOB.lastPayment
               '1a' + // uint256
               `${two}` + // 1
               '28' + // *
-              `2e` + // setUint256
+              '2e' + // setUint256
               '4a871642' // BOB.lastPayment
           );
         });
@@ -830,7 +830,7 @@ describe('Parser', () => {
             '0x' +
               '36' + // struct opcode
               '2215b81f' + // BOB.account
-              `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // addres without 0x
+              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // addres without 0x
               'cb398fe1' // endStruct
           );
         });
@@ -853,9 +853,9 @@ describe('Parser', () => {
             '0x' +
               '36' + // struct opcode
               '2215b81f' + // BOB.account
-              `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the address for account
+              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
               'c71243e7' + // BOB.account
-              `57f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the address for account
+              '57f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
               'cb398fe1' + // endStruct
               '1b' + // var
               '2215b81f' + // BOB.account
@@ -893,7 +893,7 @@ describe('Parser', () => {
             '0x' +
               '36' + // struct opcode
               '2215b81f' + // BOB.account
-              `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // addres without 0x
+              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // addres without 0x
               '9b8dbd6b' + // BOB.tax
               `${number}` + // 9
               'cb398fe1' // endStruct
@@ -924,9 +924,9 @@ describe('Parser', () => {
             '0x' +
               '36' + // struct opcode
               '2215b81f' + // BOB.account
-              `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the address for account
+              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
               'c71243e7' + // BOB.account
-              `57f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the address for account
+              '57f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
               '4a871642' + // BOB.lastPayment
               `${number}` + // 3
               'cb398fe1' + // endStruct
