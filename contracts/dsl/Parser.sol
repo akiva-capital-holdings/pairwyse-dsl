@@ -144,7 +144,7 @@ contract Parser is IParser {
             // for struct
             // TODO: make it for string also?
             console.log(_value);
-            console.logBytes4(bytes4(keccak256(abi.encodePacked(_value))));
+            console.logBytes32((keccak256(abi.encodePacked(_value))));
             program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(_value))));
         }
 
@@ -470,7 +470,7 @@ contract Parser is IParser {
      */
     function _parseOpcodeWithParams(address _ctxAddr) internal {
         string storage cmd = _nextCmd();
-        console.log(cmd);
+        // console.log(cmd);
         bytes1 opcode = IContext(_ctxAddr).opCodeByName(cmd);
         // TODO: simplify
         bytes4 _selector = bytes4(keccak256(abi.encodePacked(cmd)));
@@ -489,7 +489,7 @@ contract Parser is IParser {
         } else {
             program = bytes.concat(program, opcode);
             _selector = IContext(_ctxAddr).asmSelectors(cmd);
-            console.logBytes4(_selector);
+            // console.logBytes4(_selector);
             if (_selector != 0x0) {
                 (bool success, ) = address(this).delegatecall(
                     abi.encodeWithSelector(_selector, IContext(_ctxAddr))

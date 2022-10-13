@@ -944,7 +944,7 @@ describe('Parser', () => {
         });
 
         describe('sumThroughStructs', () => {
-          it.only('sum through tructs values with additional code', async () => {
+          it('sum through tructs values with additional code', async () => {
             await app.parseCodeExt(ctxAddr, [
               'struct',
               'BOB',
@@ -984,28 +984,28 @@ describe('Parser', () => {
             expect(await ctx.program()).to.equal(
               `0x` +
                 `36` + // struct
-                '4a871642' + // BOB
+                '4a871642' + // BOB.lastPayment
                 `${three}` + // 3
                 'cb398fe1' + // endStruct
                 '36' + // endStruct
-                'c07a9c8d' + // ALISA
+                'c07a9c8d' + // ALISA.lastPayment
                 `${number1}` + // 300
                 'cb398fe1' + // endStruct
                 '36' + // struct
-                'ffafe3f2' + // MAX
+                'ffafe3f2' + // MAX.lastPayment
                 `${number2}` + // 170
                 'cb398fe1' + // endStruct
                 '31' + // declareArr
                 '02' + // struct
                 '80e5f4d2' + // USERS
                 '33' + //  push
-                'c07a9c8d' + // ALISA
+                'f15754e0' + // ALISA
                 '80e5f4d2' + // USERS
                 '33' + // push
-                '4a871642' + // BOB
+                '29d93e4f' + // BOB
                 '80e5f4d2' + // USERS
                 '33' + // push
-                'ffafe3f2' + // MAX
+                'a4278787' + // MAX
                 '80e5f4d2' + // USERS
                 '38' + // sumThroughStructs
                 '80e5f4d2' + // USERS
