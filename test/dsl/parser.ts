@@ -438,7 +438,6 @@ describe('Parser', () => {
           );
         });
 
-
         it.skip('with additional code just after it', async () => {
           const number = new Array(64).join('0') + 6;
           await app.parseCodeExt(ctxAddr, [
@@ -652,7 +651,6 @@ describe('Parser', () => {
         expect(await ctx.program()).to.equal(expectedProgram);
       });
     });
-
 
     describe('Structs', () => {
       const tempZero = new Array(64).join('0');
