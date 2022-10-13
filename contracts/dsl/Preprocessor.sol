@@ -7,7 +7,7 @@ import { StringStack } from './helpers/StringStack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 import { ErrorsPreprocessor } from './libs/Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Preprocessor of DSL code
@@ -231,7 +231,8 @@ contract Preprocessor is IPreprocessor {
         StringStack _stack
     ) public returns (string[] memory) {
         PreprocessorInfo memory s;
-
+        // helps to separate a struct variable name and array's name for arrays with type `struct`
+        bool checkStructName;
         string memory chunk;
 
         // Cleanup
@@ -241,6 +242,31 @@ contract Preprocessor is IPreprocessor {
         // Infix to postfix
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
+
+            // ---> starts sumOf block for array of structures
+            if (chunk.equal('sumOf')) {
+                checkStructName = true;
+                continue;
+            }
+
+            if (checkStructName) {
+                // returns success=true if user provides complex name, ex. `USERS.balance`
+                // where arrName = USERS, structVar = balance
+                (bool success, string memory arrName, string memory structVar) = _getNames(chunk);
+                if (success) {
+                    // use another internal command to sum variables - `sumThroughStructs`
+                    result.push('sumThroughStructs');
+                    result.push(arrName);
+                    result.push(structVar);
+                } else {
+                    // use simple sum command `sumOf`
+                    result.push('sumOf');
+                    result.push(chunk);
+                }
+                checkStructName = false;
+                continue;
+            }
+            // <--- ends sumOf block for array of structures
 
             if (chunk.equal('struct')) {
                 s.isStructStart = true;
@@ -389,6 +415,33 @@ contract Preprocessor is IPreprocessor {
         } else if (_chunk.equal('GWEI')) {
             return 1000000000;
         } else return 0;
+    }
+
+    function _getNames(string memory _chunk)
+        internal
+        pure
+        returns (
+            bool success,
+            string memory arrName,
+            string memory structVar
+        )
+    {
+        // TODO: move it to StringUtils?
+        // TODO: decrease amount of iterations
+        bytes memory symbols = bytes(_chunk);
+        bool isFound; // dot was found
+        for (uint256 i = 0; i < symbols.length; i++) {
+            if (!isFound) {
+                if (symbols[i] == 0x2e) {
+                    isFound = true;
+                    continue;
+                }
+                arrName = arrName.concat(string(abi.encodePacked(symbols[i])));
+            } else {
+                structVar = structVar.concat(string(abi.encodePacked(symbols[i])));
+            }
+        }
+        if (isFound) return (true, arrName, structVar);
     }
 
     /**

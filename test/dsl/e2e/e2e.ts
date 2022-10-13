@@ -1196,6 +1196,73 @@ describe('End-to-end', () => {
         expect(await app.getStorageUint256(hex4Bytes('RESULT_2'))).equal(1);
         expect(await app.getStorageUint256(hex4Bytes('RESULT_3'))).equal(0);
       });
+
+      it.only('sum through tructs values with additional code', async () => {
+        const input = `
+          struct BOB {
+            lastPayment: 3
+          }
+
+          struct ALISA {
+            lastPayment: 300
+          }
+
+          struct MAX {
+            lastPayment: 170
+          }
+          struct[] USERS
+          insert ALISA into USERS
+          insert BOB into USERS
+          insert MAX into USERS
+          sumOf USERS.balance
+        `;
+
+        const code = await preprocessor.callStatic.transform(ctxAddr, input);
+
+        const expectedCode = [
+          'struct',
+          'BOB',
+          'lastPayment',
+          '3',
+          'endStruct',
+          'struct',
+          'ALISA',
+          'lastPayment',
+          '300',
+          'endStruct',
+          'struct',
+          'MAX',
+          'lastPayment',
+          '170',
+          'endStruct',
+          'declareArr',
+          'struct',
+          'USERS',
+          'push',
+          'ALISA',
+          'USERS',
+          'push',
+          'BOB',
+          'USERS',
+          'push',
+          'MAX',
+          'USERS',
+          'sumThroughStructs',
+          'USERS',
+          'balance',
+        ];
+        expect(code).to.eql(expectedCode);
+
+        // to Parser
+        await app.parseCode(code);
+
+        await app.execute();
+
+        const StackCont = await ethers.getContractFactory('Stack');
+        const contextStackAddress = await ctx.stack();
+        stack = StackCont.attach(contextStackAddress);
+        await checkStackTailv2(stack, [473]);
+      });
     });
   });
 });

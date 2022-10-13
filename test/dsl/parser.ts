@@ -942,6 +942,77 @@ describe('Parser', () => {
               '01'
           );
         });
+
+        describe('sumThroughStructs', () => {
+          it.only('sum through tructs values with additional code', async () => {
+            await app.parseCodeExt(ctxAddr, [
+              'struct',
+              'BOB',
+              'lastPayment',
+              '3',
+              'endStruct',
+              'struct',
+              'ALISA',
+              'lastPayment',
+              '300',
+              'endStruct',
+              'struct',
+              'MAX',
+              'lastPayment',
+              '170',
+              'endStruct',
+              'declareArr',
+              'struct',
+              'USERS',
+              'push',
+              'ALISA',
+              'USERS',
+              'push',
+              'BOB',
+              'USERS',
+              'push',
+              'MAX',
+              'USERS',
+              'sumThroughStructs',
+              'USERS',
+              'balance',
+            ]);
+
+            const three = new Array(64).join('0') + 3;
+            const number1 = new Array(62).join('0') + '12c'; // 300
+            const number2 = new Array(63).join('0') + 'aa'; // 170
+            expect(await ctx.program()).to.equal(
+              `0x` +
+                `36` + // struct
+                '4a871642' + // BOB
+                `${three}` + // 3
+                'cb398fe1' + // endStruct
+                '36' + // endStruct
+                'c07a9c8d' + // ALISA
+                `${number1}` + // 300
+                'cb398fe1' + // endStruct
+                '36' + // struct
+                'ffafe3f2' + // MAX
+                `${number2}` + // 170
+                'cb398fe1' + // endStruct
+                '31' + // declareArr
+                '02' + // struct
+                '80e5f4d2' + // USERS
+                '33' + //  push
+                'c07a9c8d' + // ALISA
+                '80e5f4d2' + // USERS
+                '33' + // push
+                '4a871642' + // BOB
+                '80e5f4d2' + // USERS
+                '33' + // push
+                'ffafe3f2' + // MAX
+                '80e5f4d2' + // USERS
+                '38' + // sumThroughStructs
+                '80e5f4d2' + // USERS
+                'ea06f38f' // balance
+            );
+          });
+        });
       });
     });
   });

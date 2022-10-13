@@ -52,6 +52,8 @@ library ErrorsGeneralOpcodes {
     string constant OP4 = 'OP4'; // Opcodes: tries to put an item to non-existing array
     string constant OP5 = 'OP5'; // Opcodes: opLoadLocal call not success
     string constant OP6 = 'OP6'; // Opcodes: array is empty
+    string constant OP7 = 'OP7'; // Opcodes: tries to put non-struct value to the array with a struct type
+    string constant OP8 = 'OP8'; // Opcodes: wrong type of array
 }
 
 /**

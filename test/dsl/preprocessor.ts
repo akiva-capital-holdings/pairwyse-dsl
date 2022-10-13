@@ -1633,6 +1633,56 @@ describe('Preprocessor', () => {
       });
     });
 
+    describe('struct type', () => {
+      describe('sumOf', () => {
+        it('sum several values', async () => {
+          const input = `
+            struct[] USERS
+            insert ALISA into USERS
+            insert BOB into USERS
+            insert MAX into USERS
+            sumOf USERS.balance
+          `;
+
+          const code = await app.callStatic.transform(ctxAddr, input);
+          const expectedCode = [
+            'declareArr',
+            'struct',
+            'USERS',
+            'push',
+            'ALISA',
+            'USERS',
+            'push',
+            'BOB',
+            'USERS',
+            'push',
+            'MAX',
+            'USERS',
+            'sumThroughStructs',
+            'USERS',
+            'balance',
+          ];
+          expect(code).to.eql(expectedCode);
+        });
+      });
+
+      describe('declareArr', () => {
+        it('declare array between several commands', async () => {
+          const input = 'uint256 2 declareArr struct ACCOUNTS bool false';
+          const cmds = await app.callStatic.transform(ctxAddr, input);
+          expect(cmds).to.eql([
+            'uint256',
+            '2',
+            'declareArr',
+            'struct',
+            'ACCOUNTS',
+            'bool',
+            'false',
+          ]);
+        });
+      });
+    });
+
     describe('Different type of arrays', () => {
       it('Use simplified declareArr command, that include additional code', async () => {
         const input = `
@@ -1728,9 +1778,9 @@ describe('Preprocessor', () => {
       });
     });
 
-    describe('mixed types', () => {
-      it('complex struct with different types', async () => {
-        // TODO: "FOR MISHA" something weird with operators for `Bob.lastPayment > 1`.
+    describe('arrays and stucts', () => {
+      it.skip('with different types of commands', async () => {
+        // TODO: something weird with operators for `Bob.lastPayment > 1`.
         // Only with structure operators are changed their place for in the list of commands
         // const input = `
         // var HEY > var EXPIRY
@@ -1744,6 +1794,14 @@ describe('Preprocessor', () => {
               lastPayment: 1000
             }
 
+            struct Mary {
+              account: 0x57f8a90ede3d84c7c0166bd84a4635e4675accfc,
+              lastPayment: 1500
+            }
+
+            struct[] USERS
+            insert Bob into USERS
+            insert Mary into USERS
             (Bob.lastPayment > 1)
             bool false
             (blockTimestamp < var EXPIRY)
@@ -1763,6 +1821,22 @@ describe('Preprocessor', () => {
           'lastPayment',
           '1000',
           'endStruct',
+          'struct',
+          'Mary',
+          'account',
+          '0x57f8a90ede3d84c7c0166bd84a4635e4675accfc',
+          'lastPayment',
+          '1500',
+          'endStruct',
+          'declareArr',
+          'struct',
+          'USERS',
+          'push',
+          'Bob',
+          'USERS',
+          'push',
+          'Mary',
+          'USERS',
           'Bob.lastPayment',
           'uint256',
           '1',

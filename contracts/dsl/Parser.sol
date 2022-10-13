@@ -10,7 +10,7 @@ import { ByteUtils } from './libs/ByteUtils.sol';
 import { Preprocessor } from './Preprocessor.sol';
 import { ErrorsParser } from './libs/Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Parser of DSL code
@@ -140,6 +140,12 @@ contract Parser is IParser {
             program = bytes.concat(program, bytes32(_sliced.fromHexBytes()));
         } else if (_value.mayBeNumber()) {
             program = bytes.concat(program, bytes32(_value.toUint256()));
+        } else {
+            // for struct
+            // TODO: make it for string also?
+            console.log(_value);
+            console.logBytes4(bytes4(keccak256(abi.encodePacked(_value))));
+            program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(_value))));
         }
 
         program = bytes.concat(program, _arrName);
@@ -309,6 +315,11 @@ contract Parser is IParser {
         _parseVariable(); // array name
     }
 
+    function asmSumThroughStructs() public {
+        _parseVariable(); // array name
+        _parseVariable(); // variable name
+    }
+
     /**
      * @dev Updates previous `program` for positive and negative branch position
      *
@@ -399,12 +410,13 @@ contract Parser is IParser {
         // parsing name/value parameters till found the 'endStruct' word
         do {
             // parse the name of variable - `balance`, `account`
-            string memory _name = _nextCmd();
+            string memory _variable = _nextCmd();
             // create the struct name of variable - `BOB.balance`, `BOB.account`
-            _name = _structName.concat('.').concat(_name);
-            IContext(_ctxAddr).setStructVar(_name); // TODO: check with Misha
+            string memory _name = _structName.concat('.').concat(_variable);
+            // TODO: let's think how not to use setter in Parser here..
+            IContext(_ctxAddr).setStructVars(_structName, _variable, _name);
+            // TODO: store sertain bytes for each word separate in bytes string?
             program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(_name))));
-
             // parse the value of `balance` variable - `456`, `0x345...`
             string memory _value = _nextCmd();
 
@@ -458,7 +470,7 @@ contract Parser is IParser {
      */
     function _parseOpcodeWithParams(address _ctxAddr) internal {
         string storage cmd = _nextCmd();
-
+        console.log(cmd);
         bytes1 opcode = IContext(_ctxAddr).opCodeByName(cmd);
         // TODO: simplify
         bytes4 _selector = bytes4(keccak256(abi.encodePacked(cmd)));
@@ -477,6 +489,7 @@ contract Parser is IParser {
         } else {
             program = bytes.concat(program, opcode);
             _selector = IContext(_ctxAddr).asmSelectors(cmd);
+            console.logBytes4(_selector);
             if (_selector != 0x0) {
                 (bool success, ) = address(this).delegatecall(
                     abi.encodeWithSelector(_selector, IContext(_ctxAddr))

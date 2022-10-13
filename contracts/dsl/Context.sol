@@ -10,7 +10,7 @@ import { LogicalOpcodes } from './libs/opcodes/LogicalOpcodes.sol';
 import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
 import { ErrorsContext } from './libs/Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Context of DSL code
@@ -59,6 +59,7 @@ contract Context is IContext {
     // alias -> base command
     mapping(string => string) public aliases;
     mapping(string => bool) public isStructVar;
+    mapping(bytes4 => mapping(bytes4 => bytes4)) public structParams;
 
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), ErrorsContext.CTX1);
@@ -498,6 +499,42 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
 
+        /* Sums struct variables values from the `struct type` array
+            Ex. `sumThroughStructs ARR_NAME STRUCT_VARIABLE_NAME`
+
+            For more info see command `declareArr struct`
+            Usage:
+                struct Bob { // declare the first struct
+                  lastPayment: 1000
+                }
+
+                struct Mary { // declare the second struct
+                  lastPayment: 2000
+                }
+
+                // declare the array that have type `struct`
+                declareArr struct USERS
+
+                // insert `Bob` name into `USERS` array,
+                push Bob USERS
+
+                // or use `insert` DSL command by inserting `Bob` name into `USERS` array
+                insert Mary into USERS
+
+                // usage of a `sumThroughStructs` command sums 1000 and 2000 and save to the stack
+                sumThroughStructs USERS lastPayment
+
+                // or command bellow will be preprocessed to the same `sumThroughStructs` format
+                sumOf USERS.lastPayment
+        */
+        addOpcode(
+            'sumThroughStructs',
+            0x38,
+            OtherOpcodes.opSumThroughStructs.selector,
+            IParser.asmSumThroughStructs.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
         // Complex Opcodes with sub Opcodes (branches)
 
         /*
@@ -548,9 +585,8 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         // types of arrays for declaration
-        // TODO: should be normal selectors here for getting values instead of mocked as `opLoadRemoteUint256`
         _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadRemoteUint256.selector);
-        // if there will be no other types exept uint256 and address, then TODO: `0x03 -> 0x02`
+        _addOpcodeBranch(name, 'struct', 0x02, OtherOpcodes.opLoadRemoteUint256.selector);
         _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
 
         // Aliases
@@ -729,10 +765,21 @@ contract Context is IContext {
     /**
      * @dev Sets structure variable state to true
      *
-     * @param _varName is the name of structure variable, ex. `BOB.account`
      */
-    function setStructVar(string memory _varName) public {
-        isStructVar[_varName] = true;
+    function setStructVars(
+        string memory _structName,
+        string memory _varName,
+        string memory _fullName
+    ) public {
+        isStructVar[_fullName] = true;
+        bytes4 structName = bytes4(keccak256(abi.encodePacked(_structName)));
+        bytes4 varName = bytes4(keccak256(abi.encodePacked(_varName)));
+        bytes4 fullName = bytes4(keccak256(abi.encodePacked(_fullName)));
+        structParams[structName][varName] = fullName;
+    }
+
+    function getStructVars(bytes4 _structName, bytes4 _varName) public view returns (bytes4) {
+        return structParams[_structName][_varName];
     }
 
     /**
