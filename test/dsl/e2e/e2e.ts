@@ -1214,7 +1214,7 @@ describe('End-to-end', () => {
           insert ALISA into USERS
           insert BOB into USERS
           insert MAX into USERS
-          sumOf USERS.balance
+          sumOf USERS.lastPayment
         `;
 
         const code = await preprocessor.callStatic.transform(ctxAddr, input);
@@ -1249,19 +1249,56 @@ describe('End-to-end', () => {
           'USERS',
           'sumThroughStructs',
           'USERS',
-          'balance',
+          'lastPayment',
         ];
         expect(code).to.eql(expectedCode);
 
-        // to Parser
         await app.parseCode(code);
 
+        const three = new Array(64).join('0') + 3;
+        const number1 = new Array(62).join('0') + '12c'; // 300
+        const number2 = new Array(63).join('0') + 'aa'; // 170
+
+        // expect(await ctx.program()).to.equal(
+        //   `0x` +
+        //     `36` + // struct
+        //     '4a871642' + // BOB.lastPayment
+        //     `${three}` + // 3
+        //     'cb398fe1' + // endStruct
+        //     '36' + // endStruct
+        //     'c07a9c8d' + // ALISA.lastPayment
+        //     `${number1}` + // 300
+        //     'cb398fe1' + // endStruct
+        //     '36' + // struct
+        //     'ffafe3f2' + // MAX.lastPayment
+        //     `${number2}` + // 170
+        //     'cb398fe1' + // endStruct
+        //     '31' + // declareArr
+        //     '02' + // struct
+        //     '80e5f4d2' + // USERS
+        //     '33' + //  push
+        //     'f15754e0' + // ALISA
+        //     '80e5f4d2' + // USERS
+        //     '33' + // push
+        //     '29d93e4f' + // BOB
+        //     '80e5f4d2' + // USERS
+        //     '33' + // push
+        //     'a4278787' + // MAX
+        //     '80e5f4d2' + // USERS
+        //     '38' + // sumThroughStructs
+        //     '80e5f4d2' + // USERS
+        //     'f72cc83a' // lastPayment
+        // );
+
+        // expect(await app.getStorageUint256(hex4Bytes('ALISA.lastPayment'))).equal(0);
+        // expect(await app.getStorageUint256(hex4Bytes('MAX.lastPayment'))).equal(0);
+        // expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(0);
         await app.execute();
 
-        const StackCont = await ethers.getContractFactory('Stack');
-        const contextStackAddress = await ctx.stack();
-        stack = StackCont.attach(contextStackAddress);
-        await checkStackTailv2(stack, [473]);
+        // const StackCont = await ethers.getContractFactory('Stack');
+        // const contextStackAddress = await ctx.stack();
+        // stack = StackCont.attach(contextStackAddress);
+        // await checkStackTailv2(stack, [473]);
       });
     });
   });

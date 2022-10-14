@@ -975,7 +975,7 @@ describe('Parser', () => {
               'USERS',
               'sumThroughStructs',
               'USERS',
-              'balance',
+              'lastPayment',
             ]);
 
             const three = new Array(64).join('0') + 3;
@@ -1009,7 +1009,7 @@ describe('Parser', () => {
                 '80e5f4d2' + // USERS
                 '38' + // sumThroughStructs
                 '80e5f4d2' + // USERS
-                'ea06f38f' // balance
+                'f72cc83a' // lastPayment
             );
           });
         });
