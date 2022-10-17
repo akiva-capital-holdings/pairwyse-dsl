@@ -1512,10 +1512,10 @@ describe('End-to-end', () => {
     before(async () => {
       // Create an array for the usage in for-loops
       const input = `
-      uint256[] LPS_INITIAL
-      insert ${alice.address} into LPS_INITIAL
-      insert ${bob.address} into LPS_INITIAL
-      insert ${carl.address} into LPS_INITIAL
+      uint256[] DEPOSITS
+      insert 2 into DEPOSITS
+      insert 3 into DEPOSITS
+      insert 4 into DEPOSITS
       `;
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
       await app.parseCode(code);
@@ -1524,25 +1524,28 @@ describe('End-to-end', () => {
 
     it.only('Simple for loop', async () => {
       const input = `
-        for LP_INITIAL in LPS_INITIAL iterate {
-          bool true
+        for DEPOSIT in DEPOSITS iterate {
+          (var TOTAL_DEPOSIT + var DEPOSIT) setUint256 TOTAL_DEPOSIT
         }
 
         15
       `;
-      // Set necessary variables
-      // await app.setStorageUint256(hex4Bytes('LPS_INITIAL'), varValue);
 
       // Preprocessing
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
       expect(code).eql([
         'for',
-        'LP_INITIAL',
+        'DEPOSIT',
         'in',
-        'LPS_INITIAL',
+        'DEPOSITS',
         'iterate',
-        'bool',
-        'true',
+        'var',
+        'TOTAL_DEPOSIT',
+        'var',
+        'DEPOSIT',
+        '+',
+        'setUint256',
+        'TOTAL_DEPOSIT',
         'end',
         'uint256',
         '15',
@@ -1553,11 +1556,16 @@ describe('End-to-end', () => {
       expect(await ctx.program()).to.equal(
         '0x' +
           '37' + // for
-          'c5bc3efa' + // hex4Bytes('LP_INITIAL')
-          'a0c9d042' + // hex4Bytes('LPS_INITIAL')
+          '87a7811f' + // hex4Bytes('DEPOSIT')
+          '060f7dbd' + // hex4Bytes('DEPOSITS')
           '38' + // iterate
-          '18' + // bool
-          '01' + // true
+          '1b' + // var
+          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
+          '1b' + // var
+          '87a7811f' + // hex4Bytes('DEPOSIT')
+          '26' + // +
+          '2e' + // setUint256
+          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
           '24' + // end
           '1a' + // uint256
           `${new Array(64).join('0')}f` // 15
@@ -1565,6 +1573,10 @@ describe('End-to-end', () => {
 
       // Execution
       await app.execute();
+
+      // Variable checks
+      expect(await app.getStorageUint256(hex4Bytes('TOTAL_DEPOSIT'))).equal(2 + 3 + 4);
+      await checkStackTailv2(stack, [15]);
     });
   });
 });

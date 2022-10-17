@@ -31,6 +31,18 @@ library OpcodeHelpers {
         return nextBytes(_ctx, 1)[0];
     }
 
+    function readBytesSlice(
+        address _ctx,
+        uint256 start,
+        uint256 end
+    ) public view returns (bytes32 resB32) {
+        bytes memory slice = IContext(_ctx).programAt(start, end - start);
+        // Convert bytes to bytes32
+        assembly {
+            resB32 := mload(add(slice, 0x20))
+        }
+    }
+
     function nextBranchSelector(address _ctx, string memory baseOpName) public returns (bytes4) {
         bytes1 branchCode = nextBytes1(_ctx);
         return IContext(_ctx).branchSelectors(baseOpName, branchCode);

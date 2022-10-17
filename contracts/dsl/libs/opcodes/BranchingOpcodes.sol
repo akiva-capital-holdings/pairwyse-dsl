@@ -3,9 +3,12 @@ pragma solidity ^0.8.0;
 
 import { IContext } from '../../interfaces/IContext.sol';
 import { IERC20 } from '../../interfaces/IERC20.sol';
+import { ILinkedList } from '../../interfaces/ILinkedList.sol';
+import { IStorage } from '../../interfaces/IStorage.sol';
 import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
+import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
 import 'hardhat/console.sol';
 
@@ -63,76 +66,64 @@ library BranchingOpcodes {
         bytes32 loopVarName = OpcodeHelpers.getNextBytes(_ctx, 4);
         console.logBytes32(loopVarName);
         // OpcodeHelpers.nextBytes(_ctx, 32); // skip `in` keyword as it is useless
-        bytes32 arrName = OpcodeHelpers.getNextBytes(_ctx, 4);
-        console.logBytes32(arrName);
+        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+        console.logBytes32(_arrNameB32);
 
         // check if the array exists
         (bool success1, bytes memory data1) = IContext(_ctx).appAddr().call(
-            abi.encodeWithSignature('getType(bytes32)', arrName)
+            abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
         // TODO: these errors are as strings because I wanna check are the error names correct
         require(success1, 'ErrorsGeneralOpcodes.OP1');
         require(bytes32(data1) != bytes32(0x0), 'ErrorsGeneralOpcodes.OP4');
 
-        /**
-         * Get array length
-         */
-        // Load local variable by it's hex
-        (bool success2, bytes memory data2) = IContext(_ctx).appAddr().call(
-            abi.encodeWithSignature('getLength(bytes32)', arrName)
-        );
-        require(success2, 'ErrorsGeneralOpcodes.OP5');
-
-        // Convert bytes to bytes32
-        bytes32 result;
-        assembly {
-            result := mload(add(data2, 0x20))
-        }
-        uint256 arrLength = uint256(result);
-        console.log(arrLength); // 3
-
-        IContext(_ctx).setForLoopCtr(arrLength);
-
-        // IContext(_ctx).setPc(last > 0 ? _posTrueBranch : _posFalseBranch);
-
-        // /**
-        //  * opGet
-        //  */
-        // for (uint256 i = 0; i < arrLength; i++) {
-        //     console.log('i =', i);
-
-        //     (bool success3, bytes memory data3) = IContext(_ctx).appAddr().call(
-        //         abi.encodeWithSignature(
-        //             'get(uint256,bytes32)',
-        //             i, // index of the searched item
-        //             arrName // array name, ex. INDEX_LIST, PARTNERS
-        //         )
-        //     );
-        //     require(success3, 'ErrorsGeneralOpcodes.OP1');
-
-        //     address element; // element by index `i` from the array
-
-        //     assembly {
-        //         element := mload(add(data3, 20))
-        //     }
-        //     // 0: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-        //     // 1: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
-        //     // 2: 0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc
-        //     console.log(element);
-        // }
+        uint256 _arrLen = ILinkedList(IContext(_ctx).appAddr()).getLength(_arrNameB32);
+        IContext(_ctx).setForLoopCtr(_arrLen);
     }
 
     function opIterate(address _ctx) public {
         console.log('-> opIterate');
         // Decrease by 1 the for-loop iterations couter
         uint256 _currCtr = IContext(_ctx).forLoopCtr();
+        uint256 _currPc = IContext(_ctx).pc() - 1;
         console.log('Current counter is', _currCtr);
         if (_currCtr > 1) {
-            console.log('Set next PC to current PC', IContext(_ctx).pc() - 1);
-            IContext(_ctx).setNextPc(IContext(_ctx).pc() - 1);
-        } /* else {
-            IContext(_ctx).setNextPc(IContext(_ctx).program().length);
-        }*/
+            console.log('iterate: Set next PC to current PC', _currPc);
+            IContext(_ctx).setNextPc(_currPc);
+        }
+
+        // -- Get the element by index from array
+        bytes32 _tempVarNameB32 = OpcodeHelpers.readBytesSlice(_ctx, _currPc - 8, _currPc - 4);
+        bytes32 _arrNameB32 = OpcodeHelpers.readBytesSlice(_ctx, _currPc - 4, _currPc);
+        console.log('Array name is');
+        console.logBytes32(_arrNameB32);
+        uint256 _arrLen = ILinkedList(IContext(_ctx).appAddr()).getLength(_arrNameB32);
+        uint256 _index = _arrLen - IContext(_ctx).forLoopCtr();
+
+        // check if the array exists
+        (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
+            abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
+        );
+        require(success, ErrorsGeneralOpcodes.OP1);
+
+        (success, data) = IContext(_ctx).appAddr().call(
+            abi.encodeWithSignature(
+                'get(uint256,bytes32)',
+                _index, // index of the searched item
+                _arrNameB32 // array name, ex. INDEX_LIST, PARTNERS
+            )
+        );
+        require(success, ErrorsGeneralOpcodes.OP1);
+
+        uint256 _element = uint256(bytes32(data));
+        console.log('The current element by index', _index, 'is', _element);
+
+        // Set the iterator variable value
+        console.log('_tempVarNameB32');
+        console.logBytes32(_tempVarNameB32);
+        IStorage(IContext(_ctx).appAddr()).setStorageUint256(_tempVarNameB32, _element);
+
+        // -- end of Get the element by index from array
 
         IContext(_ctx).setForLoopCtr(_currCtr - 1); // TODO: rename forLoopCtr to forLoopIterationsRemaining
     }
@@ -140,8 +131,10 @@ library BranchingOpcodes {
     function opEnd(address _ctx) public {
         console.log('-> opEnd');
         console.log('Next PC is', IContext(_ctx).nextpc());
+        uint256 _currPc = IContext(_ctx).pc();
         IContext(_ctx).setPc(IContext(_ctx).nextpc());
-        IContext(_ctx).setNextPc(IContext(_ctx).program().length);
+        console.log('end: Set next PC to current PC', _currPc);
+        IContext(_ctx).setNextPc(_currPc); // set next PC to the code after this `end` opcode
     }
 
     function getUint16(address _ctx) public returns (uint16) {
