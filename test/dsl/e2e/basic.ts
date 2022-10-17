@@ -1075,7 +1075,7 @@ describe('DSL: basic', () => {
       expect(await app.getStorageUint256(hex4Bytes('A'))).to.equal(11);
       expect(await app.getStorageUint256(hex4Bytes('B'))).to.equal(22);
       expect(await app.getStorageUint256(hex4Bytes('C'))).to.equal(33);
-      expect(await app.getStorageUint256(hex4Bytes('D'))).to.equal(0);
+      expect(await app.getStorageUint256(hex4Bytes('D'))).to.equal(44);
     });
   });
 

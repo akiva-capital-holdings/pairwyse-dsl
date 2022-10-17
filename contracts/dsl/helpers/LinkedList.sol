@@ -2,10 +2,12 @@
 
 pragma solidity ^0.8.0;
 
+import { ILinkedList } from '../interfaces/ILinkedList.sol';
+
 // import 'hardhat/console.sol';
 
 // TODO: make a library
-contract LinkedList {
+contract LinkedList is ILinkedList {
     /* Important!
     As the contract is working directly with storage pointers, so
     there is must not be any additional variables exept mappings.

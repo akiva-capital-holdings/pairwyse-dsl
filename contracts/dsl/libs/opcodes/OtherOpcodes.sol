@@ -55,7 +55,6 @@ library OtherOpcodes {
             abi.encodeWithSignature('setStorageBool(bytes32,bool)', _varNameB32, _boolVal)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
-        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     /**
@@ -70,8 +69,6 @@ library OtherOpcodes {
             abi.encodeWithSignature('setStorageUint256(bytes32,uint256)', _varNameB32, _val)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
-
-        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
 
     /**
