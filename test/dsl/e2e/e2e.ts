@@ -215,14 +215,14 @@ describe('End-to-end', () => {
       'bad',
       'uint256',
       FOUR,
-      'branch',
+      'end',
       'good',
       'uint256',
       ONE,
       'uint256',
       TWO,
       'end',
-      'branch',
+      'end',
       'bad',
       'uint256',
       THREE,
@@ -243,13 +243,13 @@ describe('End-to-end', () => {
       '006d' + // position of the `bad` branch
       '1a' + // uin256
       `${FOUR}` + // FOUR
-      '2f' + // branch tag
+      '24' + // end tag
       '1a' + // good: uint256
       `${ONE}` + // good: ONE
       '1a' + // good: uint256
       `${TWO}` + // good: TWO
       '24' + // good: end
-      '2f' + // branch tag
+      '24' + // end tag
       '1a' + // bad: uint256
       `${THREE}` + // bad: THREE
       '24'; // bad: end
@@ -1014,16 +1014,29 @@ describe('End-to-end', () => {
 
     it.only('Simple for loop', async () => {
       const input = `
-        for LP_INITIAL in LPS_INITIAL {
+        for LP_INITIAL in LPS_INITIAL iterate {
           bool true
         }
+
+        15
       `;
       // Set necessary variables
       // await app.setStorageUint256(hex4Bytes('LPS_INITIAL'), varValue);
 
       // Preprocessing
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
-      expect(code).eql(['for', 'LP_INITIAL', 'in', 'LPS_INITIAL', 'bool', 'true', 'end']);
+      expect(code).eql([
+        'for',
+        'LP_INITIAL',
+        'in',
+        'LPS_INITIAL',
+        'iterate',
+        'bool',
+        'true',
+        'end',
+        'uint256',
+        '15',
+      ]);
 
       // Parsing
       await app.parseCode(code);
@@ -1032,9 +1045,12 @@ describe('End-to-end', () => {
           '37' + // for
           'c5bc3efa' + // hex4Bytes('LP_INITIAL')
           'a0c9d042' + // hex4Bytes('LPS_INITIAL')
+          '38' + // iterate
           '18' + // bool
           '01' + // true
-          '24' // end
+          '24' + // end
+          '1a' + // uint256
+          `${new Array(64).join('0')}f` // 15
       );
 
       // Execution

@@ -59,6 +59,8 @@ contract Context is IContext {
     // alias -> base command
     mapping(string => string) public aliases;
     mapping(string => bool) public isStructVar;
+    // Counter for the number of iterations for every for-loop in DSL code
+    uint256 public forLoopCtr;
 
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), ErrorsContext.CTX1);
@@ -295,15 +297,6 @@ contract Context is IContext {
             OpcodeLibNames.BranchingOpcodes
         );
 
-        // 'branch' tag gets replaced with 'end' tag. So this is just another name of the 'end' tag
-        addOpcode(
-            'branch',
-            0x2f,
-            BranchingOpcodes.opEnd.selector,
-            0x0,
-            OpcodeLibNames.BranchingOpcodes
-        );
-
         // Simple Opcodes
         addOpcode(
             'blockNumber',
@@ -502,9 +495,17 @@ contract Context is IContext {
         addOpcode(
             'for',
             0x37,
-            OtherOpcodes.opForLoop.selector,
+            BranchingOpcodes.opForLoop.selector,
             IParser.asmForLoop.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.BranchingOpcodes
+        );
+
+        addOpcode(
+            'iterate',
+            0x38,
+            BranchingOpcodes.opIterate.selector,
+            0x0,
+            OpcodeLibNames.BranchingOpcodes
         );
 
         // Complex Opcodes with sub Opcodes (branches)
@@ -554,7 +555,9 @@ contract Context is IContext {
         // if there will be no other types exept uint256 and address, then TODO: `0x03 -> 0x02`
         _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
 
-        // Aliases
+        /***********
+         * Aliases *
+         **********/
 
         /*
             As the blockTimestamp is the current opcode the user can use time alias to
@@ -565,6 +568,7 @@ contract Context is IContext {
                 `time < var FUND_INVESTMENT_DATE`
         */
         _addAlias('time', 'blockTimestamp');
+        _addAlias('end', 'branch');
     }
 
     /**
@@ -734,6 +738,10 @@ contract Context is IContext {
      */
     function setStructVar(string memory _varName) public {
         isStructVar[_varName] = true;
+    }
+
+    function setForLoopCtr(uint256 _forLoopCtr) external {
+        forLoopCtr = _forLoopCtr;
     }
 
     /**
