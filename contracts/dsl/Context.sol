@@ -60,6 +60,8 @@ contract Context is IContext {
     mapping(string => string) public aliases;
     mapping(string => bool) public isStructVar;
     mapping(bytes4 => mapping(bytes4 => bytes4)) public structParams;
+    // Counter for the number of iterations for every for-loop in DSL code
+    uint256 public forLoopCtr;
 
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), ErrorsContext.CTX1);
@@ -291,15 +293,6 @@ contract Context is IContext {
         addOpcode(
             'end',
             0x24,
-            BranchingOpcodes.opEnd.selector,
-            0x0,
-            OpcodeLibNames.BranchingOpcodes
-        );
-
-        // 'branch' tag gets replaced with 'end' tag. So this is just another name of the 'end' tag
-        addOpcode(
-            'branch',
-            0x2f,
             BranchingOpcodes.opEnd.selector,
             0x0,
             OpcodeLibNames.BranchingOpcodes
@@ -545,9 +538,17 @@ contract Context is IContext {
         addOpcode(
             'for',
             0x37,
-            OtherOpcodes.opForLoop.selector,
+            BranchingOpcodes.opForLoop.selector,
             IParser.asmForLoop.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.BranchingOpcodes
+        );
+
+        addOpcode(
+            'iterate',
+            0x38,
+            BranchingOpcodes.opIterate.selector,
+            0x0,
+            OpcodeLibNames.BranchingOpcodes
         );
 
         // Complex Opcodes with sub Opcodes (branches)
@@ -596,7 +597,9 @@ contract Context is IContext {
         _addOpcodeBranch(name, 'struct', 0x02, bytes4(0x0));
         _addOpcodeBranch(name, 'address', 0x03, bytes4(0x0));
 
-        // Aliases
+        /***********
+         * Aliases *
+         **********/
 
         /*
             As the blockTimestamp is the current opcode the user can use time alias to
@@ -607,6 +610,7 @@ contract Context is IContext {
                 `time < var FUND_INVESTMENT_DATE`
         */
         _addAlias('time', 'blockTimestamp');
+        _addAlias('end', 'branch');
     }
 
     /**
@@ -785,6 +789,10 @@ contract Context is IContext {
         bytes4 varName = bytes4(keccak256(abi.encodePacked(_varName)));
         bytes4 fullName = bytes4(keccak256(abi.encodePacked(_fullName)));
         structParams[structName][varName] = fullName;
+    }
+
+    function setForLoopCtr(uint256 _forLoopCtr) external {
+        forLoopCtr = _forLoopCtr;
     }
 
     /**
