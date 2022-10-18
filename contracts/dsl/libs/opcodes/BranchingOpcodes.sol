@@ -133,12 +133,16 @@ library BranchingOpcodes {
         console.log('Next PC is', IContext(_ctx).nextpc());
         uint256 _currPc = IContext(_ctx).pc();
         IContext(_ctx).setPc(IContext(_ctx).nextpc());
-        console.log('end: Set next PC to current PC', _currPc);
+        console.log('end-loop: Set next PC to current PC', _currPc);
         IContext(_ctx).setNextPc(_currPc); // set next PC to the code after this `end` opcode
     }
 
     function opEnd(address _ctx) public {
+        console.log('-> opEnd');
+        console.log('Current PC is', IContext(_ctx).pc());
+        console.log('Next PC is', IContext(_ctx).nextpc());
         IContext(_ctx).setPc(IContext(_ctx).nextpc());
+        console.log('Set next PC to', IContext(_ctx).program().length);
         IContext(_ctx).setNextPc(IContext(_ctx).program().length);
     }
 
