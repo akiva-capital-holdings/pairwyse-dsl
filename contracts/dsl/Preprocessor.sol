@@ -33,7 +33,7 @@ contract Preprocessor is IPreprocessor {
     // Stack with elements of type string that is used to temporarily store data of `infixToPostfix` function
     StringStack internal strStack;
 
-    // StringArray internal array;
+    bytes1 private DOT_SYMBOL = 0x2e;
 
     constructor() {
         strStack = new StringStack();
@@ -430,21 +430,19 @@ contract Preprocessor is IPreprocessor {
      */
     function _getNames(string memory _chunk)
         internal
-        pure
+        view
         returns (
             bool success,
             string memory arrName,
             string memory structVar
         )
     {
-        // TODO: move it to StringUtils?
         // TODO: decrease amount of iterations
         bytes memory symbols = bytes(_chunk);
         bool isFound; // dot was found
         for (uint256 i = 0; i < symbols.length; i++) {
             if (!isFound) {
-                if (symbols[i] == 0x2e) {
-                    // 0x2e = `.` (dot) symbol
+                if (symbols[i] == DOT_SYMBOL) {
                     isFound = true;
                     continue;
                 }

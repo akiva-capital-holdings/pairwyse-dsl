@@ -1246,7 +1246,7 @@ describe('End-to-end', () => {
         expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(3);
       });
 
-      it('sum through tructs values with additional code', async () => {
+      it('sum through structs values with additional code', async () => {
         const input = `
           struct BOB {
             lastPayment: 3

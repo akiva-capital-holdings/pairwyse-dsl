@@ -100,7 +100,7 @@ interface IContext {
         string memory _fullName
     ) external;
 
-    function getStructVars(bytes4 _structName, bytes4 _varName)
+    function structParams(bytes4 _structName, bytes4 _varName)
         external
         view
         returns (bytes4 _fullName);

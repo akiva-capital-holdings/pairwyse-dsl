@@ -993,7 +993,7 @@ describe('Parser', () => {
         });
 
         describe('sumThroughStructs', () => {
-          it('sum through tructs values with additional code', async () => {
+          it('sum through structs values with additional code', async () => {
             await app.parseCodeExt(ctxAddr, [
               'struct',
               'BOB',
@@ -1048,13 +1048,13 @@ describe('Parser', () => {
                 '02' + // struct
                 '80e5f4d2' + // USERS
                 '33' + //  push
-                'f15754e0' + // ALISA
+                'f15754e000000000000000000000000000000000000000000000000000000000' + // ALISA
                 '80e5f4d2' + // USERS
                 '33' + // push
-                '29d93e4f' + // BOB
+                '29d93e4f00000000000000000000000000000000000000000000000000000000' + // BOB
                 '80e5f4d2' + // USERS
                 '33' + // push
-                'a4278787' + // MAX
+                'a427878700000000000000000000000000000000000000000000000000000000' + // MAX
                 '80e5f4d2' + // USERS
                 '38' + // sumThroughStructs
                 '80e5f4d2' + // USERS

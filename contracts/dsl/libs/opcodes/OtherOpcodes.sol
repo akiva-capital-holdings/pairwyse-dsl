@@ -174,11 +174,6 @@ library OtherOpcodes {
         require(success, ErrorsGeneralOpcodes.OP1);
         require(bytes32(data) != bytes32(0x0), ErrorsGeneralOpcodes.OP4);
 
-        // TODO: if _arrNameB32 is an struct type of array checks that
-        // _varValue is a name of a struct
-        // then parse as 4 bytes
-        // ERROR ErrorsGeneralOpcodes.OP7 already prepared
-
         (success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
                 'addItem(bytes32,bytes32)',
@@ -429,7 +424,7 @@ library OtherOpcodes {
             bytes memory item = _getItem(_ctx, i, _arrNameB32);
 
             // get struct variable value
-            bytes4 _fullName = IContext(_ctx).getStructVars(bytes4(item), _varName);
+            bytes4 _fullName = IContext(_ctx).structParams(bytes4(item), _varName);
             (success, item) = IContext(_ctx).appAddr().call(
                 abi.encodeWithSignature('getStorageUint256(bytes32)', _fullName)
             );
