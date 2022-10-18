@@ -36,6 +36,8 @@ describe('Other opcodes', () => {
   const zero32bytes = '0x' + new Array(65).join('0');
 
   before(async () => {
+    // TODO: check if await checkStackTailv2(stack, ...); really works in otherOpcode.ts
+
     StackCont = await ethers.getContractFactory('Stack');
 
     ctx = await (await ethers.getContractFactory('Context')).deploy();
