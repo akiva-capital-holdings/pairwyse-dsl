@@ -501,9 +501,17 @@ contract Context is IContext {
         );
 
         addOpcode(
-            'iterate',
+            'startLoop',
             0x38,
-            BranchingOpcodes.opIterate.selector,
+            BranchingOpcodes.opStartLoop.selector,
+            0x0,
+            OpcodeLibNames.BranchingOpcodes
+        );
+
+        addOpcode(
+            'endLoop',
+            0x39,
+            BranchingOpcodes.opEndLoop.selector,
             0x0,
             OpcodeLibNames.BranchingOpcodes
         );

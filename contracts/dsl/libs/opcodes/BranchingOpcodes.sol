@@ -81,8 +81,8 @@ library BranchingOpcodes {
         IContext(_ctx).setForLoopCtr(_arrLen);
     }
 
-    function opIterate(address _ctx) public {
-        console.log('-> opIterate');
+    function opStartLoop(address _ctx) public {
+        console.log('-> opStartLoop');
         // Decrease by 1 the for-loop iterations couter
         uint256 _currCtr = IContext(_ctx).forLoopCtr();
         uint256 _currPc = IContext(_ctx).pc() - 1;
@@ -128,13 +128,18 @@ library BranchingOpcodes {
         IContext(_ctx).setForLoopCtr(_currCtr - 1); // TODO: rename forLoopCtr to forLoopIterationsRemaining
     }
 
-    function opEnd(address _ctx) public {
-        console.log('-> opEnd');
+    function opEndLoop(address _ctx) public {
+        console.log('-> opEndLoop');
         console.log('Next PC is', IContext(_ctx).nextpc());
         uint256 _currPc = IContext(_ctx).pc();
         IContext(_ctx).setPc(IContext(_ctx).nextpc());
         console.log('end: Set next PC to current PC', _currPc);
         IContext(_ctx).setNextPc(_currPc); // set next PC to the code after this `end` opcode
+    }
+
+    function opEnd(address _ctx) public {
+        IContext(_ctx).setPc(IContext(_ctx).nextpc());
+        IContext(_ctx).setNextPc(IContext(_ctx).program().length);
     }
 
     function getUint16(address _ctx) public returns (uint16) {
