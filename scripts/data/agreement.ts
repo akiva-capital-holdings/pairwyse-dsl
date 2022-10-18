@@ -93,8 +93,7 @@ export const aliceBobAndCarl = (
     transaction: `
               (transferFrom TOKEN_ADDR ALICE BOB ${tenTokens.toString()})
           and (sendEth ALICE ${oneEth})
-          and (setLocalBool OBLIGATIONS_SETTLED true)
-        `,
+          and (setLocalBool OBLIGATIONS_SETTLED true)`,
     conditions: ['bool true'],
   },
   // If Alice didn't return 10 tokens to Bob before EXPIRY
@@ -107,12 +106,7 @@ export const aliceBobAndCarl = (
               transfer TOKEN_ADDR BOB ${tenTokens.toString()}
           and (setLocalBool LENDER_WITHDRAW_INSURERS true)
         `,
-    conditions: [
-      `
-              time > var EXPIRY
-          and (var OBLIGATIONS_SETTLED == bool false)
-        `,
-    ],
+    conditions: ['time > var EXPIRY and (var OBLIGATIONS_SETTLED == bool false)'],
   },
   // If 10 tokens are stil on Agreement SC, Carl collects back 10 tokens
   {
@@ -120,12 +114,7 @@ export const aliceBobAndCarl = (
     requiredTxs: [],
     signatories: [carl.address],
     transaction: `transfer TOKEN_ADDR CARL ${tenTokens.toString()}`,
-    conditions: [
-      `
-              time > var EXPIRY
-          and (var LENDER_WITHDRAW_INSURERS == bool false)
-        `,
-    ],
+    conditions: ['time > var EXPIRY and (var LENDER_WITHDRAW_INSURERS == bool false)'],
   },
 ];
 
@@ -163,10 +152,8 @@ export const businessCaseSteps = (
     signatories: [GPAddr],
     transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAINING',
     conditions: [
-      `var GP_INITIAL +
-      var LP_TOTAL >= var INITIAL_FUNDS_TARGET`,
-      `(var DEPOSIT_MIN_PERCENT * var LP_TOTAL
-          / var P1) setUint256 TWO_PERCENT`,
+      'var GP_INITIAL + var LP_TOTAL >= var INITIAL_FUNDS_TARGET',
+      '(var DEPOSIT_MIN_PERCENT * var LP_TOTAL / var P1) setUint256 TWO_PERCENT',
       `
       (var TWO_PERCENT > var GP_INITIAL)
       ifelse POS NEG
@@ -180,28 +167,23 @@ export const businessCaseSteps = (
       }`,
       'time >= var LOW_LIM',
       'time <= var UP_LIM',
-      `(balanceOf DAI TRANSACTIONS_CONT) >=
-          ((var INITIAL_FUNDS_TARGET * var P1) / 100)`,
+      '(balanceOf DAI TRANSACTIONS_CONT) >= ((var INITIAL_FUNDS_TARGET * var P1) / 100)',
     ],
   },
   {
     txId: index.concat('4'),
     requiredTxs: [index.concat('2')],
     signatories: LPsAddrs,
-    transaction: `
-      (transferVar DAI GP GP_INITIAL)
-      and
-      (transferVar DAI LP LP_INITIAL)`,
+    transaction: '(transferVar DAI GP GP_INITIAL) and (transferVar DAI LP LP_INITIAL)',
     /**
      * Note: 9805 and 200 are 98.05 and 2.00 numbers respectively. The condition should be true
      * if LP / GP > 98 / 2. But due to integer division precision errors we add just a little
      * more to 98 (make it 98.05) to eliminate division errors.
      */
     conditions: [
-      `((100 * var P1) + 5) * (var GP_REMAINING
-          + var GP_INITIAL)
+      `((100 * var P1) + 5) * (var GP_REMAINING + var GP_INITIAL)
          <
-       (100 * var P2) * var LP_INITIAL`,
+        (100 * var P2) * var LP_INITIAL`,
       'time > var UP_LIM',
       'time < var FUND_INVESTMENT_DATE',
     ],
@@ -216,8 +198,7 @@ export const businessCaseSteps = (
     conditions: [
       `(time >= var FUND_INVESTMENT_DATE)
          and
-       (100 * var PURCHASE_AMOUNT
-         <= var PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,
+       (100 * var PURCHASE_AMOUNT <= var PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,
     ],
   },
   {
@@ -238,10 +219,8 @@ export const businessCaseSteps = (
     signatories: [GPAddr],
     transaction: 'transferVar DAI GP MANAGEMENT_FEE',
     conditions: [
-      `(var LP_TOTAL * var MANAGEMENT_PERCENT / 100)
-        setUint256 MANAGEMENT_FEE`,
-      `(100 * var MANAGEMENT_FEE
-         <= var MANAGEMENT_PERCENT * var LP_TOTAL)`,
+      '(var LP_TOTAL * var MANAGEMENT_PERCENT / 100) setUint256 MANAGEMENT_FEE',
+      '(100 * var MANAGEMENT_FEE <= var MANAGEMENT_PERCENT * var LP_TOTAL)',
     ],
   },
   {
@@ -250,12 +229,8 @@ export const businessCaseSteps = (
     signatories: [GPAddr],
     transaction: 'transferVar DAI GP CARRY',
     conditions: [
-      `(var GP_INITIAL +
-          var LP_TOTAL +
-          var GP_REMAINING
-        ) setUint256 INITIAL_DEPOSIT`,
-      `(balanceOf DAI TRANSACTIONS_CONT > (
-          var INITIAL_DEPOSIT - var MANAGEMENT_FEE))
+      '(var GP_INITIAL + var LP_TOTAL + var GP_REMAINING) setUint256 INITIAL_DEPOSIT',
+      `(balanceOf DAI TRANSACTIONS_CONT > (var INITIAL_DEPOSIT - var MANAGEMENT_FEE))
         ifelse HAS_PROFIT NO_PROFIT
         end
 
@@ -292,35 +267,37 @@ export const businessCaseSteps = (
     transaction: 'transferVar DAI GP GP_PRINICIPAL',
     conditions: [
       `
-            (var PROFIT > 0)
-            ifelse ZERO_LOSS NONZERO_LOSS
-            end
-            ZERO_LOSS {
-              0 setUint256 LOSS
-            }
-            NONZERO_LOSS {
-              (var GP_INITIAL +
-                var LP_TOTAL +
-                var GP_REMAINING -
-                (balanceOf DAI TRANSACTIONS_CONT) -
-                var MANAGEMENT_FEE
-              ) setUint256 LOSS
-            }
-        `,
+      (var PROFIT > 0)
+      ifelse ZERO_LOSS NONZERO_LOSS
+      end
+
+      ZERO_LOSS {
+        0 setUint256 LOSS
+      }
+
+      NONZERO_LOSS {
+        (var GP_INITIAL +
+          var LP_TOTAL +
+          var GP_REMAINING -
+          (balanceOf DAI TRANSACTIONS_CONT) -
+          var MANAGEMENT_FEE
+        ) setUint256 LOSS
+      }`,
       `
-          (var LOSS > (var GP_INITIAL + var GP_REMAINING))
-          ifelse WITHDRAW_ZERO WITHDRAW_NONZERO
-          end
-          WITHDRAW_ZERO {
-            0 setUint256 GP_PRINICIPAL
-          }
-          WITHDRAW_NONZERO {
-            (var GP_INITIAL +
-              var GP_REMAINING -
-              var LOSS
-            ) setUint256 GP_PRINICIPAL
-          }
-        `,
+      (var LOSS > (var GP_INITIAL + var GP_REMAINING))
+      ifelse WITHDRAW_ZERO WITHDRAW_NONZERO
+      end
+
+      WITHDRAW_ZERO {
+        0 setUint256 GP_PRINICIPAL
+      }
+
+      WITHDRAW_NONZERO {
+        (var GP_INITIAL +
+          var GP_REMAINING -
+          var LOSS
+        ) setUint256 GP_PRINICIPAL
+      }`,
     ],
   },
   {
@@ -330,10 +307,7 @@ export const businessCaseSteps = (
     transaction: 'transferVar DAI LP LP_PROFIT',
     conditions: [
       '(var PROFIT - var CARRY) setUint256 ALL_LPS_PROFIT',
-      `(var ALL_LPS_PROFIT *
-          var LP_INITIAL /
-          var LP_TOTAL
-         ) setUint256 LP_PROFIT`,
+      '(var ALL_LPS_PROFIT * var LP_INITIAL / var LP_TOTAL) setUint256 LP_PROFIT',
     ],
   },
   {
@@ -342,31 +316,22 @@ export const businessCaseSteps = (
     signatories: LPsAddrs,
     transaction: 'transferVar DAI LP LP_PRINCIPAL',
     conditions: [
-      `(
-           var MANAGEMENT_FEE *
-           var LP_INITIAL /
-           var LP_TOTAL
-         ) setUint256 MANAGEMENT_FEE_LP`,
-      `(
-           (var GP_INITIAL + var GP_REMAINING) >
-           var LOSS
-         )
-         ifelse ZERO NONZERO
-         end
-         ZERO {
-           0 setUint256 UNCOVERED_NET_LOSSES
-         }
-         NONZERO {
-           (var LOSS -
-             var GP_INITIAL -
-             var GP_REMAINING
-           ) setUint256 UNCOVERED_NET_LOSSES
-         }
-        `,
-      `(var LP_INITIAL -
-           var MANAGEMENT_FEE_LP -
-           var UNCOVERED_NET_LOSSES
-         ) setUint256 LP_PRINCIPAL`,
+      '(var MANAGEMENT_FEE * var LP_INITIAL / var LP_TOTAL) setUint256 MANAGEMENT_FEE_LP',
+      `((var GP_INITIAL + var GP_REMAINING) > var LOSS)
+        ifelse ZERO NONZERO
+        end
+
+        ZERO {
+          0 setUint256 UNCOVERED_NET_LOSSES
+        }
+
+        NONZERO {
+          (var LOSS -
+            var GP_INITIAL -
+            var GP_REMAINING
+          ) setUint256 UNCOVERED_NET_LOSSES
+        }`,
+      '(var LP_INITIAL - var MANAGEMENT_FEE_LP - var UNCOVERED_NET_LOSSES) setUint256 LP_PRINCIPAL',
     ],
   },
 ];
@@ -406,9 +371,11 @@ export const businessCaseStepsSimplified = (
       `(TWO_PERCENT > GP_INITIAL)
       ifelse POS NEG
       end
+
       POS {
         (TWO_PERCENT - GP_INITIAL) setUint256 GP_REMAINING
       }
+
       NEG {
         0 setUint256 GP_REMAINING
       }`,
@@ -513,9 +480,11 @@ export const businessCaseStepsSimplified = (
       (PROFIT > 0)
       ifelse ZERO_LOSS NONZERO_LOSS
       end
+
       ZERO_LOSS {
         0 setUint256 LOSS
       }
+
       NONZERO_LOSS {
         (GP_INITIAL + LP_TOTAL + GP_REMAINING -
           (balanceOf DAI TRANSACTIONS_CONT) - MANAGEMENT_FEE
@@ -526,9 +495,11 @@ export const businessCaseStepsSimplified = (
       (LOSS > (GP_INITIAL + GP_REMAINING))
       ifelse WITHDRAW_ZERO WITHDRAW_NONZERO
       end
+
       WITHDRAW_ZERO {
         0 setUint256 GP_PRINICIPAL
       }
+
       WITHDRAW_NONZERO {
         (GP_INITIAL + GP_REMAINING - LOSS) setUint256 GP_PRINICIPAL
       }
@@ -555,9 +526,11 @@ export const businessCaseStepsSimplified = (
       `((GP_INITIAL + GP_REMAINING) > LOSS)
         ifelse ZERO NONZERO
         end
+
         ZERO {
           0 setUint256 UNCOVERED_NET_LOSSES
         }
+
         NONZERO {
           (LOSS - GP_INITIAL - GP_REMAINING) setUint256 UNCOVERED_NET_LOSSES
         }
@@ -576,10 +549,8 @@ export const aliceAndAnybodySteps = (OtherSigners: string[], index: string) => [
     signatories: OtherSigners,
     transaction: 'transferVar DAI GP PURCHASE_AMOUNT',
     conditions: [
-      `(time >= var FUND_INVESTMENT_DATE)
-             and
-       (100 * var PURCHASE_AMOUNT
-        <= var PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,
+      `(time >= var FUND_INVESTMENT_DATE) and
+       (100 * var PURCHASE_AMOUNT <= var PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,
     ],
   },
 ];

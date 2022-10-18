@@ -7,7 +7,7 @@ import { StringStack } from './helpers/StringStack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 import { ErrorsPreprocessor } from './libs/Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Preprocessor of DSL code
@@ -64,6 +64,7 @@ contract Preprocessor is IPreprocessor {
         return infixToPostfix(_ctxAddr, code, strStack);
     }
 
+    // TODO: this function isn't being executed
     /**
      * @dev Searches the comments in the program and removes comment lines
      * Example:
@@ -145,12 +146,15 @@ contract Preprocessor is IPreprocessor {
         delete result;
         string memory buffer;
         bool isStructStart;
+        bool isLoopStart;
 
         for (uint256 i = 0; i < _program.length(); i++) {
             string memory char = _program.char(i);
 
-            // if-else conditions parsing
-            if (char.equal('{')) continue;
+            if (isLoopStart && char.equal('{')) {
+                result.push('startLoop');
+                continue;
+            } else if (char.equal('{')) continue;
 
             // ---> start block for DSL struct without types
             if ((char.equal(':') || char.equal(',')) && isStructStart) {
@@ -166,6 +170,11 @@ contract Preprocessor is IPreprocessor {
                 result.push('endStruct');
                 buffer = '';
                 isStructStart = false;
+                continue;
+            } else if (isLoopStart && char.equal('}')) {
+                // `endLoop` keyword is an indicator of the loop block end
+                result.push('endLoop');
+                isLoopStart = false;
                 continue;
             } else if (char.equal('}')) {
                 result.push('end');
@@ -193,8 +202,13 @@ contract Preprocessor is IPreprocessor {
             if (char.equal('(') || char.equal(')') || char.equal('[') || char.equal(']')) {
                 result.push(char);
             }
+            // struct start
             if (result.length > 0 && !isStructStart && result[result.length - 1].equal('struct')) {
                 isStructStart = true;
+            }
+            // loop start
+            if (result.length > 0 && !isStructStart && result[result.length - 1].equal('for')) {
+                isLoopStart = true;
             }
         }
 
@@ -268,6 +282,7 @@ contract Preprocessor is IPreprocessor {
             }
             // <--- ends sumOf block for array of structures
 
+            // struct
             if (chunk.equal('struct')) {
                 s.isStructStart = true;
                 result.push(chunk);

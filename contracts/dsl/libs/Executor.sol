@@ -13,6 +13,8 @@ library Executor {
         while (IContext(_ctx).pc() < IContext(_ctx).program().length) {
             bytes memory opcodeBytes = IContext(_ctx).programAt(IContext(_ctx).pc(), 1);
             bytes1 opcodeByte1 = bytes1(uint8(opcodeBytes[0]));
+            console.log('opcode byte 1 =');
+            console.logBytes1(opcodeByte1);
 
             bytes4 _selector = IContext(_ctx).selectorByOpcode(opcodeByte1);
             require(_selector != 0x0, ErrorsExecutor.EXC2);
