@@ -417,6 +417,17 @@ contract Preprocessor is IPreprocessor {
         } else return 0;
     }
 
+    /**
+     * @dev Returns names status for complex string name.
+     * Ex. `USERS.balance`:
+     * Where `success` = true`,
+     * `arrName` = `USERS`,
+     * `structVar` = `balance`; otherwise it returns `success` = false` with empty string results
+     * @param _chunk is a command from DSL command list
+     * @return success if user provides complex name,  result is true
+     * @return arrName if user provided complex name, result is the name of structure
+     * @return structVar if user provided complex name, result is the name of structure variable
+     */
     function _getNames(string memory _chunk)
         internal
         pure

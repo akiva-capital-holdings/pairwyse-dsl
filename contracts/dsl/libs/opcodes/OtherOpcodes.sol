@@ -503,9 +503,9 @@ library OtherOpcodes {
      * @dev Returns array's length
      * @param _ctx Context contract instance address
      * @param _arrNameB32 Array's name in bytecode
-     * @param _length Array's length in bytecode
+     * @return Array's length in bytecode
      */
-    function _getArrLength(address _ctx, bytes32 _arrNameB32) internal returns (bytes32 _length) {
+    function _getArrLength(address _ctx, bytes32 _arrNameB32) internal returns (bytes32) {
         (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature('getLength(bytes32)', _arrNameB32)
         );
