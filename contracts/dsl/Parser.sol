@@ -10,7 +10,7 @@ import { ByteUtils } from './libs/ByteUtils.sol';
 import { Preprocessor } from './Preprocessor.sol';
 import { ErrorsParser } from './libs/Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 /**
  * @dev Parser of DSL code
@@ -95,7 +95,7 @@ contract Parser is IParser {
     /**
      * @dev Updates the program with the local variable value
      *
-     *  * Example of a command:
+     * Example of a command:
      * ```
      * (uint256 5 + uint256 7) setUint256 VARNAME
      * ```
@@ -107,7 +107,7 @@ contract Parser is IParser {
     /**
      * @dev Updates the program with the name(its position) of the array
      *
-     *  * Example of a command:
+     * Example of a command:
      * ```
      * declare ARR_NAME
      * ```
@@ -117,6 +117,14 @@ contract Parser is IParser {
         _parseVariable(); // program += bytecode for `ARR_NAME`
     }
 
+    /**
+     * @dev Updates the program with the element by index from the provived array's name
+     *
+     * Example of a command:
+     * ```
+     * get 3 USERS
+     * ```
+     */
     function asmGet() public {
         string memory _value = _nextCmd();
         bytes4 _arrName = bytes4(keccak256(abi.encodePacked(_nextCmd())));
@@ -124,9 +132,10 @@ contract Parser is IParser {
     }
 
     /**
-     * @dev Updates the program with the next item for the array
+     * @dev Updates the program with the new item for the array, can be `uint256`,
+     * `address` and `struct name` types.
      *
-     *  * Example of a command:
+     * Example of a command:
      * ```
      * push ITEM ARR_NAME
      * ```
@@ -141,11 +150,8 @@ contract Parser is IParser {
         } else if (_value.mayBeNumber()) {
             program = bytes.concat(program, bytes32(_value.toUint256()));
         } else {
-            // for struct
-            // TODO: make it for string also?
-            console.log(_value);
-            console.logBytes32((keccak256(abi.encodePacked(_value))));
-            program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(_value))));
+            // only for struct names!
+            program = bytes.concat(program, bytes32(bytes4(keccak256(abi.encodePacked(_value)))));
         }
 
         program = bytes.concat(program, _arrName);
@@ -304,7 +310,7 @@ contract Parser is IParser {
 
     /**
      * @dev Updates previous `program` with the name of the dsl array that will
-     * be used to sum uin256 variables
+     * be used to sum uint256 variables
      *
      * Example of a command:
      * ```
@@ -315,6 +321,24 @@ contract Parser is IParser {
         _parseVariable(); // array name
     }
 
+    /**
+     * @dev Updates previous `program` with the name of the dsl array and
+     * name of variable in the DSL structure that will
+     * be used to sum uint256 variables
+     *
+     * Example of a command:
+     * ```
+     * struct BOB {
+     *   lastPayment: 3
+     * }
+     *
+     * struct ALISA {
+     *   lastPayment: 300
+     * }
+     *
+     * sumOf USERS.lastPayment
+     * ```
+     */
     function asmSumThroughStructs() public {
         _parseVariable(); // array name
         _parseVariable(); // variable name
@@ -470,7 +494,6 @@ contract Parser is IParser {
      */
     function _parseOpcodeWithParams(address _ctxAddr) internal {
         string storage cmd = _nextCmd();
-        // console.log(cmd);
         bytes1 opcode = IContext(_ctxAddr).opCodeByName(cmd);
         // TODO: simplify
         bytes4 _selector = bytes4(keccak256(abi.encodePacked(cmd)));
@@ -489,7 +512,6 @@ contract Parser is IParser {
         } else {
             program = bytes.concat(program, opcode);
             _selector = IContext(_ctxAddr).asmSelectors(cmd);
-            // console.logBytes4(_selector);
             if (_selector != 0x0) {
                 (bool success, ) = address(this).delegatecall(
                     abi.encodeWithSelector(_selector, IContext(_ctxAddr))

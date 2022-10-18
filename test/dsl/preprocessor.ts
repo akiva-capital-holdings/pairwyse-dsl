@@ -1873,6 +1873,44 @@ describe('Preprocessor', () => {
           'endStruct',
         ]);
       });
+
+      it('push struct type values into array', async () => {
+        const input = `
+            struct Bob {
+              lastPayment: 1000
+            }
+
+            struct Mary {
+              lastPayment: 1500
+            }
+
+            struct[] USERS
+            insert Bob into USERS
+            insert Mary into USERS
+          `;
+        const res = await app.callStatic.transform(ctxAddr, input);
+        expect(res).to.eql([
+          'struct',
+          'Bob',
+          'lastPayment',
+          '1000',
+          'endStruct',
+          'struct',
+          'Mary',
+          'lastPayment',
+          '1500',
+          'endStruct',
+          'declareArr',
+          'struct',
+          'USERS',
+          'push',
+          'Bob',
+          'USERS',
+          'push',
+          'Mary',
+          'USERS',
+        ]);
+      });
     });
   });
 });

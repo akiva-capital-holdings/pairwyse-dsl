@@ -1197,7 +1197,56 @@ describe('End-to-end', () => {
         expect(await app.getStorageUint256(hex4Bytes('RESULT_3'))).equal(0);
       });
 
-      it.only('sum through tructs values with additional code', async () => {
+      it('push struct type values into array', async () => {
+        const input = `
+          struct BOB {
+            lastPayment: 3
+          }
+
+          struct MAX {
+            lastPayment: 170
+          }
+          struct[] USERS
+          insert BOB into USERS
+          insert MAX into USERS
+        `;
+
+        const code = await preprocessor.callStatic.transform(ctxAddr, input);
+        await app.parseCode(code);
+
+        const three = new Array(64).join('0') + 3;
+        const number = new Array(63).join('0') + 'aa'; // 170
+
+        expect(await ctx.program()).to.equal(
+          `0x` +
+            `36` + // struct
+            '4a871642' + // BOB.lastPayment
+            `${three}` + // 3
+            'cb398fe1' + // endStruct
+            '36' + // struct
+            'ffafe3f2' + // MAX.lastPayment
+            `${number}` + // 170
+            'cb398fe1' + // endStruct
+            '31' + // declareArr
+            '02' + // struct
+            '80e5f4d2' + // USERS
+            '33' + // push
+            '29d93e4f00000000000000000000000000000000000000000000000000000000' + // BOB
+            '80e5f4d2' + // USERS
+            '33' + // push
+            'a427878700000000000000000000000000000000000000000000000000000000' + // MAX
+            '80e5f4d2' // USERS
+        );
+
+        expect(await app.getStorageUint256(hex4Bytes('MAX.lastPayment'))).equal(0);
+        expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(0);
+        await app.execute();
+
+        expect(await app.getStorageUint256(hex4Bytes('MAX.lastPayment'))).equal(170);
+        expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(3);
+      });
+
+      it('sum through tructs values with additional code', async () => {
         const input = `
           struct BOB {
             lastPayment: 3
@@ -1213,92 +1262,65 @@ describe('End-to-end', () => {
           struct[] USERS
           insert ALISA into USERS
           insert BOB into USERS
+          sumOf USERS.lastPayment
           insert MAX into USERS
           sumOf USERS.lastPayment
         `;
 
         const code = await preprocessor.callStatic.transform(ctxAddr, input);
-
-        const expectedCode = [
-          'struct',
-          'BOB',
-          'lastPayment',
-          '3',
-          'endStruct',
-          'struct',
-          'ALISA',
-          'lastPayment',
-          '300',
-          'endStruct',
-          'struct',
-          'MAX',
-          'lastPayment',
-          '170',
-          'endStruct',
-          'declareArr',
-          'struct',
-          'USERS',
-          'push',
-          'ALISA',
-          'USERS',
-          'push',
-          'BOB',
-          'USERS',
-          'push',
-          'MAX',
-          'USERS',
-          'sumThroughStructs',
-          'USERS',
-          'lastPayment',
-        ];
-        expect(code).to.eql(expectedCode);
-
         await app.parseCode(code);
 
         const three = new Array(64).join('0') + 3;
         const number1 = new Array(62).join('0') + '12c'; // 300
         const number2 = new Array(63).join('0') + 'aa'; // 170
 
-        // expect(await ctx.program()).to.equal(
-        //   `0x` +
-        //     `36` + // struct
-        //     '4a871642' + // BOB.lastPayment
-        //     `${three}` + // 3
-        //     'cb398fe1' + // endStruct
-        //     '36' + // endStruct
-        //     'c07a9c8d' + // ALISA.lastPayment
-        //     `${number1}` + // 300
-        //     'cb398fe1' + // endStruct
-        //     '36' + // struct
-        //     'ffafe3f2' + // MAX.lastPayment
-        //     `${number2}` + // 170
-        //     'cb398fe1' + // endStruct
-        //     '31' + // declareArr
-        //     '02' + // struct
-        //     '80e5f4d2' + // USERS
-        //     '33' + //  push
-        //     'f15754e0' + // ALISA
-        //     '80e5f4d2' + // USERS
-        //     '33' + // push
-        //     '29d93e4f' + // BOB
-        //     '80e5f4d2' + // USERS
-        //     '33' + // push
-        //     'a4278787' + // MAX
-        //     '80e5f4d2' + // USERS
-        //     '38' + // sumThroughStructs
-        //     '80e5f4d2' + // USERS
-        //     'f72cc83a' // lastPayment
-        // );
+        expect(await ctx.program()).to.equal(
+          `0x` +
+            `36` + // struct
+            '4a871642' + // BOB.lastPayment
+            `${three}` + // 3
+            'cb398fe1' + // endStruct
+            '36' + // struct
+            'c07a9c8d' + // ALISA.lastPayment
+            `${number1}` + // 300
+            'cb398fe1' + // endStruct
+            '36' + // struct
+            'ffafe3f2' + // MAX.lastPayment
+            `${number2}` + // 170
+            'cb398fe1' + // endStruct
+            '31' + // declareArr
+            '02' + // struct
+            '80e5f4d2' + // USERS
+            '33' + //  push
+            'f15754e000000000000000000000000000000000000000000000000000000000' + // ALISA
+            '80e5f4d2' + // USERS
+            '33' + // push
+            '29d93e4f00000000000000000000000000000000000000000000000000000000' + // BOB
+            '80e5f4d2' + // USERS
+            '38' + // sumThroughStructs
+            '80e5f4d2' + // USERS
+            'f72cc83a' + // lastPayment
+            '33' + // push
+            'a427878700000000000000000000000000000000000000000000000000000000' + // MAX
+            '80e5f4d2' + // USERS
+            '38' + // sumThroughStructs
+            '80e5f4d2' + // USERS
+            'f72cc83a' // lastPayment
+        );
 
-        // expect(await app.getStorageUint256(hex4Bytes('ALISA.lastPayment'))).equal(0);
-        // expect(await app.getStorageUint256(hex4Bytes('MAX.lastPayment'))).equal(0);
-        // expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(0);
+        expect(await app.getStorageUint256(hex4Bytes('ALISA.lastPayment'))).equal(0);
+        expect(await app.getStorageUint256(hex4Bytes('MAX.lastPayment'))).equal(0);
+        expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(0);
         await app.execute();
 
-        // const StackCont = await ethers.getContractFactory('Stack');
-        // const contextStackAddress = await ctx.stack();
-        // stack = StackCont.attach(contextStackAddress);
-        // await checkStackTailv2(stack, [473]);
+        const StackCont = await ethers.getContractFactory('Stack');
+        const contextStackAddress = await ctx.stack();
+        stack = StackCont.attach(contextStackAddress);
+        await checkStackTailv2(stack, [303, 473]);
+
+        expect(await app.getStorageUint256(hex4Bytes('ALISA.lastPayment'))).equal(300);
+        expect(await app.getStorageUint256(hex4Bytes('MAX.lastPayment'))).equal(170);
+        expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(3);
       });
     });
   });

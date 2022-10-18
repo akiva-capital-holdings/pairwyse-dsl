@@ -445,8 +445,7 @@ describe('Other opcodes', () => {
     await testERC20.burn(receiver.address, testAmount);
   });
 
-  it.skip('opTransferFromVar', async () => {
-    // TODO: double check it, it fails
+  it('opTransferFromVar', async () => {
     const [sender, receiver] = await ethers.getSigners();
 
     await testERC20.mint(sender.address, testAmount);
@@ -455,26 +454,27 @@ describe('Other opcodes', () => {
     const bytes32TokenAddr = hex4Bytes('TOKEN_ADDR');
     const bytes32SenderAddr = hex4Bytes('SENDER');
     const bytes32ReceiverAddr = hex4Bytes('RECEIVER');
-    const bytes32TestAmount = hex4Bytes(testAmount);
+    const bytes32TestAmount = hex4Bytes('RECEIVER_AMOUNT');
 
     await clientApp.setStorageAddress(bytes32TokenAddr, testERC20.address);
     await clientApp.setStorageAddress(bytes32SenderAddr, sender.address);
     await clientApp.setStorageAddress(bytes32ReceiverAddr, receiver.address);
+    await clientApp.setStorageUint256(bytes32TestAmount, testAmount);
 
     const tokenAddress = bytes32TokenAddr.substring(2, 10);
     const senderAddress = bytes32SenderAddr.substring(2, 10);
     const receiverAddress = bytes32ReceiverAddr.substring(2, 10);
-    const amount = bytes32TestAmount.substring(2, 10);
+    const amountVar = bytes32TestAmount.substring(2, 10);
 
-    await ctx.setProgram(`0x${tokenAddress}${senderAddress}${receiverAddress}${amount}`);
+    await ctx.setProgram(`0x${tokenAddress}${senderAddress}${receiverAddress}${amountVar}`);
+    let balanceOfReceiver = await testERC20.balanceOf(receiver.address);
+    expect(balanceOfReceiver).to.be.equal(0);
 
     await app.opTransferFromVar(ctxAddr);
     await checkStackTailv2(stack, ['1']);
 
-    // TODO: double check it, it fails
-    // const balanceOfReceiver = await testERC20.balanceOf(receiver.address);
-    // console.log(balanceOfReceiver, testAmount);
-    // expect(balanceOfReceiver).to.be.equal(testAmount);
+    balanceOfReceiver = await testERC20.balanceOf(receiver.address);
+    expect(balanceOfReceiver).to.be.equal(testAmount);
   });
 
   it('opBalanceOf', async () => {

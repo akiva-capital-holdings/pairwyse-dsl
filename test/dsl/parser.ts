@@ -900,7 +900,56 @@ describe('Parser', () => {
           );
         });
 
-        it('use address and number after getting', async () => {
+        it('push struct type values into array', async () => {
+          const input = [
+            'struct',
+            'BOB',
+            'lastPayment',
+            '3',
+            'endStruct',
+            'struct',
+            'MAX',
+            'lastPayment',
+            '170',
+            'endStruct',
+            'declareArr',
+            'struct',
+            'USERS',
+            'push',
+            'BOB',
+            'USERS',
+            'push',
+            'MAX',
+            'USERS',
+          ];
+
+          await app.parseCodeExt(ctxAddr, input);
+
+          const three = new Array(64).join('0') + 3;
+          const number = new Array(63).join('0') + 'aa'; // 170
+          expect(await ctx.program()).to.equal(
+            `0x` +
+              `36` + // struct
+              '4a871642' + // BOB.lastPayment
+              `${three}` + // 3
+              'cb398fe1' + // endStruct
+              '36' + // struct
+              'ffafe3f2' + // MAX.lastPayment
+              `${number}` + // 170
+              'cb398fe1' + // endStruct
+              '31' + // declareArr
+              '02' + // struct
+              '80e5f4d2' + // USERS
+              '33' + // push
+              '29d93e4f00000000000000000000000000000000000000000000000000000000' + // BOB
+              '80e5f4d2' + // USERS
+              '33' + // push
+              'a427878700000000000000000000000000000000000000000000000000000000' + // MAX
+              '80e5f4d2' // USERS
+          );
+        });
+
+        it('use address and number after getting values', async () => {
           const number = new Array(64).join('0') + 3;
           await app.parseCodeExt(ctxAddr, [
             'struct',

@@ -10,7 +10,7 @@ import { LogicalOpcodes } from './libs/opcodes/LogicalOpcodes.sol';
 import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
 import { ErrorsContext } from './libs/Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 /**
  * @dev Context of DSL code
