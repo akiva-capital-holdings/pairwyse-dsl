@@ -764,8 +764,10 @@ contract Context is IContext {
     }
 
     /**
-     * @dev Sets structure variable state to true
-     *
+     * @dev Sets the full name depends on structure variables
+     * @param _structName is the name of the structure
+     * @param _varName is the name of the structure variable
+     * @param _fullName is the full string of the name of the structure and its variables
      */
     function setStructVars(
         string memory _structName,
@@ -779,6 +781,12 @@ contract Context is IContext {
         structParams[structName][varName] = fullName;
     }
 
+    /**
+     * @dev Returns the full name depends on structure variables
+     * @param _structName is the name of the structure
+     * @param _varName is the name of the structure variable
+     * @return Stored full name (in bytes4) of the structure name and its variable
+     */
     function getStructVars(bytes4 _structName, bytes4 _varName) public view returns (bytes4) {
         return structParams[_structName][_varName];
     }
