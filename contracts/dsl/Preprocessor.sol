@@ -418,7 +418,7 @@ contract Preprocessor is IPreprocessor {
     }
 
     /**
-     * @dev Returns names status for complex string name.
+     * @dev Searching for a `.` (dot) symbol  and returns names status for complex string name.
      * Ex. `USERS.balance`:
      * Where `success` = true`,
      * `arrName` = `USERS`,
@@ -444,6 +444,7 @@ contract Preprocessor is IPreprocessor {
         for (uint256 i = 0; i < symbols.length; i++) {
             if (!isFound) {
                 if (symbols[i] == 0x2e) {
+                    // 0x2e = `.` (dot) symbol
                     isFound = true;
                     continue;
                 }
