@@ -70,8 +70,7 @@ export const checkStack = async (
   expect(value).to.equal(expectedValue, badValueErr);
 };
 
-// TODO: rename to `checkStackTail`
-export async function checkStackTailv2(
+export async function checkStackTail(
   stack: Stack,
   expectedValues: (number | string | BigNumber)[],
   badLenErr = 'Bad stack length',

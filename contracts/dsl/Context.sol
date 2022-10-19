@@ -378,7 +378,6 @@ contract Context is IContext {
         );
 
         // Ex. `transferVar DAI RECEIVER AMOUNT`
-        // TODO: add more tests
         addOpcode(
             'transferVar',
             0x2c,
@@ -388,7 +387,6 @@ contract Context is IContext {
         );
 
         // Ex. `transferFrom DAI OWNER RECEIVER 10`
-        // TODO: add more tests
         addOpcode(
             'transferFrom',
             0x20,
@@ -398,7 +396,6 @@ contract Context is IContext {
         );
 
         // Ex. `transferFromVar DAI OWNER RECEIVER AMOUNT`
-        // TODO: add more tests
         addOpcode(
             'transferFromVar',
             0x2a,
@@ -553,6 +550,14 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
 
+        /* Declare struct and its variables names and values from the `struct type` array
+            Ex.
+            ```
+            struct BOB {
+              lastPayment: 1000
+              account: 0x9A676e781A523b5d0C0e43731313A708CB607508
+            }
+        */
         addOpcode(
             'struct',
             0x36,
@@ -585,10 +590,9 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         // types of arrays for declaration
-        // TODO: should be normal selectors here for getting values instead of mocked as `opLoadRemoteUint256`
-        _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadRemoteUint256.selector);
-        _addOpcodeBranch(name, 'struct', 0x02, OtherOpcodes.opLoadRemoteUint256.selector);
-        _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
+        _addOpcodeBranch(name, 'uint256', 0x01, bytes4(0x0));
+        _addOpcodeBranch(name, 'struct', 0x02, bytes4(0x0));
+        _addOpcodeBranch(name, 'address', 0x03, bytes4(0x0));
 
         // Aliases
 
@@ -817,7 +821,8 @@ contract Context is IContext {
         bytes1 _branchCode,
         bytes4 _selector
     ) internal {
-        require(_selector != bytes4(0), ErrorsContext.CTX2);
+        // TODO: will we use zero _selector in the future?
+        // require(_selector != bytes4(0), ErrorsContext.CTX2);
         require(
             branchSelectors[_baseOpName][_branchCode] == bytes4(0) &&
                 branchCodes[_baseOpName][_branchName] == bytes1(0),

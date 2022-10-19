@@ -13,7 +13,7 @@ import {
 } from '../../../../typechain-types';
 import {
   checkStack,
-  checkStackTailv2,
+  checkStackTail,
   hex4Bytes,
   uint256StrToHex,
   pushToStack,
@@ -36,7 +36,7 @@ describe('Other opcodes', () => {
   const zero32bytes = '0x' + new Array(65).join('0');
 
   before(async () => {
-    // TODO: check if await checkStackTailv2(stack, ...); really works in otherOpcode.ts
+    // TODO: check if await checkStackTail(stack, ...); really works in otherOpcode.ts
 
     StackCont = await ethers.getContractFactory('Stack');
 
@@ -278,7 +278,7 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${number}`);
 
     await app.opLoadLocalUint256(ctxAddr);
-    await checkStackTailv2(stack, [testValue]);
+    await checkStackTail(stack, [testValue]);
   });
 
   it('opLoadRemoteUint256', async () => {
@@ -291,7 +291,7 @@ describe('Other opcodes', () => {
 
     await ctx.setProgram(`0x${number}${clientApp.address.substring(2)}`);
     await app.opLoadRemoteUint256(ctxAddr);
-    await checkStackTailv2(stack, [testValue]);
+    await checkStackTail(stack, [testValue]);
   });
 
   it('opLoadRemoteBytes32', async () => {
@@ -303,7 +303,7 @@ describe('Other opcodes', () => {
     const bytes = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${bytes}${clientApp.address.substring(2)}`);
     await app.opLoadRemoteBytes32(ctxAddr);
-    await checkStackTailv2(stack, [testValue]);
+    await checkStackTail(stack, [testValue]);
   });
 
   it('opLoadRemoteBool', async () => {
@@ -315,7 +315,7 @@ describe('Other opcodes', () => {
     const bool = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${bool}${clientApp.address.substring(2)}`);
     await app.opLoadRemoteBool(ctxAddr);
-    await checkStackTailv2(stack, [+testValue]);
+    await checkStackTail(stack, [+testValue]);
   });
 
   it('opLoadRemoteAddress', async () => {
@@ -328,19 +328,19 @@ describe('Other opcodes', () => {
     const addr = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${addr}${clientApp.address.substring(2)}`);
     await app.opLoadRemoteAddress(ctxAddr);
-    await checkStackTailv2(stack, [testValue]);
+    await checkStackTail(stack, [testValue]);
   });
 
   it('opBool', async () => {
     await ctx.setProgram('0x01');
     await app.opBool(ctxAddr);
-    await checkStackTailv2(stack, ['0x01']);
+    await checkStackTail(stack, ['0x01']);
   });
 
   it('opUint256', async () => {
     await ctx.setProgram('0x0000000000000000000000000000000000000000000000000000000000000001');
     await app.opUint256(ctxAddr);
-    await checkStackTailv2(stack, ['1']);
+    await checkStackTail(stack, ['1']);
   });
 
   it('opSendEth', async () => {
@@ -367,7 +367,7 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${address}${fundAmountHex}`);
 
     await expect(() => app.opSendEth(ctxAddr)).to.changeEtherBalance(receiver, fundAmountUint);
-    await checkStackTailv2(stack, ['1']);
+    await checkStackTail(stack, ['1']);
   });
 
   it('opTransfer', async () => {
@@ -386,7 +386,7 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${tokenAddress}${receiverAddress}${uint256StrToHex(testAmount)}`);
 
     await app.opTransfer(ctxAddr);
-    await checkStackTailv2(stack, ['1']);
+    await checkStackTail(stack, ['1']);
 
     const balanceOfReceiver = await testERC20.balanceOf(receiver.address);
 
@@ -399,7 +399,7 @@ describe('Other opcodes', () => {
 
     const bytes32TokenAddr = hex4Bytes('TOKEN_ADDR');
     const bytes32ReceiverAddr = hex4Bytes('RECEIVER');
-    const bytes32TestAmount = hex4Bytes(testAmount);
+    const bytes32TestAmount = hex4Bytes('AMOUNT');
 
     await clientApp.setStorageAddress(bytes32TokenAddr, testERC20.address);
     await clientApp.setStorageAddress(bytes32ReceiverAddr, receiver.address);
@@ -407,11 +407,11 @@ describe('Other opcodes', () => {
 
     const tokenAddress = bytes32TokenAddr.substring(2, 10);
     const receiverAddress = bytes32ReceiverAddr.substring(2, 10);
-    const amount = bytes32TestAmount.substring(2, 10);
-    await ctx.setProgram(`0x${tokenAddress}${receiverAddress}${amount}`);
+    const amountVar = bytes32TestAmount.substring(2, 10);
+    await ctx.setProgram(`0x${tokenAddress}${receiverAddress}${amountVar}`);
 
     await app.opTransferVar(ctxAddr);
-    await checkStackTailv2(stack, ['1']);
+    await checkStackTail(stack, ['1']);
 
     const balanceOfReceiver = await testERC20.balanceOf(receiver.address);
     expect(balanceOfReceiver).to.be.equal(testAmount);
@@ -440,11 +440,10 @@ describe('Other opcodes', () => {
     );
 
     await app.opTransferFrom(ctxAddr);
-    await checkStackTailv2(stack, ['1']);
+    await checkStackTail(stack, ['1']);
 
     const balanceOfReceiver = await testERC20.balanceOf(receiver.address);
     expect(balanceOfReceiver).to.be.equal(testAmount);
-    await testERC20.burn(receiver.address, testAmount);
   });
 
   it('opTransferFromVar', async () => {
@@ -473,7 +472,7 @@ describe('Other opcodes', () => {
     expect(balanceOfReceiver).to.be.equal(0);
 
     await app.opTransferFromVar(ctxAddr);
-    await checkStackTailv2(stack, ['1']);
+    await checkStackTail(stack, ['1']);
 
     balanceOfReceiver = await testERC20.balanceOf(receiver.address);
     expect(balanceOfReceiver).to.be.equal(testAmount);
@@ -496,8 +495,7 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${tokenAddress}${receiverAddress}`);
 
     await app.opBalanceOf(ctxAddr);
-    await checkStackTailv2(stack, [testAmount]);
-    await testERC20.burn(receiver.address, testAmount);
+    await checkStackTail(stack, [testAmount]);
   });
 
   it('opUint256Get', async () => {
@@ -545,7 +543,7 @@ describe('Other opcodes', () => {
     await clientApp.setStorageBytes32(bytes32TestValueName, testValue);
     await app.opLoadLocal(ctxAddr, testSignature);
 
-    checkStackTailv2(stack, [testValue]);
+    checkStackTail(stack, [testValue]);
   });
 
   it('opLoadRemote', async () => {
@@ -558,7 +556,7 @@ describe('Other opcodes', () => {
     const bytes = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${bytes}${clientApp.address.substring(2)}`);
     await app.opLoadRemote(ctxAddr, testSignature);
-    await checkStackTailv2(stack, [testValue]);
+    await checkStackTail(stack, [testValue]);
   });
 
   it('opStruct', async () => {
