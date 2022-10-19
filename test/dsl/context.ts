@@ -96,12 +96,6 @@ describe('Context', () => {
   });
 
   describe('addOpcodeBranch', () => {
-    it('error: empty opcode selector', async () => {
-      await expect(
-        app.addOpcodeBranchExt('loadRemote', 'uint256', '0x01', '0x00000000')
-      ).to.be.revertedWith('CTX2');
-    });
-
     it('error: duplicate opcode', async () => {
       await expect(
         app.addOpcodeBranchExt('loadRemote', 'bool', '0x01', '0x00000002')

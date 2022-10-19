@@ -129,6 +129,10 @@ contract OtherOpcodesMock {
         OtherOpcodes.opSumOf(_ctx);
     }
 
+    function opSumThroughStructs(address _ctx) public {
+        OtherOpcodes.opSumThroughStructs(_ctx);
+    }
+
     function opStruct(address _ctx) public {
         OtherOpcodes.opStruct(_ctx);
     }

@@ -107,41 +107,25 @@ library OtherOpcodes {
      */
     function opSumOf(address _ctx) public {
         bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
-        bool success;
-        bytes memory data;
 
-        // check if the array exists
-        (success, data) = IContext(_ctx).appAddr().call(
-            abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
-        );
-        require(success, ErrorsGeneralOpcodes.OP1);
-        // check that type of the array is `uint256`
-        require(
-            bytes1(data) == bytes1(IContext(_ctx).branchCodes('declareArr', 'uint256')),
-            ErrorsGeneralOpcodes.OP2
-        );
-
-        // get array's length
-        (success, data) = IContext(_ctx).appAddr().call(
-            abi.encodeWithSignature('getLength(bytes32)', _arrNameB32)
-        );
-        require(success, ErrorsGeneralOpcodes.OP1);
-
+        _checkArrType(_ctx, _arrNameB32, 'uint256');
+        bytes32 _length = _getArrLength(_ctx, _arrNameB32);
         // sum items and store into the stack
-        uint256 total;
-        bytes memory item;
-        for (uint256 i = 0; i < uint256(bytes32(data)); i++) {
-            (success, item) = IContext(_ctx).appAddr().call(
-                abi.encodeWithSignature(
-                    'get(uint256,bytes32)',
-                    i, // index of the searched item
-                    _arrNameB32 // array name, ex. INDEX_LIST, PARTNERS
-                )
-            );
-            require(success, ErrorsGeneralOpcodes.OP1);
-            total += uint256(bytes32(item));
-        }
+        uint256 total = _sumOfVars(_ctx, _arrNameB32, _length);
+        OpcodeHelpers.putToStack(_ctx, total);
+    }
 
+    /**
+     * @dev Sums struct variables values from the `struct type` array
+     * @param _ctx Context contract instance address
+     */
+    function opSumThroughStructs(address _ctx) public {
+        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+        _checkArrType(_ctx, _arrNameB32, 'struct');
+        bytes32 _length = _getArrLength(_ctx, _arrNameB32);
+        // sum items and store into the stack
+        uint256 total = _sumOfStructVars(_ctx, _arrNameB32, bytes4(_varNameB32), _length);
         OpcodeHelpers.putToStack(_ctx, total);
     }
 
@@ -323,6 +307,7 @@ library OtherOpcodes {
             address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
         );
         uint256 amount = uint256(opLoadLocalGet(_ctx, 'getStorageUint256(bytes32)'));
+
         IERC20(token).transferFrom(from, to, amount);
         OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
     }
@@ -417,5 +402,109 @@ library OtherOpcodes {
         }
 
         OpcodeHelpers.putToStack(_ctx, uint256(result));
+    }
+
+    /**
+     * @dev Sums struct variables values from the `struct type` array
+     * @param _ctx Context contract instance address
+     * @param _arrNameB32 Array's name in bytecode
+     * @param _varName Struct's name in bytecode
+     * @param _length Array's length in bytecode
+     * @return total Total sum of each element in the `struct` type of array
+     */
+    function _sumOfStructVars(
+        address _ctx,
+        bytes32 _arrNameB32,
+        bytes4 _varName,
+        bytes32 _length
+    ) internal returns (uint256 total) {
+        bool success;
+        for (uint256 i = 0; i < uint256(_length); i++) {
+            // get the name of a struct
+            bytes memory item = _getItem(_ctx, i, _arrNameB32);
+
+            // get struct variable value
+            bytes4 _fullName = IContext(_ctx).structParams(bytes4(item), _varName);
+            (success, item) = IContext(_ctx).appAddr().call(
+                abi.encodeWithSignature('getStorageUint256(bytes32)', _fullName)
+            );
+            require(success, ErrorsGeneralOpcodes.OP5);
+            total += uint256(bytes32(item));
+        }
+    }
+
+    /**
+     * @dev Returns the element from the array
+     * @param _ctx Context contract instance address
+     * @param _index Array's index
+     * @param _arrNameB32 Array's name in bytecode
+     * @return item Item from the array by its index
+     */
+    function _getItem(
+        address _ctx,
+        uint256 _index,
+        bytes32 _arrNameB32
+    ) internal returns (bytes memory) {
+        (bool success, bytes memory item) = IContext(_ctx).appAddr().call(
+            abi.encodeWithSignature('get(uint256,bytes32)', _index, _arrNameB32)
+        );
+        require(success, ErrorsGeneralOpcodes.OP1);
+        return item;
+    }
+
+    /**
+     * @dev Sums uin256 elements from the array (array name should be provided)
+     * @param _ctx Context contract instance address
+     * @param _arrNameB32 Array's name in bytecode
+     * @param _length Array's length in bytecode
+     * @return total Total sum of each element in the `uint256` type of array
+     */
+    function _sumOfVars(
+        address _ctx,
+        bytes32 _arrNameB32,
+        bytes32 _length
+    ) internal returns (uint256 total) {
+        for (uint256 i = 0; i < uint256(_length); i++) {
+            bytes memory item = _getItem(_ctx, i, _arrNameB32);
+            total += uint256(bytes32(item));
+        }
+    }
+
+    /**
+     * @dev Checks the type for array
+     * @param _ctx Context contract instance address
+     * @param _arrNameB32 Array's name in bytecode
+     * @param _typeName Type of the array, ex. `uint256`, `address`, `struct`
+     */
+    function _checkArrType(
+        address _ctx,
+        bytes32 _arrNameB32,
+        string memory _typeName
+    ) internal {
+        bool success;
+        bytes memory _type;
+        // check if the array exists
+        (success, _type) = IContext(_ctx).appAddr().call(
+            abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
+        );
+        require(success, ErrorsGeneralOpcodes.OP1);
+        require(
+            bytes1(_type) == IContext(_ctx).branchCodes('declareArr', _typeName),
+            ErrorsGeneralOpcodes.OP8
+        );
+    }
+
+    /**
+     * @dev Returns array's length
+     * @param _ctx Context contract instance address
+     * @param _arrNameB32 Array's name in bytecode
+     * @return Array's length in bytecode
+     */
+    function _getArrLength(address _ctx, bytes32 _arrNameB32) internal returns (bytes32) {
+        (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
+            abi.encodeWithSignature('getLength(bytes32)', _arrNameB32)
+        );
+        require(success, ErrorsGeneralOpcodes.OP1);
+        return bytes32(data);
     }
 }
