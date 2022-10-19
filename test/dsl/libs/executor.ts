@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import * as hre from 'hardhat';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 import { Context, Stack, ExecutorMock } from '../../../typechain-types';
-import { checkStack, checkStackTailv2, hex4Bytes } from '../../utils/utils';
+import { checkStack, checkStackTail, hex4Bytes } from '../../utils/utils';
 
 const { ethers } = hre;
 
@@ -89,7 +89,7 @@ describe('Executor', () => {
             '24' // action: end
         );
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, []);
+        await checkStackTail(stack, []);
       });
 
       it('if condition is true', async () => {
@@ -109,7 +109,7 @@ describe('Executor', () => {
             '24' // action: end
         );
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, [1, 2, 4]);
+        await checkStackTail(stack, [1, 2, 4]);
       });
 
       it('if condition is false', async () => {
@@ -129,7 +129,7 @@ describe('Executor', () => {
             '24' // action: end
         );
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, []);
+        await checkStackTail(stack, []);
       });
     });
 
@@ -147,7 +147,7 @@ describe('Executor', () => {
 
         await ctx.setProgram(programTrue);
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, [2, 3]);
+        await checkStackTail(stack, [2, 3]);
       });
 
       it('if condition is true', async () => {
@@ -168,7 +168,7 @@ describe('Executor', () => {
 
         await ctx.setProgram(programTrue);
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, [1, 3]);
+        await checkStackTail(stack, [1, 3]);
       });
 
       it('if condition is true (#2)', async () => {
@@ -193,7 +193,7 @@ describe('Executor', () => {
 
         await ctx.setProgram(programTrue);
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, [1, 2, 4]);
+        await checkStackTail(stack, [1, 2, 4]);
       });
 
       it('if condition is false', async () => {
@@ -204,7 +204,7 @@ describe('Executor', () => {
 
         await ctx.setProgram(programFalse);
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, [2, 3]);
+        await checkStackTail(stack, [2, 3]);
       });
 
       it('if condition is false (#2)', async () => {
@@ -229,7 +229,7 @@ describe('Executor', () => {
 
         await ctx.setProgram(programTrue);
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, [3, 4]);
+        await checkStackTail(stack, [3, 4]);
       });
     });
 

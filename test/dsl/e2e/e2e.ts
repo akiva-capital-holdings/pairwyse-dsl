@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
 import { E2EApp, Context, Preprocessor, Stack } from '../../../typechain-types';
-import { checkStackTailv2, hex4Bytes, hex4BytesShort } from '../../utils/utils';
+import { checkStackTail, hex4Bytes, hex4BytesShort } from '../../utils/utils';
 import { deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 import { deployBaseMock } from '../../../scripts/utils/deploy.utils.mock';
 import { getChainId } from '../../../utils/utils';
@@ -91,7 +91,7 @@ describe('End-to-end', () => {
       // Execute program
       await app.execute();
 
-      await checkStackTailv2(stack, [1]);
+      await checkStackTail(stack, [1]);
     });
   });
 
@@ -152,7 +152,7 @@ describe('End-to-end', () => {
       await app.setStorageUint256(hex4Bytes('RISK'), RISK);
 
       await app.execute();
-      await checkStackTailv2(stack, [result]);
+      await checkStackTail(stack, [result]);
     }
 
     it('bytecode', async () => {
@@ -368,11 +368,196 @@ describe('End-to-end', () => {
 
   describe('Arrays', async () => {
     describe('uint256 type', () => {
-      // TODO: add tests here
-      describe('declareArr', () => {});
-      describe('push', () => {});
-      describe('get', () => {});
-      describe('lengthOf', () => {});
+      describe('declareArr', () => {
+        it('with additional code before and after it', async () => {
+          const input = `
+            bool false
+            uint256[] NUMBERS
+            bool true
+          `;
+
+          const code = await preprocessor.callStatic.transform(ctxAddr, input);
+          const expectedCode = [
+            'bool',
+            'false',
+            'declareArr',
+            'uint256',
+            'NUMBERS',
+            'bool',
+            'true',
+          ];
+          expect(code).to.eql(expectedCode);
+          // to Parser
+          await app.parseCode(code);
+
+          const expectedProgram =
+            '0x' +
+            '18' + // bool
+            '00' + // false
+            '31' + // declareArr
+            '01' + // uint256
+            '1fff709e' + // NUMBERS
+            '18' + // bool
+            '01'; // true
+          expect(await ctx.program()).to.equal(expectedProgram);
+
+          // Execute and check
+          await app.execute();
+          const StackCont = await ethers.getContractFactory('Stack');
+          const contextStackAddress = await ctx.stack();
+          stack = StackCont.attach(contextStackAddress);
+          // Results: 0 - false, 1 - true
+          await checkStackTail(stack, [0, 1]);
+        });
+      });
+
+      describe('push', () => {
+        it('with additional code before and after it', async () => {
+          const one = new Array(64).join('0') + 1;
+          const two = new Array(64).join('0') + 2;
+          const three = new Array(64).join('0') + 3;
+          const five = new Array(64).join('0') + 5;
+          const input = `
+            bool false
+            uint256[] NUMBERS
+            uint256 5
+            insert 2 into NUMBERS
+            insert 1 into NUMBERS
+            bool true
+            insert 3 into NUMBERS
+          `;
+
+          const code = await preprocessor.callStatic.transform(ctxAddr, input);
+          const expectedCode = [
+            'bool',
+            'false',
+            'declareArr',
+            'uint256',
+            'NUMBERS',
+            'uint256',
+            `5`,
+            'push',
+            `2`,
+            'NUMBERS',
+            'push',
+            `1`,
+            'NUMBERS',
+            'bool',
+            'true',
+            'push',
+            `3`,
+            'NUMBERS',
+          ];
+          expect(code).to.eql(expectedCode);
+          // to Parser
+          await app.parseCode(code);
+
+          const expectedProgram =
+            '0x' +
+            '18' + // bool
+            '00' + // false
+            '31' + // declareArr
+            '01' + // uint256
+            '1fff709e' + // NUMBERS
+            '1a' + // uint256
+            `${five}` + // 1
+            '33' + // push
+            `${two}` + // 2
+            '1fff709e' + // NUMBERS
+            '33' + // push
+            `${one}` + // 1
+            '1fff709e' + // NUMBERS
+            '18' + // bool
+            '01' + // true
+            '33' + // push
+            `${three}` + // 3
+            '1fff709e'; // NUMBERS
+          expect(await ctx.program()).to.equal(expectedProgram);
+
+          // Execute and check
+          await app.execute();
+          const StackCont = await ethers.getContractFactory('Stack');
+          const contextStackAddress = await ctx.stack();
+          stack = StackCont.attach(contextStackAddress);
+          // Results:
+          // 0 - bool false,
+          // 5 - uint256 5
+          // 1 - bool true
+          await checkStackTail(stack, [0, 5, 1]);
+        });
+      });
+
+      describe('get', () => {
+        it('with additional code before and after it', async () => {
+          const one = new Array(64).join('0') + 1;
+          const five = new Array(64).join('0') + 5;
+          const seven = new Array(64).join('0') + 7;
+          const input = `
+            bool false
+            uint256[] NUMBERS
+            insert 5 into NUMBERS
+            insert 7 into NUMBERS
+            get 1 NUMBERS > get 0 NUMBERS
+          `;
+
+          const code = await preprocessor.callStatic.transform(ctxAddr, input);
+          const expectedCode = [
+            'bool',
+            'false',
+            'declareArr',
+            'uint256',
+            'NUMBERS',
+            'push',
+            `5`,
+            'NUMBERS',
+            'push',
+            `7`,
+            'NUMBERS',
+            'get',
+            '1',
+            'NUMBERS',
+            'get',
+            '0',
+            'NUMBERS',
+            '>',
+          ];
+          expect(code).to.eql(expectedCode);
+          // to Parser
+          await app.parseCode(code);
+          const ZERO = new Array(65).join('0');
+          const expectedProgram =
+            '0x' +
+            '18' + // bool
+            '00' + // false
+            '31' + // declareArr
+            '01' + // uint256
+            '1fff709e' + // NUMBERS
+            '33' + // push
+            `${five}` + // 5
+            '1fff709e' + // NUMBERS
+            '33' + // push
+            `${seven}` + // 5
+            '1fff709e' + // NUMBERS
+            '35' + // get
+            `${one}` + // 1 index
+            '1fff709e' + // NUMBERS
+            '35' + // get
+            `${ZERO}` + // 0 index
+            '1fff709e' + // NUMBERS
+            '04'; // >
+          expect(await ctx.program()).to.equal(expectedProgram);
+
+          // Execute and check
+          await app.execute();
+          const StackCont = await ethers.getContractFactory('Stack');
+          const contextStackAddress = await ctx.stack();
+          stack = StackCont.attach(contextStackAddress);
+          // Results:
+          // 0 - bool false
+          // 1 - true (because 7 is more than 5)
+          await checkStackTail(stack, [0, 1]);
+        });
+      });
 
       describe('sumOf', () => {
         it('returns 0 if the aray is empty', async () => {
@@ -405,7 +590,7 @@ describe('End-to-end', () => {
           const StackCont = await ethers.getContractFactory('Stack');
           const contextStackAddress = await ctx.stack();
           stack = StackCont.attach(contextStackAddress);
-          await checkStackTailv2(stack, [0]);
+          await checkStackTail(stack, [0]);
         });
 
         it('returns error if the array has wrong type', async () => {
@@ -438,7 +623,7 @@ describe('End-to-end', () => {
           const StackCont = await ethers.getContractFactory('Stack');
           const contextStackAddress = await ctx.stack();
           stack = StackCont.attach(contextStackAddress);
-          await checkStackTailv2(stack, []);
+          await checkStackTail(stack, []);
         });
 
         it('sum several values with additional code and compare', async () => {
@@ -558,19 +743,11 @@ describe('End-to-end', () => {
             setUint256 SUM2 -> 1 in the stack
             comparison result for `sumOf INDEXES > sumOf NUMBERS` is false -> 0 in the stack
           */
-          await checkStackTailv2(stack, [1, 0, 1, 1, 0]);
+          await checkStackTail(stack, [1, 0, 1, 1, 0]);
           expect(await app.getStorageUint256(hex4Bytes('SUM1'))).equal(4);
           expect(await app.getStorageUint256(hex4Bytes('SUM2'))).equal(2810);
         });
       });
-    });
-
-    describe('address type', () => {
-      // TODO: add tests here
-      describe('declareArr', () => {});
-      describe('push', () => {});
-      describe('get', () => {});
-      describe('lengthOf', () => {});
     });
 
     describe('mixed types', () => {
@@ -628,7 +805,7 @@ describe('End-to-end', () => {
         expect(await ctx.program()).to.equal(expectedProgram);
 
         // Execute and check
-        await checkStackTailv2(stack, []);
+        await checkStackTail(stack, []);
 
         await app.execute();
         const StackCont = await ethers.getContractFactory('Stack');
@@ -638,7 +815,7 @@ describe('End-to-end', () => {
         expect(await app.get(0, hex4Bytes('INDEXES'))).to.equal(`0x${new Array(65).join('0')}`);
         expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(`0x${new Array(65).join('0')}`);
 
-        await checkStackTailv2(stack, []);
+        await checkStackTail(stack, []);
       });
 
       it('get items from arrays', async () => {
@@ -718,7 +895,7 @@ describe('End-to-end', () => {
         expect(await ctx.program()).to.equal(expectedProgram);
 
         // Execute and check
-        await checkStackTailv2(stack, []);
+        await checkStackTail(stack, []);
 
         await app.execute();
         const StackCont = await ethers.getContractFactory('Stack');
@@ -739,7 +916,7 @@ describe('End-to-end', () => {
           0 item in NUMBERS -> 1345 in the stack
           1 item in INDEXES -> 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc in the stack
         */
-        await checkStackTailv2(stack, [
+        await checkStackTail(stack, [
           2,
           1,
           1345,
@@ -885,7 +1062,7 @@ describe('End-to-end', () => {
       const StackCont = await ethers.getContractFactory('Stack');
       const contextStackAddress = await ctx.stack();
       stack = StackCont.attach(contextStackAddress);
-      await checkStackTailv2(stack, [0]);
+      await checkStackTail(stack, [0]);
       expect(await app.getStorageUint256(hex4Bytes('A'))).equal(6);
       expect(await app.getStorageBool(hex4Bytes('A'))).equal(true);
     });
@@ -983,7 +1160,7 @@ describe('End-to-end', () => {
         const StackCont = await ethers.getContractFactory('Stack');
         const contextStackAddress = await ctx.stack();
         stack = StackCont.attach(contextStackAddress);
-        await checkStackTailv2(stack, [1, 1]);
+        await checkStackTail(stack, [1, 1]);
         expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(6);
         expect(await app.getStorageUint256(hex4Bytes('RESULT_AFTER'))).equal(1);
       });
@@ -1316,7 +1493,7 @@ describe('End-to-end', () => {
         const StackCont = await ethers.getContractFactory('Stack');
         const contextStackAddress = await ctx.stack();
         stack = StackCont.attach(contextStackAddress);
-        await checkStackTailv2(stack, [303, 473]);
+        await checkStackTail(stack, [303, 473]);
 
         expect(await app.getStorageUint256(hex4Bytes('ALISA.lastPayment'))).equal(300);
         expect(await app.getStorageUint256(hex4Bytes('MAX.lastPayment'))).equal(170);
