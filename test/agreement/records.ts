@@ -107,8 +107,8 @@ describe('Simple Records in Agreement', () => {
     await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
     const ContextMock = await ethers.getContractFactory('ContextMock');
-    const transactionContext = await ContextMock.deploy();
-    await transactionContext.setAppAddress(appAddr);
+    const recordContext = await ContextMock.deploy();
+    await recordContext.setAppAddress(appAddr);
     const conditionContext = await ContextMock.deploy();
     await conditionContext.setAppAddress(appAddr);
 
@@ -118,7 +118,7 @@ describe('Simple Records in Agreement', () => {
       signatories: [alice.address],
       transactionStr: 'sendEth RECEIVER 1000000000000000000',
       conditionStrings: ['blockTimestamp > var LOCK_TIME'],
-      transactionCtx: transactionContext,
+      transactionCtx: recordContext,
       conditionContexts: [conditionContext],
     });
 
@@ -190,8 +190,8 @@ describe('Simple Records in Agreement', () => {
       await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
       const ContextMock = await ethers.getContractFactory('ContextMock');
-      const transactionContext = await ContextMock.deploy();
-      await transactionContext.setAppAddress(appAddr);
+      const recordContext = await ContextMock.deploy();
+      await recordContext.setAppAddress(appAddr);
       const conditionContext = await ContextMock.deploy();
       await conditionContext.setAppAddress(appAddr);
 
@@ -202,7 +202,7 @@ describe('Simple Records in Agreement', () => {
           signatories: [alice.address],
           transactionStr: 'sendEth RECEIVER 1000000000000000000',
           conditionStrings: ['blockTimestamp > var LOCK_TIME'],
-          transactionCtx: transactionContext,
+          transactionCtx: recordContext,
           conditionContexts: [conditionContext],
         },
         {
@@ -211,7 +211,7 @@ describe('Simple Records in Agreement', () => {
           signatories: [alice.address],
           transactionStr: 'sendEth RECEIVER 1000000000000000000',
           conditionStrings: ['blockTimestamp > var LOCK_TIME'],
-          transactionCtx: transactionContext,
+          transactionCtx: recordContext,
           conditionContexts: [conditionContext],
         },
         {
@@ -220,7 +220,7 @@ describe('Simple Records in Agreement', () => {
           signatories: [alice.address],
           transactionStr: 'sendEth RECEIVER 1000000000000000000',
           conditionStrings: ['blockTimestamp > var LOCK_TIME'],
-          transactionCtx: transactionContext,
+          transactionCtx: recordContext,
           conditionContexts: [conditionContext],
         }
       );
@@ -331,8 +331,8 @@ describe('Simple Records in Agreement', () => {
     await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
     const ContextMock = await ethers.getContractFactory('ContextMock');
-    const transactionContext = await ContextMock.deploy();
-    await transactionContext.setAppAddress(appAddr);
+    const recordContext = await ContextMock.deploy();
+    await recordContext.setAppAddress(appAddr);
     const conditionContext = await ContextMock.deploy();
     await conditionContext.setAppAddress(appAddr);
 
@@ -342,7 +342,7 @@ describe('Simple Records in Agreement', () => {
       signatories: [alice.address],
       transactionStr: 'sendEth RECEIVER 1000000000000000000',
       conditionStrings: ['blockTimestamp > var LOCK_TIME'],
-      transactionCtx: transactionContext,
+      transactionCtx: recordContext,
       conditionContexts: [conditionContext],
     });
 

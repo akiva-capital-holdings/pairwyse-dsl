@@ -173,12 +173,12 @@ export const addSteps = async (
   agreementAddress: string,
   multisig: MultisigMock
 ) => {
-  let transactionContext;
+  let recordContext;
   const agreement = await ethers.getContractAt('Agreement', agreementAddress);
   for await (const step of steps) {
     console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
-    transactionContext = await (await ethers.getContractFactory('Context')).deploy();
-    await transactionContext.setAppAddress(agreementAddress);
+    recordContext = await (await ethers.getContractFactory('Context')).deploy();
+    await recordContext.setAppAddress(agreementAddress);
     const cdCtxsAddrs = []; // conditional context Addresses
 
     console.log('\nTerm Conditions');
@@ -194,9 +194,9 @@ export const addSteps = async (
         }:\n\t\x1b[33m${step.conditions[j]}\x1b[0m`
       );
     }
-    await agreement.parse(step.transaction, transactionContext.address, preprocessorAddr);
+    await agreement.parse(step.transaction, recordContext.address, preprocessorAddr);
     console.log('\nTerm transaction');
-    console.log(`\n\taddress: \x1b[35m${transactionContext.address}\x1b[0m`);
+    console.log(`\n\taddress: \x1b[35m${recordContext.address}\x1b[0m`);
     console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
 
     // Create Raw transaction
@@ -206,7 +206,7 @@ export const addSteps = async (
       step.signatories,
       step.transaction,
       step.conditions,
-      transactionContext.address,
+      recordContext.address,
       cdCtxsAddrs
     );
 
