@@ -17,6 +17,23 @@
     "coverage": "yarn hardhat coverage",
     "prepare": "husky install"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+    "lint-staged": {
+    "test/**.ts": [
+      "eslint --fix --ext .ts",
+      "prettier --write",
+      "git add"
+    ],
+    "contracts/**/*.sol": [
+      "eslint --fix --ext .sol",
+      "prettier --write",
+      "git add"
+    ]
+  },
   "dependencies": {
     "hardhat": "^2.10.1",
     "hardhat-contract-sizer": "^2.6.1"
