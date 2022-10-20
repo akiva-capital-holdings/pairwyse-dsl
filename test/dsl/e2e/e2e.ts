@@ -1540,7 +1540,7 @@ describe('End-to-end', () => {
       await app.execute();
     });
 
-    // TODO: this test won't work correctly
+    // TODO: this test won't work correctly, fix it
     it.skip('Simple for loop', async () => {
       const input = `
         for ME in USERS {

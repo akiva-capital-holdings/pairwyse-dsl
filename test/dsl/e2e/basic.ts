@@ -1257,8 +1257,8 @@ describe('DSL: basic', () => {
     */
     const EMPTY_BYTES = `0x${new Array(65).join('0')}`;
     const DECLARED_BYTES = `0x${new Array(65).join('f')}`;
-    const TYPE_BYTES_ADDRESS = `0x03${new Array(63).join('0')}`;
     const TYPE_BYTES_UINT256 = `0x01${new Array(63).join('0')}`;
+    const TYPE_BYTES_ADDRESS = `0x02${new Array(63).join('0')}`;
 
     describe('declaration', () => {
       describe('uint256', () => {

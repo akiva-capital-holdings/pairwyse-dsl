@@ -483,7 +483,7 @@ describe('Parser', () => {
           expect(await ctx.program()).to.equal(
             '0x' +
               '31' + // declareArr
-              '03' + // address type
+              '02' + // address type
               '5e315030' // bytecode for a `MARY` name
           );
         });
@@ -506,7 +506,7 @@ describe('Parser', () => {
               '1b' + // var
               '1b7b16d4' + // TIMESTAMP
               '31' + // declareArr
-              '03' + // address type
+              '02' + // address type
               '5e315030' // bytecode for a `MARY` name
           );
         });
@@ -525,7 +525,7 @@ describe('Parser', () => {
           expect(await ctx.program()).to.equal(
             '0x' +
               '31' + // declareArr
-              '03' + // address
+              '02' + // address
               '5e315030' + // bytecode for a `MARY` name
               '1a' + // uint256
               `${number}` + // 6
@@ -865,15 +865,10 @@ describe('Parser', () => {
       });
 
       describe('mixed types', () => {
-        it.skip('insert empty value should not cause errors', async () => {
-          // TODO: remove empty struct code in preprocessor?
-          await app.parseCodeExt(ctxAddr, ['struct', 'BOB', 'endStruct']);
-          expect(await ctx.program()).to.equal(
-            '0x' +
-              '36' + // struct opcode
-              '29d93e4f' + // BOB
-              'cb398fe1' // endStruct
-          );
+        it.skip('error: insert empty value', async () => {
+          await expect(
+            app.parseCodeExt(ctxAddr, ['struct', 'BOB', 'endStruct'])
+          ).to.be.revertedWith('PRS1');
         });
 
         it('insert address and number', async () => {
