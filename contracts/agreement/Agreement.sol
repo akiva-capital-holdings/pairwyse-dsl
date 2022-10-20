@@ -230,26 +230,26 @@ contract Agreement {
     /**
      * @dev return valuses for preview record before execution
      * @param _recordId Record ID
-     * @return recordRequiredRecords array of required records in the record
-     * @return recordSignatories array of signatories in the record
-     * @return recordConditions array of conditions in the record
-     * @return recordTransaction string of transaction
+     * @return txsRequiredRecords array of required records in the record
+     * @return txsSignatories array of signatories in the record
+     * @return txsConditions array of conditions in the record
+     * @return txsTransaction string of transaction
      */
     function getRecord(uint256 _recordId)
         external
         view
         returns (
-            uint256[] memory recordRequiredRecords,
-            address[] memory recordSignatories,
-            string[] memory recordConditions,
-            string memory recordTransaction
+            uint256[] memory txsRequiredRecords,
+            address[] memory txsSignatories,
+            string[] memory txsConditions,
+            string memory txsTransaction
         )
     {
-        recordRequiredRecords = requiredRecords[_recordId];
-        recordSignatories = signatories[_recordId];
-        recordConditions = conditionStrings[_recordId];
-        recordTransaction = txs[_recordId].transactionString;
-        return (recordRequiredRecords, recordSignatories, recordConditions, recordTransaction);
+        txsRequiredRecords = requiredRecords[_recordId];
+        txsSignatories = signatories[_recordId];
+        txsConditions = conditionStrings[_recordId];
+        txsTransaction = txs[_recordId].transactionString;
+        return (txsRequiredRecords, txsSignatories, txsConditions, txsTransaction);
     }
 
     // solhint-disable-next-line no-empty-blocks
