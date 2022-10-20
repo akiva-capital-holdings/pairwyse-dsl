@@ -151,6 +151,7 @@ contract Preprocessor is IPreprocessor {
         for (uint256 i = 0; i < _program.length(); i++) {
             string memory char = _program.char(i);
 
+            // if-else conditions parsing
             if (isLoopStart && char.equal('{')) {
                 result.push('startLoop');
                 continue;
@@ -202,6 +203,7 @@ contract Preprocessor is IPreprocessor {
             if (char.equal('(') || char.equal(')') || char.equal('[') || char.equal(']')) {
                 result.push(char);
             }
+
             // struct start
             if (result.length > 0 && !isStructStart && result[result.length - 1].equal('struct')) {
                 isStructStart = true;

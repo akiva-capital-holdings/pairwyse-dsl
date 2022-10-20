@@ -483,7 +483,7 @@ contract Context is IContext {
         // Ex. `sumOf ARR_NAME`
         addOpcode(
             'sumOf',
-            0x37,
+            0x40,
             OtherOpcodes.opSumOf.selector,
             IParser.asmSumOf.selector,
             OpcodeLibNames.OtherOpcodes
@@ -545,7 +545,7 @@ contract Context is IContext {
 
         addOpcode(
             'startLoop',
-            0x38,
+            0x32,
             BranchingOpcodes.opStartLoop.selector,
             0x0,
             OpcodeLibNames.BranchingOpcodes

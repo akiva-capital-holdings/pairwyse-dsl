@@ -8,7 +8,7 @@ import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.util
 
 const { ethers, network } = hre;
 
-describe('DSL: basic', () => {
+describe.skip('DSL: basic', () => {
   let stack: Stack;
   let ctx: Context;
   let app: App;
