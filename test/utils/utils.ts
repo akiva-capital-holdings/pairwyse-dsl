@@ -27,6 +27,20 @@ export const hex4Bytes = (str: string) =>
 export const hex4BytesShort = (str: string) => hex4Bytes(str).slice(2, 2 + 8);
 
 /**
+ * Converts bignumber to a 32-bytes hex string
+ * @example bnToLongHexString(BigNumber.from('17')) ->
+ *          0000000000000000000000000000000000000000000000000000000000000011
+ * @param bn Input number
+ * @returns padded string with the number in hex format (without '0x')
+ */
+export const bnToLongHexString = (num: BigNumber | string) => {
+  if (typeof num === 'string') {
+    num = BigNumber.from(num);
+  }
+  return utils.hexZeroPad(num.toHexString(), 32).substring(2);
+};
+
+/**
  * Push values to stack
  * @param context context: Context
  * @param ST Stack: Stack__factory

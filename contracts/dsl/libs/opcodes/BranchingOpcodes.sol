@@ -61,7 +61,7 @@ library BranchingOpcodes {
     }
 
     function opForLoop(address _ctx) public {
-        console.log('opForLoop');
+        console.log('\n\n\nopForLoop');
         // Ex. [('for'), 'LP_INITIAL', 'in', 'LPS_INITIAL']
         bytes32 loopVarName = OpcodeHelpers.getNextBytes(_ctx, 4);
         console.logBytes32(loopVarName);
@@ -100,11 +100,14 @@ library BranchingOpcodes {
         uint256 _arrLen = ILinkedList(IContext(_ctx).appAddr()).getLength(_arrNameB32);
         uint256 _index = _arrLen - IContext(_ctx).forLoopCtr();
 
-        // check if the array exists
+        // check if the array exists & get array elements type
         (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
+        bytes1 dataType = bytes1(data);
+        console.log('The type of the elements is');
+        console.logBytes1(dataType);
 
         (success, data) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
@@ -115,13 +118,38 @@ library BranchingOpcodes {
         );
         require(success, ErrorsGeneralOpcodes.OP1);
 
-        uint256 _element = uint256(bytes32(data));
-        console.log('The current element by index', _index, 'is', _element);
+        // TODO: get the functions that you need to call from Context.branchSelectors[_baseOpName][_branchCode]
+        if (dataType == 0x01) {
+            // uint256
+            // uint256 _element = uint256(bytes32(data));
+            // console.log('The current element by index', _index, 'is', _element);
+            // console.log('Address is', address(bytes20(data)));
 
-        // Set the iterator variable value
-        console.log('_tempVarNameB32');
-        console.logBytes32(_tempVarNameB32);
-        IStorage(IContext(_ctx).appAddr()).setStorageUint256(_tempVarNameB32, _element);
+            // // Set the iterator variable value
+            // console.log('_tempVarNameB32');
+            // console.logBytes32(_tempVarNameB32);
+            // IStorage(IContext(_ctx).appAddr()).setStorageUint256(_tempVarNameB32, _element);
+            IStorage(IContext(_ctx).appAddr()).setStorageUint256(
+                _tempVarNameB32,
+                uint256(bytes32(data))
+            );
+        } else if (dataType == 0x02) {
+            // address
+            // uint256 _element = uint256(bytes32(data));
+            // console.log('The current element by index', _index, 'is', _element);
+            // console.log('Address is', address(bytes20(data)));
+
+            // // Set the iterator variable value
+            // console.log('_tempVarNameB32');
+            // console.logBytes32(_tempVarNameB32);
+            // IStorage(IContext(_ctx).appAddr()).setStorageUint256(_tempVarNameB32, _element);
+            IStorage(IContext(_ctx).appAddr()).setStorageAddress(
+                _tempVarNameB32,
+                address(bytes20(data))
+            );
+        } else {
+            revert('Unknown array data type');
+        }
 
         // -- end of Get the element by index from array
 
