@@ -5,7 +5,6 @@ import { ContextMock } from '../../typechain-types/dsl/mocks';
 describe('Context', () => {
   let app: ContextMock;
   let snapshotId: number;
-  // dummy comment, delete me
 
   enum OpcodeLibNames {
     ComparisonOpcodes,
