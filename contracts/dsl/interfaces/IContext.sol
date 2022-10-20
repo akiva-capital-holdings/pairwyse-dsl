@@ -94,7 +94,16 @@ interface IContext {
 
     function setMsgValue(uint256 _msgValue) external;
 
-    function setStructVar(string memory _varName) external;
+    function setStructVars(
+        string memory _structName,
+        string memory _varName,
+        string memory _fullName
+    ) external;
+
+    function structParams(bytes4 _structName, bytes4 _varName)
+        external
+        view
+        returns (bytes4 _fullName);
 
     function isStructVar(string memory _varName) external view returns (bool);
 }
