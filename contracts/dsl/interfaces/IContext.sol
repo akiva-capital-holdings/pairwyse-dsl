@@ -62,7 +62,7 @@ interface IContext {
 
     function isStructVar(string memory _varName) external view returns (bool);
 
-    function forLoopCtr() external view returns (uint256);
+    function forLoopIterationsRemaining() external view returns (uint256);
 
     // Functions
 
@@ -109,5 +109,5 @@ interface IContext {
         view
         returns (bytes4 _fullName);
 
-    function setForLoopCtr(uint256 _forLoopCtr) external;
+    function setForLoopIterationsRemaining(uint256 _forLoopIterationsRemaining) external;
 }

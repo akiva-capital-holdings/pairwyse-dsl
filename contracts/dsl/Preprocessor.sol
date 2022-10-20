@@ -7,7 +7,7 @@ import { StringStack } from './helpers/StringStack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 import { ErrorsPreprocessor } from './libs/Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 /**
  * @dev Preprocessor of DSL code
