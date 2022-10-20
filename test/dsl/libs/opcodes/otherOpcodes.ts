@@ -36,8 +36,6 @@ describe('Other opcodes', () => {
   const zero32bytes = '0x' + new Array(65).join('0');
 
   before(async () => {
-    // TODO: check if await checkStackTail(stack, ...); really works in otherOpcode.ts
-
     StackCont = await ethers.getContractFactory('Stack');
 
     ctx = await (await ethers.getContractFactory('Context')).deploy();
@@ -277,6 +275,7 @@ describe('Other opcodes', () => {
     const number = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${number}`);
 
+    await checkStackTail(stack, []);
     await app.opLoadLocalUint256(ctxAddr);
     await checkStackTail(stack, [testValue]);
   });
@@ -290,6 +289,7 @@ describe('Other opcodes', () => {
     const number = bytes32TestValueName.substring(2, 10);
 
     await ctx.setProgram(`0x${number}${clientApp.address.substring(2)}`);
+    await checkStackTail(stack, []);
     await app.opLoadRemoteUint256(ctxAddr);
     await checkStackTail(stack, [testValue]);
   });
@@ -302,6 +302,7 @@ describe('Other opcodes', () => {
 
     const bytes = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${bytes}${clientApp.address.substring(2)}`);
+    await checkStackTail(stack, []);
     await app.opLoadRemoteBytes32(ctxAddr);
     await checkStackTail(stack, [testValue]);
   });
@@ -314,6 +315,7 @@ describe('Other opcodes', () => {
 
     const bool = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${bool}${clientApp.address.substring(2)}`);
+    await checkStackTail(stack, []);
     await app.opLoadRemoteBool(ctxAddr);
     await checkStackTail(stack, [+testValue]);
   });
@@ -327,6 +329,7 @@ describe('Other opcodes', () => {
 
     const addr = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${addr}${clientApp.address.substring(2)}`);
+    await checkStackTail(stack, []);
     await app.opLoadRemoteAddress(ctxAddr);
     await checkStackTail(stack, [testValue]);
   });
@@ -339,6 +342,7 @@ describe('Other opcodes', () => {
 
   it('opUint256', async () => {
     await ctx.setProgram('0x0000000000000000000000000000000000000000000000000000000000000001');
+    await checkStackTail(stack, []);
     await app.opUint256(ctxAddr);
     await checkStackTail(stack, ['1']);
   });
@@ -365,7 +369,7 @@ describe('Other opcodes', () => {
 
     const address = bytes32TestAddressName.substring(2, 10);
     await ctx.setProgram(`0x${address}${fundAmountHex}`);
-
+    await checkStackTail(stack, []);
     await expect(() => app.opSendEth(ctxAddr)).to.changeEtherBalance(receiver, fundAmountUint);
     await checkStackTail(stack, ['1']);
   });
@@ -385,6 +389,7 @@ describe('Other opcodes', () => {
     const receiverAddress = bytes32ReceiverAddr.substring(2, 10);
     await ctx.setProgram(`0x${tokenAddress}${receiverAddress}${uint256StrToHex(testAmount)}`);
 
+    await checkStackTail(stack, []);
     await app.opTransfer(ctxAddr);
     await checkStackTail(stack, ['1']);
 
@@ -410,6 +415,7 @@ describe('Other opcodes', () => {
     const amountVar = bytes32TestAmount.substring(2, 10);
     await ctx.setProgram(`0x${tokenAddress}${receiverAddress}${amountVar}`);
 
+    await checkStackTail(stack, []);
     await app.opTransferVar(ctxAddr);
     await checkStackTail(stack, ['1']);
 
@@ -439,6 +445,7 @@ describe('Other opcodes', () => {
       `0x${tokenAddress}${senderAddress}${receiverAddress}${uint256StrToHex(testAmount)}`
     );
 
+    await checkStackTail(stack, []);
     await app.opTransferFrom(ctxAddr);
     await checkStackTail(stack, ['1']);
 
@@ -471,6 +478,7 @@ describe('Other opcodes', () => {
     let balanceOfReceiver = await testERC20.balanceOf(receiver.address);
     expect(balanceOfReceiver).to.be.equal(0);
 
+    await checkStackTail(stack, []);
     await app.opTransferFromVar(ctxAddr);
     await checkStackTail(stack, ['1']);
 
@@ -494,6 +502,7 @@ describe('Other opcodes', () => {
 
     await ctx.setProgram(`0x${tokenAddress}${receiverAddress}`);
 
+    await checkStackTail(stack, []);
     await app.opBalanceOf(ctxAddr);
     await checkStackTail(stack, [testAmount]);
   });
@@ -541,8 +550,9 @@ describe('Other opcodes', () => {
     await ctx.setProgram(`0x${bytes}`);
 
     await clientApp.setStorageBytes32(bytes32TestValueName, testValue);
-    await app.opLoadLocal(ctxAddr, testSignature);
 
+    await checkStackTail(stack, []);
+    await app.opLoadLocal(ctxAddr, testSignature);
     checkStackTail(stack, [testValue]);
   });
 
@@ -555,6 +565,8 @@ describe('Other opcodes', () => {
 
     const bytes = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${bytes}${clientApp.address.substring(2)}`);
+
+    await checkStackTail(stack, []);
     await app.opLoadRemote(ctxAddr, testSignature);
     await checkStackTail(stack, [testValue]);
   });
@@ -719,8 +731,9 @@ describe('Other opcodes', () => {
           `${zero32bytes}` + // 0x + 0 index
             '3c8423ff' // bytecode for PARTNERS
         );
-        await app.opGet(ctxAddr);
 
+        await checkStackTail(stack, []);
+        await app.opGet(ctxAddr);
         await checkStack(
           stack,
           1,
@@ -739,6 +752,7 @@ describe('Other opcodes', () => {
           '0x1fff709e' // bytecode for NUMBERS
         );
 
+        await checkStackTail(stack, []);
         await app.opSumOf(ctxAddr);
         // returned 8 as a result of sum for two values (3 and 5) that stored in NUMBERS
         await checkStack(stack, 1, 8);
@@ -758,6 +772,7 @@ describe('Other opcodes', () => {
             'ea06f38f' // bytecode for balance
         );
 
+        await checkStackTail(stack, []);
         await app.opSumThroughStructs(ctxAddr);
         // returned 8 as a result of sum for two values (3 and 5)
         // that stored in 'BOB.balance' & 'MAX.balance'
@@ -775,6 +790,7 @@ describe('Other opcodes', () => {
           '0x1fff709e' // bytecode for NUMBERS
         );
 
+        await checkStackTail(stack, []);
         await app.opLengthOf(ctxAddr);
         // returned 3 as a length of items that stored in NUMBERS
         await checkStack(stack, 1, 3);
@@ -787,6 +803,8 @@ describe('Other opcodes', () => {
         await ctx.setProgram(
           '0x257b3678' // bytecode for INDEXES
         );
+
+        await checkStackTail(stack, []);
         await app.opLengthOf(ctxAddr);
         // returned 2 as a length of items that stored in INDEXES
         await checkStack(stack, 1, 2);
@@ -799,6 +817,8 @@ describe('Other opcodes', () => {
         await ctx.setProgram(
           '0x3c8423ff' // bytecode for PARTNERS
         );
+
+        await checkStackTail(stack, []);
         await app.opLengthOf(ctxAddr);
         // returned 2 as a length of items that stored in PARTNERS
         await checkStack(stack, 1, 2);

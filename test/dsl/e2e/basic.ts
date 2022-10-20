@@ -876,6 +876,7 @@ describe('DSL: basic', () => {
     });
 
     it('complex; using `end` keyword', async () => {
+      // TODO: check is else test cases - it uses bool false, then bool true
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;
       const FIVE = new Array(64).join('0') + 5;
@@ -906,6 +907,7 @@ describe('DSL: basic', () => {
     `
       );
       await app.execute();
+      // TODO: it should be [1, 1, 7, 2]
       await checkStackTail(stack, [1, 1, 6, 2]);
     });
   });
