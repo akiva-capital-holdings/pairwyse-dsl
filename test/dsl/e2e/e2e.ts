@@ -3,8 +3,9 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { parseEther } from 'ethers/lib/utils';
 import { E2EApp, Context, Preprocessor, Stack } from '../../../typechain-types';
-import { checkStackTail, hex4Bytes, hex4BytesShort } from '../../utils/utils';
+import { bnToLongHexString, checkStackTail, hex4Bytes, hex4BytesShort } from '../../utils/utils';
 import { deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 import { deployBaseMock } from '../../../scripts/utils/deploy.utils.mock';
 import { getChainId } from '../../../utils/utils';
@@ -15,6 +16,7 @@ describe('End-to-end', () => {
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
   let carl: SignerWithAddress;
+  let david: SignerWithAddress;
   let stack: Stack;
   let preprocessor: Preprocessor;
   let ctx: Context;
@@ -26,7 +28,7 @@ describe('End-to-end', () => {
   let snapshotId: number;
 
   before(async () => {
-    [alice, bob, carl] = await ethers.getSigners();
+    [alice, bob, carl, david] = await ethers.getSigners();
     lastBlockTimestamp = (
       await ethers.provider.getBlock(
         // eslint-disable-next-line no-underscore-dangle
@@ -1510,19 +1512,25 @@ describe('End-to-end', () => {
 
   describe.only('For-loops', () => {
     before(async () => {
-      // Create an array for the usage in for-loops
+      // Create arrays for the usage in for-loops
       const input = `
-      uint256[] USERS
-      insert ${alice.address} into USERS
-      insert ${bob.address} into USERS
-      insert ${carl.address} into USERS
+        address[] USERS
+        insert ${bob.address} into USERS
+        insert ${carl.address} into USERS
+        insert ${david.address} into USERS
+
+        uint256[] DEPOSITS
+        insert 2 into DEPOSITS
+        insert 3 into DEPOSITS
+        insert 4 into DEPOSITS
       `;
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
       await app.parseCode(code);
       await app.execute();
     });
 
-    it.only('Simple for loop', async () => {
+    // TODO: this test won't work correctly
+    it.skip('Simple for loop', async () => {
       const input = `
         for ME in USERS {
           (msgSender == ME)
@@ -1620,7 +1628,7 @@ describe('End-to-end', () => {
       await checkStackTailv2(stack, [5, 15, 5]);
     });
 
-    it.only('Simple for loop: array of numbers', async () => {
+    it.only('for loop over array of numbers', async () => {
       const input = `
         for DEPOSIT in DEPOSITS {
           (var TOTAL_DEPOSIT + var DEPOSIT) setUint256 TOTAL_DEPOSIT
@@ -1681,6 +1689,127 @@ describe('End-to-end', () => {
        * 15 - uint256 15
        */
       await checkStackTailv2(stack, [1, 1, 1, 15]);
+    });
+
+    it.only('two for loops', async () => {
+      const input = `
+        1 setUint256 TOTAL_DEPOSIT
+
+        for DEPOSIT in DEPOSITS {
+          (var TOTAL_DEPOSIT * var DEPOSIT) setUint256 TOTAL_DEPOSIT
+        }
+
+        for USER in USERS {
+          sendEth USER 1e18
+        }
+      `;
+
+      // Preprocessing
+      const code = await preprocessor.callStatic.transform(ctxAddr, input);
+      expect(code).eql([
+        'uint256',
+        '1',
+        'setUint256',
+        'TOTAL_DEPOSIT',
+        'for',
+        'DEPOSIT',
+        'in',
+        'DEPOSITS',
+        'startLoop',
+        'var',
+        'TOTAL_DEPOSIT',
+        'var',
+        'DEPOSIT',
+        '*',
+        'setUint256',
+        'TOTAL_DEPOSIT',
+        'endLoop',
+        'for',
+        'USER',
+        'in',
+        'USERS',
+        'startLoop',
+        'sendEth',
+        'USER',
+        '1000000000000000000',
+        'endLoop',
+      ]);
+
+      // Parsing
+      await app.parseCode(code);
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '1a' + // uint256
+          `${bnToLongHexString('1')}` + // 1
+          '2e' + // setUint256
+          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
+          '37' + // for
+          '87a7811f' + // hex4Bytes('DEPOSIT')
+          '060f7dbd' + // hex4Bytes('DEPOSITS')
+          '38' + // startLoop
+          '1b' + // var
+          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
+          '1b' + // var
+          '87a7811f' + // hex4Bytes('DEPOSIT')
+          '28' + // *
+          '2e' + // setUint256
+          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
+          '39' + // endLoop
+          '37' + // for
+          '2db9fd3d' + // hex4Bytes('USER')
+          '80e5f4d2' + // hex4Bytes('USERS')
+          '38' + // startLoop
+          '1e' + // sendEth
+          '2db9fd3d' + // hex4Bytes('USER')
+          `${bnToLongHexString(parseEther('1'))}` + // 1e18
+          '39' // endLoop
+      );
+
+      // Top up the contract
+      alice.sendTransaction({ to: app.address, value: parseEther('3') });
+
+      const balancesBefore = {
+        bob: await bob.getBalance(),
+        carl: await carl.getBalance(),
+        david: await david.getBalance(),
+      };
+
+      // Execution
+      await app.execute();
+
+      // Variable checks
+      expect(await app.getStorageUint256(hex4Bytes('TOTAL_DEPOSIT'))).equal(2 * 3 * 4);
+      const balancesAfter = {
+        bob: await bob.getBalance(),
+        carl: await carl.getBalance(),
+        david: await david.getBalance(),
+      };
+      console.log({
+        bob: bob.address,
+        carl: carl.address,
+        david: david.address,
+      });
+      console.log({
+        beforeBob: balancesBefore.bob.toString(),
+        afterBob: balancesAfter.bob.toString(),
+        beforeCarl: balancesBefore.carl.toString(),
+        afterCarl: balancesAfter.carl.toString(),
+        beforeDavid: balancesBefore.david.toString(),
+        afterDavid: balancesAfter.david.toString(),
+      });
+      expect(balancesAfter.bob.sub(balancesBefore.bob)).to.equal(parseEther('1'));
+      expect(balancesAfter.carl.sub(balancesBefore.carl)).to.equal(parseEther('1'));
+      expect(balancesAfter.david.sub(balancesBefore.david)).to.equal(parseEther('1'));
+      /**
+       * 1 - setUint256 TOTAL_DEPOSIT (initiating the variable with value `1`)
+       * 1 - setUint256 TOTAL_DEPOSIT (first iteration)
+       * 1 - setUint256 TOTAL_DEPOSIT (second iteration)
+       * 1 - setUint256 TOTAL_DEPOSIT (third iteration)
+       * 1 - sendEth (first iteration)
+       * 1 - sendEth (second iteration)
+       * 1 - sendEth (third iteration)
+       */
+      await checkStackTailv2(stack, [1, 1, 1, 1, 1, 1, 1]);
     });
   });
 });

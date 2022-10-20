@@ -206,6 +206,10 @@ library OtherOpcodes {
         opLoadLocal(_ctx, 'getStorageUint256(bytes32)');
     }
 
+    function opLoadLocalAddress(address _ctx) public {
+        opLoadLocal(_ctx, 'getStorageAddress(bytes32)');
+    }
+
     function opLoadRemoteUint256(address _ctx) public {
         opLoadRemote(_ctx, 'getStorageUint256(bytes32)');
     }
@@ -234,10 +238,13 @@ library OtherOpcodes {
     }
 
     function opSendEth(address _ctx) public {
+        console.log('\n\nopSendEth');
         address payable recipient = payable(
             address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
         );
         uint256 amount = opUint256Get(_ctx);
+        console.log('recipient:', recipient);
+        console.log('amount:', amount);
         recipient.transfer(amount);
         OpcodeHelpers.putToStack(_ctx, 1);
     }
