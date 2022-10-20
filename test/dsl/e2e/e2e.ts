@@ -807,7 +807,14 @@ describe('End-to-end', () => {
         expect(await app.get(0, hex4Bytes('INDEXES'))).to.equal(`0x${new Array(65).join('0')}`);
         expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(`0x${new Array(65).join('0')}`);
 
-        await checkStackTail(stack, []);
+        /*
+          as arrays are empty, all values are zero in the stack for commands:
+          lengthOf INDEXES returns 0
+          lengthOf NUMBERS returns 0
+          get 0 NUMBERS returns 0
+          get 0 INDEXES returns 0
+        */
+        await checkStackTail(stack, [0, 0, 0, 0]);
       });
 
       it('get items from arrays', async () => {

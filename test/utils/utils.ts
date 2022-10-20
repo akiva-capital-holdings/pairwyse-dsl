@@ -47,11 +47,26 @@ export const pushToStack = async (
 };
 
 /**
+ * Checks stack length
+ * @param stack stack: Stack
+ * @param expectedLen Expected length of the stack
+ * @param badLenErr [optional] error message for incorrect stack length
+ */
+export const checkStackLength = async (
+  stack: Stack,
+  expectedLen: number,
+  badLenErr = 'Bad stack length'
+) => {
+  // check stack length
+  const stackLen = await stack.length();
+  expect(stackLen.toNumber()).to.equal(expectedLen, badLenErr);
+};
+
+/**
  * Checks stack length and it's last value
  * @param stack stack: Stack
  * @param expectedLen Expected length of the stack
  * @param expectedValue Expected value on the top of the stack (last value)
- * @param badLenErr [optional] error message for incorrect stack length
  * @param badValueErr [optional] error message for incorrect stack value
  */
 export const checkStack = async (
@@ -59,12 +74,11 @@ export const checkStack = async (
   expectedLen: number,
   expectedValue: number | string | BigNumber,
   indexFromEnd: number = 0,
-  badLenErr = 'Bad stack length',
   badValueErr = 'Bad stack value'
 ) => {
   // check stack length
+  await checkStackLength(stack, expectedLen);
   const stackLen = await stack.length();
-  expect(stackLen.toNumber()).to.equal(expectedLen, badLenErr);
   // check result
   const value = await stack.stack(stackLen.toNumber() - 1 - indexFromEnd);
   expect(value).to.equal(expectedValue, badValueErr);
@@ -73,16 +87,16 @@ export const checkStack = async (
 export async function checkStackTail(
   stack: Stack,
   expectedValues: (number | string | BigNumber)[],
-  badLenErr = 'Bad stack length',
   badValueErr = 'Bad stack value'
 ) {
+  // check stack length
+  await checkStackLength(stack, expectedValues.length);
   for (let i = 0; i < expectedValues.length; i++) {
     await checkStack(
       stack,
       expectedValues.length,
       expectedValues[expectedValues.length - 1 - i],
       i,
-      badLenErr,
       badValueErr
     );
   }
