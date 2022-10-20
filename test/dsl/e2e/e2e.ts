@@ -413,7 +413,7 @@ describe('End-to-end', () => {
         '01' + // uint256
         '1fff709e' + // bytecode for NUMBERS
         '31' + // declareArr
-        '03' + // address
+        '02' + // address
         '257b3678' + // bytecode for INDEXES
         '34' + // lengthOf
         '257b3678' + // bytecode for INDEXES
@@ -494,7 +494,7 @@ describe('End-to-end', () => {
         '01' + // uint256
         '1fff709e' + // bytecode for NUMBERS
         '31' + // declareArr
-        '03' + // address
+        '02' + // address
         '257b3678' + // bytecode for INDEXES
         '33' + // push
         'e7f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // first address
@@ -1000,7 +1000,7 @@ describe('End-to-end', () => {
     });
   });
 
-  describe.only('For-loops', () => {
+  describe('For-loops', () => {
     before(async () => {
       // Create arrays for the usage in for-loops
       const input = `
@@ -1096,11 +1096,10 @@ describe('End-to-end', () => {
        * 1 - setUint256 TOTAL_DEPOSIT (third iteration)
        * 15 - uint256 15
        */
-      // await checkStackTailv2(stack, [0, 1, 0, 15]);
       await checkStackTailv2(stack, [5, 15, 5]);
     });
 
-    it.only('for loop over array of numbers', async () => {
+    it('for loop over array of numbers', async () => {
       const input = `
         for DEPOSIT in DEPOSITS {
           (var TOTAL_DEPOSIT + var DEPOSIT) setUint256 TOTAL_DEPOSIT
@@ -1163,7 +1162,7 @@ describe('End-to-end', () => {
       await checkStackTailv2(stack, [1, 1, 1, 15]);
     });
 
-    it.only('two for loops', async () => {
+    it('two for loops', async () => {
       const input = `
         1 setUint256 TOTAL_DEPOSIT
 
