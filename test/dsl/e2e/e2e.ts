@@ -1061,25 +1061,7 @@ describe('End-to-end', () => {
 
       // Parsing
       await app.parseCode(code);
-      // expect(await ctx.program()).to.equal(
-      //   '0x' +
-      //     '37' + // for
-      //     '87a7811f' + // hex4Bytes('ME')
-      //     '060f7dbd' + // hex4Bytes('DEPOSITS')
-      //     '38' + // startLoop
-      //     '1b' + // var
-      //     '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
-      //     '1b' + // var
-      //     '87a7811f' + // hex4Bytes('DEPOSIT')
-      //     '26' + // +
-      //     '2e' + // setUint256
-      //     '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
-      //     '39' + // endLoop
-      //     '1a' + // uint256
-      //     `${new Array(64).join('0')}f` // 15
-      // );
 
-      console.log(await ctx.program());
       expect(await ctx.program()).to.equal(
         '0x' +
           '37' + // for 1
@@ -1274,19 +1256,6 @@ describe('End-to-end', () => {
         carl: await carl.getBalance(),
         david: await david.getBalance(),
       };
-      console.log({
-        bob: bob.address,
-        carl: carl.address,
-        david: david.address,
-      });
-      console.log({
-        beforeBob: balancesBefore.bob.toString(),
-        afterBob: balancesAfter.bob.toString(),
-        beforeCarl: balancesBefore.carl.toString(),
-        afterCarl: balancesAfter.carl.toString(),
-        beforeDavid: balancesBefore.david.toString(),
-        afterDavid: balancesAfter.david.toString(),
-      });
       expect(balancesAfter.bob.sub(balancesBefore.bob)).to.equal(parseEther('1'));
       expect(balancesAfter.carl.sub(balancesBefore.carl)).to.equal(parseEther('1'));
       expect(balancesAfter.david.sub(balancesBefore.david)).to.equal(parseEther('1'));

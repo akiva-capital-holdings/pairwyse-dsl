@@ -54,6 +54,15 @@ library ErrorsGeneralOpcodes {
 }
 
 /**
+ * @title List of BranchingOpcodes errors
+ */
+library ErrorsBranchingOpcodes {
+    string constant BR1 = 'BR1'; // BranchingOpcodes: LinkedList.getType() delegate call error
+    string constant BR2 = 'BR2'; // BranchingOpcodes: array doesn't exist
+    string constant BR3 = 'BR3'; // BranchingOpcodes: LinkedList.get() delegate call error
+}
+
+/**
  * @title List of Parser errors
  */
 library ErrorsParser {

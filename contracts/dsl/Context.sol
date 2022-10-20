@@ -60,7 +60,7 @@ contract Context is IContext {
     mapping(string => string) public aliases;
     mapping(string => bool) public isStructVar;
     // Counter for the number of iterations for every for-loop in DSL code
-    uint256 public forLoopCtr;
+    uint256 public forLoopIterationsRemaining;
 
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), ErrorsContext.CTX1);
@@ -747,8 +747,8 @@ contract Context is IContext {
         isStructVar[_varName] = true;
     }
 
-    function setForLoopCtr(uint256 _forLoopCtr) external {
-        forLoopCtr = _forLoopCtr;
+    function setForLoopIterationsRemaining(uint256 _forLoopIterationsRemaining) external {
+        forLoopIterationsRemaining = _forLoopIterationsRemaining;
     }
 
     /**

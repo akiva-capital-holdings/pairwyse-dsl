@@ -8,7 +8,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
@@ -199,24 +199,19 @@ library OtherOpcodes {
     }
 
     function opBool(address _ctx) public {
-        console.log('\n-> opBool');
         bytes memory data = OpcodeHelpers.nextBytes(_ctx, 1);
         OpcodeHelpers.putToStack(_ctx, uint256(uint8(data[0])));
     }
 
     function opUint256(address _ctx) public {
-        console.log('\n-> opUint256');
         OpcodeHelpers.putToStack(_ctx, opUint256Get(_ctx));
     }
 
     function opSendEth(address _ctx) public {
-        console.log('\n\nopSendEth');
         address payable recipient = payable(
             address(uint160(uint256(opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)'))))
         );
         uint256 amount = opUint256Get(_ctx);
-        console.log('recipient:', recipient);
-        console.log('amount:', amount);
         recipient.transfer(amount);
         OpcodeHelpers.putToStack(_ctx, 1);
     }

@@ -8,9 +8,9 @@ import { IStorage } from '../../interfaces/IStorage.sol';
 import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
-import { ErrorsGeneralOpcodes } from '../Errors.sol';
+import { ErrorsBranchingOpcodes } from '../Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 /**
  * @title Logical operator opcodes
@@ -61,53 +61,41 @@ library BranchingOpcodes {
     }
 
     function opForLoop(address _ctx) public {
-        console.log('\n\n\nopForLoop');
-        // Ex. [('for'), 'LP_INITIAL', 'in', 'LPS_INITIAL']
-        bytes32 loopVarName = OpcodeHelpers.getNextBytes(_ctx, 4);
-        console.logBytes32(loopVarName);
-        // OpcodeHelpers.nextBytes(_ctx, 32); // skip `in` keyword as it is useless
+        IContext(_ctx).incPc(4); // skip loop's temporary variable name. It will be used later in opStartLoop
         bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
-        console.logBytes32(_arrNameB32);
 
         // check if the array exists
         (bool success1, bytes memory data1) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
-        // TODO: these errors are as strings because I wanna check are the error names correct
-        require(success1, 'ErrorsGeneralOpcodes.OP1');
-        require(bytes32(data1) != bytes32(0x0), 'ErrorsGeneralOpcodes.OP4');
+        require(success1, ErrorsBranchingOpcodes.BR1);
+        require(bytes32(data1) != bytes32(0x0), ErrorsBranchingOpcodes.BR2);
 
         uint256 _arrLen = ILinkedList(IContext(_ctx).appAddr()).getLength(_arrNameB32);
-        IContext(_ctx).setForLoopCtr(_arrLen);
+        IContext(_ctx).setForLoopIterationsRemaining(_arrLen);
     }
 
     function opStartLoop(address _ctx) public {
-        console.log('-> opStartLoop');
         // Decrease by 1 the for-loop iterations couter
-        uint256 _currCtr = IContext(_ctx).forLoopCtr();
+        uint256 _currCtr = IContext(_ctx).forLoopIterationsRemaining();
         uint256 _currPc = IContext(_ctx).pc() - 1;
-        console.log('Current counter is', _currCtr);
+
         if (_currCtr > 1) {
-            console.log('iterate: Set next PC to current PC', _currPc);
             IContext(_ctx).setNextPc(_currPc);
         }
 
-        // -- Get the element by index from array
+        // -- Get the element by index from array. TODO: move to another function
         bytes32 _tempVarNameB32 = OpcodeHelpers.readBytesSlice(_ctx, _currPc - 8, _currPc - 4);
         bytes32 _arrNameB32 = OpcodeHelpers.readBytesSlice(_ctx, _currPc - 4, _currPc);
-        console.log('Array name is');
-        console.logBytes32(_arrNameB32);
         uint256 _arrLen = ILinkedList(IContext(_ctx).appAddr()).getLength(_arrNameB32);
-        uint256 _index = _arrLen - IContext(_ctx).forLoopCtr();
+        uint256 _index = _arrLen - IContext(_ctx).forLoopIterationsRemaining();
 
         // check if the array exists & get array elements type
         (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
-        require(success, ErrorsGeneralOpcodes.OP1);
+        require(success, ErrorsBranchingOpcodes.BR1);
         bytes1 dataType = bytes1(data);
-        console.log('The type of the elements is');
-        console.logBytes1(dataType);
 
         (success, data) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
@@ -116,33 +104,15 @@ library BranchingOpcodes {
                 _arrNameB32 // array name, ex. INDEX_LIST, PARTNERS
             )
         );
-        require(success, ErrorsGeneralOpcodes.OP1);
+        require(success, ErrorsBranchingOpcodes.BR3);
 
         // TODO: get the functions that you need to call from Context.branchSelectors[_baseOpName][_branchCode]
         if (dataType == 0x01) {
-            // uint256
-            // uint256 _element = uint256(bytes32(data));
-            // console.log('The current element by index', _index, 'is', _element);
-            // console.log('Address is', address(bytes20(data)));
-
-            // // Set the iterator variable value
-            // console.log('_tempVarNameB32');
-            // console.logBytes32(_tempVarNameB32);
-            // IStorage(IContext(_ctx).appAddr()).setStorageUint256(_tempVarNameB32, _element);
             IStorage(IContext(_ctx).appAddr()).setStorageUint256(
                 _tempVarNameB32,
                 uint256(bytes32(data))
             );
         } else if (dataType == 0x02) {
-            // address
-            // uint256 _element = uint256(bytes32(data));
-            // console.log('The current element by index', _index, 'is', _element);
-            // console.log('Address is', address(bytes20(data)));
-
-            // // Set the iterator variable value
-            // console.log('_tempVarNameB32');
-            // console.logBytes32(_tempVarNameB32);
-            // IStorage(IContext(_ctx).appAddr()).setStorageUint256(_tempVarNameB32, _element);
             IStorage(IContext(_ctx).appAddr()).setStorageAddress(
                 _tempVarNameB32,
                 address(bytes20(data))
@@ -150,27 +120,19 @@ library BranchingOpcodes {
         } else {
             revert('Unknown array data type');
         }
-
         // -- end of Get the element by index from array
 
-        IContext(_ctx).setForLoopCtr(_currCtr - 1); // TODO: rename forLoopCtr to forLoopIterationsRemaining
+        IContext(_ctx).setForLoopIterationsRemaining(_currCtr - 1);
     }
 
     function opEndLoop(address _ctx) public {
-        console.log('-> opEndLoop');
-        console.log('Next PC is', IContext(_ctx).nextpc());
         uint256 _currPc = IContext(_ctx).pc();
         IContext(_ctx).setPc(IContext(_ctx).nextpc());
-        console.log('end-loop: Set next PC to current PC', _currPc);
-        IContext(_ctx).setNextPc(_currPc); // set next PC to the code after this `end` opcode
+        IContext(_ctx).setNextPc(_currPc); // sets next PC to the code after this `end` opcode
     }
 
     function opEnd(address _ctx) public {
-        console.log('-> opEnd');
-        console.log('Current PC is', IContext(_ctx).pc());
-        console.log('Next PC is', IContext(_ctx).nextpc());
         IContext(_ctx).setPc(IContext(_ctx).nextpc());
-        console.log('Set next PC to', IContext(_ctx).program().length);
         IContext(_ctx).setNextPc(IContext(_ctx).program().length);
     }
 
