@@ -550,7 +550,7 @@ describe('Parser', () => {
               '1a' + // uint256
               `${number}` + // 6
               '31' + // declareArr
-              '03' + // address
+              '02' + // address
               '5e315030' + // bytecode for a `MARY` name
               '1b' + // var
               '1b7b16d4' // TIMESTAMP
@@ -597,7 +597,7 @@ describe('Parser', () => {
           expect(await ctx.program()).to.equal(
             '0x' +
               '31' + // declareArr
-              '03' + // uint256
+              '02' + // address
               '3c8423ff' + // bytecode for PARTNERS
               '33' + // push
               'e7f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // address
@@ -632,8 +632,6 @@ describe('Parser', () => {
         ]);
 
         const NUMBER = new Array(62).join('0') + 541;
-        const ONE = new Array(64).join('0') + 1;
-        const ZERO = new Array(65).join('0');
 
         const expectedProgram =
           '0x' +
@@ -641,7 +639,7 @@ describe('Parser', () => {
           '01' + // uint256
           '1fff709e' + // bytecode for NUMBERS
           '31' + // declareArr
-          '03' + // address
+          '02' + // address
           '257b3678' + // bytecode for INDEXES
           '33' + // push
           'e7f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // first address
@@ -700,7 +698,7 @@ describe('Parser', () => {
           '01' + // uint256
           '1fff709e' + // bytecode for NUMBERS
           '31' + // declareArr
-          '03' + // address
+          '02' + // address
           '257b3678' + // bytecode for INDEXES
           '33' + // push
           'e7f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // first address
