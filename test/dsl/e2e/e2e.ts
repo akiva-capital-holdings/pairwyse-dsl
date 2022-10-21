@@ -12,7 +12,7 @@ import { getChainId } from '../../../utils/utils';
 
 const { ethers, network } = hre;
 
-describe.only('End-to-end', () => {
+describe('End-to-end', () => {
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
   let carl: SignerWithAddress;
@@ -1512,7 +1512,7 @@ describe.only('End-to-end', () => {
     });
   });
 
-  describe.only('For-loops', () => {
+  describe('For-loops', () => {
     before(async () => {
       // Create arrays for the usage in for-loops
       const input = `
@@ -1529,6 +1529,7 @@ describe.only('End-to-end', () => {
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
       await app.parseCode(code);
       await app.execute();
+      console.log('<-----setUp');
     });
 
     // TODO: this test won't work correctly, fix it
@@ -1675,79 +1676,82 @@ describe.only('End-to-end', () => {
     });
 
     it.only('two for loops', async () => {
+      /*
+           for DEPOSIT in DEPOSITS {
+          (var TOTAL_DEPOSIT * var DEPOSIT) setUint256 TOTAL_DEPOSIT
+        }
+*/
       const input = `
         1 setUint256 TOTAL_DEPOSIT
 
-        for DEPOSIT in DEPOSITS {
-          (var TOTAL_DEPOSIT * var DEPOSIT) setUint256 TOTAL_DEPOSIT
-        }
-
         for USER in USERS {
-          sendEth USER 1e18
+          sendEth BOB 1e18
         }
       `;
 
       // Preprocessing
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
-      expect(code).eql([
-        'uint256',
-        '1',
-        'setUint256',
-        'TOTAL_DEPOSIT',
-        'for',
-        'DEPOSIT',
-        'in',
-        'DEPOSITS',
-        'startLoop',
-        'var',
-        'TOTAL_DEPOSIT',
-        'var',
-        'DEPOSIT',
-        '*',
-        'setUint256',
-        'TOTAL_DEPOSIT',
-        'endLoop',
-        'for',
-        'USER',
-        'in',
-        'USERS',
-        'startLoop',
-        'sendEth',
-        'USER',
-        '1000000000000000000',
-        'endLoop',
-      ]);
+      // expect(code).eql([
+      //   'uint256',
+      //   '1',
+      //   'setUint256',
+      //   'TOTAL_DEPOSIT',
+      //   'for',
+      //   'DEPOSIT',
+      //   'in',
+      //   'DEPOSITS',
+      //   'startLoop',
+      //   'var',
+      //   'TOTAL_DEPOSIT',
+      //   'var',
+      //   'DEPOSIT',
+      //   '*',
+      //   'setUint256',
+      //   'TOTAL_DEPOSIT',
+      //   'endLoop',
+      //   'for',
+      //   'USER',
+      //   'in',
+      //   'USERS',
+      //   'startLoop',
+      //   'sendEth',
+      //   'USER',
+      //   '1000000000000000000',
+      //   'endLoop',
+      // ]);
 
-      // Parsing
+      // // Parsing
       await app.parseCode(code);
-      expect(await ctx.program()).to.equal(
-        '0x' +
-          '1a' + // uint256
-          `${bnToLongHexString('1')}` + // 1
-          '2e' + // setUint256
-          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
-          '37' + // for
-          '87a7811f' + // hex4Bytes('DEPOSIT')
-          '060f7dbd' + // hex4Bytes('DEPOSITS')
-          '32' + // startLoop
-          '1b' + // var
-          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
-          '1b' + // var
-          '87a7811f' + // hex4Bytes('DEPOSIT')
-          '28' + // *
-          '2e' + // setUint256
-          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
-          '39' + // endLoop
-          '37' + // for
-          '2db9fd3d' + // hex4Bytes('USER')
-          '80e5f4d2' + // hex4Bytes('USERS')
-          '32' + // startLoop
-          '1e' + // sendEth
-          '2db9fd3d' + // hex4Bytes('USER')
-          `${bnToLongHexString(parseEther('1'))}` + // 1e18
-          '39' // endLoop
-      );
+      // expect(await ctx.program()).to.equal(
+      //   '0x' +
+      //     '1a' + // uint256
+      //     `${bnToLongHexString('1')}` + // 1
+      //     '2e' + // setUint256
+      //     '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
+      //     '37' + // for
+      //     '87a7811f' + // hex4Bytes('DEPOSIT')
+      //     '060f7dbd' + // hex4Bytes('DEPOSITS')
+      //     '32' + // startLoop
+      //     '1b' + // var
+      //     '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
+      //     '1b' + // var
+      //     '87a7811f' + // hex4Bytes('DEPOSIT')
+      //     '28' + // *
+      //     '2e' + // setUint256
+      //     '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
+      //     '39' + // endLoop
+      //     '37' + // for
+      //     '2db9fd3d' + // hex4Bytes('USER')
+      //     '80e5f4d2' + // hex4Bytes('USERS')
+      //     '32' + // startLoop
+      //     '1e' + // sendEth
+      //     '2db9fd3d' + // hex4Bytes('USER')
+      //     `${bnToLongHexString(parseEther('1'))}` + // 1e18
+      //     '39' // endLoop
+      // );
 
+      // checking with simple bob
+      await app.setStorageAddress(hex4Bytes('BOB'), bob.address);
       // Top up the contract
       alice.sendTransaction({ to: app.address, value: parseEther('3') });
 
@@ -1762,11 +1766,11 @@ describe.only('End-to-end', () => {
 
       // // Variable checks
       // expect(await app.getStorageUint256(hex4Bytes('TOTAL_DEPOSIT'))).equal(2 * 3 * 4);
-      // const balancesAfter = {
-      //   bob: await bob.getBalance(),
-      //   carl: await carl.getBalance(),
-      //   david: await david.getBalance(),
-      // };
+      const balancesAfter = {
+        bob: await bob.getBalance(),
+        carl: await carl.getBalance(),
+        david: await david.getBalance(),
+      };
       // expect(balancesAfter.bob.sub(balancesBefore.bob)).to.equal(parseEther('1'));
       // expect(balancesAfter.carl.sub(balancesBefore.carl)).to.equal(parseEther('1'));
       // expect(balancesAfter.david.sub(balancesBefore.david)).to.equal(parseEther('1'));
