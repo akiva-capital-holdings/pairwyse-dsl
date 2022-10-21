@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import { IContext } from '../interfaces/IContext.sol';
 import { ErrorsExecutor } from './Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 library Executor {
     function execute(address _ctx) public {
@@ -15,7 +15,6 @@ library Executor {
             bytes1 opcodeByte1 = bytes1(uint8(opcodeBytes[0]));
 
             bytes4 _selector = IContext(_ctx).selectorByOpcode(opcodeByte1);
-            console.logBytes1(opcodeByte1);
             require(_selector != 0x0, ErrorsExecutor.EXC2);
             IContext.OpcodeLibNames _libName = IContext(_ctx).opcodeLibNameByOpcode(opcodeByte1);
             IContext(_ctx).incPc(1);

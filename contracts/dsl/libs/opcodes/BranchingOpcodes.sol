@@ -86,6 +86,7 @@ library BranchingOpcodes {
 
         // -- Get the element by index from array. TODO: move to another function
         bytes32 _tempVarNameB32 = OpcodeHelpers.readBytesSlice(_ctx, _currPc - 8, _currPc - 4);
+
         bytes32 _arrNameB32 = OpcodeHelpers.readBytesSlice(_ctx, _currPc - 4, _currPc);
         uint256 _arrLen = ILinkedList(IContext(_ctx).appAddr()).getLength(_arrNameB32);
         uint256 _index = _arrLen - IContext(_ctx).forLoopIterationsRemaining();
@@ -112,7 +113,7 @@ library BranchingOpcodes {
                 _tempVarNameB32,
                 uint256(bytes32(data))
             );
-        } else if (dataType == 0x02) {
+        } else if (dataType == 0x03) {
             IStorage(IContext(_ctx).appAddr()).setStorageAddress(
                 _tempVarNameB32,
                 address(bytes20(data))

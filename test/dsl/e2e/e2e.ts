@@ -1529,7 +1529,6 @@ describe('End-to-end', () => {
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
       await app.parseCode(code);
       await app.execute();
-      console.log('<-----setUp');
     });
 
     // TODO: this test won't work correctly, fix it
@@ -1675,83 +1674,80 @@ describe('End-to-end', () => {
       await checkStackTail(stack, [1, 1, 1, 15]);
     });
 
-    it.only('two for loops', async () => {
-      /*
-           for DEPOSIT in DEPOSITS {
-          (var TOTAL_DEPOSIT * var DEPOSIT) setUint256 TOTAL_DEPOSIT
-        }
-*/
+    it('two for loops', async () => {
       const input = `
         1 setUint256 TOTAL_DEPOSIT
 
+        for DEPOSIT in DEPOSITS {
+          (var TOTAL_DEPOSIT * var DEPOSIT) setUint256 TOTAL_DEPOSIT
+        }
+
         for USER in USERS {
-          sendEth BOB 1e18
+          sendEth USER 1e18
         }
       `;
 
       // Preprocessing
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
-      // expect(code).eql([
-      //   'uint256',
-      //   '1',
-      //   'setUint256',
-      //   'TOTAL_DEPOSIT',
-      //   'for',
-      //   'DEPOSIT',
-      //   'in',
-      //   'DEPOSITS',
-      //   'startLoop',
-      //   'var',
-      //   'TOTAL_DEPOSIT',
-      //   'var',
-      //   'DEPOSIT',
-      //   '*',
-      //   'setUint256',
-      //   'TOTAL_DEPOSIT',
-      //   'endLoop',
-      //   'for',
-      //   'USER',
-      //   'in',
-      //   'USERS',
-      //   'startLoop',
-      //   'sendEth',
-      //   'USER',
-      //   '1000000000000000000',
-      //   'endLoop',
-      // ]);
+      expect(code).eql([
+        'uint256',
+        '1',
+        'setUint256',
+        'TOTAL_DEPOSIT',
+        'for',
+        'DEPOSIT',
+        'in',
+        'DEPOSITS',
+        'startLoop',
+        'var',
+        'TOTAL_DEPOSIT',
+        'var',
+        'DEPOSIT',
+        '*',
+        'setUint256',
+        'TOTAL_DEPOSIT',
+        'endLoop',
+        'for',
+        'USER',
+        'in',
+        'USERS',
+        'startLoop',
+        'sendEth',
+        'USER',
+        '1000000000000000000',
+        'endLoop',
+      ]);
 
-      // // Parsing
+      // Parsing
       await app.parseCode(code);
-      // expect(await ctx.program()).to.equal(
-      //   '0x' +
-      //     '1a' + // uint256
-      //     `${bnToLongHexString('1')}` + // 1
-      //     '2e' + // setUint256
-      //     '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
-      //     '37' + // for
-      //     '87a7811f' + // hex4Bytes('DEPOSIT')
-      //     '060f7dbd' + // hex4Bytes('DEPOSITS')
-      //     '32' + // startLoop
-      //     '1b' + // var
-      //     '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
-      //     '1b' + // var
-      //     '87a7811f' + // hex4Bytes('DEPOSIT')
-      //     '28' + // *
-      //     '2e' + // setUint256
-      //     '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
-      //     '39' + // endLoop
-      //     '37' + // for
-      //     '2db9fd3d' + // hex4Bytes('USER')
-      //     '80e5f4d2' + // hex4Bytes('USERS')
-      //     '32' + // startLoop
-      //     '1e' + // sendEth
-      //     '2db9fd3d' + // hex4Bytes('USER')
-      //     `${bnToLongHexString(parseEther('1'))}` + // 1e18
-      //     '39' // endLoop
-      // );
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '1a' + // uint256
+          `${bnToLongHexString('1')}` + // 1
+          '2e' + // setUint256
+          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
+          '37' + // for
+          '87a7811f' + // hex4Bytes('DEPOSIT')
+          '060f7dbd' + // hex4Bytes('DEPOSITS')
+          '32' + // startLoop
+          '1b' + // var
+          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
+          '1b' + // var
+          '87a7811f' + // hex4Bytes('DEPOSIT')
+          '28' + // *
+          '2e' + // setUint256
+          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
+          '39' + // endLoop
+          '37' + // for
+          '2db9fd3d' + // hex4Bytes('USER')
+          '80e5f4d2' + // hex4Bytes('USERS')
+          '32' + // startLoop
+          '1e' + // sendEth
+          '2db9fd3d' + // hex4Bytes('USER')
+          `${bnToLongHexString(parseEther('1'))}` + // 1e18
+          '39' // endLoop
+      );
 
-      // checking with simple bob
-      await app.setStorageAddress(hex4Bytes('BOB'), bob.address);
       // Top up the contract
       alice.sendTransaction({ to: app.address, value: parseEther('3') });
 
@@ -1764,26 +1760,26 @@ describe('End-to-end', () => {
       // Execution
       await app.execute();
 
-      // // Variable checks
-      // expect(await app.getStorageUint256(hex4Bytes('TOTAL_DEPOSIT'))).equal(2 * 3 * 4);
+      // Variable checks
+      expect(await app.getStorageUint256(hex4Bytes('TOTAL_DEPOSIT'))).equal(2 * 3 * 4);
       const balancesAfter = {
         bob: await bob.getBalance(),
         carl: await carl.getBalance(),
         david: await david.getBalance(),
       };
-      // expect(balancesAfter.bob.sub(balancesBefore.bob)).to.equal(parseEther('1'));
-      // expect(balancesAfter.carl.sub(balancesBefore.carl)).to.equal(parseEther('1'));
-      // expect(balancesAfter.david.sub(balancesBefore.david)).to.equal(parseEther('1'));
-      // /**
-      //  * 1 - setUint256 TOTAL_DEPOSIT (initiating the variable with value `1`)
-      //  * 1 - setUint256 TOTAL_DEPOSIT (first iteration)
-      //  * 1 - setUint256 TOTAL_DEPOSIT (second iteration)
-      //  * 1 - setUint256 TOTAL_DEPOSIT (third iteration)
-      //  * 1 - sendEth (first iteration)
-      //  * 1 - sendEth (second iteration)
-      //  * 1 - sendEth (third iteration)
-      //  */
-      // await checkStackTail(stack, [1, 1, 1, 1, 1, 1, 1]);
+      expect(balancesAfter.bob.sub(balancesBefore.bob)).to.equal(parseEther('1'));
+      expect(balancesAfter.carl.sub(balancesBefore.carl)).to.equal(parseEther('1'));
+      expect(balancesAfter.david.sub(balancesBefore.david)).to.equal(parseEther('1'));
+      /**
+       * 1 - setUint256 TOTAL_DEPOSIT (initiating the variable with value `1`)
+       * 1 - setUint256 TOTAL_DEPOSIT (first iteration)
+       * 1 - setUint256 TOTAL_DEPOSIT (second iteration)
+       * 1 - setUint256 TOTAL_DEPOSIT (third iteration)
+       * 1 - sendEth (first iteration)
+       * 1 - sendEth (second iteration)
+       * 1 - sendEth (third iteration)
+       */
+      await checkStackTail(stack, [1, 1, 1, 1, 1, 1, 1]);
     });
   });
 });
