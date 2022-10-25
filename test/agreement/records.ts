@@ -423,7 +423,7 @@ describe('Simple Records in Agreement', () => {
       await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
       await app.setStorageUint256(hex4Bytes('TOKEN_ADDR'), token.address);
 
-      // Define Conditional Transactions
+      // Define Records
       records.push(
         {
           recordId: 1,
@@ -491,7 +491,7 @@ describe('Simple Records in Agreement', () => {
 
   describe('More than one condition', () => {
     it('checks length of the condition strings', async () => {
-      records.push({
+      const record = {
         recordId: 9,
         requiredRecords: [],
         signatories: [alice.address],
@@ -526,11 +526,9 @@ describe('Simple Records in Agreement', () => {
           await ContextCont.deploy(),
           await ContextCont.deploy(),
         ],
-      });
+      };
 
-      expect(records.length).equal(1);
-
-      await setRecord(records[0], app);
+      await setRecord(record, app);
       const condStrLen = (await app.conditionStringsLen(9)).toNumber();
       expect(condStrLen).to.equal(6);
     });
@@ -549,7 +547,7 @@ describe('Simple Records in Agreement', () => {
       await app.setStorageAddress(hex4Bytes('ALICE'), alice.address);
       await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
-      records.push({
+      const record = {
         recordId: 8,
         requiredRecords: [3],
         signatories: [bob.address],
@@ -557,12 +555,11 @@ describe('Simple Records in Agreement', () => {
         conditionStrings: ['blockTimestamp > var LOCK_TIME'],
         transactionCtx: await ContextCont.deploy(),
         conditionContexts: [await ContextCont.deploy()],
-      });
+      };
 
-      expect(records.length).equal(1);
-      const { recordId, conditionContexts, transactionCtx, transactionStr } = records[0];
+      const { recordId, conditionContexts, transactionCtx, transactionStr } = record;
 
-      await setRecord(records[0], app);
+      await setRecord(record, app);
 
       // Set app addresses & msg senders
       await transactionCtx.setAppAddress(app.address);
