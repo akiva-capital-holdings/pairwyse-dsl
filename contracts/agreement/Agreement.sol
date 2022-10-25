@@ -168,27 +168,28 @@ contract Agreement {
     /**
      * @dev return valuses for preview record before execution
      * @param _recordId Record ID
-     * @return txsRequiredRecords array of required records in the record
-     * @return txsSignatories array of signatories in the record
-     * @return txsConditions array of conditions in the record
-     * @return txsTransaction string of transaction
+     * @return _requiredRecords array of required records in the record
+     * @return _signatories array of signatories in the record
+     * @return _conditions array of conditions in the record
+     * @return _transaction string of transaction
+     * @return _isActive true if the record is active
      */
     function getRecord(uint256 _recordId)
         external
         view
         returns (
-            uint256[] memory txsRequiredRecords,
-            address[] memory txsSignatories,
-            string[] memory txsConditions,
-            string memory txsTransaction,
-            bool isActive
+            uint256[] memory _requiredRecords,
+            address[] memory _signatories,
+            string[] memory _conditions,
+            string memory _transaction,
+            bool _isActive
         )
     {
-        txsRequiredRecords = requiredRecords[_recordId];
-        txsSignatories = signatories[_recordId];
-        txsConditions = conditionStrings[_recordId];
-        txsTransaction = records[_recordId].transactionString;
-        isActive = records[_recordId].isActive;
+        _requiredRecords = requiredRecords[_recordId];
+        _signatories = signatories[_recordId];
+        _conditions = conditionStrings[_recordId];
+        _transaction = records[_recordId].transactionString;
+        _isActive = records[_recordId].isActive;
     }
 
     /**
@@ -323,10 +324,10 @@ contract Agreement {
      * @return true all the required records were executed, false - otherwise
      */
     function _validateRequiredRecords(uint256 _recordId) internal view returns (bool) {
-        uint256[] memory txsRequiredRecords = requiredRecords[_recordId];
+        uint256[] memory _requiredRecords = requiredRecords[_recordId];
         Record memory requiredRecord;
-        for (uint256 i = 0; i < txsRequiredRecords.length; i++) {
-            requiredRecord = records[txsRequiredRecords[i]];
+        for (uint256 i = 0; i < _requiredRecords.length; i++) {
+            requiredRecord = records[_requiredRecords[i]];
             if (!requiredRecord.isExecuted) return false;
         }
         return true;
