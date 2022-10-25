@@ -97,6 +97,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
 
     // Execute transaction
     await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
+
     await expect(await agreement.connect(alice).execute(txId)).to.changeEtherBalance(bob, oneEthBN);
 
     // Tx already executed
