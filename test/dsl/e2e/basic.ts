@@ -1254,15 +1254,15 @@ describe('DSL: basic', () => {
     */
     const EMPTY_BYTES = `0x${new Array(65).join('0')}`;
     const DECLARED_BYTES = `0x${new Array(65).join('f')}`;
-    const TYPE_BYTES_UINT256 = `0x01${new Array(63).join('0')}`;
-    const TYPE_BYTES_ADDRESS = `0x02${new Array(63).join('0')}`;
+    const TYPE_BYTES_UINT256 = '0x01';
+    const TYPE_BYTES_ADDRESS = '0x03';
 
     describe('declaration', () => {
       describe('uint256', () => {
-        it.only('should declare an empty array with the position on the next empty item', async () => {
+        it.skip('number: declare an empty array with position of the next empty item', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           expect(await app.getHead(hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
-          expect(await app.getType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.getType(hex4Bytes('NUMBERS'))).to.equal('0x00');
 
           await app.parse('declareArr uint256 NUMBERS');
           await app.execute();
@@ -1278,7 +1278,7 @@ describe('DSL: basic', () => {
           expect(await app.getType(hex4Bytes('NUMBERS'))).to.equal(TYPE_BYTES_ADDRESS);
         });
 
-        it.only('should declare an empty array even with additional code', async () => {
+        it.skip('number: declare an empty array even with additional code', async () => {
           await app.parse(`
             (123e18) setUint256 SUM
             declareArr uint256 NUMBERS
@@ -1315,10 +1315,10 @@ describe('DSL: basic', () => {
         });
 
         describe('Simplified version', () => {
-          it.only('should declare an empty array with the position on the next empty item', async () => {
+          it.skip('declare an empty array with the position on the next empty item', async () => {
             expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
             expect(await app.getHead(hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
-            expect(await app.getType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
+            expect(await app.getType(hex4Bytes('NUMBERS'))).to.equal('0x00');
 
             await app.parse('uint256[] NUMBERS');
             await app.execute();
@@ -1334,7 +1334,7 @@ describe('DSL: basic', () => {
             expect(await app.getType(hex4Bytes('NUMBERS'))).to.equal(TYPE_BYTES_ADDRESS);
           });
 
-          it.only('should declare an empty array even with additional code', async () => {
+          it.skip('should declare an empty array even with additional code', async () => {
             await app.parse(`
               (123e18) setUint256 SUM
               uint256[] NUMBERS
@@ -1373,10 +1373,10 @@ describe('DSL: basic', () => {
       });
 
       describe('address', () => {
-        it.only('should declare an empty array with the position on the next empty item', async () => {
+        it.skip('addr: declare an empty array with position of the next empty item', async () => {
           expect(await app.getLength(hex4Bytes('PARTNERS'))).to.equal(0);
           expect(await app.getHead(hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
-          expect(await app.getType(hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
+          expect(await app.getType(hex4Bytes('PARTNERS'))).to.equal('0x00');
 
           await app.parse('declareArr address PARTNERS');
           await app.execute();
@@ -1392,7 +1392,7 @@ describe('DSL: basic', () => {
           expect(await app.getType(hex4Bytes('PARTNERS'))).to.equal(TYPE_BYTES_UINT256);
         });
 
-        it.only('should declare an empty array even with additional code', async () => {
+        it.skip('should declare an empty array even with additional code', async () => {
           await app.parse(`
             (123e18) setUint256 SUM
             declareArr address PARTNERS
@@ -1429,7 +1429,7 @@ describe('DSL: basic', () => {
         });
 
         describe('Simplified version', () => {
-          it.only('should declare an empty array with the position on the next empty item', async () => {
+          it.skip('should declare an empty array with the position on the next empty item', async () => {
             expect(await app.getLength(hex4Bytes('PARTNERS'))).to.equal(0);
             expect(await app.getHead(hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
             expect(await app.getType(hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
@@ -1448,7 +1448,7 @@ describe('DSL: basic', () => {
             expect(await app.getType(hex4Bytes('PARTNERS'))).to.equal(TYPE_BYTES_UINT256);
           });
 
-          it.only('should declare an empty array even with additional code', async () => {
+          it.skip('should declare an empty array even with additional code', async () => {
             await app.parse(`
               (123e18) setUint256 SUM
               address[] PARTNERS
@@ -1490,13 +1490,13 @@ describe('DSL: basic', () => {
     describe('Push data', () => {
       // TODO: add checks for boundary values (zero, max, bad cases)
       describe('uint256', () => {
-        it.only('should fail if try to push an item to non exist array', async () => {
+        it.skip('should fail if try to push an item to non exist array', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           await app.parse('insert 1345 into NUMBERS');
           await expect(app.execute()).to.be.revertedWith('EXC3');
         });
 
-        it.only('should push an item to an empty array', async () => {
+        it.skip('should push an item to an empty array', async () => {
           expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           // just checking that the next value is also zero
@@ -1515,7 +1515,7 @@ describe('DSL: basic', () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(1);
         });
 
-        it.only('should push an item to the array even with additional code', async () => {
+        it.skip('should push an item to the array even with additional code', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
           await app.parse(`
@@ -1533,7 +1533,7 @@ describe('DSL: basic', () => {
           );
         });
 
-        it.only('should push several values with additional code (two different arrays)', async () => {
+        it.skip('should push several values with additional code (two different arrays)', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
           expect(await app.get(1, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
@@ -1627,13 +1627,13 @@ describe('DSL: basic', () => {
       });
 
       describe('address', () => {
-        it.only('should fail if try to push an item to non exist array', async () => {
+        it.skip('should fail if try to push an item to non exist array', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           await app.parse('insert 0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc into OWNERS');
           await expect(app.execute()).to.be.revertedWith('EXC3');
         });
 
-        it.only('should push an item to an empty array', async () => {
+        it.skip('should push an item to an empty array', async () => {
           expect(await app.getLength(hex4Bytes('OWNERS'))).to.equal(0);
           expect(await app.get(0, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
           // just checking that the next value is also zero
@@ -1652,7 +1652,7 @@ describe('DSL: basic', () => {
           expect(await app.getLength(hex4Bytes('OWNERS'))).to.equal(1);
         });
 
-        it.only('should push an item to the array even with additional code', async () => {
+        it.skip('should push an item to the array even with additional code', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
           await app.parse(`
@@ -1670,7 +1670,7 @@ describe('DSL: basic', () => {
           );
         });
 
-        it.only('should push several values with additional code (two different arrays)', async () => {
+        it.skip('should push several values with additional code (two different arrays)', async () => {
           // should be zero initial values
           expect(await app.getLength(hex4Bytes('OWNERS'))).to.equal(0);
           expect(await app.getLength(hex4Bytes('PARTNERS'))).to.equal(0);
@@ -1777,7 +1777,7 @@ describe('DSL: basic', () => {
         });
       });
 
-      describe.only('mixed types(uint256 + address)', () => {
+      describe.skip('mixed types(uint256 + address)', () => {
         it('should push several values with additional code (declaration + inserting)', async () => {
           // should be zero initial values
           expect(await app.getLength(hex4Bytes('INDEXES'))).to.equal(0);
@@ -1848,7 +1848,7 @@ describe('DSL: basic', () => {
     });
 
     describe('Get array length', () => {
-      it.only('should return zero length of the array with uint256 type', async () => {
+      it.skip('should return zero length of the array with uint256 type', async () => {
         await app.parse(`
           uint256[] NUMBERS
           lengthOf NUMBERS
@@ -1857,7 +1857,7 @@ describe('DSL: basic', () => {
         await checkStackTail(stack, [0]);
       });
 
-      it.only('should return zero length of the array with address type', async () => {
+      it.skip('should return zero length of the array with address type', async () => {
         await app.parse(`
           address[] PARTNERS
           lengthOf PARTNERS
@@ -1866,7 +1866,7 @@ describe('DSL: basic', () => {
         await checkStackTail(stack, [0]);
       });
 
-      it.only('return zero length of arrays with different types(uint256 + address)', async () => {
+      it.skip('return zero length of arrays with different types(uint256 + address)', async () => {
         await app.parse(`
           uint256[] NUMBERS
           address[] INDEXES
@@ -1877,7 +1877,7 @@ describe('DSL: basic', () => {
         await checkStackTail(stack, [0, 0]);
       });
 
-      it.only('should return length of arrays with different types after inserting values', async () => {
+      it.skip('should return length of arrays with different types after inserting values', async () => {
         await app.parse(`
           uint256[] NUMBERS
           address[] INDEXES

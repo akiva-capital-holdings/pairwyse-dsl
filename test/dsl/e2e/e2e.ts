@@ -373,7 +373,7 @@ describe('End-to-end', () => {
     });
   });
 
-  describe.only('Arrays', async () => {
+  describe.skip('Arrays', async () => {
     describe('uint256 type', () => {
       describe('declareArr', () => {
         it('with additional code before and after it', async () => {
@@ -1530,7 +1530,7 @@ describe('End-to-end', () => {
     });
 
     // TODO: this test won't work correctly, fix it
-    it.only('Simple for loop', async () => {
+    it.skip('Simple for loop', async () => {
       const input = `
         for ME in USERS {
           (msgSender == ME)
