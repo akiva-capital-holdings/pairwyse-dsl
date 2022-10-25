@@ -184,7 +184,7 @@ describe('Simple Records in Agreement', () => {
     });
 
     it('active record', async () => {
-      let record = await app.txs(recordId);
+      let record = await app.records(recordId);
       // Check that record deactivated yet
       expect(record.isActive).to.be.equal(false);
 
@@ -194,12 +194,12 @@ describe('Simple Records in Agreement', () => {
 
       // Check that record was activated
       await activateRecord(app, multisig, recordId);
-      record = await app.txs(recordId);
+      record = await app.records(recordId);
       expect(record.isActive).to.be.equal(true);
 
       // Check that record was deactivated
       await deactivateRecord(app, multisig, recordId);
-      record = await app.txs(recordId);
+      record = await app.records(recordId);
       expect(record.isActive).to.be.equal(false);
 
       // Check that additional deactivating will reverted
@@ -215,18 +215,18 @@ describe('Simple Records in Agreement', () => {
 
       // Check that record can be activated after deactivated status
       await activateRecord(app, multisig, recordId);
-      record = await app.txs(recordId);
+      record = await app.records(recordId);
       expect(record.isActive).to.be.equal(true);
     });
 
     it('archived record', async () => {
-      let record = await app.txs(recordId);
+      let record = await app.records(recordId);
       // Check that record is not archived yet
       expect(record.isArchived).to.be.equal(false);
 
       // Check that record is archived
       await archiveRecord(app, multisig, recordId);
-      record = await app.txs(recordId);
+      record = await app.records(recordId);
       expect(record.isArchived).to.be.equal(true);
 
       // Check that record does not exist
@@ -235,12 +235,12 @@ describe('Simple Records in Agreement', () => {
 
       // Check that archived record is still archived
       await archiveRecord(app, multisig, recordId);
-      record = await app.txs(recordId);
+      record = await app.records(recordId);
       expect(record.isArchived).to.be.equal(true);
 
       // Check that record is unArchived
       await unarchiveRecord(app, multisig, recordId);
-      record = await app.txs(recordId);
+      record = await app.records(recordId);
       expect(record.isArchived).to.be.equal(false);
 
       // Check that secondary unAchived will reverted
@@ -254,7 +254,7 @@ describe('Simple Records in Agreement', () => {
 
       // Check that archived record is archived after unarchived processing
       await archiveRecord(app, multisig, recordId);
-      record = await app.txs(recordId);
+      record = await app.records(recordId);
       expect(record.isArchived).to.be.equal(true);
     });
   });
