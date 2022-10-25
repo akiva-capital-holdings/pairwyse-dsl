@@ -1577,7 +1577,7 @@ describe('End-to-end', () => {
           '37' + // for 1
           '1854c655' + // hex4Bytes('ME') 5
           '80e5f4d2' + // hex4Bytes('USERS') 9
-          '38' + // startLoop 10
+          '32' + // startLoop 10
           '1d' + // msgSender 11
           '1b' + // var 12
           '1854c655' + // hex4Bytes('ME') 16
@@ -1848,7 +1848,7 @@ describe('End-to-end', () => {
           '37' + // for 1
           '1854c655' + // hex4Bytes('ME') 5
           '80e5f4d2' + // hex4Bytes('USERS') 9
-          '38' + // startLoop 10
+          '32' + // startLoop 10
           '1d' + // msgSender 11
           '1b' + // var 12
           '1854c655' + // hex4Bytes('ME') 16
@@ -1916,7 +1916,7 @@ describe('End-to-end', () => {
           '37' + // for
           '87a7811f' + // hex4Bytes('DEPOSIT')
           '060f7dbd' + // hex4Bytes('DEPOSITS')
-          '38' + // startLoop
+          '32' + // startLoop
           '1b' + // var
           '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
           '1b' + // var
@@ -1998,7 +1998,7 @@ describe('End-to-end', () => {
           '37' + // for
           '87a7811f' + // hex4Bytes('DEPOSIT')
           '060f7dbd' + // hex4Bytes('DEPOSITS')
-          '38' + // startLoop
+          '32' + // startLoop
           '1b' + // var
           '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
           '1b' + // var
@@ -2010,7 +2010,7 @@ describe('End-to-end', () => {
           '37' + // for
           '2db9fd3d' + // hex4Bytes('USER')
           '80e5f4d2' + // hex4Bytes('USERS')
-          '38' + // startLoop
+          '32' + // startLoop
           '1e' + // sendEth
           '2db9fd3d' + // hex4Bytes('USER')
           `${bnToLongHexString(parseEther('1'))}` + // 1e18

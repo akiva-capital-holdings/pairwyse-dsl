@@ -803,10 +803,6 @@ contract Context is IContext {
         forLoopIterationsRemaining = _forLoopIterationsRemaining;
     }
 
-    function setForLoopIterationsRemaining(uint256 _forLoopIterationsRemaining) external {
-        forLoopIterationsRemaining = _forLoopIterationsRemaining;
-    }
-
     /**
      * @dev Adds the opcode for the operator
      * @param _name is the name of the operator
