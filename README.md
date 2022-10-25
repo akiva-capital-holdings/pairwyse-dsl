@@ -39,7 +39,7 @@ In tests might be some issues if the address was provided incorectly or if this 
 
 ### Before pushing to repository
 
-All tests marked as agreement (example: `test/agreement/agreement<*>.ts`) must be skipped. Example: `describe.skip('Agreement: business case'...`
+All tests marked as agreement (example: `test/agreement/agreement<*>.ts`) must be skipped. Example: `describe.only('Agreement: business case'...`
 
 ### Run tests
 

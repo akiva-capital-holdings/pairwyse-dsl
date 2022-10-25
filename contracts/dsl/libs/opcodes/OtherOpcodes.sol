@@ -87,7 +87,7 @@ library OtherOpcodes {
         );
 
         require(success, ErrorsGeneralOpcodes.OP1);
-        require(bytes32(data) != bytes32(0x0), ErrorsGeneralOpcodes.OP2);
+        require(bytes1(data) != bytes1(0x0), ErrorsGeneralOpcodes.OP2);
         (success, data) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
                 'get(uint256,bytes32)',
@@ -171,7 +171,7 @@ library OtherOpcodes {
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
-        require(bytes32(data) != bytes32(0x0), ErrorsGeneralOpcodes.OP4);
+        require(bytes1(data) != bytes1(0x0), ErrorsGeneralOpcodes.OP4);
 
         (success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
@@ -188,14 +188,13 @@ library OtherOpcodes {
      * @param _ctx Context contract instance address
      */
     function opDeclare(address _ctx) public {
-        // https://github.com/ethereum/solidity/releases/tag/v0.8.5
-        bytes32 _varType = OpcodeHelpers.getNextBytes(_ctx, 1);
+        bytes32 _arrType = OpcodeHelpers.getNextBytes(_ctx, 1);
         bytes32 _arrName = OpcodeHelpers.getNextBytes(_ctx, 4);
 
         (bool success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
-                'declare(bytes32,bytes32)',
-                _varType, // type of the array
+                'declare(bytes1,bytes32)',
+                bytes1(_arrType), // type of the array
                 _arrName
             )
         );

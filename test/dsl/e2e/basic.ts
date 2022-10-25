@@ -396,7 +396,7 @@ describe('DSL: basic', () => {
     await app.execute();
     expect(await app.getStorageUint256(hex4Bytes('VAR'))).to.equal(21);
 
-    await app.setStorageUint256(hex4Bytes('X'), 10);
+    await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('X'), 10);
     await app.parse('(var X + 15) setUint256 VAR');
     await app.execute();
     expect(await app.getStorageUint256(hex4Bytes('VAR'))).to.equal(25);
@@ -405,7 +405,7 @@ describe('DSL: basic', () => {
   describe('variables', () => {
     describe('implicit usage', () => {
       it('NUMBER', async () => {
-        await app.setStorageUint256(hex4Bytes('NUMBER'), 777);
+        await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUMBER'), 777);
         await app.parse('NUMBER');
         await app.execute();
         await checkStackTail(stack, [777]);
@@ -414,11 +414,11 @@ describe('DSL: basic', () => {
       it('NUMBER (1000) > NUMBER2 (15)', async () => {
         // Set NUMBER
         const bytes32Number = hex4Bytes('NUMBER');
-        await app.setStorageUint256(bytes32Number, 1000);
+        await app['setStorageUint256(bytes32,uint256)'](bytes32Number, 1000);
 
         // Set NUMBER2
         const bytes32Number2 = hex4Bytes('NUMBER2');
-        await app.setStorageUint256(bytes32Number2, 15);
+        await app['setStorageUint256(bytes32,uint256)'](bytes32Number2, 15);
 
         await app.parse('NUMBER > NUMBER2');
         await app.execute();
@@ -427,7 +427,7 @@ describe('DSL: basic', () => {
     });
 
     it('var NUMBER', async () => {
-      await app.setStorageUint256(hex4Bytes('NUMBER'), 777);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUMBER'), 777);
       await app.parse('var NUMBER');
       await app.execute();
       await checkStackTail(stack, [777]);
@@ -436,11 +436,11 @@ describe('DSL: basic', () => {
     it('var NUMBER (1000) > var NUMBER2 (15)', async () => {
       // Set NUMBER
       const bytes32Number = hex4Bytes('NUMBER');
-      await app.setStorageUint256(bytes32Number, 1000);
+      await app['setStorageUint256(bytes32,uint256)'](bytes32Number, 1000);
 
       // Set NUMBER2
       const bytes32Number2 = hex4Bytes('NUMBER2');
-      await app.setStorageUint256(bytes32Number2, 15);
+      await app['setStorageUint256(bytes32,uint256)'](bytes32Number2, 15);
 
       await app.parse('var NUMBER > var NUMBER2');
       await app.execute();
@@ -448,8 +448,8 @@ describe('DSL: basic', () => {
     });
 
     it('var TIMESTAMP < var NEXT_MONTH', async () => {
-      await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
-      await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
 
       await app.parse('var TIMESTAMP < var NEXT_MONTH');
       await app.execute();
@@ -457,8 +457,8 @@ describe('DSL: basic', () => {
     });
 
     it('var TIMESTAMP > var NEXT_MONTH', async () => {
-      await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
-      await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
 
       await app.parse('var TIMESTAMP > var NEXT_MONTH');
       await app.execute();
@@ -466,7 +466,7 @@ describe('DSL: basic', () => {
     });
 
     it('var A (false)', async () => {
-      await app.setStorageBool(hex4Bytes('A'), false);
+      await app['setStorageBool(bytes32,bool)'](hex4Bytes('A'), false);
 
       await app.parse('var A');
       await app.execute();
@@ -474,7 +474,7 @@ describe('DSL: basic', () => {
     });
 
     it('var B (true)', async () => {
-      await app.setStorageBool(hex4Bytes('B'), true);
+      await app['setStorageBool(bytes32,bool)'](hex4Bytes('B'), true);
 
       await app.parse('var B');
       await app.execute();
@@ -482,8 +482,8 @@ describe('DSL: basic', () => {
     });
 
     it('var A (false) != var B (true)', async () => {
-      await app.setStorageBool(hex4Bytes('A'), false);
-      await app.setStorageBool(hex4Bytes('B'), true);
+      await app['setStorageBool(bytes32,bool)'](hex4Bytes('A'), false);
+      await app['setStorageBool(bytes32,bool)'](hex4Bytes('B'), true);
 
       await app.parse('var A != var B');
       await app.execute();
@@ -491,8 +491,8 @@ describe('DSL: basic', () => {
     });
 
     it('NOR var A (false) != var B (true)', async () => {
-      await app.setStorageBool(hex4Bytes('A'), false);
-      await app.setStorageBool(hex4Bytes('B'), true);
+      await app['setStorageBool(bytes32,bool)'](hex4Bytes('A'), false);
+      await app['setStorageBool(bytes32,bool)'](hex4Bytes('B'), true);
 
       await app.parse('! (var A != var B)');
       await app.execute();
@@ -549,7 +549,7 @@ describe('DSL: basic', () => {
 
   describe('loadRemote', () => {
     it('loadRemote uint256 NUMBER', async () => {
-      await app.setStorageUint256(hex4Bytes('NUMBER'), 777);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUMBER'), 777);
 
       await app.parse(`loadRemote uint256 NUMBER ${appAddrHex}`);
       await app.execute();
@@ -559,11 +559,11 @@ describe('DSL: basic', () => {
     it('loadRemote uint256 NUMBER (1000) > loadRemote uint256 NUMBER2 (15)', async () => {
       // Set NUMBER
       const bytes32Number = hex4Bytes('NUMBER');
-      await app.setStorageUint256(bytes32Number, 1000);
+      await app['setStorageUint256(bytes32,uint256)'](bytes32Number, 1000);
 
       // Set NUMBER2
       const bytes32Number2 = hex4Bytes('NUMBER2');
-      await app.setStorageUint256(bytes32Number2, 15);
+      await app['setStorageUint256(bytes32,uint256)'](bytes32Number2, 15);
 
       await app.parse(
         `loadRemote uint256 NUMBER ${appAddrHex} > loadRemote uint256 NUMBER2 ${appAddrHex}`
@@ -573,8 +573,8 @@ describe('DSL: basic', () => {
     });
 
     it('var TIMESTAMP < loadRemote uint256 NEXT_MONTH', async () => {
-      await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
-      await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
 
       await app.parse(`var TIMESTAMP < loadRemote uint256 NEXT_MONTH ${appAddrHex}`);
       await app.execute();
@@ -582,7 +582,7 @@ describe('DSL: basic', () => {
     });
 
     it('loadRemote bool A (false)', async () => {
-      await app.setStorageBool(hex4Bytes('A'), false);
+      await app['setStorageBool(bytes32,bool)'](hex4Bytes('A'), false);
 
       await app.parse(`loadRemote bool A ${appAddrHex}`);
       await app.execute();
@@ -590,7 +590,7 @@ describe('DSL: basic', () => {
     });
 
     it('loadRemote bool B (true)', async () => {
-      await app.setStorageBool(hex4Bytes('B'), true);
+      await app['setStorageBool(bytes32,bool)'](hex4Bytes('B'), true);
 
       await app.parse(`loadRemote bool B ${appAddrHex}`);
       await app.execute();
@@ -598,8 +598,8 @@ describe('DSL: basic', () => {
     });
 
     it('loadRemote bool A (false) != loadRemote bool B (true)', async () => {
-      await app.setStorageBool(hex4Bytes('A'), false);
-      await app.setStorageBool(hex4Bytes('B'), true);
+      await app['setStorageBool(bytes32,bool)'](hex4Bytes('A'), false);
+      await app['setStorageBool(bytes32,bool)'](hex4Bytes('B'), true);
 
       await app.parse(`loadRemote bool A ${appAddrHex} != loadRemote bool B ${appAddrHex}`);
       await app.execute();
@@ -608,11 +608,11 @@ describe('DSL: basic', () => {
 
     describe('opLoadRemoteAddress', () => {
       it('addresses are equal', async () => {
-        await app.setStorageAddress(
+        await app['setStorageAddress(bytes32,address)'](
           hex4Bytes('ADDR'),
           '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5'
         );
-        await app.setStorageAddress(
+        await app['setStorageAddress(bytes32,address)'](
           hex4Bytes('ADDR2'),
           '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5'
         );
@@ -625,11 +625,11 @@ describe('DSL: basic', () => {
       });
 
       it('different addresses are not equal', async () => {
-        await app.setStorageAddress(
+        await app['setStorageAddress(bytes32,address)'](
           hex4Bytes('ADDR'),
           '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5'
         );
-        await app.setStorageAddress(
+        await app['setStorageAddress(bytes32,address)'](
           hex4Bytes('ADDR2'),
           '0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836'
         );
@@ -731,7 +731,7 @@ describe('DSL: basic', () => {
 
   it('msgSender', async () => {
     const [sender] = await ethers.getSigners();
-    await app.setStorageAddress(hex4Bytes('SENDER'), sender.address);
+    await app['setStorageAddress(bytes32,address)'](hex4Bytes('SENDER'), sender.address);
     await app.parse('var SENDER == msgSender');
     await app.execute();
     await checkStackTail(stack, [1]);
@@ -746,7 +746,7 @@ describe('DSL: basic', () => {
 
   it('sendEth', async () => {
     const [vault, receiver] = await ethers.getSigners();
-    await app.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
+    await app['setStorageAddress(bytes32,address)'](hex4Bytes('RECEIVER'), receiver.address);
     const twoEth = parseEther('2');
 
     await app.parse(`sendEth RECEIVER ${twoEth.toString()}`);
@@ -770,8 +770,8 @@ describe('DSL: basic', () => {
     await dai.transfer(app.address, oneDAI);
     expect(await dai.balanceOf(app.address)).to.equal(oneDAI);
 
-    await app.setStorageAddress(hex4Bytes('DAI'), dai.address);
-    await app.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
+    await app['setStorageAddress(bytes32,address)'](hex4Bytes('DAI'), dai.address);
+    await app['setStorageAddress(bytes32,address)'](hex4Bytes('RECEIVER'), receiver.address);
 
     await app.parse(`transfer DAI RECEIVER ${oneDAI.toString()}`);
     await app.execute();
@@ -789,9 +789,9 @@ describe('DSL: basic', () => {
     await dai.transfer(app.address, oneDAI);
     expect(await dai.balanceOf(app.address)).to.equal(oneDAI);
 
-    await app.setStorageAddress(hex4Bytes('DAI'), dai.address);
-    await app.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
-    await app.setStorageUint256(hex4Bytes('AMOUNT'), oneDAI.toString());
+    await app['setStorageAddress(bytes32,address)'](hex4Bytes('DAI'), dai.address);
+    await app['setStorageAddress(bytes32,address)'](hex4Bytes('RECEIVER'), receiver.address);
+    await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('AMOUNT'), oneDAI.toString());
 
     await app.parse('transferVar DAI RECEIVER AMOUNT');
     await app.execute();
@@ -809,9 +809,9 @@ describe('DSL: basic', () => {
     await dai.connect(owner).approve(app.address, oneDAI);
     expect(await dai.allowance(owner.address, app.address)).to.equal(oneDAI);
 
-    await app.setStorageAddress(hex4Bytes('DAI'), dai.address);
-    await app.setStorageAddress(hex4Bytes('OWNER'), owner.address);
-    await app.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
+    await app['setStorageAddress(bytes32,address)'](hex4Bytes('DAI'), dai.address);
+    await app['setStorageAddress(bytes32,address)'](hex4Bytes('OWNER'), owner.address);
+    await app['setStorageAddress(bytes32,address)'](hex4Bytes('RECEIVER'), receiver.address);
 
     await app.parse(`transferFrom DAI OWNER RECEIVER ${oneDAI.toString()}`);
     await app.execute();
@@ -829,10 +829,10 @@ describe('DSL: basic', () => {
     await dai.connect(owner).approve(app.address, oneDAI);
     expect(await dai.allowance(owner.address, app.address)).to.equal(oneDAI);
 
-    await app.setStorageAddress(hex4Bytes('DAI'), dai.address);
-    await app.setStorageAddress(hex4Bytes('OWNER'), owner.address);
-    await app.setStorageAddress(hex4Bytes('RECEIVER'), receiver.address);
-    await app.setStorageUint256(hex4Bytes('AMOUNT'), oneDAI.toString());
+    await app['setStorageAddress(bytes32,address)'](hex4Bytes('DAI'), dai.address);
+    await app['setStorageAddress(bytes32,address)'](hex4Bytes('OWNER'), owner.address);
+    await app['setStorageAddress(bytes32,address)'](hex4Bytes('RECEIVER'), receiver.address);
+    await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('AMOUNT'), oneDAI.toString());
 
     await app.parse('transferFromVar DAI OWNER RECEIVER AMOUNT');
     await app.execute();
@@ -846,8 +846,8 @@ describe('DSL: basic', () => {
     const Token = await ethers.getContractFactory('Token');
     const dai = await Token.connect(user).deploy(parseEther('1000'));
 
-    await app.setStorageAddress(hex4Bytes('DAI'), dai.address);
-    await app.setStorageAddress(hex4Bytes('USER'), user.address);
+    await app['setStorageAddress(bytes32,address)'](hex4Bytes('DAI'), dai.address);
+    await app['setStorageAddress(bytes32,address)'](hex4Bytes('USER'), user.address);
 
     await app.parse('balanceOf DAI USER');
     await app.execute();
@@ -876,7 +876,7 @@ describe('DSL: basic', () => {
     });
 
     it('complex; using `end` keyword', async () => {
-      // TODO: check is else test cases - it uses bool false, then bool true
+      // TODO: check if-else test cases - it uses bool false, then bool true
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;
       const FIVE = new Array(64).join('0') + 5;
@@ -884,9 +884,7 @@ describe('DSL: basic', () => {
       const SEVEN = new Array(64).join('0') + 7;
 
       await app.parse(
-        `
-
-      ${ONE}
+        `${ONE}
 
       bool true
       bool true
@@ -903,8 +901,7 @@ describe('DSL: basic', () => {
       }
       E {
         ${SEVEN}
-      }
-    `
+      }`
       );
       await app.execute();
       // TODO: it should be [1, 1, 7, 2]
@@ -913,16 +910,16 @@ describe('DSL: basic', () => {
   });
 
   it('TIMESTAMP > PREV_MONTH', async () => {
-    await app.setStorageUint256(hex4Bytes('PREV_MONTH'), PREV_MONTH);
-    await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
+    await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('PREV_MONTH'), PREV_MONTH);
+    await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
     await app.parse('var TIMESTAMP > var PREV_MONTH');
     await app.execute();
     await checkStackTail(stack, [1]);
   });
 
   it('TIMESTAMP < NEXT_MONTH', async () => {
-    await app.setStorageUint256(hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
-    await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
+    await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NEXT_MONTH'), NEXT_MONTH);
+    await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
     await app.parse('(var TIMESTAMP) < (var NEXT_MONTH)');
     await app.execute();
     await checkStackTail(stack, [1]);
@@ -946,10 +943,10 @@ describe('DSL: basic', () => {
     const NOT_RISKY = false;
 
     async function testCase(INIT: number, EXPIRY: number, RISK: boolean, target: number) {
-      await app.setStorageUint256(hex4Bytes('INIT'), INIT);
-      await app.setStorageUint256(hex4Bytes('EXPIRY'), EXPIRY);
-      await app.setStorageUint256(hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
-      await app.setStorageBool(hex4Bytes('RISK'), RISK);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('INIT'), INIT);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('EXPIRY'), EXPIRY);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('TIMESTAMP'), lastBlockTimestamp);
+      await app['setStorageBool(bytes32,bool)'](hex4Bytes('RISK'), RISK);
 
       await app.parse(
         `
@@ -1262,7 +1259,7 @@ describe('DSL: basic', () => {
 
     describe('declaration', () => {
       describe('uint256', () => {
-        it.skip('should declare an empty array with the position on the next empty item', async () => {
+        it.only('should declare an empty array with the position on the next empty item', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           expect(await app.getHead(hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
           expect(await app.getType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
@@ -1281,7 +1278,7 @@ describe('DSL: basic', () => {
           expect(await app.getType(hex4Bytes('NUMBERS'))).to.equal(TYPE_BYTES_ADDRESS);
         });
 
-        it.skip('should declare an empty array even with additional code', async () => {
+        it.only('should declare an empty array even with additional code', async () => {
           await app.parse(`
             (123e18) setUint256 SUM
             declareArr uint256 NUMBERS
@@ -1318,7 +1315,7 @@ describe('DSL: basic', () => {
         });
 
         describe('Simplified version', () => {
-          it.skip('should declare an empty array with the position on the next empty item', async () => {
+          it.only('should declare an empty array with the position on the next empty item', async () => {
             expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
             expect(await app.getHead(hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
             expect(await app.getType(hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
@@ -1337,7 +1334,7 @@ describe('DSL: basic', () => {
             expect(await app.getType(hex4Bytes('NUMBERS'))).to.equal(TYPE_BYTES_ADDRESS);
           });
 
-          it.skip('should declare an empty array even with additional code', async () => {
+          it.only('should declare an empty array even with additional code', async () => {
             await app.parse(`
               (123e18) setUint256 SUM
               uint256[] NUMBERS
@@ -1376,7 +1373,7 @@ describe('DSL: basic', () => {
       });
 
       describe('address', () => {
-        it.skip('should declare an empty array with the position on the next empty item', async () => {
+        it.only('should declare an empty array with the position on the next empty item', async () => {
           expect(await app.getLength(hex4Bytes('PARTNERS'))).to.equal(0);
           expect(await app.getHead(hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
           expect(await app.getType(hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
@@ -1395,7 +1392,7 @@ describe('DSL: basic', () => {
           expect(await app.getType(hex4Bytes('PARTNERS'))).to.equal(TYPE_BYTES_UINT256);
         });
 
-        it.skip('should declare an empty array even with additional code', async () => {
+        it.only('should declare an empty array even with additional code', async () => {
           await app.parse(`
             (123e18) setUint256 SUM
             declareArr address PARTNERS
@@ -1432,7 +1429,7 @@ describe('DSL: basic', () => {
         });
 
         describe('Simplified version', () => {
-          it.skip('should declare an empty array with the position on the next empty item', async () => {
+          it.only('should declare an empty array with the position on the next empty item', async () => {
             expect(await app.getLength(hex4Bytes('PARTNERS'))).to.equal(0);
             expect(await app.getHead(hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
             expect(await app.getType(hex4Bytes('PARTNERS'))).to.equal(EMPTY_BYTES);
@@ -1451,7 +1448,7 @@ describe('DSL: basic', () => {
             expect(await app.getType(hex4Bytes('PARTNERS'))).to.equal(TYPE_BYTES_UINT256);
           });
 
-          it.skip('should declare an empty array even with additional code', async () => {
+          it.only('should declare an empty array even with additional code', async () => {
             await app.parse(`
               (123e18) setUint256 SUM
               address[] PARTNERS
@@ -1493,13 +1490,13 @@ describe('DSL: basic', () => {
     describe('Push data', () => {
       // TODO: add checks for boundary values (zero, max, bad cases)
       describe('uint256', () => {
-        it.skip('should fail if try to push an item to non exist array', async () => {
+        it.only('should fail if try to push an item to non exist array', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           await app.parse('insert 1345 into NUMBERS');
           await expect(app.execute()).to.be.revertedWith('EXC3');
         });
 
-        it.skip('should push an item to an empty array', async () => {
+        it.only('should push an item to an empty array', async () => {
           expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           // just checking that the next value is also zero
@@ -1518,7 +1515,7 @@ describe('DSL: basic', () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(1);
         });
 
-        it.skip('should push an item to the array even with additional code', async () => {
+        it.only('should push an item to the array even with additional code', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
           await app.parse(`
@@ -1536,7 +1533,7 @@ describe('DSL: basic', () => {
           );
         });
 
-        it.skip('should push several values with additional code (two different arrays)', async () => {
+        it.only('should push several values with additional code (two different arrays)', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
           expect(await app.get(1, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
@@ -1630,13 +1627,13 @@ describe('DSL: basic', () => {
       });
 
       describe('address', () => {
-        it.skip('should fail if try to push an item to non exist array', async () => {
+        it.only('should fail if try to push an item to non exist array', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           await app.parse('insert 0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc into OWNERS');
           await expect(app.execute()).to.be.revertedWith('EXC3');
         });
 
-        it.skip('should push an item to an empty array', async () => {
+        it.only('should push an item to an empty array', async () => {
           expect(await app.getLength(hex4Bytes('OWNERS'))).to.equal(0);
           expect(await app.get(0, hex4Bytes('OWNERS'))).to.equal(EMPTY_BYTES);
           // just checking that the next value is also zero
@@ -1655,7 +1652,7 @@ describe('DSL: basic', () => {
           expect(await app.getLength(hex4Bytes('OWNERS'))).to.equal(1);
         });
 
-        it.skip('should push an item to the array even with additional code', async () => {
+        it.only('should push an item to the array even with additional code', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
           await app.parse(`
@@ -1673,7 +1670,7 @@ describe('DSL: basic', () => {
           );
         });
 
-        it.skip('should push several values with additional code (two different arrays)', async () => {
+        it.only('should push several values with additional code (two different arrays)', async () => {
           // should be zero initial values
           expect(await app.getLength(hex4Bytes('OWNERS'))).to.equal(0);
           expect(await app.getLength(hex4Bytes('PARTNERS'))).to.equal(0);
@@ -1780,7 +1777,7 @@ describe('DSL: basic', () => {
         });
       });
 
-      describe.skip('mixed types(uint256 + address)', () => {
+      describe.only('mixed types(uint256 + address)', () => {
         it('should push several values with additional code (declaration + inserting)', async () => {
           // should be zero initial values
           expect(await app.getLength(hex4Bytes('INDEXES'))).to.equal(0);
@@ -1851,7 +1848,7 @@ describe('DSL: basic', () => {
     });
 
     describe('Get array length', () => {
-      it.skip('should return zero length of the array with uint256 type', async () => {
+      it.only('should return zero length of the array with uint256 type', async () => {
         await app.parse(`
           uint256[] NUMBERS
           lengthOf NUMBERS
@@ -1860,7 +1857,7 @@ describe('DSL: basic', () => {
         await checkStackTail(stack, [0]);
       });
 
-      it.skip('should return zero length of the array with address type', async () => {
+      it.only('should return zero length of the array with address type', async () => {
         await app.parse(`
           address[] PARTNERS
           lengthOf PARTNERS
@@ -1869,7 +1866,7 @@ describe('DSL: basic', () => {
         await checkStackTail(stack, [0]);
       });
 
-      it.skip('return zero length of arrays with different types(uint256 + address)', async () => {
+      it.only('return zero length of arrays with different types(uint256 + address)', async () => {
         await app.parse(`
           uint256[] NUMBERS
           address[] INDEXES
@@ -1880,7 +1877,7 @@ describe('DSL: basic', () => {
         await checkStackTail(stack, [0, 0]);
       });
 
-      it.skip('should return length of arrays with different types after inserting values', async () => {
+      it.only('should return length of arrays with different types after inserting values', async () => {
         await app.parse(`
           uint256[] NUMBERS
           address[] INDEXES

@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import { IContext } from './interfaces/IContext.sol';
 import { IParser } from './interfaces/IParser.sol';
+import { IStorageUniversal } from './interfaces/IStorageUniversal.sol';
 import { Stack } from './helpers/Stack.sol';
 import { ComparisonOpcodes } from './libs/opcodes/ComparisonOpcodes.sol';
 import { BranchingOpcodes } from './libs/opcodes/BranchingOpcodes.sol';
@@ -415,7 +416,7 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
 
-        // TODO: need more examples and test how we can use it internally
+        // Ex. (msgValue == 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266) setBool IS_OWNER
         addOpcode(
             'msgValue',
             0x22,
@@ -524,6 +525,7 @@ contract Context is IContext {
             IParser.asmSumThroughStructs.selector,
             OpcodeLibNames.OtherOpcodes
         );
+
         // Creates structs
         // Ex. `struct BOB { address: 0x123...456, lastDeposit: 3 }`
         // Ex. `BOB.lastDeposit >= 5`
@@ -535,6 +537,16 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
 
+        /************
+         * For loop *
+         ***********/
+        // start of the for-loop
+        // Ex.
+        // ```
+        // for USER in USERS {
+        //   sendEth USER 1e18
+        // }
+        // ```
         addOpcode(
             'for',
             0x37,
@@ -543,6 +555,8 @@ contract Context is IContext {
             OpcodeLibNames.BranchingOpcodes
         );
 
+        // internal opcode that is added automatically by Preprocessor
+        // indicates the start of the for-loop block
         addOpcode(
             'startLoop',
             0x32,
@@ -551,6 +565,7 @@ contract Context is IContext {
             OpcodeLibNames.BranchingOpcodes
         );
 
+        // indicates the end of the for-loop block
         addOpcode(
             'endLoop',
             0x39,
@@ -601,9 +616,9 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         // types of arrays for declaration
-        _addOpcodeBranch(name, 'uint256', 0x01, bytes4(0x0));
+        _addOpcodeBranch(name, 'uint256', 0x01, IStorageUniversal.setStorageUint256.selector);
         _addOpcodeBranch(name, 'struct', 0x02, bytes4(0x0));
-        _addOpcodeBranch(name, 'address', 0x03, bytes4(0x0));
+        _addOpcodeBranch(name, 'address', 0x03, IStorageUniversal.setStorageAddress.selector);
 
         /***********
          * Aliases *
@@ -799,6 +814,10 @@ contract Context is IContext {
         structParams[structName][varName] = fullName;
     }
 
+    /**
+     * @dev Sets the number of iterations for the for-loop that is being executed
+     * @param _forLoopIterationsRemaining The number of iterations of the loop
+     */
     function setForLoopIterationsRemaining(uint256 _forLoopIterationsRemaining) external {
         forLoopIterationsRemaining = _forLoopIterationsRemaining;
     }

@@ -64,7 +64,6 @@ contract Preprocessor is IPreprocessor {
         return infixToPostfix(_ctxAddr, code, strStack);
     }
 
-    // TODO: this function isn't being executed
     /**
      * @dev Searches the comments in the program and removes comment lines
      * Example:

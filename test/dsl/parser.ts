@@ -7,7 +7,7 @@ import { hex4Bytes } from '../utils/utils';
 
 const { ethers, network } = hre;
 
-describe.skip('Parser', () => {
+describe('Parser', () => {
   let sender: SignerWithAddress;
   let app: ParserMock;
   let preprocessorAddr: string;
@@ -285,7 +285,7 @@ describe.skip('Parser', () => {
     it('updates the program with the loadRemote variable (uin256)', async () => {
       // Set NUMBER
       const bytes32Number = hex4Bytes('NUMBER');
-      await app.setStorageUint256(bytes32Number, 1000);
+      await app['setStorageUint256(bytes32,uint256)'](bytes32Number, 1000);
 
       await app.parseCodeExt(ctxAddr, ['loadRemote', 'uint256', 'NUMBER', appAddrHex]);
 
@@ -301,7 +301,7 @@ describe.skip('Parser', () => {
     it('updates the program with the loadRemote variable (bool)', async () => {
       const bytes32Bool = hex4Bytes('BOOL_VALUE');
       // Set BOOL_VALUE
-      await app.setStorageBool(bytes32Bool, true);
+      await app['setStorageBool(bytes32,bool)'](bytes32Bool, true);
 
       await app.parseCodeExt(ctxAddr, ['loadRemote', 'bool', 'BOOL_VALUE', appAddrHex]);
       expect(await ctx.program()).to.equal(
@@ -325,7 +325,7 @@ describe.skip('Parser', () => {
     describe('declare array', () => {
       describe('uint256 type', () => {
         describe('declare array', () => {
-          it.skip('simple array', async () => {
+          it.only('simple array', async () => {
             await app.parseCodeExt(ctxAddr, ['declareArr', 'uint256', 'NUMBERS']);
             expect(await ctx.program()).to.equal(
               '0x' +
@@ -335,7 +335,7 @@ describe.skip('Parser', () => {
             );
           });
 
-          it.skip('only with additional code just before it', async () => {
+          it.only('only with additional code just before it', async () => {
             const number = new Array(64).join('0') + 6;
             await app.parseCodeExt(ctxAddr, [
               'uint256',
@@ -358,7 +358,7 @@ describe.skip('Parser', () => {
             );
           });
 
-          it.skip('only with additional code just after it', async () => {
+          it.only('only with additional code just after it', async () => {
             const number = new Array(64).join('0') + 6;
             await app.parseCodeExt(ctxAddr, [
               'declareArr',
@@ -478,7 +478,7 @@ describe.skip('Parser', () => {
       });
 
       describe('address type', () => {
-        it.skip('declare simple array', async () => {
+        it.only('declare simple array', async () => {
           await app.parseCodeExt(ctxAddr, ['declareArr', 'address', 'MARY']);
           expect(await ctx.program()).to.equal(
             '0x' +
@@ -488,7 +488,7 @@ describe.skip('Parser', () => {
           );
         });
 
-        it.skip('with additional code just before it', async () => {
+        it.only('with additional code just before it', async () => {
           const number = new Array(64).join('0') + 6;
           await app.parseCodeExt(ctxAddr, [
             'uint256',
@@ -511,7 +511,7 @@ describe.skip('Parser', () => {
           );
         });
 
-        it.skip('with additional code just after it', async () => {
+        it.only('with additional code just after it', async () => {
           const number = new Array(64).join('0') + 6;
           await app.parseCodeExt(ctxAddr, [
             'declareArr',
@@ -865,7 +865,7 @@ describe.skip('Parser', () => {
       });
 
       describe('mixed types', () => {
-        it.skip('error: insert empty value', async () => {
+        it.only('error: insert empty value', async () => {
           await expect(
             app.parseCodeExt(ctxAddr, ['struct', 'BOB', 'endStruct'])
           ).to.be.revertedWith('PRS1');
@@ -919,10 +919,10 @@ describe.skip('Parser', () => {
           await app.parseCodeExt(ctxAddr, input);
 
           const three = new Array(64).join('0') + 3;
-          const number = new Array(63).join('0') + 'aa'; // 170
+          const number = `${new Array(63).join('0')}aa`; // 170
           expect(await ctx.program()).to.equal(
-            `0x` +
-              `36` + // struct
+            '0x' +
+              '36' + // struct
               '4a871642' + // BOB.lastPayment
               `${three}` + // 3
               'cb398fe1' + // endStruct
@@ -1021,11 +1021,11 @@ describe.skip('Parser', () => {
             ]);
 
             const three = new Array(64).join('0') + 3;
-            const number1 = new Array(62).join('0') + '12c'; // 300
-            const number2 = new Array(63).join('0') + 'aa'; // 170
+            const number1 = `${new Array(62).join('0')}12c`; // 300
+            const number2 = `${new Array(63).join('0')}aa`; // 170
             expect(await ctx.program()).to.equal(
-              `0x` +
-                `36` + // struct
+              '0x' +
+                '36' + // struct
                 '4a871642' + // BOB.lastPayment
                 `${three}` + // 3
                 'cb398fe1' + // endStruct
@@ -1057,5 +1057,14 @@ describe.skip('Parser', () => {
         });
       });
     });
+  });
+
+  describe('For loops', () => {
+    // test a loop over array of type uint256
+    // test a loop over array of type struct
+    // test a loop over array of type address
+    // test function calls inside a for loop
+    // test if inside a for loop
+    // test if-else inside a for loop
   });
 });

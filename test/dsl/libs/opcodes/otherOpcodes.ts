@@ -33,7 +33,7 @@ describe('Other opcodes', () => {
   let structType: string;
   let snapshotId: number;
   const testAmount = '1000';
-  const zero32bytes = '0x' + new Array(65).join('0');
+  const zero32bytes = `0x${new Array(65).join('0')}`;
 
   before(async () => {
     StackCont = await ethers.getContractFactory('Stack');
@@ -270,7 +270,7 @@ describe('Other opcodes', () => {
     const testValue = 1;
     const bytes32TestValueName = hex4Bytes('NUMBER');
 
-    await clientApp.setStorageUint256(bytes32TestValueName, testValue);
+    await clientApp['setStorageUint256(bytes32,uint256)'](bytes32TestValueName, testValue);
 
     const number = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${number}`);
@@ -284,7 +284,7 @@ describe('Other opcodes', () => {
     const testValue = 1;
     const bytes32TestValueName = hex4Bytes('NUMBER');
 
-    await clientApp.setStorageUint256(bytes32TestValueName, testValue);
+    await clientApp['setStorageUint256(bytes32,uint256)'](bytes32TestValueName, testValue);
 
     const number = bytes32TestValueName.substring(2, 10);
 
@@ -311,7 +311,7 @@ describe('Other opcodes', () => {
     const testValue = true;
     const bytes32TestValueName = hex4Bytes('BOOLEAN');
 
-    await clientApp.setStorageBool(bytes32TestValueName, testValue);
+    await clientApp['setStorageBool(bytes32,bool)'](bytes32TestValueName, testValue);
 
     const bool = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${bool}${clientApp.address.substring(2)}`);
@@ -325,7 +325,7 @@ describe('Other opcodes', () => {
     const testValue = addr1.address;
     const bytes32TestValueName = hex4Bytes('ADDRESS');
 
-    await clientApp.setStorageAddress(bytes32TestValueName, testValue);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32TestValueName, testValue);
 
     const addr = bytes32TestValueName.substring(2, 10);
     await ctx.setProgram(`0x${addr}${clientApp.address.substring(2)}`);
@@ -365,7 +365,7 @@ describe('Other opcodes', () => {
 
     const bytes32TestAddressName = hex4Bytes('ADDRESS');
 
-    await clientApp.setStorageAddress(bytes32TestAddressName, testAddress);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32TestAddressName, testAddress);
 
     const address = bytes32TestAddressName.substring(2, 10);
     await ctx.setProgram(`0x${address}${fundAmountHex}`);
@@ -382,8 +382,8 @@ describe('Other opcodes', () => {
     const bytes32TokenAddr = hex4Bytes('TOKEN_ADDR');
     const bytes32ReceiverAddr = hex4Bytes('RECEIVER');
 
-    await clientApp.setStorageAddress(bytes32TokenAddr, testERC20.address);
-    await clientApp.setStorageAddress(bytes32ReceiverAddr, receiver.address);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32TokenAddr, testERC20.address);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32ReceiverAddr, receiver.address);
 
     const tokenAddress = bytes32TokenAddr.substring(2, 10);
     const receiverAddress = bytes32ReceiverAddr.substring(2, 10);
@@ -406,9 +406,9 @@ describe('Other opcodes', () => {
     const bytes32ReceiverAddr = hex4Bytes('RECEIVER');
     const bytes32TestAmount = hex4Bytes('AMOUNT');
 
-    await clientApp.setStorageAddress(bytes32TokenAddr, testERC20.address);
-    await clientApp.setStorageAddress(bytes32ReceiverAddr, receiver.address);
-    await clientApp.setStorageUint256(bytes32TestAmount, 1000);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32TokenAddr, testERC20.address);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32ReceiverAddr, receiver.address);
+    await clientApp['setStorageUint256(bytes32,uint256)'](bytes32TestAmount, 1000);
 
     const tokenAddress = bytes32TokenAddr.substring(2, 10);
     const receiverAddress = bytes32ReceiverAddr.substring(2, 10);
@@ -433,9 +433,9 @@ describe('Other opcodes', () => {
     const bytes32SenderAddr = hex4Bytes('SENDER');
     const bytes32ReceiverAddr = hex4Bytes('RECEIVER');
 
-    await clientApp.setStorageAddress(bytes32TokenAddr, testERC20.address);
-    await clientApp.setStorageAddress(bytes32SenderAddr, sender.address);
-    await clientApp.setStorageAddress(bytes32ReceiverAddr, receiver.address);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32TokenAddr, testERC20.address);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32SenderAddr, sender.address);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32ReceiverAddr, receiver.address);
 
     const tokenAddress = bytes32TokenAddr.substring(2, 10);
     const senderAddress = bytes32SenderAddr.substring(2, 10);
@@ -464,10 +464,10 @@ describe('Other opcodes', () => {
     const bytes32ReceiverAddr = hex4Bytes('RECEIVER');
     const bytes32TestAmount = hex4Bytes('RECEIVER_AMOUNT');
 
-    await clientApp.setStorageAddress(bytes32TokenAddr, testERC20.address);
-    await clientApp.setStorageAddress(bytes32SenderAddr, sender.address);
-    await clientApp.setStorageAddress(bytes32ReceiverAddr, receiver.address);
-    await clientApp.setStorageUint256(bytes32TestAmount, testAmount);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32TokenAddr, testERC20.address);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32SenderAddr, sender.address);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32ReceiverAddr, receiver.address);
+    await clientApp['setStorageUint256(bytes32,uint256)'](bytes32TestAmount, testAmount);
 
     const tokenAddress = bytes32TokenAddr.substring(2, 10);
     const senderAddress = bytes32SenderAddr.substring(2, 10);
@@ -494,8 +494,8 @@ describe('Other opcodes', () => {
     const bytes32TokenAddr = hex4Bytes('TOKEN_ADDR');
     const bytes32ReceiverAddr = hex4Bytes('RECEIVER');
 
-    await clientApp.setStorageAddress(bytes32TokenAddr, testERC20.address);
-    await clientApp.setStorageAddress(bytes32ReceiverAddr, receiver.address);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32TokenAddr, testERC20.address);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32ReceiverAddr, receiver.address);
 
     const tokenAddress = bytes32TokenAddr.substring(2, 10);
     const receiverAddress = bytes32ReceiverAddr.substring(2, 10);
@@ -576,7 +576,6 @@ describe('Other opcodes', () => {
     const ACCOUNT = hex4Bytes('BOB.account');
     const ADDRESS = '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000';
     const THREE = new Array(64).join('0') + 3;
-    const ZERO = new Array(65).join('0');
 
     await ctx.setProgram(
       '0x' +
@@ -609,7 +608,7 @@ describe('Other opcodes', () => {
 
     describe('opDeclare', () => {
       it('uint256 type', async () => {
-        expect(await clientApp.getType(NUMBERS)).to.be.equal(zero32bytes);
+        expect(await clientApp.getType(NUMBERS)).to.be.equal('0x00');
 
         await ctx.setProgram(
           '0x' +
@@ -618,9 +617,7 @@ describe('Other opcodes', () => {
         );
 
         await app.opDeclare(ctxAddr);
-        expect(await clientApp.getType(NUMBERS)).to.be.equal(
-          '0x0100000000000000000000000000000000000000000000000000000000000000'
-        );
+        expect(await clientApp.getType(NUMBERS)).to.be.equal('0x01');
       });
 
       it('struct type', async () => {
@@ -629,11 +626,9 @@ describe('Other opcodes', () => {
             '02' + // struct
             '3c8423ff' // bytecode for PARTNERS
         );
-        expect(await clientApp.getType(PARTNERS)).to.be.equal(zero32bytes);
+        expect(await clientApp.getType(PARTNERS)).to.be.equal('0x00');
         await app.opDeclare(ctxAddr);
-        expect(await clientApp.getType(PARTNERS)).to.be.equal(
-          '0x0200000000000000000000000000000000000000000000000000000000000000'
-        );
+        expect(await clientApp.getType(PARTNERS)).to.be.equal('0x02');
       });
 
       it('address type', async () => {
@@ -642,17 +637,15 @@ describe('Other opcodes', () => {
             '03' + // address
             '257b3678' // bytecode for INDEXES
         );
-        expect(await clientApp.getType(INDEXES)).to.be.equal(zero32bytes);
+        expect(await clientApp.getType(INDEXES)).to.be.equal('0x00');
         await app.opDeclare(ctxAddr);
-        expect(await clientApp.getType(INDEXES)).to.be.equal(
-          '0x0300000000000000000000000000000000000000000000000000000000000000'
-        );
+        expect(await clientApp.getType(INDEXES)).to.be.equal('0x03');
       });
     });
 
     describe('opPush', () => {
       it('uint256 type', async () => {
-        await clientApp.declare(`${uint256type}${zero62}`, NUMBERS);
+        await clientApp.declare(uint256type, NUMBERS);
         expect(await clientApp.getLength(NUMBERS)).to.be.equal(0);
         await ctx.setProgram(
           '0x' +
@@ -667,7 +660,7 @@ describe('Other opcodes', () => {
       });
 
       it('struct type', async () => {
-        await clientApp.declare(`${structType}${zero62}`, INDEXES);
+        await clientApp.declare(structType, INDEXES);
         expect(await clientApp.getLength(INDEXES)).to.be.equal(0);
 
         await ctx.setProgram(
@@ -681,7 +674,7 @@ describe('Other opcodes', () => {
       });
 
       it('address type', async () => {
-        await clientApp.declare(`${addressType}${zero62}`, PARTNERS);
+        await clientApp.declare(addressType, PARTNERS);
         expect(await clientApp.getLength(PARTNERS)).to.be.equal(0);
         await ctx.setProgram(
           '0x' +
@@ -697,7 +690,7 @@ describe('Other opcodes', () => {
 
     describe('opGet', () => {
       it('uint256 type', async () => {
-        await clientApp.declare(`${uint256type}${zero62}`, NUMBERS);
+        await clientApp.declare(uint256type, NUMBERS);
         await clientApp.addItem(`0x${THREE}`, NUMBERS);
 
         await ctx.setProgram(
@@ -711,8 +704,8 @@ describe('Other opcodes', () => {
       });
 
       it('struct type', async () => {
-        await clientApp.declare(`${addressType}${zero62}`, INDEXES);
-        await clientApp.addItem(`${MAX}`, INDEXES);
+        await clientApp.declare(addressType, INDEXES);
+        await clientApp.addItem(MAX, INDEXES);
 
         await ctx.setProgram(
           `${zero32bytes}` + // 0x + 0 index
@@ -720,11 +713,11 @@ describe('Other opcodes', () => {
         );
         await app.opGet(ctxAddr);
         // returns bytecode for MAX struct name
-        await checkStack(stack, 1, `${MAX}`);
+        await checkStack(stack, 1, MAX);
       });
 
       it('address type', async () => {
-        await clientApp.declare(`${addressType}${zero62}`, PARTNERS);
+        await clientApp.declare(addressType, PARTNERS);
         await clientApp.addItem(`0x${ADDRESS_MARY}`, PARTNERS);
 
         await ctx.setProgram(
@@ -744,7 +737,7 @@ describe('Other opcodes', () => {
 
     describe('opSumOf', () => {
       it('uint256 type', async () => {
-        await clientApp.declare(`${uint256type}${zero62}`, NUMBERS);
+        await clientApp.declare(uint256type, NUMBERS);
         await clientApp.addItem(`0x${THREE}`, NUMBERS);
         await clientApp.addItem(`0x${FIVE}`, NUMBERS);
 
@@ -759,11 +752,11 @@ describe('Other opcodes', () => {
       });
 
       it('struct type', async () => {
-        await clientApp.declare(`${structType}${zero62}`, INDEXES);
-        await clientApp.addItem(`${MAX}`, INDEXES);
-        await clientApp.addItem(`${BOB}`, INDEXES);
-        await clientApp.setStorageUint256(hex4Bytes('BOB.balance'), 55);
-        await clientApp.setStorageUint256(hex4Bytes('MAX.balance'), 33);
+        await clientApp.declare(structType, INDEXES);
+        await clientApp.addItem(MAX, INDEXES);
+        await clientApp.addItem(BOB, INDEXES);
+        await clientApp['setStorageUint256(bytes32,uint256)'](hex4Bytes('BOB.balance'), 55);
+        await clientApp['setStorageUint256(bytes32,uint256)'](hex4Bytes('MAX.balance'), 33);
         await ctx.setStructVars('BOB', 'balance', 'BOB.balance');
         await ctx.setStructVars('MAX', 'balance', 'MAX.balance');
 
@@ -782,7 +775,7 @@ describe('Other opcodes', () => {
 
     describe('opLengthOf', () => {
       it('uint256 type', async () => {
-        await clientApp.declare(`${uint256type}${zero62}`, NUMBERS);
+        await clientApp.declare(uint256type, NUMBERS);
         await clientApp.addItem(`0x${THREE}`, NUMBERS);
         await clientApp.addItem(`0x${FIVE}`, NUMBERS);
         await clientApp.addItem(`0x${ONE}`, NUMBERS);
@@ -797,9 +790,9 @@ describe('Other opcodes', () => {
       });
 
       it('struct type', async () => {
-        await clientApp.declare(`${structType}${zero62}`, INDEXES);
-        await clientApp.addItem(`${BOB}`, INDEXES);
-        await clientApp.addItem(`${MAX}`, INDEXES);
+        await clientApp.declare(structType, INDEXES);
+        await clientApp.addItem(BOB, INDEXES);
+        await clientApp.addItem(MAX, INDEXES);
         await ctx.setProgram(
           '0x257b3678' // bytecode for INDEXES
         );
@@ -811,7 +804,7 @@ describe('Other opcodes', () => {
       });
 
       it('address type', async () => {
-        await clientApp.declare(`${addressType}${zero62}`, PARTNERS);
+        await clientApp.declare(addressType, PARTNERS);
         await clientApp.addItem(`0x${ADDRESS_MARY}`, PARTNERS);
         await clientApp.addItem(`0x${ADDRESS_MAX}`, PARTNERS);
         await ctx.setProgram(

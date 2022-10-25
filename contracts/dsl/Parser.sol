@@ -456,8 +456,11 @@ contract Parser is IParser {
         _parseVariable(); // parse the 'endStruct' word
     }
 
+    /**
+     * @dev Parses variable names in for-loop & skip the unnecessary `in` parameter
+     * Ex. ['for', 'LP_INITIAL', 'in', 'LPS_INITIAL']
+     */
     function asmForLoop() public {
-        // Ex. [('for'), 'LP_INITIAL', 'in', 'LPS_INITIAL']
         // parse temporary variable name
         _parseVariable();
         _nextCmd(); // skip `in` keyword

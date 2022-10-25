@@ -1529,7 +1529,7 @@ describe('Preprocessor', () => {
       });
 
       describe('declareArr', () => {
-        it.skip('declare array', async () => {
+        it.only('declare array', async () => {
           const input = 'declareArr uint256 BALANCES';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql(['declareArr', 'uint256', 'BALANCES']);
@@ -1549,19 +1549,19 @@ describe('Preprocessor', () => {
           ]);
         });
 
-        it.skip('declare array just before a command', async () => {
+        it.only('declare array just before a command', async () => {
           const input = 'declareArr uint256 BALANCES bool false';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql(['declareArr', 'uint256', 'BALANCES', 'bool', 'false']);
         });
 
-        it.skip('declare array just after a command', async () => {
+        it.only('declare array just after a command', async () => {
           const input = 'declareArr uint256 BALANCES bool false';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql(['declareArr', 'uint256', 'BALANCES', 'bool', 'false']);
         });
 
-        it.skip('declare three arrays', async () => {
+        it.only('declare three arrays', async () => {
           const input =
             'declareArr uint256 BALANCES declareArr uint256 VALUES declareArr uint256 INDEXES';
           const cmds = await app.callStatic.transform(ctxAddr, input);
@@ -1582,7 +1582,7 @@ describe('Preprocessor', () => {
 
     describe('address type', () => {
       describe('declareArr', () => {
-        it.skip('declare array', async () => {
+        it.only('declare array', async () => {
           const input = 'declareArr address REALTORS';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql(['declareArr', 'address', 'REALTORS']);
@@ -1602,19 +1602,19 @@ describe('Preprocessor', () => {
           ]);
         });
 
-        it.skip('declare array just before a command', async () => {
+        it.only('declare array just before a command', async () => {
           const input = 'declareArr address REALTORS bool false';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql(['declareArr', 'address', 'REALTORS', 'bool', 'false']);
         });
 
-        it.skip('declare array just after a command', async () => {
+        it.only('declare array just after a command', async () => {
           const input = 'declareArr address REALTORS bool false';
           const cmds = await app.callStatic.transform(ctxAddr, input);
           expect(cmds).to.eql(['declareArr', 'address', 'REALTORS', 'bool', 'false']);
         });
 
-        it.skip('declare three arrays', async () => {
+        it.only('declare three arrays', async () => {
           const input =
             'declareArr address REALTORS declareArr address OWNERS declareArr address DBs';
           const cmds = await app.callStatic.transform(ctxAddr, input);
@@ -1779,7 +1779,7 @@ describe('Preprocessor', () => {
     });
 
     describe('arrays and stucts', () => {
-      it.skip('with different types of commands', async () => {
+      it.only('with different types of commands', async () => {
         // TODO: something weird with operators for `Bob.lastPayment > 1`.
         // Only with structure operators are changed their place for in the list of commands
         // const input = `
