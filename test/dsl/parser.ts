@@ -1060,6 +1060,7 @@ describe('Parser', () => {
   });
 
   describe('For loops', () => {
+    // TODO
     // test a loop over array of type uint256
     // test a loop over array of type struct
     // test a loop over array of type address

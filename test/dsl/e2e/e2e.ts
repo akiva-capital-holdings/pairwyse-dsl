@@ -373,7 +373,7 @@ describe('End-to-end', () => {
     });
   });
 
-  describe.skip('Arrays', async () => {
+  describe('Arrays', async () => {
     describe('uint256 type', () => {
       describe('declareArr', () => {
         it('with additional code before and after it', async () => {
