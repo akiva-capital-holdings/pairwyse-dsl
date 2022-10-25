@@ -5,7 +5,6 @@ import dotenv from 'dotenv';
 import { addSteps, businessCaseTest } from '../../utils/utils';
 import { businessCaseSteps } from '../../../scripts/data/agreement';
 import { deployAgreement, deployPreprocessor } from '../../../scripts/utils/deploy.utils';
-// import { activateRecord } from '../../scripts/utils/update.record';
 import { ONE_MONTH } from '../../utils/constants';
 import { DynamicTestData } from '../../types';
 
