@@ -4,7 +4,6 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
 import { addSteps, hex4Bytes } from '../utils/utils';
 import { deployAgreement, deployPreprocessor } from '../../scripts/utils/deploy.utils';
-import { activateRecord } from '../../scripts/utils/update.record';
 import {
   aliceAndBobSteps,
   aliceBobAndCarl,
