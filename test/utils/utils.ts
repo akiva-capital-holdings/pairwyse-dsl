@@ -10,6 +10,7 @@ import { Stack__factory, Stack, Context, ERC20 } from '../../typechain-types';
 import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
 import { DynamicTestData, OpConditionalTxFunc, TxObject } from '../types';
 import { ONE_DAY, ONE_MONTH, ONE_YEAR } from './constants';
+import { activateRecord } from '../../scripts/utils/update.record';
 
 /**
  * Apply keccak256 to `str`, cut the result to the first 4 bytes, append
@@ -225,6 +226,9 @@ export const addSteps = async (
 
     // Send this raw transaction with Multisig contract
     const { hash } = await multisig.executeTransaction(agreement.address, data as string, 0);
+
+    // Activate records
+    await activateRecord(agreement, multisig, Number(step.txId));
 
     console.log(`\nAgreement update transaction hash: \n\t\x1b[35m${hash}\x1b[0m`);
   }

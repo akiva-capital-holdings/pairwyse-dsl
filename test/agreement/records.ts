@@ -62,7 +62,8 @@ describe('Simple Records in Agreement', () => {
     await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
     await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
-    // Make a snapshot
+    // TODO: Make a snapshot. Test should not be depended on certain ID of record.
+    // TODO: Tests can be simplified more to decrease time for its execution
     // snapshotId = await network.provider.send('evm_snapshot');
   });
 

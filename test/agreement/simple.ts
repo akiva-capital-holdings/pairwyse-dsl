@@ -67,8 +67,6 @@ describe('Agreement: Alice, Bob, Carl', () => {
       multisig
     );
 
-    // Activate records
-    await activateRecord(agreement, multisig, 1);
     await expect(agreement.connect(bob).execute(txId)).to.be.revertedWith('AGR1');
   });
 
@@ -95,12 +93,6 @@ describe('Agreement: Alice, Bob, Carl', () => {
     // Bad signatory
     // await expect(agreement.connect(anybody).execute(txId)).to.be.revertedWith('AGR1');
 
-    // Try to execute if the record is not activated
-    await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('AGR13');
-
-    // Activate record
-    await activateRecord(agreement, multisig, 1);
-
     // Condition isn't satisfied
     await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('AGR6');
 
@@ -119,10 +111,6 @@ describe('Agreement: Alice, Bob, Carl', () => {
 
     // Update Agreement
     await addSteps(preprocessorAddr, oneEthToBobSteps(alice), agreementAddr, multisig);
-
-    // Activate records
-    await activateRecord(agreement, multisig, 1);
-    await activateRecord(agreement, multisig, 2);
 
     // Execute
     await expect(await agreement.connect(alice).execute(1, { value: oneEthBN })).changeEtherBalance(
@@ -148,11 +136,6 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await agreement.setStorageAddress(hex4Bytes('TOKEN_ADDR'), token.address);
     await agreement.setStorageAddress(hex4Bytes('ALICE'), alice.address);
     await agreement.setStorageAddress(hex4Bytes('BOB'), bob.address);
-
-    // Activate records
-    await activateRecord(agreement, multisig, 21);
-    await activateRecord(agreement, multisig, 22);
-    await activateRecord(agreement, multisig, 23);
 
     // Alice deposits 1 ETH to SC
     await expect(agreement.connect(alice).execute(21, { value: 0 })).to.be.revertedWith('AGR3');
@@ -205,13 +188,6 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await agreement.setStorageAddress(hex4Bytes('CARL'), carl.address);
     await agreement.setStorageAddress(hex4Bytes('TRANSACTIONS'), agreementAddr);
 
-    // Activate records
-    await activateRecord(agreement, multisig, 31);
-    await activateRecord(agreement, multisig, 32);
-    await activateRecord(agreement, multisig, 33);
-    await activateRecord(agreement, multisig, 34);
-    await activateRecord(agreement, multisig, 36);
-
     // Alice deposits 1 ETH to SC
     console.log('Alice deposits 1 ETH to SC');
     await agreement.connect(alice).execute(31, { value: oneEthBN });
@@ -243,7 +219,6 @@ describe('Agreement: Alice, Bob, Carl', () => {
     expect(await token.balanceOf(alice.address)).to.equal(0);
 
     // To speed up the test. It may be enabled
-    // await activateRecord(agreement, multisig, 35);
     // // If Alice didn't return 10 tokens to Bob before EXPIRY
     // // then Bob can collect 10 tokens from Carl
     // await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
@@ -291,9 +266,6 @@ describe('Agreement: Alice, Bob, Carl', () => {
         agreementAddr,
         multisig
       );
-
-      // Activate records
-      await activateRecord(agreement, multisig, 41);
 
       // Alice deposits 10 dai tokens to SC
       await daiToken.connect(alice).transfer(agreementAddr, tenTokens);
