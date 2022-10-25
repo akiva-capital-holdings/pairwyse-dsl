@@ -12,7 +12,7 @@ import {
   setRecord,
   setRecords,
   parseConditions,
-} from '../../scripts/utils/update.record';
+} from '../../scripts/utils/update.record.mock';
 import { deployPreprocessor } from '../../scripts/utils/deploy.utils';
 import { AgreementMock, ContextMock__factory } from '../../typechain-types';
 import { anyone, ONE_MONTH } from '../utils/constants';
