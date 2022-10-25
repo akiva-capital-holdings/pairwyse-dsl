@@ -290,11 +290,11 @@ describe('Executor', () => {
         it('17 > 15', async () => {
           // Set NUMBER
           const bytes32Number = hex4Bytes('NUMBER');
-          await app.setStorageUint256(bytes32Number, 17);
+          await app['setStorageUint256(bytes32,uint256)'](bytes32Number, 17);
 
           // Set NUMBER2
           const bytes32Number2 = hex4Bytes('NUMBER2');
-          await app.setStorageUint256(bytes32Number2, 15);
+          await app['setStorageUint256(bytes32,uint256)'](bytes32Number2, 15);
 
           /**
            * The program is:
@@ -314,11 +314,11 @@ describe('Executor', () => {
         it('5 <= 3', async () => {
           // Set NUMBER
           const bytes32Number = hex4Bytes('NUMBER');
-          await app.setStorageUint256(bytes32Number, 5);
+          await app['setStorageUint256(bytes32,uint256)'](bytes32Number, 5);
 
           // Set NUMBER2
           const bytes32Number2 = hex4Bytes('NUMBER2');
-          await app.setStorageUint256(bytes32Number2, 3);
+          await app['setStorageUint256(bytes32,uint256)'](bytes32Number2, 3);
 
           /**
            * The program is:
@@ -338,11 +338,11 @@ describe('Executor', () => {
         it('12 = 12', async () => {
           // Set NUMBER
           const bytes32Number = hex4Bytes('NUMBER');
-          await app.setStorageUint256(bytes32Number, 12);
+          await app['setStorageUint256(bytes32,uint256)'](bytes32Number, 12);
 
           // Set NUMBER2
           const bytes32Number2 = hex4Bytes('NUMBER2');
-          await app.setStorageUint256(bytes32Number2, 12);
+          await app['setStorageUint256(bytes32,uint256)'](bytes32Number2, 12);
 
           /**
            * The program is:
@@ -372,11 +372,11 @@ describe('Executor', () => {
         it('17 > 15', async () => {
           // Set N
           const bytes32Number = hex4Bytes('N');
-          await app.setStorageUint256(bytes32Number, 17);
+          await app['setStorageUint256(bytes32,uint256)'](bytes32Number, 17);
 
           // Set N2
           const bytes32Number2 = hex4Bytes('N2');
-          await app.setStorageUint256(bytes32Number2, 15);
+          await app['setStorageUint256(bytes32,uint256)'](bytes32Number2, 15);
 
           /**
            * The program is:
@@ -396,11 +396,11 @@ describe('Executor', () => {
         it('5 <= 3', async () => {
           // Set N
           const bytes32Number = hex4Bytes('N');
-          await app.setStorageUint256(bytes32Number, 5);
+          await app['setStorageUint256(bytes32,uint256)'](bytes32Number, 5);
 
           // Set N2
           const bytes32Number2 = hex4Bytes('N2');
-          await app.setStorageUint256(bytes32Number2, 3);
+          await app['setStorageUint256(bytes32,uint256)'](bytes32Number2, 3);
 
           /**
            * The program is:
@@ -420,11 +420,11 @@ describe('Executor', () => {
         it('12 = 12', async () => {
           // Set N
           const bytes32Number = hex4Bytes('N');
-          await app.setStorageUint256(bytes32Number, 12);
+          await app['setStorageUint256(bytes32,uint256)'](bytes32Number, 12);
 
           // Set N2
           const bytes32Number2 = hex4Bytes('N2');
-          await app.setStorageUint256(bytes32Number2, 12);
+          await app['setStorageUint256(bytes32,uint256)'](bytes32Number2, 12);
 
           /**
            * The program is:
@@ -446,11 +446,17 @@ describe('Executor', () => {
         it('addresses are equal', async () => {
           // Set ADDR
           const addrBytes = hex4Bytes('ADDR');
-          await app.setStorageAddress(addrBytes, '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+          await app['setStorageAddress(bytes32,address)'](
+            addrBytes,
+            '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5'
+          );
 
           // Set ADDR2
           const addrBytes2 = hex4Bytes('ADDR2');
-          await app.setStorageAddress(addrBytes2, '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+          await app['setStorageAddress(bytes32,address)'](
+            addrBytes2,
+            '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5'
+          );
 
           /**
            * The program is:
@@ -470,11 +476,17 @@ describe('Executor', () => {
         it('different addresses are not equal', async () => {
           // Set A
           const addrBytes = hex4Bytes('A');
-          await app.setStorageAddress(addrBytes, '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5');
+          await app['setStorageAddress(bytes32,address)'](
+            addrBytes,
+            '0x52bc44d5378309EE2abF1539BF71dE1b7d7bE3b5'
+          );
 
           // Set A2
           const addrBytes2 = hex4Bytes('A2');
-          await app.setStorageAddress(addrBytes2, '0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836');
+          await app['setStorageAddress(bytes32,address)'](
+            addrBytes2,
+            '0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836'
+          );
 
           /**
            * The program is:
@@ -558,11 +570,11 @@ describe('Executor', () => {
         it('true == true', async () => {
           // Set BOOL
           const boolBytes = hex4Bytes('BOOL');
-          await app.setStorageBool(boolBytes, true);
+          await app['setStorageBool(bytes32,bool)'](boolBytes, true);
 
           // Set BOOL2
           const boolBytes2 = hex4Bytes('BOOL2');
-          await app.setStorageBool(boolBytes2, true);
+          await app['setStorageBool(bytes32,bool)'](boolBytes2, true);
 
           /**
            * The program is:
@@ -582,11 +594,11 @@ describe('Executor', () => {
         it('true != true', async () => {
           // Set BOOL
           const boolBytes = hex4Bytes('BOOL');
-          await app.setStorageBool(boolBytes, true);
+          await app['setStorageBool(bytes32,bool)'](boolBytes, true);
 
           // Set BOOL2
           const boolBytes2 = hex4Bytes('BOOL2');
-          await app.setStorageBool(boolBytes2, true);
+          await app['setStorageBool(bytes32,bool)'](boolBytes2, true);
 
           /**
            * The program is:

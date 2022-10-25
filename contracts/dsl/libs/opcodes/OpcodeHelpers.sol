@@ -31,6 +31,26 @@ library OpcodeHelpers {
         return nextBytes(_ctx, 1)[0];
     }
 
+    /**
+     * @dev Reads the slice of bytes from the raw program
+     * @dev Warning! The maximum slice size can only be 32 bytes!
+     * @param _ctx Context contract address
+     * @param _start Start position to read
+     * @param _end End position to read
+     * @return res Bytes32 slice of the raw program
+     */
+    function readBytesSlice(
+        address _ctx,
+        uint256 _start,
+        uint256 _end
+    ) public view returns (bytes32 res) {
+        bytes memory slice = IContext(_ctx).programAt(_start, _end - _start);
+        // Convert bytes to bytes32
+        assembly {
+            res := mload(add(slice, 0x20))
+        }
+    }
+
     function nextBranchSelector(address _ctx, string memory baseOpName) public returns (bytes4) {
         bytes1 branchCode = nextBytes1(_ctx);
         return IContext(_ctx).branchSelectors(baseOpName, branchCode);

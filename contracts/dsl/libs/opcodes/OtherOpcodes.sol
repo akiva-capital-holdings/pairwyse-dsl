@@ -55,7 +55,7 @@ library OtherOpcodes {
             abi.encodeWithSignature('setStorageBool(bytes32,bool)', _varNameB32, _boolVal)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
-        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
+        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     /**
@@ -70,8 +70,7 @@ library OtherOpcodes {
             abi.encodeWithSignature('setStorageUint256(bytes32,uint256)', _varNameB32, _val)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
-
-        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
+        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     /**
@@ -88,7 +87,7 @@ library OtherOpcodes {
         );
 
         require(success, ErrorsGeneralOpcodes.OP1);
-        require(bytes32(data) != bytes32(0x0), ErrorsGeneralOpcodes.OP2);
+        require(bytes1(data) != bytes1(0x0), ErrorsGeneralOpcodes.OP2);
         (success, data) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
                 'get(uint256,bytes32)',
@@ -172,7 +171,7 @@ library OtherOpcodes {
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
         require(success, ErrorsGeneralOpcodes.OP1);
-        require(bytes32(data) != bytes32(0x0), ErrorsGeneralOpcodes.OP4);
+        require(bytes1(data) != bytes1(0x0), ErrorsGeneralOpcodes.OP4);
 
         (success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
@@ -189,14 +188,13 @@ library OtherOpcodes {
      * @param _ctx Context contract instance address
      */
     function opDeclare(address _ctx) public {
-        // https://github.com/ethereum/solidity/releases/tag/v0.8.5
-        bytes32 _varType = OpcodeHelpers.getNextBytes(_ctx, 1);
+        bytes32 _arrType = OpcodeHelpers.getNextBytes(_ctx, 1);
         bytes32 _arrName = OpcodeHelpers.getNextBytes(_ctx, 4);
 
         (bool success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
-                'declare(bytes32,bytes32)',
-                _varType, // type of the array
+                'declare(bytes1,bytes32)',
+                bytes1(_arrType), // type of the array
                 _arrName
             )
         );
@@ -205,6 +203,10 @@ library OtherOpcodes {
 
     function opLoadLocalUint256(address _ctx) public {
         opLoadLocal(_ctx, 'getStorageUint256(bytes32)');
+    }
+
+    function opLoadLocalAddress(address _ctx) public {
+        opLoadLocal(_ctx, 'getStorageAddress(bytes32)');
     }
 
     function opLoadRemoteUint256(address _ctx) public {
@@ -238,7 +240,7 @@ library OtherOpcodes {
         );
         uint256 amount = opUint256Get(_ctx);
         recipient.transfer(amount);
-        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
+        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     function opTransfer(address _ctx) public {
@@ -250,7 +252,7 @@ library OtherOpcodes {
         );
         uint256 amount = opUint256Get(_ctx);
         IERC20(token).transfer(recipient, amount);
-        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
+        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     function opTransferVar(address _ctx) public {
@@ -262,7 +264,7 @@ library OtherOpcodes {
         );
         uint256 amount = uint256(opLoadLocalGet(_ctx, 'getStorageUint256(bytes32)'));
         IERC20(token).transfer(recipient, amount);
-        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
+        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     function opTransferFrom(address _ctx) public {
@@ -277,7 +279,7 @@ library OtherOpcodes {
         );
         uint256 amount = opUint256Get(_ctx);
         IERC20(token).transferFrom(from, to, amount);
-        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
+        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     function opBalanceOf(address _ctx) public {
@@ -309,7 +311,7 @@ library OtherOpcodes {
         uint256 amount = uint256(opLoadLocalGet(_ctx, 'getStorageUint256(bytes32)'));
 
         IERC20(token).transferFrom(from, to, amount);
-        OpcodeHelpers.putToStack(_ctx, 1); // TODO: remove
+        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     function opUint256Get(address _ctx) public returns (uint256) {

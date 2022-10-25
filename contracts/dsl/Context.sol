@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import { IContext } from './interfaces/IContext.sol';
 import { IParser } from './interfaces/IParser.sol';
+import { IStorageUniversal } from './interfaces/IStorageUniversal.sol';
 import { Stack } from './helpers/Stack.sol';
 import { ComparisonOpcodes } from './libs/opcodes/ComparisonOpcodes.sol';
 import { BranchingOpcodes } from './libs/opcodes/BranchingOpcodes.sol';
@@ -60,6 +61,8 @@ contract Context is IContext {
     mapping(string => string) public aliases;
     mapping(string => bool) public isStructVar;
     mapping(bytes4 => mapping(bytes4 => bytes4)) public structParams;
+    // Counter for the number of iterations for every for-loop in DSL code
+    uint256 public forLoopIterationsRemaining;
 
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), ErrorsContext.CTX1);
@@ -296,15 +299,6 @@ contract Context is IContext {
             OpcodeLibNames.BranchingOpcodes
         );
 
-        // 'branch' tag gets replaced with 'end' tag. So this is just another name of the 'end' tag
-        addOpcode(
-            'branch',
-            0x2f,
-            BranchingOpcodes.opEnd.selector,
-            0x0,
-            OpcodeLibNames.BranchingOpcodes
-        );
-
         // Simple Opcodes
         addOpcode(
             'blockNumber',
@@ -422,7 +416,7 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
 
-        // TODO: need more examples and test how we can use it internally
+        // Ex. (msgValue == 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266) setBool IS_OWNER
         addOpcode(
             'msgValue',
             0x22,
@@ -490,7 +484,7 @@ contract Context is IContext {
         // Ex. `sumOf ARR_NAME`
         addOpcode(
             'sumOf',
-            0x37,
+            0x40,
             OtherOpcodes.opSumOf.selector,
             IParser.asmSumOf.selector,
             OpcodeLibNames.OtherOpcodes
@@ -532,6 +526,54 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
 
+        // Creates structs
+        // Ex. `struct BOB { address: 0x123...456, lastDeposit: 3 }`
+        // Ex. `BOB.lastDeposit >= 5`
+        addOpcode(
+            'struct',
+            0x36,
+            OtherOpcodes.opStruct.selector,
+            IParser.asmStruct.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
+        /************
+         * For loop *
+         ***********/
+        // start of the for-loop
+        // Ex.
+        // ```
+        // for USER in USERS {
+        //   sendEth USER 1e18
+        // }
+        // ```
+        addOpcode(
+            'for',
+            0x37,
+            BranchingOpcodes.opForLoop.selector,
+            IParser.asmForLoop.selector,
+            OpcodeLibNames.BranchingOpcodes
+        );
+
+        // internal opcode that is added automatically by Preprocessor
+        // indicates the start of the for-loop block
+        addOpcode(
+            'startLoop',
+            0x32,
+            BranchingOpcodes.opStartLoop.selector,
+            0x0,
+            OpcodeLibNames.BranchingOpcodes
+        );
+
+        // indicates the end of the for-loop block
+        addOpcode(
+            'endLoop',
+            0x39,
+            BranchingOpcodes.opEndLoop.selector,
+            0x0,
+            OpcodeLibNames.BranchingOpcodes
+        );
+
         // Complex Opcodes with sub Opcodes (branches)
 
         /*
@@ -547,22 +589,6 @@ contract Context is IContext {
             0x1b,
             OtherOpcodes.opLoadLocalUint256.selector,
             IParser.asmVar.selector,
-            OpcodeLibNames.OtherOpcodes
-        );
-
-        /* Declare struct and its variables names and values from the `struct type` array
-            Ex.
-            ```
-            struct BOB {
-              lastPayment: 1000
-              account: 0x9A676e781A523b5d0C0e43731313A708CB607508
-            }
-        */
-        addOpcode(
-            'struct',
-            0x36,
-            OtherOpcodes.opStruct.selector,
-            IParser.asmStruct.selector,
             OpcodeLibNames.OtherOpcodes
         );
 
@@ -590,11 +616,13 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         // types of arrays for declaration
-        _addOpcodeBranch(name, 'uint256', 0x01, bytes4(0x0));
+        _addOpcodeBranch(name, 'uint256', 0x01, IStorageUniversal.setStorageUint256.selector);
         _addOpcodeBranch(name, 'struct', 0x02, bytes4(0x0));
-        _addOpcodeBranch(name, 'address', 0x03, bytes4(0x0));
+        _addOpcodeBranch(name, 'address', 0x03, IStorageUniversal.setStorageAddress.selector);
 
-        // Aliases
+        /***********
+         * Aliases *
+         **********/
 
         /*
             As the blockTimestamp is the current opcode the user can use time alias to
@@ -605,6 +633,7 @@ contract Context is IContext {
                 `time < var FUND_INVESTMENT_DATE`
         */
         _addAlias('time', 'blockTimestamp');
+        _addAlias('end', 'branch');
     }
 
     /**
@@ -783,6 +812,14 @@ contract Context is IContext {
         bytes4 varName = bytes4(keccak256(abi.encodePacked(_varName)));
         bytes4 fullName = bytes4(keccak256(abi.encodePacked(_fullName)));
         structParams[structName][varName] = fullName;
+    }
+
+    /**
+     * @dev Sets the number of iterations for the for-loop that is being executed
+     * @param _forLoopIterationsRemaining The number of iterations of the loop
+     */
+    function setForLoopIterationsRemaining(uint256 _forLoopIterationsRemaining) external {
+        forLoopIterationsRemaining = _forLoopIterationsRemaining;
     }
 
     /**

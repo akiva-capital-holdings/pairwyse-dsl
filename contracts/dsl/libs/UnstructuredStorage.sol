@@ -27,9 +27,23 @@ library UnstructuredStorage {
         }
     }
 
+    function setStorageBool(bytes32 position, bytes32 data) internal {
+        bool val = data != bytes32(0);
+        assembly {
+            sstore(position, val)
+        }
+    }
+
     function setStorageBool(bytes32 position, bool data) internal {
         assembly {
             sstore(position, data)
+        }
+    }
+
+    function setStorageAddress(bytes32 position, bytes32 data) internal {
+        address val = address(bytes20(data));
+        assembly {
+            sstore(position, val)
         }
     }
 
@@ -42,6 +56,13 @@ library UnstructuredStorage {
     function setStorageBytes32(bytes32 position, bytes32 data) internal {
         assembly {
             sstore(position, data)
+        }
+    }
+
+    function setStorageUint256(bytes32 position, bytes32 data) internal {
+        uint256 val = uint256(bytes32(data));
+        assembly {
+            sstore(position, val)
         }
     }
 

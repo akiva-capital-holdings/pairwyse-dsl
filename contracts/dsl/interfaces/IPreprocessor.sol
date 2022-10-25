@@ -36,6 +36,7 @@ interface IPreprocessor {
         bool directUseUint256;
         bool isArrayStart;
         bool isStructStart;
+        bool isLoopStart;
         uint256 loadRemoteVarCount;
         uint256 currencyMultiplier;
         uint256 insertStep;

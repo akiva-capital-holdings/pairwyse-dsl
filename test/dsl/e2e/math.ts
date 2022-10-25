@@ -59,8 +59,8 @@ describe('DSL: math', () => {
     });
 
     it('division by zero error from variables', async () => {
-      await app.setStorageUint256(hex4Bytes('NUM1'), 10);
-      await app.setStorageUint256(hex4Bytes('NUM2'), 0);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUM1'), 10);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUM2'), 0);
       await app.parse('var NUM1 / var NUM2');
       await expect(app.execute()).to.be.revertedWith('EXC3');
     });
@@ -72,8 +72,8 @@ describe('DSL: math', () => {
       await app.parse('uint256 0 / uint256 0');
       await expect(app.execute()).to.be.revertedWith('EXC3');
 
-      await app.setStorageUint256(hex4Bytes('NUM1'), 0);
-      await app.setStorageUint256(hex4Bytes('NUM2'), 0);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUM1'), 0);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUM2'), 0);
       await app.parse('var NUM1 / var NUM2');
       await expect(app.execute()).to.be.revertedWith('EXC3');
     });
@@ -89,8 +89,8 @@ describe('DSL: math', () => {
     });
 
     it('should divide zero by number from variables', async () => {
-      await app.setStorageUint256(hex4Bytes('NUM1'), 0);
-      await app.setStorageUint256(hex4Bytes('NUM2'), 1);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUM1'), 0);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUM2'), 1);
       await app.parse('var NUM1 / var NUM2');
       await app.execute();
     });
@@ -101,8 +101,8 @@ describe('DSL: math', () => {
       await app.parse('uint256 5 - uint256 6');
       await expect(app.execute()).to.be.revertedWith('EXC3');
 
-      await app.setStorageUint256(hex4Bytes('NUM1'), 10);
-      await app.setStorageUint256(hex4Bytes('NUM2'), 1000);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUM1'), 10);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUM2'), 1000);
       await app.parse('var NUM1 - var NUM2');
       await expect(app.execute()).to.be.revertedWith('EXC3');
     });
@@ -114,8 +114,8 @@ describe('DSL: math', () => {
       await app.parse('uint256 0 - uint256 1');
       await expect(app.execute()).to.be.revertedWith('EXC3');
 
-      await app.setStorageUint256(hex4Bytes('NUM1'), 0);
-      await app.setStorageUint256(hex4Bytes('NUM2'), 1);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUM1'), 0);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUM2'), 1);
       await app.parse('var NUM1 - var NUM2');
       await expect(app.execute()).to.be.revertedWith('EXC3');
     });
@@ -127,8 +127,8 @@ describe('DSL: math', () => {
       await app.parse('uint256 0 - uint256 0');
       await app.execute();
 
-      await app.setStorageUint256(hex4Bytes('NUM1'), 0);
-      await app.setStorageUint256(hex4Bytes('NUM2'), 0);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUM1'), 0);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUM2'), 0);
       await app.parse('var NUM1 - var NUM2');
       await app.execute();
     });
@@ -195,8 +195,8 @@ describe('DSL: math', () => {
       await app.parse('uint256 0 + uint256 0');
       await app.execute();
 
-      await app.setStorageUint256(hex4Bytes('NUM1'), 0);
-      await app.setStorageUint256(hex4Bytes('NUM2'), 0);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUM1'), 0);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUM2'), 0);
       await app.parse('var NUM1 + var NUM2');
       await app.execute();
     });

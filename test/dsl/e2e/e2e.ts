@@ -2,8 +2,10 @@ import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { parseEther } from 'ethers/lib/utils';
 import { E2EApp, Context, Preprocessor, Stack } from '../../../typechain-types';
-import { checkStackTail, hex4Bytes, hex4BytesShort } from '../../utils/utils';
+import { bnToLongHexString, checkStackTail, hex4Bytes, hex4BytesShort } from '../../utils/utils';
 import { deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 import { deployBaseMock } from '../../../scripts/utils/deploy.utils.mock';
 import { getChainId } from '../../../utils/utils';
@@ -11,6 +13,10 @@ import { getChainId } from '../../../utils/utils';
 const { ethers, network } = hre;
 
 describe('End-to-end', () => {
+  let alice: SignerWithAddress;
+  let bob: SignerWithAddress;
+  let carl: SignerWithAddress;
+  let david: SignerWithAddress;
   let stack: Stack;
   let preprocessor: Preprocessor;
   let ctx: Context;
@@ -22,6 +28,7 @@ describe('End-to-end', () => {
   let snapshotId: number;
 
   before(async () => {
+    [alice, bob, carl, david] = await ethers.getSigners();
     lastBlockTimestamp = (
       await ethers.provider.getBlock(
         // eslint-disable-next-line no-underscore-dangle
@@ -82,7 +89,7 @@ describe('End-to-end', () => {
       const bytecode = ['17', `1b${varHash}`, '03'];
 
       // Parse code
-      await app.setStorageUint256(varHashPadded, varValue);
+      await app['setStorageUint256(bytes32,uint256)'](varHashPadded, varValue);
       await app.parse(code);
 
       const resultBytecode = await ctx.program();
@@ -146,10 +153,10 @@ describe('End-to-end', () => {
       C: number,
       result: number
     ) {
-      await app.setStorageUint256(hex4Bytes('NOW'), NOW);
-      await app.setStorageUint256(hex4Bytes('INIT'), INIT);
-      await app.setStorageUint256(hex4Bytes('EXPIRY'), EXPIRY);
-      await app.setStorageUint256(hex4Bytes('RISK'), RISK);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NOW'), NOW);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('INIT'), INIT);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('EXPIRY'), EXPIRY);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('RISK'), RISK);
 
       await app.execute();
       await checkStackTail(stack, [result]);
@@ -210,14 +217,14 @@ describe('End-to-end', () => {
       'bad',
       'uint256',
       FOUR,
-      'branch',
+      'end',
       'good',
       'uint256',
       ONE,
       'uint256',
       TWO,
       'end',
-      'branch',
+      'end',
       'bad',
       'uint256',
       THREE,
@@ -238,13 +245,13 @@ describe('End-to-end', () => {
       '006d' + // position of the `bad` branch
       '1a' + // uin256
       `${FOUR}` + // FOUR
-      '2f' + // branch tag
+      '24' + // end tag
       '1a' + // good: uint256
       `${ONE}` + // good: ONE
       '1a' + // good: uint256
       `${TWO}` + // good: TWO
       '24' + // good: end
-      '2f' + // branch tag
+      '24' + // end tag
       '1a' + // bad: uint256
       `${THREE}` + // bad: THREE
       '24'; // bad: end
@@ -435,17 +442,17 @@ describe('End-to-end', () => {
             'uint256',
             'NUMBERS',
             'uint256',
-            `5`,
+            '5',
             'push',
-            `2`,
+            '2',
             'NUMBERS',
             'push',
-            `1`,
+            '1',
             'NUMBERS',
             'bool',
             'true',
             'push',
-            `3`,
+            '3',
             'NUMBERS',
           ];
           expect(code).to.eql(expectedCode);
@@ -508,10 +515,10 @@ describe('End-to-end', () => {
             'uint256',
             'NUMBERS',
             'push',
-            `5`,
+            '5',
             'NUMBERS',
             'push',
-            `7`,
+            '7',
             'NUMBERS',
             'get',
             '1',
@@ -577,7 +584,7 @@ describe('End-to-end', () => {
             '31' + // declareArr
             '01' + // uint256
             '1fff709e' + // NUMBERS
-            '37' + // sumOf
+            '40' + // sumOf
             '1fff709e'; // NUMBERS
           expect(await ctx.program()).to.equal(expectedProgram);
 
@@ -606,7 +613,7 @@ describe('End-to-end', () => {
             '31' + // declareArr
             '03' + // address
             '3c8423ff' + // PARTNERS
-            '37' + // sumOf
+            '40' + // sumOf
             '3c8423ff'; // PARTNERS
           expect(await ctx.program()).to.equal(expectedProgram);
 
@@ -707,17 +714,17 @@ describe('End-to-end', () => {
             '257b3678' + // INDEXES
             '18' + // bool
             '00' + // false
-            '37' + // sumOf
+            '40' + // sumOf
             '257b3678' + // INDEXES
             '2e' + // setUint256
             '7a83eb71' + // SUM1
-            '37' + // sumOf
+            '40' + // sumOf
             '1fff709e' + // NUMBERS
             '2e' + // setUint256
             'd49d1b0f' + // SUM2
-            '37' + // sumOf
+            '40' + // sumOf
             '257b3678' + // INDEXES
-            '37' + // sumOf
+            '40' + // sumOf
             '1fff709e' + // NUMBERS
             '04'; // >
           expect(await ctx.program()).to.equal(expectedProgram);
@@ -792,7 +799,7 @@ describe('End-to-end', () => {
           `${ZERO}` + // 0 index
           '1fff709e' + // bytecode for NUMBERS
           '35' + // get
-          `${ZERO}` + // 1 index
+          `${ZERO}` + // 0 index
           '257b3678'; // bytecode for INDEXES
         expect(await ctx.program()).to.equal(expectedProgram);
 
@@ -1045,7 +1052,7 @@ describe('End-to-end', () => {
     });
 
     it('Use A value as bool, but it was stored as a number', async () => {
-      await app.setStorageUint256(hex4Bytes('A'), 6);
+      await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('A'), 6);
       const input = 'bool A';
       const code = await preprocessor.callStatic.transform(ctxAddr, input);
       const expectedCode = ['bool', 'A'];
@@ -1393,11 +1400,11 @@ describe('End-to-end', () => {
         await app.parseCode(code);
 
         const three = new Array(64).join('0') + 3;
-        const number = new Array(63).join('0') + 'aa'; // 170
+        const number = `${new Array(63).join('0')}aa`; // 170
 
         expect(await ctx.program()).to.equal(
-          `0x` +
-            `36` + // struct
+          '0x' +
+            '36' + // struct
             '4a871642' + // BOB.lastPayment
             `${three}` + // 3
             'cb398fe1' + // endStruct
@@ -1449,12 +1456,12 @@ describe('End-to-end', () => {
         await app.parseCode(code);
 
         const three = new Array(64).join('0') + 3;
-        const number1 = new Array(62).join('0') + '12c'; // 300
-        const number2 = new Array(63).join('0') + 'aa'; // 170
+        const number1 = `${new Array(62).join('0')}12c`; // 300
+        const number2 = `${new Array(63).join('0')}aa`; // 170
 
         expect(await ctx.program()).to.equal(
-          `0x` +
-            `36` + // struct
+          '0x' +
+            '36' + // struct
             '4a871642' + // BOB.lastPayment
             `${three}` + // 3
             'cb398fe1' + // endStruct
@@ -1500,6 +1507,283 @@ describe('End-to-end', () => {
         expect(await app.getStorageUint256(hex4Bytes('MAX.lastPayment'))).equal(170);
         expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(3);
       });
+    });
+  });
+
+  describe('For-loops', () => {
+    before(async () => {
+      // Create arrays for the usage in for-loops
+      const input = `
+        address[] USERS
+        insert ${bob.address} into USERS
+        insert ${carl.address} into USERS
+        insert ${david.address} into USERS
+
+        uint256[] DEPOSITS
+        insert 2 into DEPOSITS
+        insert 3 into DEPOSITS
+        insert 4 into DEPOSITS
+      `;
+      const code = await preprocessor.callStatic.transform(ctxAddr, input);
+      await app.parseCode(code);
+      await app.execute();
+    });
+
+    // TODO: this test won't work correctly, fix it
+    it.skip('Simple for loop', async () => {
+      const input = `
+        for ME in USERS {
+          (msgSender == ME)
+          ifelse ITS_ME ITS_NOT_ME end
+        }
+
+        ITS_ME { 10 }
+        ITS_NOT_ME { 5 }
+      `;
+
+      // Preprocessing
+      const code = await preprocessor.callStatic.transform(ctxAddr, input);
+      expect(code).eql([
+        'for',
+        'ME',
+        'in',
+        'USERS',
+        'startLoop',
+        'msgSender',
+        'ME',
+        '==',
+        'ifelse',
+        'ITS_ME',
+        'ITS_NOT_ME',
+        // 'end',
+        'endLoop',
+        'ITS_ME',
+        'uint256',
+        '10',
+        'end',
+        'ITS_NOT_ME',
+        'uint256',
+        '5',
+        'end',
+        // 'uint256',
+        // '15',
+      ]);
+
+      // Parsing
+      await app.parseCode(code);
+
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '37' + // for 1
+          '1854c655' + // hex4Bytes('ME') 5
+          '80e5f4d2' + // hex4Bytes('USERS') 9
+          '32' + // startLoop 10
+          '1d' + // msgSender 11
+          '1b' + // var 12
+          '1854c655' + // hex4Bytes('ME') 16
+          '01' + // `==` 17
+          '23' + // ifelse 18
+          '0017' + // ITS_ME branch position 20
+          '0039' + // ITS_NOT_ME branch position 22
+          // '24' + // end 23
+          '39' + // endLoop 24
+          '1a' + // uint256 25
+          `${new Array(64).join('0')}a` + // 10
+          '24' + // end
+          '1a' + // uint256
+          `${new Array(64).join('0')}5` + // 5
+          '24' // end
+        // '1a' + // uint256
+        // `${new Array(64).join('0')}f` // 15
+      );
+
+      // Execution
+      await app.connect(alice).execute();
+
+      /**
+       * 1 - setUint256 TOTAL_DEPOSIT (first iteration)
+       * 1 - setUint256 TOTAL_DEPOSIT (second iteration)
+       * 1 - setUint256 TOTAL_DEPOSIT (third iteration)
+       * 15 - uint256 15
+       */
+      await checkStackTail(stack, [5, 15, 5]);
+    });
+
+    it('for loop over array of numbers', async () => {
+      const input = `
+        // Getting the total user's deposit
+        for DEPOSIT in DEPOSITS {
+          (var TOTAL_DEPOSIT + var DEPOSIT) setUint256 TOTAL_DEPOSIT
+        }
+
+        15 // just a random number
+      `;
+
+      // Preprocessing
+      const noComments = await preprocessor.callStatic.cleanString(input);
+      const code = await preprocessor.callStatic.transform(ctxAddr, noComments);
+      expect(code).eql([
+        'for',
+        'DEPOSIT',
+        'in',
+        'DEPOSITS',
+        'startLoop',
+        'var',
+        'TOTAL_DEPOSIT',
+        'var',
+        'DEPOSIT',
+        '+',
+        'setUint256',
+        'TOTAL_DEPOSIT',
+        'endLoop',
+        'uint256',
+        '15',
+      ]);
+
+      // Parsing
+      await app.parseCode(code);
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '37' + // for
+          '87a7811f' + // hex4Bytes('DEPOSIT')
+          '060f7dbd' + // hex4Bytes('DEPOSITS')
+          '32' + // startLoop
+          '1b' + // var
+          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
+          '1b' + // var
+          '87a7811f' + // hex4Bytes('DEPOSIT')
+          '26' + // +
+          '2e' + // setUint256
+          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
+          '39' + // endLoop
+          '1a' + // uint256
+          `${new Array(64).join('0')}f` // 15
+      );
+
+      // Execution
+      await app.execute();
+
+      // Variable checks
+      expect(await app.getStorageUint256(hex4Bytes('TOTAL_DEPOSIT'))).equal(2 + 3 + 4);
+      /**
+       * 1 - setUint256 TOTAL_DEPOSIT (first iteration)
+       * 1 - setUint256 TOTAL_DEPOSIT (second iteration)
+       * 1 - setUint256 TOTAL_DEPOSIT (third iteration)
+       * 15 - uint256 15
+       */
+      await checkStackTail(stack, [1, 1, 1, 15]);
+    });
+
+    it('two for loops', async () => {
+      const input = `
+        1 setUint256 TOTAL_DEPOSIT
+
+        // Now we're not getting the true total deposit but rather multiply
+        // the deposits
+        for DEPOSIT in DEPOSITS {
+          (var TOTAL_DEPOSIT * var DEPOSIT) setUint256 TOTAL_DEPOSIT
+        }
+
+        // Sending 1 ETH to all users in the USERS array
+        for USER in USERS {
+          sendEth USER 1e18
+        }
+      `;
+
+      // Preprocessing
+      const noComments = await preprocessor.callStatic.cleanString(input);
+      const code = await preprocessor.callStatic.transform(ctxAddr, noComments);
+      expect(code).eql([
+        'uint256',
+        '1',
+        'setUint256',
+        'TOTAL_DEPOSIT',
+        'for',
+        'DEPOSIT',
+        'in',
+        'DEPOSITS',
+        'startLoop',
+        'var',
+        'TOTAL_DEPOSIT',
+        'var',
+        'DEPOSIT',
+        '*',
+        'setUint256',
+        'TOTAL_DEPOSIT',
+        'endLoop',
+        'for',
+        'USER',
+        'in',
+        'USERS',
+        'startLoop',
+        'sendEth',
+        'USER',
+        '1000000000000000000',
+        'endLoop',
+      ]);
+
+      // Parsing
+      await app.parseCode(code);
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '1a' + // uint256
+          `${bnToLongHexString('1')}` + // 1
+          '2e' + // setUint256
+          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
+          '37' + // for
+          '87a7811f' + // hex4Bytes('DEPOSIT')
+          '060f7dbd' + // hex4Bytes('DEPOSITS')
+          '32' + // startLoop
+          '1b' + // var
+          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
+          '1b' + // var
+          '87a7811f' + // hex4Bytes('DEPOSIT')
+          '28' + // *
+          '2e' + // setUint256
+          '0432f551' + // hex4Bytes('TOTAL_DEPOSIT')
+          '39' + // endLoop
+          '37' + // for
+          '2db9fd3d' + // hex4Bytes('USER')
+          '80e5f4d2' + // hex4Bytes('USERS')
+          '32' + // startLoop
+          '1e' + // sendEth
+          '2db9fd3d' + // hex4Bytes('USER')
+          `${bnToLongHexString(parseEther('1'))}` + // 1e18
+          '39' // endLoop
+      );
+
+      // Top up the contract
+      alice.sendTransaction({ to: app.address, value: parseEther('3') });
+
+      const balancesBefore = {
+        bob: await bob.getBalance(),
+        carl: await carl.getBalance(),
+        david: await david.getBalance(),
+      };
+
+      // Execution
+      await app.execute();
+
+      // Variable checks
+      expect(await app.getStorageUint256(hex4Bytes('TOTAL_DEPOSIT'))).equal(2 * 3 * 4);
+      const balancesAfter = {
+        bob: await bob.getBalance(),
+        carl: await carl.getBalance(),
+        david: await david.getBalance(),
+      };
+      expect(balancesAfter.bob.sub(balancesBefore.bob)).to.equal(parseEther('1'));
+      expect(balancesAfter.carl.sub(balancesBefore.carl)).to.equal(parseEther('1'));
+      expect(balancesAfter.david.sub(balancesBefore.david)).to.equal(parseEther('1'));
+      /**
+       * 1 - setUint256 TOTAL_DEPOSIT (initiating the variable with value `1`)
+       * 1 - setUint256 TOTAL_DEPOSIT (first iteration)
+       * 1 - setUint256 TOTAL_DEPOSIT (second iteration)
+       * 1 - setUint256 TOTAL_DEPOSIT (third iteration)
+       * 1 - sendEth (first iteration)
+       * 1 - sendEth (second iteration)
+       * 1 - sendEth (third iteration)
+       */
+      await checkStackTail(stack, [1, 1, 1, 1, 1, 1, 1]);
     });
   });
 });

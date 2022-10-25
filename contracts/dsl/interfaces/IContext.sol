@@ -60,6 +60,10 @@ interface IContext {
 
     function aliases(string memory _alias) external view returns (string memory _baseCmd);
 
+    function isStructVar(string memory _varName) external view returns (bool);
+
+    function forLoopIterationsRemaining() external view returns (uint256);
+
     // Functions
 
     function operatorsLen() external view returns (uint256);
@@ -105,5 +109,5 @@ interface IContext {
         view
         returns (bytes4 _fullName);
 
-    function isStructVar(string memory _varName) external view returns (bool);
+    function setForLoopIterationsRemaining(uint256 _forLoopIterationsRemaining) external;
 }

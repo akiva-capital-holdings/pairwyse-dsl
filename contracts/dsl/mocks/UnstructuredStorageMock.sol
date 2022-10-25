@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import { IStorage } from '../interfaces/IStorage.sol';
+import { IStorageUniversal } from '../interfaces/IStorageUniversal.sol';
 import { UnstructuredStorage } from '../../dsl/libs/UnstructuredStorage.sol';
 
-contract UnstructuredStorageMock {
+contract UnstructuredStorageMock is IStorage, IStorageUniversal {
     using UnstructuredStorage for bytes32;
 
     function getStorageBool(bytes32 position) public view returns (bool data) {
@@ -26,7 +28,15 @@ contract UnstructuredStorageMock {
         position.setStorageBool(data);
     }
 
+    function setStorageBool(bytes32 position, bytes32 data) public {
+        position.setStorageBool(data);
+    }
+
     function setStorageAddress(bytes32 position, address data) public {
+        position.setStorageAddress(data);
+    }
+
+    function setStorageAddress(bytes32 position, bytes32 data) public {
         position.setStorageAddress(data);
     }
 
@@ -35,6 +45,10 @@ contract UnstructuredStorageMock {
     }
 
     function setStorageUint256(bytes32 position, uint256 data) public {
+        position.setStorageUint256(data);
+    }
+
+    function setStorageUint256(bytes32 position, bytes32 data) public {
         position.setStorageUint256(data);
     }
 }

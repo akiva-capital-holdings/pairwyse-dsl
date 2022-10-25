@@ -285,7 +285,7 @@ describe('Parser', () => {
     it('updates the program with the loadRemote variable (uin256)', async () => {
       // Set NUMBER
       const bytes32Number = hex4Bytes('NUMBER');
-      await app.setStorageUint256(bytes32Number, 1000);
+      await app['setStorageUint256(bytes32,uint256)'](bytes32Number, 1000);
 
       await app.parseCodeExt(ctxAddr, ['loadRemote', 'uint256', 'NUMBER', appAddrHex]);
 
@@ -301,7 +301,7 @@ describe('Parser', () => {
     it('updates the program with the loadRemote variable (bool)', async () => {
       const bytes32Bool = hex4Bytes('BOOL_VALUE');
       // Set BOOL_VALUE
-      await app.setStorageBool(bytes32Bool, true);
+      await app['setStorageBool(bytes32,bool)'](bytes32Bool, true);
 
       await app.parseCodeExt(ctxAddr, ['loadRemote', 'bool', 'BOOL_VALUE', appAddrHex]);
       expect(await ctx.program()).to.equal(
@@ -468,9 +468,9 @@ describe('Parser', () => {
                 '257b3678' + // INDEXES
                 '18' + // bool
                 '00' + // false
-                '37' + // sumOf
+                '40' + // sumOf
                 '257b3678' + // INDEXES
-                '37' + // sumOf
+                '40' + // sumOf
                 '1fff709e'
             ); // NUMBERS
           });
@@ -597,7 +597,7 @@ describe('Parser', () => {
           expect(await ctx.program()).to.equal(
             '0x' +
               '31' + // declareArr
-              '03' + // uint256
+              '03' + // address
               '3c8423ff' + // bytecode for PARTNERS
               '33' + // push
               'e7f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // address
@@ -632,8 +632,6 @@ describe('Parser', () => {
         ]);
 
         const NUMBER = new Array(62).join('0') + 541;
-        const ONE = new Array(64).join('0') + 1;
-        const ZERO = new Array(65).join('0');
 
         const expectedProgram =
           '0x' +
@@ -867,15 +865,10 @@ describe('Parser', () => {
       });
 
       describe('mixed types', () => {
-        it.skip('insert empty value should not cause errors', async () => {
-          // TODO: remove empty struct code in preprocessor?
-          await app.parseCodeExt(ctxAddr, ['struct', 'BOB', 'endStruct']);
-          expect(await ctx.program()).to.equal(
-            '0x' +
-              '36' + // struct opcode
-              '29d93e4f' + // BOB
-              'cb398fe1' // endStruct
-          );
+        it.skip('error: insert empty value', async () => {
+          await expect(
+            app.parseCodeExt(ctxAddr, ['struct', 'BOB', 'endStruct'])
+          ).to.be.revertedWith('PRS1');
         });
 
         it('insert address and number', async () => {
@@ -926,10 +919,10 @@ describe('Parser', () => {
           await app.parseCodeExt(ctxAddr, input);
 
           const three = new Array(64).join('0') + 3;
-          const number = new Array(63).join('0') + 'aa'; // 170
+          const number = `${new Array(63).join('0')}aa`; // 170
           expect(await ctx.program()).to.equal(
-            `0x` +
-              `36` + // struct
+            '0x' +
+              '36' + // struct
               '4a871642' + // BOB.lastPayment
               `${three}` + // 3
               'cb398fe1' + // endStruct
@@ -1028,11 +1021,11 @@ describe('Parser', () => {
             ]);
 
             const three = new Array(64).join('0') + 3;
-            const number1 = new Array(62).join('0') + '12c'; // 300
-            const number2 = new Array(63).join('0') + 'aa'; // 170
+            const number1 = `${new Array(62).join('0')}12c`; // 300
+            const number2 = `${new Array(63).join('0')}aa`; // 170
             expect(await ctx.program()).to.equal(
-              `0x` +
-                `36` + // struct
+              '0x' +
+                '36' + // struct
                 '4a871642' + // BOB.lastPayment
                 `${three}` + // 3
                 'cb398fe1' + // endStruct
@@ -1064,5 +1057,15 @@ describe('Parser', () => {
         });
       });
     });
+  });
+
+  describe('For loops', () => {
+    // TODO
+    // test a loop over array of type uint256
+    // test a loop over array of type struct
+    // test a loop over array of type address
+    // test function calls inside a for loop
+    // test if inside a for loop
+    // test if-else inside a for loop
   });
 });

@@ -1779,8 +1779,7 @@ describe('Preprocessor', () => {
     });
 
     describe('arrays and stucts', () => {
-      it.skip('with different types of commands', async () => {
-        // TODO: something weird with operators for `Bob.lastPayment > 1`.
+      it('with different types of commands', async () => {
         // Only with structure operators are changed their place for in the list of commands
         // const input = `
         // var HEY > var EXPIRY
@@ -1838,7 +1837,6 @@ describe('Preprocessor', () => {
           'Mary',
           'USERS',
           'Bob.lastPayment',
-          'uint256',
           '1',
           '>',
           'bool',

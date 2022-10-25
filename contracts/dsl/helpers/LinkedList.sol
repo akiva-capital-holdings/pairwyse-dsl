@@ -2,10 +2,12 @@
 
 pragma solidity ^0.8.0;
 
+import { ILinkedList } from '../interfaces/ILinkedList.sol';
+
 // import 'hardhat/console.sol';
 
 // TODO: make a library
-contract LinkedList {
+contract LinkedList is ILinkedList {
     /* Important!
     As the contract is working directly with storage pointers, so
     there is must not be any additional variables exept mappings.
@@ -34,15 +36,14 @@ contract LinkedList {
 
     // arr name => head to array (positions to the first element in arrays)
     mapping(bytes32 => bytes32) private heads;
-    mapping(bytes32 => bytes32) private types; // arr name => type to array
+    mapping(bytes32 => bytes1) private types; // arr name => type to array
     mapping(bytes32 => uint256) private lengths; // arr name => length of array
 
     /**
      * @dev Returns length of the array
      * @param _arrName is a bytecode of the array name
      */
-    function getType(bytes32 _arrName) external view returns (bytes32) {
-        // TODO: should we return bytes1 type here or just name of type (uint256, address)
+    function getType(bytes32 _arrName) external view returns (bytes1) {
         return types[_arrName];
     }
 
@@ -75,7 +76,7 @@ contract LinkedList {
      * @param _type is a bytecode type of the array. Bytecode of each type can be find in Context contract
      * @param _arrName is a bytecode of the array name
      */
-    function declare(bytes32 _type, bytes32 _arrName) external {
+    function declare(bytes1 _type, bytes32 _arrName) external {
         types[_arrName] = _type;
         heads[_arrName] = EMPTY;
     }

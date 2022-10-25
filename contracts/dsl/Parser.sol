@@ -457,6 +457,17 @@ contract Parser is IParser {
     }
 
     /**
+     * @dev Parses variable names in for-loop & skip the unnecessary `in` parameter
+     * Ex. ['for', 'LP_INITIAL', 'in', 'LPS_INITIAL']
+     */
+    function asmForLoop() public {
+        // parse temporary variable name
+        _parseVariable();
+        _nextCmd(); // skip `in` keyword
+        _parseVariable();
+    }
+
+    /**
      * Internal functions
      */
 
