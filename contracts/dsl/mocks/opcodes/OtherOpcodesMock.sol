@@ -2,9 +2,8 @@
 pragma solidity ^0.8.0;
 
 import { OtherOpcodes } from '../../libs/opcodes/OtherOpcodes.sol';
-import { UnstructuredStorageMock } from '../UnstructuredStorageMock.sol';
 
-contract OtherOpcodesMock is UnstructuredStorageMock {
+contract OtherOpcodesMock {
     receive() external payable {}
 
     function opLoadRemoteAny(address _ctx) public {
@@ -112,5 +111,33 @@ contract OtherOpcodesMock is UnstructuredStorageMock {
 
     function opLoadRemote(address _ctx, string memory funcSignature) public {
         OtherOpcodes.opLoadRemote(_ctx, funcSignature);
+    }
+
+    function opDeclare(address _ctx) public {
+        OtherOpcodes.opDeclare(_ctx);
+    }
+
+    function opPush(address _ctx) public {
+        OtherOpcodes.opPush(_ctx);
+    }
+
+    function opGet(address _ctx) public {
+        OtherOpcodes.opGet(_ctx);
+    }
+
+    function opSumOf(address _ctx) public {
+        OtherOpcodes.opSumOf(_ctx);
+    }
+
+    function opSumThroughStructs(address _ctx) public {
+        OtherOpcodes.opSumThroughStructs(_ctx);
+    }
+
+    function opStruct(address _ctx) public {
+        OtherOpcodes.opStruct(_ctx);
+    }
+
+    function opLengthOf(address _ctx) public {
+        OtherOpcodes.opLengthOf(_ctx);
     }
 }

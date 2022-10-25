@@ -36,9 +36,9 @@ contract AgreementMock is Agreement {
     function addRecordTransaction(
         uint256 _recordId,
         string memory _transactionString,
-        address _transactionContext
+        address _recordContext
     ) public {
-        _addRecordTransaction(_recordId, _transactionString, _transactionContext);
+        _addRecordTransaction(_recordId, _transactionString, _recordContext);
     }
 
     function verify(uint256 _recordId) public view returns (bool) {

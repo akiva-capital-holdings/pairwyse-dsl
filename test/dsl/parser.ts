@@ -7,7 +7,7 @@ import { hex4Bytes } from '../utils/utils';
 
 const { ethers, network } = hre;
 
-describe('Parser', () => {
+describe.skip('Parser', () => {
   let sender: SignerWithAddress;
   let app: ParserMock;
   let preprocessorAddr: string;
@@ -324,83 +324,156 @@ describe('Parser', () => {
     */
     describe('declare array', () => {
       describe('uint256 type', () => {
-        it.skip('simple array', async () => {
-          await app.parseCodeExt(ctxAddr, ['declareArr', 'uint256', 'NUMBERS']);
-          expect(await ctx.program()).to.equal(
-            '0x' +
-              '31' + // declareArr
-              '01' + // uint256
-              '1fff709e' // bytecode for a `NUMBERS` name
-          );
+        describe('declare array', () => {
+          it.skip('simple array', async () => {
+            await app.parseCodeExt(ctxAddr, ['declareArr', 'uint256', 'NUMBERS']);
+            expect(await ctx.program()).to.equal(
+              '0x' +
+                '31' + // declareArr
+                '01' + // uint256
+                '1fff709e' // bytecode for a `NUMBERS` name
+            );
+          });
+
+          it.skip('only with additional code just before it', async () => {
+            const number = new Array(64).join('0') + 6;
+            await app.parseCodeExt(ctxAddr, [
+              'uint256',
+              '6',
+              'var',
+              'TIMESTAMP',
+              'declareArr',
+              'uint256',
+              'NUMBERS',
+            ]);
+            expect(await ctx.program()).to.equal(
+              '0x' +
+                '1a' + // uint256
+                `${number}` + // 6
+                '1b' + // var
+                '1b7b16d4' + // TIMESTAMP
+                '31' + // declareArr
+                '01' + // uint256
+                '1fff709e' // bytecode for a `NUMBERS` name
+            );
+          });
+
+          it.skip('only with additional code just after it', async () => {
+            const number = new Array(64).join('0') + 6;
+            await app.parseCodeExt(ctxAddr, [
+              'declareArr',
+              'uint256',
+              'NUMBERS',
+              'uint256',
+              '6',
+              'var',
+              'TIMESTAMP',
+            ]);
+            expect(await ctx.program()).to.equal(
+              '0x' +
+                '31' + // declareArr
+                '01' + // uint256 type
+                '1fff709e' + // bytecode for a `NUMBERS` name
+                '1a' + // uint256
+                `${number}` + // 6
+                '1b' + // var
+                '1b7b16d4' // TIMESTAMP
+            );
+          });
+
+          it('with additional code before and after it', async () => {
+            const number = new Array(64).join('0') + 6;
+            await app.parseCodeExt(ctxAddr, [
+              'uint256',
+              '6',
+              'declareArr',
+              'uint256',
+              'NUMBERS',
+              'var',
+              'TIMESTAMP',
+            ]);
+            expect(await ctx.program()).to.equal(
+              '0x' +
+                '1a' + // uint256
+                `${number}` + // 6
+                '31' + // declareArr
+                '01' + // uint256 type
+                '1fff709e' + // bytecode for a `NUMBERS` name
+                '1b' + // var
+                '1b7b16d4' // TIMESTAMP
+            );
+          });
         });
 
-        it.skip('only with additional code just before it', async () => {
-          const number = new Array(64).join('0') + 6;
-          await app.parseCodeExt(ctxAddr, [
-            'uint256',
-            '6',
-            'var',
-            'TIMESTAMP',
-            'declareArr',
-            'uint256',
-            'NUMBERS',
-          ]);
-          expect(await ctx.program()).to.equal(
-            '0x' +
-              '1a' + // uint256
-              `${number}` + // 6
-              '1b' + // var
-              '1b7b16d4' + // TIMESTAMP
-              '31' + // declareArr
-              '01' + // uint256
-              '1fff709e' // bytecode for a `NUMBERS` name
-          );
-        });
+        describe('sumOf', () => {
+          it('sum several values with additional code', async () => {
+            await app.parseCodeExt(ctxAddr, [
+              'uint256',
+              '3',
+              'setUint256',
+              'SUM',
+              'declareArr',
+              'uint256',
+              'NUMBERS',
+              'push',
+              '1345',
+              'NUMBERS',
+              'declareArr',
+              'uint256',
+              'INDEXES',
+              'push',
+              '1',
+              'INDEXES',
+              'push',
+              '1465',
+              'NUMBERS',
+              'push',
+              '3',
+              'INDEXES',
+              'bool',
+              'false',
+              'sumOf',
+              'INDEXES',
+              'sumOf',
+              'NUMBERS',
+            ]);
 
-        it.skip('only with additional code just after it', async () => {
-          const number = new Array(64).join('0') + 6;
-          await app.parseCodeExt(ctxAddr, [
-            'declareArr',
-            'uint256',
-            'NUMBERS',
-            'uint256',
-            '6',
-            'var',
-            'TIMESTAMP',
-          ]);
-          expect(await ctx.program()).to.equal(
-            '0x' +
-              '31' + // declareArr
-              '01' + // uint256 type
-              '1fff709e' + // bytecode for a `NUMBERS` name
-              '1a' + // uint256
-              `${number}` + // 6
-              '1b' + // var
-              '1b7b16d4' // TIMESTAMP
-          );
-        });
-
-        it('with additional code before and after it', async () => {
-          const number = new Array(64).join('0') + 6;
-          await app.parseCodeExt(ctxAddr, [
-            'uint256',
-            '6',
-            'declareArr',
-            'uint256',
-            'NUMBERS',
-            'var',
-            'TIMESTAMP',
-          ]);
-          expect(await ctx.program()).to.equal(
-            '0x' +
-              '1a' + // uint256
-              `${number}` + // 6
-              '31' + // declareArr
-              '01' + // uint256 type
-              '1fff709e' + // bytecode for a `NUMBERS` name
-              '1b' + // var
-              '1b7b16d4' // TIMESTAMP
-          );
+            const one = new Array(64).join('0') + 1;
+            const three = new Array(64).join('0') + 3;
+            const number1 = new Array(62).join('0') + 541;
+            const number2 = `${new Array(62).join('0')}5b9`;
+            expect(await ctx.program()).to.equal(
+              '0x' + //
+                '1a' + // uint256
+                `${three}` + // 3
+                '2e' + // setUint256
+                '2df384fb' + // SUM
+                '31' + // declareArr
+                '01' + // uint256
+                '1fff709e' + // NUMBERS
+                '33' + // push
+                `${number1}` + // 1345
+                '1fff709e' + // NUMBERS
+                '31' + // declareArr
+                '01' + // uint256
+                '257b3678' + // INDEXES
+                '33' + // push
+                `${one}` + // 1
+                '257b3678' + // INDEXES
+                '33' + // push
+                `${number2}` + // 1465
+                '1fff709e' + // NUMBERS
+                '33' + // push
+                `${three}` + // 3
+                '257b3678' + // INDEXES
+                '18' + // bool
+                '00' + // false
+                '40' + // sumOf
+                '257b3678' + // INDEXES
+                '40' + // sumOf
+                '1fff709e'
+            ); // NUMBERS
+          });
         });
       });
 
@@ -410,7 +483,7 @@ describe('Parser', () => {
           expect(await ctx.program()).to.equal(
             '0x' +
               '31' + // declareArr
-              '02' + // address type
+              '03' + // address type
               '5e315030' // bytecode for a `MARY` name
           );
         });
@@ -433,7 +506,7 @@ describe('Parser', () => {
               '1b' + // var
               '1b7b16d4' + // TIMESTAMP
               '31' + // declareArr
-              '02' + // address type
+              '03' + // address type
               '5e315030' // bytecode for a `MARY` name
           );
         });
@@ -452,7 +525,7 @@ describe('Parser', () => {
           expect(await ctx.program()).to.equal(
             '0x' +
               '31' + // declareArr
-              '02' + // address
+              '03' + // address
               '5e315030' + // bytecode for a `MARY` name
               '1a' + // uint256
               `${number}` + // 6
@@ -477,7 +550,7 @@ describe('Parser', () => {
               '1a' + // uint256
               `${number}` + // 6
               '31' + // declareArr
-              '02' + // address
+              '03' + // address
               '5e315030' + // bytecode for a `MARY` name
               '1b' + // var
               '1b7b16d4' // TIMESTAMP
@@ -524,7 +597,7 @@ describe('Parser', () => {
           expect(await ctx.program()).to.equal(
             '0x' +
               '31' + // declareArr
-              '02' + // address
+              '03' + // address
               '3c8423ff' + // bytecode for PARTNERS
               '33' + // push
               'e7f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // address
@@ -566,7 +639,7 @@ describe('Parser', () => {
           '01' + // uint256
           '1fff709e' + // bytecode for NUMBERS
           '31' + // declareArr
-          '02' + // address
+          '03' + // address
           '257b3678' + // bytecode for INDEXES
           '33' + // push
           'e7f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // first address
@@ -625,7 +698,7 @@ describe('Parser', () => {
           '01' + // uint256
           '1fff709e' + // bytecode for NUMBERS
           '31' + // declareArr
-          '02' + // address
+          '03' + // address
           '257b3678' + // bytecode for INDEXES
           '33' + // push
           'e7f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // first address
@@ -729,14 +802,14 @@ describe('Parser', () => {
               '1a' + // uint256
               `${one}` + // 1
               '04' + // >
-              `2e` + // setUint256
+              '2e' + // setUint256
               'cf239df2' + // RESULT_AFTER
               '1b' + // var
               '4a871642' + // BOB.lastPayment
               '1a' + // uint256
               `${two}` + // 1
               '28' + // *
-              `2e` + // setUint256
+              '2e' + // setUint256
               '4a871642' // BOB.lastPayment
           );
         });
@@ -755,7 +828,7 @@ describe('Parser', () => {
             '0x' +
               '36' + // struct opcode
               '2215b81f' + // BOB.account
-              `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // addres without 0x
+              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // addres without 0x
               'cb398fe1' // endStruct
           );
         });
@@ -778,9 +851,9 @@ describe('Parser', () => {
             '0x' +
               '36' + // struct opcode
               '2215b81f' + // BOB.account
-              `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the address for account
+              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
               'c71243e7' + // BOB.account
-              `57f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the address for account
+              '57f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
               'cb398fe1' + // endStruct
               '1b' + // var
               '2215b81f' + // BOB.account
@@ -813,14 +886,63 @@ describe('Parser', () => {
             '0x' +
               '36' + // struct opcode
               '2215b81f' + // BOB.account
-              `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // addres without 0x
+              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // addres without 0x
               '9b8dbd6b' + // BOB.tax
               `${number}` + // 9
               'cb398fe1' // endStruct
           );
         });
 
-        it('use address and number after getting', async () => {
+        it('push struct type values into array', async () => {
+          const input = [
+            'struct',
+            'BOB',
+            'lastPayment',
+            '3',
+            'endStruct',
+            'struct',
+            'MAX',
+            'lastPayment',
+            '170',
+            'endStruct',
+            'declareArr',
+            'struct',
+            'USERS',
+            'push',
+            'BOB',
+            'USERS',
+            'push',
+            'MAX',
+            'USERS',
+          ];
+
+          await app.parseCodeExt(ctxAddr, input);
+
+          const three = new Array(64).join('0') + 3;
+          const number = new Array(63).join('0') + 'aa'; // 170
+          expect(await ctx.program()).to.equal(
+            `0x` +
+              `36` + // struct
+              '4a871642' + // BOB.lastPayment
+              `${three}` + // 3
+              'cb398fe1' + // endStruct
+              '36' + // struct
+              'ffafe3f2' + // MAX.lastPayment
+              `${number}` + // 170
+              'cb398fe1' + // endStruct
+              '31' + // declareArr
+              '02' + // struct
+              '80e5f4d2' + // USERS
+              '33' + // push
+              '29d93e4f00000000000000000000000000000000000000000000000000000000' + // BOB
+              '80e5f4d2' + // USERS
+              '33' + // push
+              'a427878700000000000000000000000000000000000000000000000000000000' + // MAX
+              '80e5f4d2' // USERS
+          );
+        });
+
+        it('use address and number after getting values', async () => {
           const number = new Array(64).join('0') + 3;
           await app.parseCodeExt(ctxAddr, [
             'struct',
@@ -844,9 +966,9 @@ describe('Parser', () => {
             '0x' +
               '36' + // struct opcode
               '2215b81f' + // BOB.account
-              `47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the address for account
+              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
               'c71243e7' + // BOB.account
-              `57f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000` + // the address for account
+              '57f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
               '4a871642' + // BOB.lastPayment
               `${number}` + // 3
               'cb398fe1' + // endStruct
@@ -861,6 +983,77 @@ describe('Parser', () => {
               `${number}` + // 3
               '01'
           );
+        });
+
+        describe('sumThroughStructs', () => {
+          it('sum through structs values with additional code', async () => {
+            await app.parseCodeExt(ctxAddr, [
+              'struct',
+              'BOB',
+              'lastPayment',
+              '3',
+              'endStruct',
+              'struct',
+              'ALISA',
+              'lastPayment',
+              '300',
+              'endStruct',
+              'struct',
+              'MAX',
+              'lastPayment',
+              '170',
+              'endStruct',
+              'declareArr',
+              'struct',
+              'USERS',
+              'push',
+              'ALISA',
+              'USERS',
+              'push',
+              'BOB',
+              'USERS',
+              'push',
+              'MAX',
+              'USERS',
+              'sumThroughStructs',
+              'USERS',
+              'lastPayment',
+            ]);
+
+            const three = new Array(64).join('0') + 3;
+            const number1 = new Array(62).join('0') + '12c'; // 300
+            const number2 = new Array(63).join('0') + 'aa'; // 170
+            expect(await ctx.program()).to.equal(
+              `0x` +
+                `36` + // struct
+                '4a871642' + // BOB.lastPayment
+                `${three}` + // 3
+                'cb398fe1' + // endStruct
+                '36' + // endStruct
+                'c07a9c8d' + // ALISA.lastPayment
+                `${number1}` + // 300
+                'cb398fe1' + // endStruct
+                '36' + // struct
+                'ffafe3f2' + // MAX.lastPayment
+                `${number2}` + // 170
+                'cb398fe1' + // endStruct
+                '31' + // declareArr
+                '02' + // struct
+                '80e5f4d2' + // USERS
+                '33' + //  push
+                'f15754e000000000000000000000000000000000000000000000000000000000' + // ALISA
+                '80e5f4d2' + // USERS
+                '33' + // push
+                '29d93e4f00000000000000000000000000000000000000000000000000000000' + // BOB
+                '80e5f4d2' + // USERS
+                '33' + // push
+                'a427878700000000000000000000000000000000000000000000000000000000' + // MAX
+                '80e5f4d2' + // USERS
+                '38' + // sumThroughStructs
+                '80e5f4d2' + // USERS
+                'f72cc83a' // lastPayment
+            );
+          });
         });
       });
     });

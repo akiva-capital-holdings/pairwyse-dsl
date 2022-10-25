@@ -33,7 +33,7 @@ contract Preprocessor is IPreprocessor {
     // Stack with elements of type string that is used to temporarily store data of `infixToPostfix` function
     StringStack internal strStack;
 
-    // StringArray internal array;
+    bytes1 private DOT_SYMBOL = 0x2e;
 
     constructor() {
         strStack = new StringStack();
@@ -151,6 +151,7 @@ contract Preprocessor is IPreprocessor {
         for (uint256 i = 0; i < _program.length(); i++) {
             string memory char = _program.char(i);
 
+            // if-else conditions parsing
             if (isLoopStart && char.equal('{')) {
                 result.push('startLoop');
                 continue;
@@ -202,6 +203,7 @@ contract Preprocessor is IPreprocessor {
             if (char.equal('(') || char.equal(')') || char.equal('[') || char.equal(']')) {
                 result.push(char);
             }
+
             // struct start
             if (result.length > 0 && !isStructStart && result[result.length - 1].equal('struct')) {
                 isStructStart = true;
@@ -245,7 +247,8 @@ contract Preprocessor is IPreprocessor {
         StringStack _stack
     ) public returns (string[] memory) {
         PreprocessorInfo memory s;
-
+        // helps to separate a struct variable name and array's name for arrays with type `struct`
+        bool checkStructName;
         string memory chunk;
 
         // Cleanup
@@ -255,6 +258,31 @@ contract Preprocessor is IPreprocessor {
         // Infix to postfix
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
+
+            // ---> starts sumOf block for array of structures
+            if (chunk.equal('sumOf')) {
+                checkStructName = true;
+                continue;
+            }
+
+            if (checkStructName) {
+                // returns success=true if user provides complex name, ex. `USERS.balance`
+                // where arrName = USERS, structVar = balance
+                (bool success, string memory arrName, string memory structVar) = _getNames(chunk);
+                if (success) {
+                    // use another internal command to sum variables - `sumThroughStructs`
+                    result.push('sumThroughStructs');
+                    result.push(arrName);
+                    result.push(structVar);
+                } else {
+                    // use simple sum command `sumOf`
+                    result.push('sumOf');
+                    result.push(chunk);
+                }
+                checkStructName = false;
+                continue;
+            }
+            // <--- ends sumOf block for array of structures
 
             // struct
             if (chunk.equal('struct')) {
@@ -404,6 +432,43 @@ contract Preprocessor is IPreprocessor {
         } else if (_chunk.equal('GWEI')) {
             return 1000000000;
         } else return 0;
+    }
+
+    /**
+     * @dev Searching for a `.` (dot) symbol  and returns names status for complex string name.
+     * Ex. `USERS.balance`:
+     * Where `success` = true`,
+     * `arrName` = `USERS`,
+     * `structVar` = `balance`; otherwise it returns `success` = false` with empty string results
+     * @param _chunk is a command from DSL command list
+     * @return success if user provides complex name,  result is true
+     * @return arrName if user provided complex name, result is the name of structure
+     * @return structVar if user provided complex name, result is the name of structure variable
+     */
+    function _getNames(string memory _chunk)
+        internal
+        view
+        returns (
+            bool success,
+            string memory arrName,
+            string memory structVar
+        )
+    {
+        // TODO: decrease amount of iterations
+        bytes memory symbols = bytes(_chunk);
+        bool isFound; // dot was found
+        for (uint256 i = 0; i < symbols.length; i++) {
+            if (!isFound) {
+                if (symbols[i] == DOT_SYMBOL) {
+                    isFound = true;
+                    continue;
+                }
+                arrName = arrName.concat(string(abi.encodePacked(symbols[i])));
+            } else {
+                structVar = structVar.concat(string(abi.encodePacked(symbols[i])));
+            }
+        }
+        if (isFound) return (true, arrName, structVar);
     }
 
     /**

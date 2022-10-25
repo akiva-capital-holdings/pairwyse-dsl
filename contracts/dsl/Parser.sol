@@ -95,7 +95,7 @@ contract Parser is IParser {
     /**
      * @dev Updates the program with the local variable value
      *
-     *  * Example of a command:
+     * Example of a command:
      * ```
      * (uint256 5 + uint256 7) setUint256 VARNAME
      * ```
@@ -107,7 +107,7 @@ contract Parser is IParser {
     /**
      * @dev Updates the program with the name(its position) of the array
      *
-     *  * Example of a command:
+     * Example of a command:
      * ```
      * declare ARR_NAME
      * ```
@@ -117,6 +117,14 @@ contract Parser is IParser {
         _parseVariable(); // program += bytecode for `ARR_NAME`
     }
 
+    /**
+     * @dev Updates the program with the element by index from the provived array's name
+     *
+     * Example of a command:
+     * ```
+     * get 3 USERS
+     * ```
+     */
     function asmGet() public {
         string memory _value = _nextCmd();
         bytes4 _arrName = bytes4(keccak256(abi.encodePacked(_nextCmd())));
@@ -124,9 +132,10 @@ contract Parser is IParser {
     }
 
     /**
-     * @dev Updates the program with the next item for the array
+     * @dev Updates the program with the new item for the array, can be `uint256`,
+     * `address` and `struct name` types.
      *
-     *  * Example of a command:
+     * Example of a command:
      * ```
      * push ITEM ARR_NAME
      * ```
@@ -140,6 +149,9 @@ contract Parser is IParser {
             program = bytes.concat(program, bytes32(_sliced.fromHexBytes()));
         } else if (_value.mayBeNumber()) {
             program = bytes.concat(program, bytes32(_value.toUint256()));
+        } else {
+            // only for struct names!
+            program = bytes.concat(program, bytes32(bytes4(keccak256(abi.encodePacked(_value)))));
         }
 
         program = bytes.concat(program, _arrName);
@@ -297,6 +309,42 @@ contract Parser is IParser {
     }
 
     /**
+     * @dev Updates previous `program` with the name of the dsl array that will
+     * be used to sum uint256 variables
+     *
+     * Example of a command:
+     * ```
+     * sumOf ARR_NAME
+     * ```
+     */
+    function asmSumOf() public {
+        _parseVariable(); // array name
+    }
+
+    /**
+     * @dev Updates previous `program` with the name of the dsl array and
+     * name of variable in the DSL structure that will
+     * be used to sum uint256 variables
+     *
+     * Example of a command:
+     * ```
+     * struct BOB {
+     *   lastPayment: 3
+     * }
+     *
+     * struct ALISA {
+     *   lastPayment: 300
+     * }
+     *
+     * sumOf USERS.lastPayment
+     * ```
+     */
+    function asmSumThroughStructs() public {
+        _parseVariable(); // array name
+        _parseVariable(); // variable name
+    }
+
+    /**
      * @dev Updates previous `program` for positive and negative branch position
      *
      * Example of a command:
@@ -386,12 +434,13 @@ contract Parser is IParser {
         // parsing name/value parameters till found the 'endStruct' word
         do {
             // parse the name of variable - `balance`, `account`
-            string memory _name = _nextCmd();
+            string memory _variable = _nextCmd();
             // create the struct name of variable - `BOB.balance`, `BOB.account`
-            _name = _structName.concat('.').concat(_name);
-            IContext(_ctxAddr).setStructVar(_name); // TODO: check with Misha
+            string memory _name = _structName.concat('.').concat(_variable);
+            // TODO: let's think how not to use setter in Parser here..
+            IContext(_ctxAddr).setStructVars(_structName, _variable, _name);
+            // TODO: store sertain bytes for each word separate in bytes string?
             program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(_name))));
-
             // parse the value of `balance` variable - `456`, `0x345...`
             string memory _value = _nextCmd();
 
@@ -453,7 +502,6 @@ contract Parser is IParser {
      */
     function _parseOpcodeWithParams(address _ctxAddr) internal {
         string storage cmd = _nextCmd();
-
         bytes1 opcode = IContext(_ctxAddr).opCodeByName(cmd);
         // TODO: simplify
         bytes4 _selector = bytes4(keccak256(abi.encodePacked(cmd)));

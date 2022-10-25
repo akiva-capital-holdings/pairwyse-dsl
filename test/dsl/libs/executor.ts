@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import * as hre from 'hardhat';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 import { Context, Stack, ExecutorMock } from '../../../typechain-types';
-import { checkStack, checkStackTailv2, hex4Bytes } from '../../utils/utils';
+import { checkStack, checkStackTail, hex4Bytes } from '../../utils/utils';
 
 const { ethers } = hre;
 
@@ -79,8 +79,6 @@ describe('Executor', () => {
           '0x' +
             '25' + // if
             '0027' + // position of the `action` branch
-            '1a' + // uin256
-            `${FOUR}` + // FOUR
             '24' + // end of body
             '1a' + // action: uint256
             `${ONE}` + // action: ONE
@@ -88,8 +86,9 @@ describe('Executor', () => {
             `${TWO}` + // action: TWO
             '24' // action: end
         );
+        await checkStackTail(stack, []);
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, []);
+        await checkStackTail(stack, []);
       });
 
       it('if condition is true', async () => {
@@ -109,10 +108,15 @@ describe('Executor', () => {
             '24' // action: end
         );
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, [1, 2, 4]);
+        /*
+         1 - action: ONE,
+         2 - action: TWO,
+         4 - uin256 FOUR
+        */
+        await checkStackTail(stack, [1, 2, 4]);
       });
 
-      it('if condition is false', async () => {
+      it('if condition is false returns only value after that condition', async () => {
         await ctx.setProgram(
           '0x' +
             '18' + // bool
@@ -128,8 +132,10 @@ describe('Executor', () => {
             `${TWO}` + // action: TWO
             '24' // action: end
         );
+
+        await checkStackTail(stack, []);
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, []);
+        await checkStackTail(stack, [4]);
       });
     });
 
@@ -140,6 +146,7 @@ describe('Executor', () => {
       const FOUR = new Array(64).join('0') + 4;
 
       it('nothing in the stack', async () => {
+        // TODO: the name of the test do not match with expected result
         const programTrue = `0x 23 0027 0049  1a ${THREE} 24  1a ${ONE} 24  1a ${TWO} 24`
           .split(' ')
           .filter((x) => !!x)
@@ -147,10 +154,11 @@ describe('Executor', () => {
 
         await ctx.setProgram(programTrue);
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, [2, 3]);
+        await checkStackTail(stack, [2, 3]);
       });
 
       it('if condition is true', async () => {
+        // TODO: it is not clear what we expected here. Lets add DSL code as readable example
         /**
          * 18 bool
          * 01 true
@@ -168,10 +176,11 @@ describe('Executor', () => {
 
         await ctx.setProgram(programTrue);
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, [1, 3]);
+        await checkStackTail(stack, [1, 3]);
       });
 
       it('if condition is true (#2)', async () => {
+        // TODO: it is not clear what we expected here. Lets add DSL code as readable example
         const programTrue =
           '0x' +
           '18' + // bool
@@ -193,10 +202,11 @@ describe('Executor', () => {
 
         await ctx.setProgram(programTrue);
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, [1, 2, 4]);
+        await checkStackTail(stack, [1, 2, 4]);
       });
 
       it('if condition is false', async () => {
+        // TODO: it is not clear what we expected here. Lets add DSL code as readable example
         const programFalse = `0x 18 00 23 0029 004b  1a ${THREE} 24  1a ${ONE} 24  1a ${TWO} 24`
           .split(' ')
           .filter((x) => !!x)
@@ -204,7 +214,7 @@ describe('Executor', () => {
 
         await ctx.setProgram(programFalse);
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, [2, 3]);
+        await checkStackTail(stack, [2, 3]);
       });
 
       it('if condition is false (#2)', async () => {
@@ -229,7 +239,8 @@ describe('Executor', () => {
 
         await ctx.setProgram(programTrue);
         await app.execute(ctxAddr);
-        await checkStackTailv2(stack, [3, 4]);
+        // TODO: it should be [1, 2, 4]
+        await checkStackTail(stack, [3, 4]);
       });
     });
 

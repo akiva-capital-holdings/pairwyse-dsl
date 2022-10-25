@@ -61,11 +61,26 @@ export const pushToStack = async (
 };
 
 /**
+ * Checks stack length
+ * @param stack stack: Stack
+ * @param expectedLen Expected length of the stack
+ * @param badLenErr [optional] error message for incorrect stack length
+ */
+export const checkStackLength = async (
+  stack: Stack,
+  expectedLen: number,
+  badLenErr = 'Bad stack length'
+) => {
+  // check stack length
+  const stackLen = await stack.length();
+  expect(stackLen.toNumber()).to.equal(expectedLen, badLenErr);
+};
+
+/**
  * Checks stack length and it's last value
  * @param stack stack: Stack
  * @param expectedLen Expected length of the stack
  * @param expectedValue Expected value on the top of the stack (last value)
- * @param badLenErr [optional] error message for incorrect stack length
  * @param badValueErr [optional] error message for incorrect stack value
  */
 export const checkStack = async (
@@ -73,31 +88,29 @@ export const checkStack = async (
   expectedLen: number,
   expectedValue: number | string | BigNumber,
   indexFromEnd: number = 0,
-  badLenErr = 'Bad stack length',
   badValueErr = 'Bad stack value'
 ) => {
   // check stack length
+  await checkStackLength(stack, expectedLen);
   const stackLen = await stack.length();
-  expect(stackLen.toNumber()).to.equal(expectedLen, badLenErr);
   // check result
   const value = await stack.stack(stackLen.toNumber() - 1 - indexFromEnd);
   expect(value).to.equal(expectedValue, badValueErr);
 };
 
-// TODO: rename to `checkStackTail`
-export async function checkStackTailv2(
+export async function checkStackTail(
   stack: Stack,
   expectedValues: (number | string | BigNumber)[],
-  badLenErr = 'Bad stack length',
   badValueErr = 'Bad stack value'
 ) {
+  // check stack length
+  await checkStackLength(stack, expectedValues.length);
   for (let i = 0; i < expectedValues.length; i++) {
     await checkStack(
       stack,
       expectedValues.length,
       expectedValues[expectedValues.length - 1 - i],
       i,
-      badLenErr,
       badValueErr
     );
   }
@@ -187,12 +200,12 @@ export const addSteps = async (
   agreementAddress: string,
   multisig: MultisigMock
 ) => {
-  let transactionContext;
+  let recordContext;
   const agreement = await ethers.getContractAt('Agreement', agreementAddress);
   for await (const step of steps) {
     console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
-    transactionContext = await (await ethers.getContractFactory('Context')).deploy();
-    await transactionContext.setAppAddress(agreementAddress);
+    recordContext = await (await ethers.getContractFactory('Context')).deploy();
+    await recordContext.setAppAddress(agreementAddress);
     const cdCtxsAddrs = []; // conditional context Addresses
 
     console.log('\nTerm Conditions');
@@ -208,9 +221,9 @@ export const addSteps = async (
         }:\n\t\x1b[33m${step.conditions[j]}\x1b[0m`
       );
     }
-    await agreement.parse(step.transaction, transactionContext.address, preprocessorAddr);
+    await agreement.parse(step.transaction, recordContext.address, preprocessorAddr);
     console.log('\nTerm transaction');
-    console.log(`\n\taddress: \x1b[35m${transactionContext.address}\x1b[0m`);
+    console.log(`\n\taddress: \x1b[35m${recordContext.address}\x1b[0m`);
     console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
 
     // Create Raw transaction
@@ -220,7 +233,7 @@ export const addSteps = async (
       step.signatories,
       step.transaction,
       step.conditions,
-      transactionContext.address,
+      recordContext.address,
       cdCtxsAddrs
     );
 

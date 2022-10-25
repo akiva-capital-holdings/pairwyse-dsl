@@ -59,6 +59,7 @@ contract Context is IContext {
     // alias -> base command
     mapping(string => string) public aliases;
     mapping(string => bool) public isStructVar;
+    mapping(bytes4 => mapping(bytes4 => bytes4)) public structParams;
     // Counter for the number of iterations for every for-loop in DSL code
     uint256 public forLoopIterationsRemaining;
 
@@ -370,7 +371,6 @@ contract Context is IContext {
         );
 
         // Ex. `transferVar DAI RECEIVER AMOUNT`
-        // TODO: add more tests
         addOpcode(
             'transferVar',
             0x2c,
@@ -380,7 +380,6 @@ contract Context is IContext {
         );
 
         // Ex. `transferFrom DAI OWNER RECEIVER 10`
-        // TODO: add more tests
         addOpcode(
             'transferFrom',
             0x20,
@@ -390,7 +389,6 @@ contract Context is IContext {
         );
 
         // Ex. `transferFromVar DAI OWNER RECEIVER AMOUNT`
-        // TODO: add more tests
         addOpcode(
             'transferFromVar',
             0x2a,
@@ -481,6 +479,51 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
 
+        // Sums all elements in an array
+        // Ex. `sumOf ARR_NAME`
+        addOpcode(
+            'sumOf',
+            0x40,
+            OtherOpcodes.opSumOf.selector,
+            IParser.asmSumOf.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
+        /* Sums struct variables values from the `struct type` array
+            Ex. `sumThroughStructs ARR_NAME STRUCT_VARIABLE_NAME`
+
+            For more info see command `declareArr struct`
+            Usage:
+                struct Bob { // declare the first struct
+                  lastPayment: 1000
+                }
+
+                struct Mary { // declare the second struct
+                  lastPayment: 2000
+                }
+
+                // declare the array that have type `struct`
+                declareArr struct USERS
+
+                // insert `Bob` name into `USERS` array,
+                push Bob USERS
+
+                // or use `insert` DSL command by inserting `Bob` name into `USERS` array
+                insert Mary into USERS
+
+                // usage of a `sumThroughStructs` command sums 1000 and 2000 and save to the stack
+                sumThroughStructs USERS lastPayment
+
+                // or command bellow will be preprocessed to the same `sumThroughStructs` format
+                sumOf USERS.lastPayment
+        */
+        addOpcode(
+            'sumThroughStructs',
+            0x38,
+            OtherOpcodes.opSumThroughStructs.selector,
+            IParser.asmSumThroughStructs.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
         // Creates structs
         // Ex. `struct BOB { address: 0x123...456, lastDeposit: 3 }`
         // Ex. `BOB.lastDeposit >= 5`
@@ -502,7 +545,7 @@ contract Context is IContext {
 
         addOpcode(
             'startLoop',
-            0x38,
+            0x32,
             BranchingOpcodes.opStartLoop.selector,
             0x0,
             OpcodeLibNames.BranchingOpcodes
@@ -558,9 +601,9 @@ contract Context is IContext {
             OpcodeLibNames.OtherOpcodes
         );
         // types of arrays for declaration
-        // TODO: should be normal selectors here for getting values instead of mocked as `opLoadRemoteUint256`
-        _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadLocalUint256.selector);
-        _addOpcodeBranch(name, 'address', 0x02, OtherOpcodes.opLoadLocalAddress.selector);
+        _addOpcodeBranch(name, 'uint256', 0x01, bytes4(0x0));
+        _addOpcodeBranch(name, 'struct', 0x02, bytes4(0x0));
+        _addOpcodeBranch(name, 'address', 0x03, bytes4(0x0));
 
         /***********
          * Aliases *
@@ -739,12 +782,25 @@ contract Context is IContext {
     }
 
     /**
-     * @dev Sets structure variable state to true
-     *
-     * @param _varName is the name of structure variable, ex. `BOB.account`
+     * @dev Sets the full name depends on structure variables
+     * @param _structName is the name of the structure
+     * @param _varName is the name of the structure variable
+     * @param _fullName is the full string of the name of the structure and its variables
      */
-    function setStructVar(string memory _varName) public {
-        isStructVar[_varName] = true;
+    function setStructVars(
+        string memory _structName,
+        string memory _varName,
+        string memory _fullName
+    ) public {
+        isStructVar[_fullName] = true;
+        bytes4 structName = bytes4(keccak256(abi.encodePacked(_structName)));
+        bytes4 varName = bytes4(keccak256(abi.encodePacked(_varName)));
+        bytes4 fullName = bytes4(keccak256(abi.encodePacked(_fullName)));
+        structParams[structName][varName] = fullName;
+    }
+
+    function setForLoopIterationsRemaining(uint256 _forLoopIterationsRemaining) external {
+        forLoopIterationsRemaining = _forLoopIterationsRemaining;
     }
 
     function setForLoopIterationsRemaining(uint256 _forLoopIterationsRemaining) external {
@@ -787,7 +843,8 @@ contract Context is IContext {
         bytes1 _branchCode,
         bytes4 _selector
     ) internal {
-        require(_selector != bytes4(0), ErrorsContext.CTX2);
+        // TODO: will we use zero _selector in the future?
+        // require(_selector != bytes4(0), ErrorsContext.CTX2);
         require(
             branchSelectors[_baseOpName][_branchCode] == bytes4(0) &&
                 branchCodes[_baseOpName][_branchName] == bytes1(0),

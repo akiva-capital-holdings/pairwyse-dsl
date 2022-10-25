@@ -51,6 +51,17 @@ library ErrorsGeneralOpcodes {
     string constant OP3 = 'OP3'; // Opcodes: opLoadRemote call not success
     string constant OP4 = 'OP4'; // Opcodes: tries to put an item to non-existing array
     string constant OP5 = 'OP5'; // Opcodes: opLoadLocal call not success
+    string constant OP6 = 'OP6'; // Opcodes: array is empty
+    string constant OP8 = 'OP8'; // Opcodes: wrong type of array
+}
+
+/**
+ * @title List of BranchingOpcodes errors
+ */
+library ErrorsBranchingOpcodes {
+    string constant BR1 = 'BR1'; // BranchingOpcodes: LinkedList.getType() delegate call error
+    string constant BR2 = 'BR2'; // BranchingOpcodes: array doesn't exist
+    string constant BR3 = 'BR3'; // BranchingOpcodes: LinkedList.get() delegate call error
 }
 
 /**

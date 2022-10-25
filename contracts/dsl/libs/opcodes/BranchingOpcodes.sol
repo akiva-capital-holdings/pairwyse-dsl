@@ -112,7 +112,7 @@ library BranchingOpcodes {
                 _tempVarNameB32,
                 uint256(bytes32(data))
             );
-        } else if (dataType == 0x02) {
+        } else if (dataType == 0x03) {
             IStorage(IContext(_ctx).appAddr()).setStorageAddress(
                 _tempVarNameB32,
                 address(bytes20(data))
