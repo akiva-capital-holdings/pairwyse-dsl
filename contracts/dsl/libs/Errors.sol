@@ -19,6 +19,7 @@ library ErrorsAgreement {
     string constant AGR10 = 'AGR10'; // Agreement: this record has not yet been archived
     string constant AGR11 = 'AGR11'; // Agreement: not a GnosisSafe
     string constant AGR12 = 'AGR12'; // Agreement: zero address
+    string constant AGR13 = 'AGR13'; // Agreement: the record is not activated
 }
 
 /**

@@ -27,10 +27,10 @@ contract Agreement {
 
     IParser public parser; // TODO: We can get rid of this dependency
     IContext public context;
-    address public safeAddr;
+    address public ownerAddr;
 
     event NewRecord(
-        uint256 recordId, // recordId ID
+        uint256 recordId,
         uint256[] requiredRecords, // required transactions that have to be executed
         address[] signatories, // addresses that can execute the transaction
         string transaction, // DSL code string ex. `uint256 5 > uint256 3`
@@ -47,8 +47,8 @@ contract Agreement {
     }
 
     // Only GnosisSafe
-    modifier onlySafe() {
-        require(msg.sender == safeAddr, ErrorsAgreement.AGR11);
+    modifier onlyOwner() {
+        require(msg.sender == ownerAddr, ErrorsAgreement.AGR11);
         _;
     }
 
@@ -56,6 +56,7 @@ contract Agreement {
         address recordContext;
         bool isExecuted;
         bool isArchived;
+        bool isActive;
         string transactionString;
     }
 
@@ -71,9 +72,9 @@ contract Agreement {
     /**
      * Sets parser address, creates new Context instance, and setups Context
      */
-    constructor(address _parser, address _safeAddr) {
-        require(_safeAddr != address(0), ErrorsAgreement.AGR12);
-        safeAddr = _safeAddr;
+    constructor(address _parser, address _ownerAddr) {
+        require(_ownerAddr != address(0), ErrorsAgreement.AGR12);
+        ownerAddr = _ownerAddr;
         parser = IParser(_parser);
         context = new Context();
         context.setAppAddress(address(this));
@@ -144,25 +145,6 @@ contract Agreement {
     }
 
     /**
-     * @dev archived any of the existing records by recordId.
-     * @param _recordId Record ID
-     */
-    function archiveRecord(uint256 _recordId) external onlySafe {
-        require(txs[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
-        txs[_recordId].isArchived = true;
-    }
-
-    /**
-     * @dev  unarchive any of the existing records by recordId
-     * @param _recordId Record ID
-     */
-    function unArchiveRecord(uint256 _recordId) external onlySafe {
-        require(txs[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
-        require(txs[_recordId].isArchived != false, ErrorsAgreement.AGR10);
-        txs[_recordId].isArchived = false;
-    }
-
-    /**
      * @dev Sorted all records and return array of active records in Agreement
      * @return activeRecords array of active records in Agreement
      */
@@ -171,6 +153,7 @@ contract Agreement {
         uint256[] memory activeRecords = new uint256[](_activeRecordsLen());
         for (uint256 i = 0; i < recordIds.length; i++) {
             if (
+                txs[recordIds[i]].isActive &&
                 !txs[recordIds[i]].isArchived &&
                 !txs[recordIds[i]].isExecuted &&
                 txs[recordIds[i]].recordContext != address(0)
@@ -180,6 +163,70 @@ contract Agreement {
             }
         }
         return activeRecords;
+    }
+
+    /**
+     * @dev return valuses for preview record before execution
+     * @param _recordId Record ID
+     * @return txsRequiredRecords array of required records in the record
+     * @return txsSignatories array of signatories in the record
+     * @return txsConditions array of conditions in the record
+     * @return txsTransaction string of transaction
+     */
+    function getRecord(uint256 _recordId)
+        external
+        view
+        returns (
+            uint256[] memory txsRequiredRecords,
+            address[] memory txsSignatories,
+            string[] memory txsConditions,
+            string memory txsTransaction,
+            bool isActive
+        )
+    {
+        txsRequiredRecords = requiredRecords[_recordId];
+        txsSignatories = signatories[_recordId];
+        txsConditions = conditionStrings[_recordId];
+        txsTransaction = txs[_recordId].transactionString;
+        isActive = txs[_recordId].isActive;
+    }
+
+    /**
+     * @dev archived any of the existing records by recordId.
+     * @param _recordId Record ID
+     */
+    function archiveRecord(uint256 _recordId) external onlyOwner {
+        require(txs[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+        txs[_recordId].isArchived = true;
+    }
+
+    /**
+     * @dev unarchive any of the existing records by recordId
+     * @param _recordId Record ID
+     */
+    function unArchiveRecord(uint256 _recordId) external onlyOwner {
+        require(txs[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+        require(txs[_recordId].isArchived != false, ErrorsAgreement.AGR10);
+        txs[_recordId].isArchived = false;
+    }
+
+    /**
+     * @dev activates the existing records by recordId, only awailable for ownerAddr
+     * @param _recordId Record ID
+     */
+    function activateRecord(uint256 _recordId) external onlyOwner {
+        require(txs[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+        txs[_recordId].isActive = true;
+    }
+
+    /**
+     * @dev deactivates the existing records by recordId, only awailable for ownerAddr
+     * @param _recordId Record ID
+     */
+    function deactivateRecord(uint256 _recordId) external onlyOwner {
+        require(txs[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+        require(txs[_recordId].isActive != false, ErrorsAgreement.AGR10);
+        txs[_recordId].isActive = false;
     }
 
     /**
@@ -204,7 +251,7 @@ contract Agreement {
         string[] memory _conditionStrings,
         address _recordContext,
         address[] memory _conditionContexts
-    ) external onlySafe {
+    ) external onlyOwner {
         _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
         for (uint256 i = 0; i < _conditionContexts.length; i++) {
             _addRecordCondition(_recordId, _conditionStrings[i], _conditionContexts[i]);
@@ -221,35 +268,11 @@ contract Agreement {
     }
 
     function execute(uint256 _recordId) external payable {
+        require(txs[_recordId].isActive, ErrorsAgreement.AGR13);
         require(_verify(_recordId), ErrorsAgreement.AGR1);
         require(_validateRequiredRecords(_recordId), ErrorsAgreement.AGR2);
         require(_validateConditions(_recordId, msg.value), ErrorsAgreement.AGR6);
         require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
-    }
-
-    /**
-     * @dev return valuses for preview record before execution
-     * @param _recordId Record ID
-     * @return txsRequiredRecords array of required records in the record
-     * @return txsSignatories array of signatories in the record
-     * @return txsConditions array of conditions in the record
-     * @return txsTransaction string of transaction
-     */
-    function getRecord(uint256 _recordId)
-        external
-        view
-        returns (
-            uint256[] memory txsRequiredRecords,
-            address[] memory txsSignatories,
-            string[] memory txsConditions,
-            string memory txsTransaction
-        )
-    {
-        txsRequiredRecords = requiredRecords[_recordId];
-        txsSignatories = signatories[_recordId];
-        txsConditions = conditionStrings[_recordId];
-        txsTransaction = txs[_recordId].transactionString;
-        return (txsRequiredRecords, txsSignatories, txsConditions, txsTransaction);
     }
 
     // solhint-disable-next-line no-empty-blocks
@@ -321,7 +344,7 @@ contract Agreement {
         address[] memory _signatories
     ) internal {
         _checkSignatories(_signatories);
-        Record memory txn = Record(address(0), false, false, '');
+        Record memory txn = Record(address(0), false, false, false, '');
         signatories[_recordId] = _signatories;
         requiredRecords[_recordId] = _requiredRecords;
         txs[_recordId] = txn;
@@ -399,7 +422,7 @@ contract Agreement {
         Executor.execute(address(txn.recordContext));
         isExecutedBySignatory[_recordId][_signatory] = true;
 
-        // Check is tx was executed by all signatories
+        // Check if record was executed by all signatories
         uint256 executionProgress;
         address[] memory signatoriesOfRecord = signatories[_recordId];
         for (uint256 i = 0; i < signatoriesOfRecord.length; i++) {
@@ -421,6 +444,7 @@ contract Agreement {
         uint256 count = 0;
         for (uint256 i = 0; i < recordIds.length; i++) {
             if (
+                txs[recordIds[i]].isActive &&
                 !txs[recordIds[i]].isArchived &&
                 !txs[recordIds[i]].isExecuted &&
                 txs[recordIds[i]].recordContext != address(0)
