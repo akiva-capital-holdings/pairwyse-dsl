@@ -49,7 +49,7 @@ const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
-      chainId: 1337,
+      chainId: 51337,
     },
     localhost: {
       timeout: 1e9,
