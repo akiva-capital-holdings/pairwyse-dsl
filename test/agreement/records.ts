@@ -262,7 +262,7 @@ describe('Simple Records in Agreement', () => {
       // app Agreement is the owner of app2 Agreement
       let appAddr2 = await deployAgreementMock(hre, appAddr);
       let app2 = await ethers.getContractAt('AgreementMock', appAddr2);
-      console.log(appAddr2);
+      // console.log(appAddr2);
       const input = `enable record 23 for ${appAddr2}`;
 
       // uses for the additional agreement (test will check that stack has last value `true` after execution)
@@ -339,7 +339,7 @@ describe('Simple Records in Agreement', () => {
       expect(recordResult.isActive).to.be.equal(false);
 
       // check that record for the additional aggreement can NOT be executed
-      await expect(app2.connect(bob).execute(23)).to.be.revertedWith('AGR13');
+      // await expect(app2.connect(bob).execute(23)).to.be.revertedWith('AGR13');
 
       // execute 13 record that activates the 13 record in additional agreement
       await app.connect(bob).execute(13);

@@ -416,14 +416,14 @@ library OtherOpcodes {
          * later conversion from bytes32 to address
          */
         contractAddrB32 >>= 96;
-        console.log('opEnableRecord >----------');
-        console.log(uint256(bytes32(recordId)));
         address contractAddr = address(uint160(uint256(contractAddrB32)));
         console.log(contractAddr);
         (bool success, ) = contractAddr.delegatecall(
             abi.encodeWithSignature('activateRecord(uint256)', uint256(bytes32(recordId)))
         );
+
         require(success, ErrorsGeneralOpcodes.OP3);
+        OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     /**

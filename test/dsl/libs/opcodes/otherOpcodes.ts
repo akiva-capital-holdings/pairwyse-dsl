@@ -827,7 +827,7 @@ describe('Other opcodes', () => {
   });
 
   // Use simple Agreement with one `activaterecord` fuction to decrease test time
-  describe.only('opEnableRecord', () => {
+  describe.skip('opEnableRecord', () => {
     let appAddrMain: string;
     let appAddr: string;
     let alice: SignerWithAddress;
@@ -856,6 +856,7 @@ describe('Other opcodes', () => {
 
     it('check that record 54 was activated', async () => {
       await _ctx2.setProgram(`0x${bnToLongHexString('34')}${appAddrMain.substring(2)}`);
+      // add context address to cover require and onlyOwner modifier
       await app.opEnableRecord(_ctx2.address);
     });
   });

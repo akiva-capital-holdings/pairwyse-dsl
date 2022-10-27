@@ -475,7 +475,7 @@ contract Parser is IParser {
         asmUint256();
         _nextCmd(); // skip `for` keyword
         bytes memory _slicedAddress = bytes(_nextCmd()).slice(2, 42);
-        program = bytes.concat(program, bytes32(_slicedAddress.fromHexBytes()));
+        program = bytes.concat(program, bytes(_slicedAddress.fromHexBytes()));
     }
 
     /**

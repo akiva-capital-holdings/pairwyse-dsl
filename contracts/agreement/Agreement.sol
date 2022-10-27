@@ -198,8 +198,7 @@ contract Agreement {
      * @param _recordId Record ID
      */
     function archiveRecord(uint256 _recordId) external onlyOwner {
-        // require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
-        console.log(_recordId);
+        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         records[_recordId].isArchived = true;
     }
 
@@ -217,9 +216,10 @@ contract Agreement {
      * @dev activates the existing records by recordId, only awailable for ownerAddr
      * @param _recordId Record ID
      */
-    function activateRecord(uint256 _recordId) external onlyOwner {
-        console.log(records[_recordId].isActive);
-        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+    function activateRecord(uint256 _recordId) external {
+        console.log('activateRecord >---');
+        console.log(_recordId, records[_recordId].isActive);
+        // require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         records[_recordId].isActive = true;
     }
 
@@ -255,13 +255,15 @@ contract Agreement {
         string[] memory _conditionStrings,
         address _recordContext,
         address[] memory _conditionContexts
-    ) external onlyOwner {
+    ) external {
         _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
         for (uint256 i = 0; i < _conditionContexts.length; i++) {
             _addRecordCondition(_recordId, _conditionStrings[i], _conditionContexts[i]);
         }
         _addRecordTransaction(_recordId, _transactionString, _recordContext);
-
+        if (msg.sender == ownerAddr) {
+            records[_recordId].isActive = true;
+        }
         emit NewRecord(
             _recordId,
             _requiredRecords,
