@@ -252,13 +252,15 @@ contract Agreement {
         string[] memory _conditionStrings,
         address _recordContext,
         address[] memory _conditionContexts
-    ) external onlyOwner {
+    ) external {
         _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
         for (uint256 i = 0; i < _conditionContexts.length; i++) {
             _addRecordCondition(_recordId, _conditionStrings[i], _conditionContexts[i]);
         }
         _addRecordTransaction(_recordId, _transactionString, _recordContext);
-        records[_recordId].isArchived = true;
+        if (msg.sender == ownerAddr) {
+            records[_recordId].isActive = true;
+        }
 
         emit NewRecord(
             _recordId,

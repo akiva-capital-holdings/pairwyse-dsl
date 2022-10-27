@@ -69,6 +69,38 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await expect(agreement.connect(bob).execute(txId)).to.be.revertedWith('AGR1');
   });
 
+  it('update test', async () => {
+    const updateAgreementAddr = await deployAgreement(hre, alice.address);
+    const updateAgreement = await ethers.getContractAt('Agreement', updateAgreementAddr);
+    const recordContext = await (await ethers.getContractFactory('Context')).deploy();
+    await recordContext.setAppAddress(alice.address);
+    const firstTxId = '1';
+    const secondTxId = '2';
+    const signatories = [alice.address];
+    const conditions = ['blockTimestamp > var LOCK_TIME'];
+    const transaction = 'sendEth RECEIVER 1000000000000000000';
+    // record by agreement owner
+    await updateAgreement
+      .connect(alice)
+      .update(firstTxId, [], signatories, transaction, conditions, recordContext.address, [
+        recordContext.address,
+      ]);
+
+    // record by other address
+    await updateAgreement
+      .connect(bob)
+      .update(secondTxId, [], signatories, transaction, conditions, recordContext.address, [
+        recordContext.address,
+      ]);
+
+    // owner set isActive = true
+    const trueResult = await updateAgreement.records(firstTxId);
+    // other set isActive = false
+    const falseResult = await updateAgreement.records(secondTxId);
+    expect(trueResult.isActive).to.equal(true);
+    expect(falseResult.isActive).to.equal(false);
+  });
+
   it('one condition', async () => {
     // Set variables
     await agreement.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
