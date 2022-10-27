@@ -258,6 +258,7 @@ contract Agreement {
             _addRecordCondition(_recordId, _conditionStrings[i], _conditionContexts[i]);
         }
         _addRecordTransaction(_recordId, _transactionString, _recordContext);
+        records[_recordId].isArchived = true;
 
         emit NewRecord(
             _recordId,
