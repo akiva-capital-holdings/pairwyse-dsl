@@ -1911,4 +1911,29 @@ describe('Preprocessor', () => {
       });
     });
   });
+
+  describe.skip('activate records', () => {
+    it('enable several records for several agreement', async () => {
+      const input = `
+        enable record 34 for 0xE1ec18D475D02a8219a13D045a15fe67db8e0774
+        enable record 15 for 0xE2ec18D475D02a8219a13D045a15fe67db8e0773
+        enable record 1 for 0xE3ec18D475D02a8219a13D045a15fe67db8e0773
+      `;
+      const res = await app.callStatic.transform(ctxAddr, input);
+      expect(res).to.eql([
+        'enable',
+        '34',
+        'for',
+        '0xE1ec18D475D02a8219a13D045a15fe67db8e0774',
+        'enable',
+        '15',
+        'for',
+        '0xE2ec18D475D02a8219a13D045a15fe67db8e0773',
+        'enable',
+        '1',
+        'for',
+        '0xE3ec18D475D02a8219a13D045a15fe67db8e0773',
+      ]);
+    });
+  });
 });

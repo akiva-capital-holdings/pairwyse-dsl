@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import * as hre from 'hardhat';
 import { deployBaseMock } from '../../scripts/utils/deploy.utils.mock';
 import { Context, ParserMock } from '../../typechain-types';
-import { hex4Bytes } from '../utils/utils';
+import { hex4Bytes, bnToLongHexString } from '../utils/utils';
 
 const { ethers, network } = hre;
 
@@ -1067,5 +1067,37 @@ describe('Parser', () => {
     // test function calls inside a for loop
     // test if inside a for loop
     // test if-else inside a for loop
+  });
+
+  describe.skip('activate records', () => {
+    it('enable several records for several agreement', async () => {
+      await app.parseCodeExt(ctxAddr, [
+        'enable',
+        '34',
+        'for',
+        '0xE1ec18D475D02a8219a13D045a15fe67db8e0774',
+        'enable',
+        '15',
+        'for',
+        '0xE2ec18D475D02a8219a13D045a15fe67db8e0773',
+        'enable',
+        '1',
+        'for',
+        '0xE3ec18D475D02a8219a13D045a15fe67db8e0773',
+      ]);
+
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '41' +
+          `${bnToLongHexString('34')}` +
+          'e1ec18d475d02a8219a13d045a15fe67db8e0774000000000000000000000000' +
+          '41' +
+          `${bnToLongHexString('15')}` +
+          'e2ec18d475d02a8219a13d045a15fe67db8e0773000000000000000000000000' +
+          '41' +
+          `${bnToLongHexString('1')}` +
+          'e3ec18d475d02a8219a13d045a15fe67db8e0773000000000000000000000000'
+      );
+    });
   });
 });

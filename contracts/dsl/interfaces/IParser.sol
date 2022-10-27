@@ -63,4 +63,6 @@ interface IParser {
     function asmStruct(address _ctxAddr) external;
 
     function asmForLoop() external;
+
+    function asmEnableRecord() external;
 }

@@ -13,7 +13,8 @@ import { OtherOpcodes } from '../dsl/libs/opcodes/OtherOpcodes.sol';
 import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
+
 // TODO: automatically make sure that no contract exceeds the maximum contract size
 
 /**
@@ -197,7 +198,8 @@ contract Agreement {
      * @param _recordId Record ID
      */
     function archiveRecord(uint256 _recordId) external onlyOwner {
-        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+        // require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+        console.log(_recordId);
         records[_recordId].isArchived = true;
     }
 
@@ -216,6 +218,7 @@ contract Agreement {
      * @param _recordId Record ID
      */
     function activateRecord(uint256 _recordId) external onlyOwner {
+        console.log(records[_recordId].isActive);
         require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         records[_recordId].isActive = true;
     }

@@ -257,6 +257,124 @@ describe('Simple Records in Agreement', () => {
       record = await app.records(recordId);
       expect(record.isArchived).to.be.equal(true);
     });
+
+    it.only('activates one existing record through DSL', async () => {
+      // app Agreement is the owner of app2 Agreement
+      let appAddr2 = await deployAgreementMock(hre, appAddr);
+      let app2 = await ethers.getContractAt('AgreementMock', appAddr2);
+      console.log(appAddr2);
+      const input = `enable record 23 for ${appAddr2}`;
+
+      // uses for the additional agreement (test will check that stack has last value `true` after execution)
+      const input2 = `bool true`;
+
+      // record for the main agreement
+      let record = {
+        recordId: 13,
+        requiredRecords: [],
+        signatories: [bob.address],
+        transactionStr: input, // enables record for the additional agreement
+        conditionStrings: ['bool true'],
+        transactionCtx: await ContextCont.deploy(),
+        conditionContexts: [await ContextCont.deploy()],
+      };
+
+      // record for the additional agreement
+      let record2 = {
+        recordId: 23,
+        requiredRecords: [],
+        signatories: [bob.address],
+        transactionStr: input2,
+        conditionStrings: ['bool true'],
+        transactionCtx: await ContextCont.deploy(),
+        conditionContexts: [await ContextCont.deploy()],
+      };
+
+      const {
+        recordId: recordId1,
+        conditionContexts: conditionContexts1,
+        transactionCtx: transactionCtx1,
+        transactionStr: transactionStr1,
+      } = record;
+
+      const {
+        recordId: recordId2,
+        conditionContexts: conditionContexts2,
+        transactionCtx: transactionCtx2,
+        transactionStr: transactionStr2,
+      } = record2;
+
+      // the record sets to the apps
+      await setRecord(record, app);
+      await setRecord(record2, app2);
+
+      // Set app addresses & msg senders
+      await transactionCtx1.setAppAddress(app.address);
+      await transactionCtx1.setMsgSender(bob.address);
+      await conditionContexts1[0].setAppAddress(app.address);
+      await conditionContexts1[0].setMsgSender(bob.address);
+
+      await transactionCtx2.setAppAddress(app2.address);
+      await transactionCtx2.setMsgSender(bob.address);
+      await conditionContexts2[0].setAppAddress(app2.address);
+      await conditionContexts2[0].setMsgSender(bob.address);
+
+      // Parse all conditions and a transaction #1
+      await parseConditions(13, parser, app, preprAddr);
+      await parser.parse(preprAddr, record.transactionCtx.address, record.transactionStr);
+
+      // Parse all conditions and a transaction #2
+      await parseConditions(23, parser, app2, preprAddr);
+      await parser.parse(preprAddr, record2.transactionCtx.address, record2.transactionStr);
+
+      // check that record can be activated for the main aggreement
+      let recordResult = await app.records(13);
+      expect(recordResult.isActive).to.be.equal(false);
+      await activateRecord(app, multisig, 13);
+      recordResult = await app.records(13);
+      expect(recordResult.isActive).to.be.equal(true);
+
+      // check that record is not activated for the additional aggreement
+      recordResult = await app2.records(23);
+      expect(recordResult.isActive).to.be.equal(false);
+
+      // check that record for the additional aggreement can NOT be executed
+      await expect(app2.connect(bob).execute(23)).to.be.revertedWith('AGR13');
+
+      // execute 13 record that activates the 13 record in additional agreement
+      await app.connect(bob).execute(13);
+      // // check that record is activated for the additional aggreement
+      // recordResult = await app2.records(23);
+      // expect(recordResult.isActive).to.be.equal(true);
+
+      // // check that record for the additional aggreement can be executed
+      // await app2.fulfill(23, 0, bob.address);
+    });
+
+    it.skip('activates several existing records for two agreements', async () => {
+      const input = `
+        enable record 34 for addr2
+        enable record 15 for addr2
+        enable record 1 for addr3
+      `;
+
+      let record = await app.records(34);
+      expect(record.isActive).to.be.equal(false);
+      record = await app.records(15);
+      expect(record.isActive).to.be.equal(false);
+      record = await app.records(1);
+      expect(record.isActive).to.be.equal(false);
+
+      // create records
+      // execute dsl code for different agreements
+
+      record = await app.records(34);
+      expect(record.isActive).to.be.equal(true);
+      record = await app.records(15);
+      expect(record.isActive).to.be.equal(true);
+      record = await app.records(1);
+      expect(record.isActive).to.be.equal(true);
+    });
   });
 
   describe('Get actual record Id', () => {
@@ -686,5 +804,9 @@ describe('Simple Records in Agreement', () => {
         app.addRecordTransaction(recordId, transactionStr, transactionCtx.address)
       ).to.be.revertedWith('AGR5');
     });
+  });
+
+  describe('Enable record', () => {
+    it('activates existing record', async () => {});
   });
 });

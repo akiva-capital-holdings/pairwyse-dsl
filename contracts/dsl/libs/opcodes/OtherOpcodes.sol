@@ -8,7 +8,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
@@ -404,6 +404,26 @@ library OtherOpcodes {
         }
 
         OpcodeHelpers.putToStack(_ctx, uint256(result));
+    }
+
+    function opEnableRecord(address _ctx) public {
+        bytes memory recordId = OpcodeHelpers.nextBytes(_ctx, 32);
+        bytes memory contractAddrBytes = OpcodeHelpers.nextBytes(_ctx, 20);
+        bytes32 contractAddrB32 = bytes32(contractAddrBytes);
+
+        /**
+         * Shift bytes to the left so that
+         * later conversion from bytes32 to address
+         */
+        contractAddrB32 >>= 96;
+        console.log('opEnableRecord >----------');
+        console.log(uint256(bytes32(recordId)));
+        address contractAddr = address(uint160(uint256(contractAddrB32)));
+        console.log(contractAddr);
+        (bool success, ) = contractAddr.delegatecall(
+            abi.encodeWithSignature('activateRecord(uint256)', uint256(bytes32(recordId)))
+        );
+        require(success, ErrorsGeneralOpcodes.OP3);
     }
 
     /**

@@ -1,4 +1,4 @@
-import { ethers, network } from 'hardhat';
+import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
@@ -10,6 +10,7 @@ import {
   OtherOpcodesMock,
   ERC20Mintable,
   BaseStorage,
+  AgreementMock,
 } from '../../../../typechain-types';
 import {
   checkStack,
@@ -17,7 +18,12 @@ import {
   hex4Bytes,
   uint256StrToHex,
   pushToStack,
+  bnToLongHexString,
 } from '../../../utils/utils';
+import { deployAgreementMock, deployParserMock } from '../../../../scripts/utils/deploy.utils.mock';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+
+const { ethers, network } = hre;
 
 describe('Other opcodes', () => {
   let StackCont: Stack__factory;
@@ -32,6 +38,7 @@ describe('Other opcodes', () => {
   let addressType: string;
   let structType: string;
   let snapshotId: number;
+  let otherOpcodesLibAddr: string;
   const testAmount = '1000';
   const zero32bytes = `0x${new Array(65).join('0')}`;
 
@@ -48,7 +55,7 @@ describe('Other opcodes', () => {
         libraries: { OpcodeHelpers: opcodeHelpersLib.address },
       })
     ).deploy();
-
+    otherOpcodesLibAddr = otherOpcodesLib.address;
     // Deploy OtherOpcodesMock
     app = await (
       await ethers.getContractFactory('OtherOpcodesMock', {
@@ -816,6 +823,40 @@ describe('Other opcodes', () => {
         // returned 2 as a length of items that stored in PARTNERS
         await checkStack(stack, 1, 2);
       });
+    });
+  });
+
+  // Use simple Agreement with one `activaterecord` fuction to decrease test time
+  describe.only('opEnableRecord', () => {
+    let appAddrMain: string;
+    let appAddr: string;
+    let alice: SignerWithAddress;
+    let _ctx: Context;
+    let _ctx2: Context;
+    let appMain: AgreementMock;
+    let appAdd: AgreementMock;
+
+    before(async () => {
+      // Deploy contracts
+      [alice] = await ethers.getSigners();
+      appAddrMain = await deployAgreementMock(hre, alice.address);
+      appAddr = await deployAgreementMock(hre, alice.address);
+
+      appMain = await ethers.getContractAt('AgreementMock', appAddrMain);
+      appAdd = await ethers.getContractAt('AgreementMock', appAddr);
+
+      _ctx = await (await ethers.getContractFactory('Context')).deploy();
+      _ctx2 = await (await ethers.getContractFactory('Context')).deploy();
+      // Setup
+      await _ctx.setAppAddress(appAddrMain);
+      await _ctx.setOtherOpcodesAddr(otherOpcodesLibAddr);
+      await _ctx2.setAppAddress(appAddr);
+      await _ctx2.setOtherOpcodesAddr(otherOpcodesLibAddr);
+    });
+
+    it('check that record 54 was activated', async () => {
+      await _ctx2.setProgram(`0x${bnToLongHexString('34')}${appAddrMain.substring(2)}`);
+      await app.opEnableRecord(_ctx2.address);
     });
   });
 });
