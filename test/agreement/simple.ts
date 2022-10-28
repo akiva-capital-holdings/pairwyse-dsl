@@ -227,11 +227,8 @@ describe('Agreement: Alice, Bob, Carl', () => {
     // Carl deposits 10 tokens to SC
     console.log('Carl deposits 10 tokens to SC');
     await token.connect(carl).approve(agreementAddr, tenTokens);
-    await expect(() => agreement.connect(carl).execute(32)).to.changeTokenBalance(
-      token,
-      agreement,
-      tenTokens
-    );
+    await agreement.connect(carl).execute(32, { value: tenTokens });
+    expect(await ethers.provider.getBalance(agreementAddr)).to.equal(parseEther('11'));
 
     // Bob lends 10 tokens to Alice
     console.log('Bob lends 10 tokens to Alice');
