@@ -13,7 +13,7 @@ import { OtherOpcodes } from '../dsl/libs/opcodes/OtherOpcodes.sol';
 import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 // TODO: automatically make sure that no contract exceeds the maximum contract size
 
@@ -216,10 +216,8 @@ contract Agreement {
      * @dev activates the existing records by recordId, only awailable for ownerAddr
      * @param _recordId Record ID
      */
-    function activateRecord(uint256 _recordId) external {
-        console.log('activateRecord >---');
-        console.log(_recordId, records[_recordId].isActive);
-        // require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+    function activateRecord(uint256 _recordId) external onlyOwner {
+        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         records[_recordId].isActive = true;
     }
 

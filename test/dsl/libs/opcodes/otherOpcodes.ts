@@ -826,38 +826,40 @@ describe('Other opcodes', () => {
     });
   });
 
-  // Use simple Agreement with one `activaterecord` fuction to decrease test time
-  describe.skip('opEnableRecord', () => {
-    let appAddrMain: string;
-    let appAddr: string;
-    let alice: SignerWithAddress;
-    let _ctx: Context;
-    let _ctx2: Context;
-    let appMain: AgreementMock;
-    let appAdd: AgreementMock;
-
-    before(async () => {
-      // Deploy contracts
-      [alice] = await ethers.getSigners();
-      appAddrMain = await deployAgreementMock(hre, alice.address);
-      appAddr = await deployAgreementMock(hre, alice.address);
-
-      appMain = await ethers.getContractAt('AgreementMock', appAddrMain);
-      appAdd = await ethers.getContractAt('AgreementMock', appAddr);
-
-      _ctx = await (await ethers.getContractFactory('Context')).deploy();
-      _ctx2 = await (await ethers.getContractFactory('Context')).deploy();
-      // Setup
-      await _ctx.setAppAddress(appAddrMain);
-      await _ctx.setOtherOpcodesAddr(otherOpcodesLibAddr);
-      await _ctx2.setAppAddress(appAddr);
-      await _ctx2.setOtherOpcodesAddr(otherOpcodesLibAddr);
-    });
-
+  describe('opEnableRecord', () => {
     it('check that record 54 was activated', async () => {
-      await _ctx2.setProgram(`0x${bnToLongHexString('34')}${appAddrMain.substring(2)}`);
-      // add context address to cover require and onlyOwner modifier
-      await app.opEnableRecord(_ctx2.address);
+      /*
+        `agreement` is the contract that stores 34 record, it has own _ctxAgreement
+        _ctxExecutive - context uses to execute 34 record from `agreement`
+        _ctxCondition - contest-helper just to set a context for the recordContext in agreement
+      */
+
+      // app is the owner of agreement (non-usable in prod)
+      // it sets just to check that onlyOwner modifier works well
+      const agreementAddr = await deployAgreementMock(hre, app.address);
+      const agreement = await ethers.getContractAt('AgreementMock', agreementAddr);
+
+      const _ctxAgreement = await (await ethers.getContractFactory('Context')).deploy();
+      const _ctxCondition = await (await ethers.getContractFactory('Context')).deploy();
+      const _ctxExecutive = await (await ethers.getContractFactory('Context')).deploy();
+      // Setup
+      await _ctxAgreement.setAppAddress(app.address);
+      await _ctxAgreement.setOtherOpcodesAddr(otherOpcodesLibAddr);
+      let ID = 34;
+      let [alice] = await ethers.getSigners();
+      await agreement.setRecordContext(ID, _ctxCondition.address);
+      await _ctxExecutive.setProgram(
+        `0x${bnToLongHexString(`${ID}`)}${agreementAddr.substring(2)}`
+      );
+
+      let record = await agreement.records(ID);
+
+      expect(record.isActive).to.be.equal(false);
+
+      await app.opEnableRecord(_ctxExecutive.address);
+
+      record = await agreement.records(ID);
+      expect(record.isActive).to.be.equal(true);
     });
   });
 });

@@ -1069,7 +1069,7 @@ describe('Parser', () => {
     // test if-else inside a for loop
   });
 
-  describe.skip('activate records', () => {
+  describe('activate records', () => {
     it('enable several records for several agreement', async () => {
       await app.parseCodeExt(ctxAddr, [
         'enable',
@@ -1077,7 +1077,7 @@ describe('Parser', () => {
         'for',
         '0xE1ec18D475D02a8219a13D045a15fe67db8e0774',
         'enable',
-        '15',
+        '9',
         'for',
         '0xE2ec18D475D02a8219a13D045a15fe67db8e0773',
         'enable',
@@ -1090,13 +1090,13 @@ describe('Parser', () => {
         '0x' +
           '41' +
           `${bnToLongHexString('34')}` +
-          'e1ec18d475d02a8219a13d045a15fe67db8e0774000000000000000000000000' +
+          'e1ec18d475d02a8219a13d045a15fe67db8e0774' +
           '41' +
-          `${bnToLongHexString('15')}` +
-          'e2ec18d475d02a8219a13d045a15fe67db8e0773000000000000000000000000' +
+          `${bnToLongHexString('9')}` +
+          'e2ec18d475d02a8219a13d045a15fe67db8e0773' +
           '41' +
           `${bnToLongHexString('1')}` +
-          'e3ec18d475d02a8219a13d045a15fe67db8e0773000000000000000000000000'
+          'e3ec18d475d02a8219a13d045a15fe67db8e0773'
       );
     });
   });

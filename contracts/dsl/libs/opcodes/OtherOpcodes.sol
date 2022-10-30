@@ -8,7 +8,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
@@ -417,8 +417,8 @@ library OtherOpcodes {
          */
         contractAddrB32 >>= 96;
         address contractAddr = address(uint160(uint256(contractAddrB32)));
-        console.log(contractAddr);
-        (bool success, ) = contractAddr.delegatecall(
+
+        (bool success, ) = contractAddr.call(
             abi.encodeWithSignature('activateRecord(uint256)', uint256(bytes32(recordId)))
         );
 

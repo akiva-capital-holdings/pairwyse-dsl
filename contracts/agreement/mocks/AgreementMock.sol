@@ -60,4 +60,8 @@ contract AgreementMock is Agreement {
     ) external returns (bool) {
         return _fulfill(_recordId, _msgValue, _signatory);
     }
+
+    function setRecordContext(uint256 _recordId, address _context) external {
+        records[_recordId].recordContext = _context;
+    }
 }

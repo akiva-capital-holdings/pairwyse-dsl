@@ -2,8 +2,10 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import * as hre from 'hardhat';
 import { ParserMock } from '../../typechain-types/dsl/mocks';
-import { addSteps, hex4Bytes } from '../utils/utils';
+import { addSteps, hex4Bytes, checkStackTail } from '../utils/utils';
 import { deployAgreementMock, deployParserMock } from '../../scripts/utils/deploy.utils.mock';
+import { setApp } from '../../scripts/utils/update.record.mock';
+
 import {
   activateRecord,
   deactivateRecord,
@@ -12,6 +14,7 @@ import {
   setRecord,
   setRecords,
   parseConditions,
+  parseConditionsList,
 } from '../../scripts/utils/update.record.mock';
 import { deployPreprocessor } from '../../scripts/utils/deploy.utils';
 import { AgreementMock, ContextMock__factory } from '../../typechain-types';
@@ -116,10 +119,10 @@ describe('Simple Records in Agreement', () => {
     before(async () => {
       const ContextMock = await ethers.getContractFactory('ContextMock');
       const recordContext = await ContextMock.deploy();
-      await recordContext.setAppAddress(appAddr);
       const conditionContext = await ContextMock.deploy();
       recordContextAddr = recordContext.address;
-      await conditionContext.setAppAddress(appAddr);
+      await setApp(recordContext, app, alice.address);
+      await setApp(conditionContext, app, alice.address);
 
       recordId = 95;
       signatories = [alice.address];
@@ -131,9 +134,6 @@ describe('Simple Records in Agreement', () => {
       await app.addRecordCondition(recordId, conditionString, conditionContext.address);
       await app.addRecordTransaction(recordId, transactionStr, recordContext.address);
 
-      // Set msg senders
-      await recordContext.setMsgSender(alice.address);
-      await conditionContext.setMsgSender(alice.address);
       localSnapshotId = await network.provider.send('evm_snapshot');
     });
 
@@ -148,11 +148,7 @@ describe('Simple Records in Agreement', () => {
       const condCtxLen = (await app.conditionContextsLen(recordId)).toNumber();
       expect(condCtxLen).to.equal(1);
 
-      await parser.parse(
-        preprAddr,
-        await app.conditionContexts(recordId, 0),
-        await app.conditionStrings(recordId, 0)
-      );
+      await parseConditions(recordId, parser, app, preprAddr);
       await parser.parse(preprAddr, recordContextAddr, transactionStr);
 
       // Top up contract
@@ -167,11 +163,7 @@ describe('Simple Records in Agreement', () => {
       // Advance time
       // await ethers.provider.send('evm_increaseTime', [ONE_MONTH + ONE_MONTH]);
       await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-      await parser.parse(
-        preprAddr,
-        await app.conditionContexts(recordId, 0),
-        await app.conditionStrings(recordId, 0)
-      );
+      await parseConditions(recordId, parser, app, preprAddr);
 
       // Validate again
       expect(await app.callStatic.validateConditions(recordId, 0)).equal(true);
@@ -258,15 +250,21 @@ describe('Simple Records in Agreement', () => {
       expect(record.isArchived).to.be.equal(true);
     });
 
-    it.only('activates one existing record through DSL', async () => {
-      // app Agreement is the owner of app2 Agreement
-      let appAddr2 = await deployAgreementMock(hre, appAddr);
-      let app2 = await ethers.getContractAt('AgreementMock', appAddr2);
-      // console.log(appAddr2);
-      const input = `enable record 23 for ${appAddr2}`;
+    it('activates one existing record through DSL', async () => {
+      // This test works. It can be used if needs to activate
+      // only one record for two different agreements
 
-      // uses for the additional agreement (test will check that stack has last value `true` after execution)
-      const input2 = `bool true`;
+      // creates Agreement2
+      // Agreement is the owner of Agreement2
+      let aggr1 = app; // just to have normal names inside this test
+      let aggr2Addr = await deployAgreementMock(hre, appAddr);
+
+      let aggr2 = await ethers.getContractAt('AgreementMock', aggr2Addr);
+      const input = `enable record 23 for ${aggr2Addr}`;
+
+      // uses for the Agreement2 (test will check that stack has
+      // value `6` after execution)
+      const input2 = `uint256 6`;
 
       // record for the main agreement
       let record = {
@@ -279,7 +277,7 @@ describe('Simple Records in Agreement', () => {
         conditionContexts: [await ContextCont.deploy()],
       };
 
-      // record for the additional agreement
+      // record for the Agreement2
       let record2 = {
         recordId: 23,
         requiredRecords: [],
@@ -290,90 +288,213 @@ describe('Simple Records in Agreement', () => {
         conditionContexts: [await ContextCont.deploy()],
       };
 
-      const {
-        recordId: recordId1,
-        conditionContexts: conditionContexts1,
-        transactionCtx: transactionCtx1,
-        transactionStr: transactionStr1,
-      } = record;
-
-      const {
-        recordId: recordId2,
-        conditionContexts: conditionContexts2,
-        transactionCtx: transactionCtx2,
-        transactionStr: transactionStr2,
-      } = record2;
+      const { conditionContexts: CC1, transactionCtx: TC1 } = record;
+      const { conditionContexts: CC2, transactionCtx: TC2 } = record2;
 
       // the record sets to the apps
-      await setRecord(record, app);
-      await setRecord(record2, app2);
 
-      // Set app addresses & msg senders
-      await transactionCtx1.setAppAddress(app.address);
-      await transactionCtx1.setMsgSender(bob.address);
-      await conditionContexts1[0].setAppAddress(app.address);
-      await conditionContexts1[0].setMsgSender(bob.address);
+      await setRecord(record, aggr1);
+      await setRecord(record2, aggr2);
 
-      await transactionCtx2.setAppAddress(app2.address);
-      await transactionCtx2.setMsgSender(bob.address);
-      await conditionContexts2[0].setAppAddress(app2.address);
-      await conditionContexts2[0].setMsgSender(bob.address);
+      // Set Agreement and Agreement2 addresses & msg senders
+      await setApp(TC1, aggr1, bob.address);
+      await setApp(TC2, aggr2, bob.address);
+      await setApp(CC1[0], aggr1, bob.address);
+      await setApp(CC2[0], aggr2, bob.address);
 
-      // Parse all conditions and a transaction #1
-      await parseConditions(13, parser, app, preprAddr);
+      // parse all conditions and a transaction #1
+      await parseConditions(13, parser, aggr1, preprAddr);
       await parser.parse(preprAddr, record.transactionCtx.address, record.transactionStr);
 
-      // Parse all conditions and a transaction #2
-      await parseConditions(23, parser, app2, preprAddr);
+      // parse all conditions and a transaction #2
+      await parseConditions(23, parser, aggr2, preprAddr);
       await parser.parse(preprAddr, record2.transactionCtx.address, record2.transactionStr);
 
-      // check that record can be activated for the main aggreement
-      let recordResult = await app.records(13);
+      // check that record can be activated for the main Aggreement
+      let recordResult = await aggr1.records(13);
       expect(recordResult.isActive).to.be.equal(false);
-      await activateRecord(app, multisig, 13);
-      recordResult = await app.records(13);
+      await activateRecord(aggr1, multisig, 13);
+      recordResult = await aggr1.records(13);
       expect(recordResult.isActive).to.be.equal(true);
 
+      // check that record for the Aggreement2 can NOT be executed
+      await expect(aggr2.connect(bob).execute(23)).to.be.revertedWith('AGR13');
+
       // check that record is not activated for the additional aggreement
-      recordResult = await app2.records(23);
+      recordResult = await aggr2.records(23);
       expect(recordResult.isActive).to.be.equal(false);
 
-      // check that record for the additional aggreement can NOT be executed
-      // await expect(app2.connect(bob).execute(23)).to.be.revertedWith('AGR13');
+      // execute 13 record that activates the 13 record in Aggreement2
+      await aggr1.connect(bob).execute(13);
 
-      // execute 13 record that activates the 13 record in additional agreement
-      await app.connect(bob).execute(13);
-      // // check that record is activated for the additional aggreement
-      // recordResult = await app2.records(23);
-      // expect(recordResult.isActive).to.be.equal(true);
+      // check that record is activated for the Aggreement2
+      recordResult = await aggr2.records(23);
+      expect(recordResult.isActive).to.be.equal(true);
 
-      // // check that record for the additional aggreement can be executed
-      // await app2.fulfill(23, 0, bob.address);
+      // create Stack instance
+      const stackAddr = await TC2.stack();
+      const stack = await ethers.getContractAt('Stack', stackAddr);
+
+      // check that stack is empty for the Aggreement2
+      await checkStackTail(stack, []);
+
+      // check that record for the Aggreement2 can be executed
+      await aggr2.connect(bob).execute(23);
+
+      // check that stack was changed for the Aggreement2
+      // because of result of `uint256 6` (check input2)
+      await checkStackTail(stack, [6]);
     });
 
-    it.skip('activates several existing records for two agreements', async () => {
+    it('activates several existing records for two agreements', async () => {
+      // creates Agreement2 + Agreement3
+      // Agreement is the owner of Agreement2 and Agreement3
+      let aggr1 = app; // just to have normal names inside this test
+      let aggr2Addr = await deployAgreementMock(hre, appAddr);
+      let aggr3Addr = await deployAgreementMock(hre, appAddr);
+
+      let aggr2 = await ethers.getContractAt('AgreementMock', aggr2Addr);
+      let aggr3 = await ethers.getContractAt('AgreementMock', aggr3Addr);
+
+      // uses for the Agreement
       const input = `
-        enable record 34 for addr2
-        enable record 15 for addr2
-        enable record 1 for addr3
+        enable record 34 for ${aggr2Addr}
+        enable record 15 for ${aggr2Addr}
+        enable record 41 for ${aggr3Addr}
       `;
+      // uses for the Agreement2
+      const input2 = `uint256 6`;
+      const input21 = `uint256 66`;
+      // uses for the Agreement3
+      const input3 = `uint256 45`;
 
-      let record = await app.records(34);
-      expect(record.isActive).to.be.equal(false);
-      record = await app.records(15);
-      expect(record.isActive).to.be.equal(false);
-      record = await app.records(1);
-      expect(record.isActive).to.be.equal(false);
+      // record for the main Agreement
+      let record = {
+        recordId: 40,
+        requiredRecords: [],
+        signatories: [bob.address],
+        transactionStr: input, // enables records2 and record3
+        conditionStrings: ['bool true'],
+        transactionCtx: await ContextCont.deploy(),
+        conditionContexts: [await ContextCont.deploy()],
+      };
 
-      // create records
-      // execute dsl code for different agreements
+      // records for the Agreement2
+      let records2 = [
+        {
+          recordId: 34,
+          requiredRecords: [],
+          signatories: [bob.address],
+          transactionStr: input2,
+          conditionStrings: ['bool true'],
+          transactionCtx: await ContextCont.deploy(),
+          conditionContexts: [await ContextCont.deploy()],
+        },
+        {
+          recordId: 15,
+          requiredRecords: [],
+          signatories: [bob.address],
+          transactionStr: input21,
+          conditionStrings: ['bool true'],
+          transactionCtx: await ContextCont.deploy(),
+          conditionContexts: [await ContextCont.deploy()],
+        },
+      ];
 
-      record = await app.records(34);
-      expect(record.isActive).to.be.equal(true);
-      record = await app.records(15);
-      expect(record.isActive).to.be.equal(true);
-      record = await app.records(1);
-      expect(record.isActive).to.be.equal(true);
+      // record for the Agreement3
+      let record3 = {
+        recordId: 41,
+        requiredRecords: [],
+        signatories: [bob.address],
+        transactionStr: input3,
+        conditionStrings: ['bool true'],
+        transactionCtx: await ContextCont.deploy(),
+        conditionContexts: [await ContextCont.deploy()],
+      };
+
+      const { conditionContexts: CC, transactionCtx: TC } = record;
+      const { conditionContexts: CC2, transactionCtx: TC2 } = records2[0];
+      const { conditionContexts: CC21, transactionCtx: TC21 } = records2[1];
+      const { conditionContexts: CC3, transactionCtx: TC3 } = record3;
+
+      // the record sets to the Agreement, Agreement2, Agreement3
+      await setRecord(record, aggr1);
+      await setRecords(records2, aggr2);
+      await setRecord(record3, aggr3);
+
+      // Set Agreement, Agreement2, Agreement3 addresses & msg senders
+      // params: context, agreement, msg.sender
+      await setApp(TC, aggr1, bob.address);
+      await setApp(TC2, aggr2, bob.address);
+      await setApp(TC21, aggr2, bob.address);
+      await setApp(TC3, aggr3, bob.address);
+      await setApp(CC[0], aggr1, bob.address);
+      await setApp(CC2[0], aggr2, bob.address);
+      await setApp(CC21[0], aggr2, bob.address);
+      await setApp(CC3[0], aggr3, bob.address);
+
+      // parse all conditions and a transactions
+      await parseConditions(40, parser, aggr1, preprAddr);
+      await parseConditionsList([34, 15], parser, aggr2, preprAddr);
+      await parseConditions(41, parser, aggr3, preprAddr);
+      await parser.parse(preprAddr, TC.address, record.transactionStr);
+      await parser.parse(preprAddr, TC2.address, records2[0].transactionStr);
+      await parser.parse(preprAddr, TC21.address, records2[1].transactionStr);
+      await parser.parse(preprAddr, TC3.address, record3.transactionStr);
+
+      // check that record can be activated for the main Aggreement
+      let recordResult = await aggr1.records(40);
+      expect(recordResult.isActive).to.be.equal(false);
+      await activateRecord(aggr1, multisig, 40);
+      recordResult = await aggr1.records(40);
+      expect(recordResult.isActive).to.be.equal(true);
+
+      // check that records for the Aggreement2 and Aggreement3 can NOT be executed
+      await expect(aggr2.connect(bob).execute(34)).to.be.revertedWith('AGR13');
+      await expect(aggr2.connect(bob).execute(15)).to.be.revertedWith('AGR13');
+      await expect(aggr3.connect(bob).execute(41)).to.be.revertedWith('AGR13');
+
+      // check that records is not activated for the Aggreement2 and Aggreement3
+      recordResult = await aggr2.records(34);
+      expect(recordResult.isActive).to.be.equal(false);
+      recordResult = await aggr2.records(15);
+      expect(recordResult.isActive).to.be.equal(false);
+      recordResult = await aggr2.records(41);
+      expect(recordResult.isActive).to.be.equal(false);
+
+      // execute 40 record that activates the 34, 15, 41 record in Aggreement2, Aggreement3
+      await aggr1.connect(bob).execute(40);
+
+      // check that record is activated for the Aggreement2
+      recordResult = await aggr2.records(34);
+      expect(recordResult.isActive).to.be.equal(true);
+      recordResult = await aggr2.records(15);
+      expect(recordResult.isActive).to.be.equal(true);
+      recordResult = await aggr3.records(41);
+      expect(recordResult.isActive).to.be.equal(true);
+
+      // create Stack instance for Aggreement2
+      const stackAddr2 = await TC2.stack();
+      const stackAddr21 = await TC21.stack();
+      const stackAddr3 = await TC3.stack();
+      const stack2 = await ethers.getContractAt('Stack', stackAddr2);
+      const stack21 = await ethers.getContractAt('Stack', stackAddr21);
+      const stack3 = await ethers.getContractAt('Stack', stackAddr3);
+
+      // check that stack is empty for the Aggreement2, Aggreement3
+      await checkStackTail(stack2, []);
+      await checkStackTail(stack21, []);
+      await checkStackTail(stack3, []);
+
+      // check that records for the Aggreement2 and Aggreement2 can be executed
+      await aggr2.connect(bob).execute(34);
+      await aggr2.connect(bob).execute(15);
+      await aggr3.connect(bob).execute(41);
+
+      // check that stacks were changed for the Aggreement2, Aggreement3
+      await checkStackTail(stack2, [6]);
+      await checkStackTail(stack21, [66]);
+      await checkStackTail(stack3, [45]);
     });
   });
 
@@ -383,9 +504,7 @@ describe('Simple Records in Agreement', () => {
     before(async () => {
       const ContextMock = await ethers.getContractFactory('ContextMock');
       const recordContext = await ContextMock.deploy();
-      await recordContext.setAppAddress(appAddr);
       const conditionContext = await ContextMock.deploy();
-      await conditionContext.setAppAddress(appAddr);
 
       records.push(
         {
@@ -431,9 +550,9 @@ describe('Simple Records in Agreement', () => {
 
         await setRecord(records[i], app);
 
-        // Set msg senders
-        await transactionCtx.setMsgSender(alice.address);
-        await conditionContexts[0].setMsgSender(alice.address);
+        // Set app and msg senders
+        await setApp(recordContext, app, alice.address);
+        await setApp(conditionContexts[0], app, alice.address);
 
         // Parse all conditions and a transaction
         const condCtxLen = (await app.conditionContextsLen(recordId)).toNumber();
@@ -567,16 +686,12 @@ describe('Simple Records in Agreement', () => {
       const { recordId: recordId0 } = records[0];
       const { recordId: recordId1 } = records[1];
       expect(records.length).equal(2);
-      // Set app addresses & msg senders
-      await records[0].transactionCtx.setAppAddress(app.address);
-      await records[0].transactionCtx.setMsgSender(alice.address);
-      await records[0].conditionContexts[0].setAppAddress(app.address);
-      await records[0].conditionContexts[0].setMsgSender(alice.address);
 
-      await records[1].transactionCtx.setAppAddress(app.address);
-      await records[1].transactionCtx.setMsgSender(bob.address);
-      await records[1].conditionContexts[0].setAppAddress(app.address);
-      await records[1].conditionContexts[0].setMsgSender(bob.address);
+      // Set app addresses & msg senders
+      await setApp(records[0].transactionCtx, app, alice.address);
+      await setApp(records[0].conditionContexts[0], app, alice.address);
+      await setApp(records[1].transactionCtx, app, bob.address);
+      await setApp(records[1].conditionContexts[0], app, bob.address);
 
       // Parse all conditions and a transaction #1
       await parseConditions(recordId0, parser, app, preprAddr);
@@ -680,16 +795,15 @@ describe('Simple Records in Agreement', () => {
       await setRecord(record, app);
 
       // Set app addresses & msg senders
-      await transactionCtx.setAppAddress(app.address);
-      await transactionCtx.setMsgSender(alice.address);
-      await conditionContexts[0].setAppAddress(app.address);
-      await conditionContexts[0].setMsgSender(alice.address);
+      await setApp(transactionCtx, app, alice.address);
+      await setApp(conditionContexts[0], app, alice.address);
 
       // Parse all conditions and a transaction
       const condCtxLen = (await app.conditionContextsLen(recordId)).toNumber();
       expect(condCtxLen).to.equal(1);
       const condStrLen = (await app.conditionStringsLen(recordId)).toNumber();
       expect(condStrLen).to.equal(1);
+
       await parseConditions(recordId, parser, app, preprAddr);
       await parser.parse(preprAddr, transactionCtx.address, transactionStr);
 
@@ -715,16 +829,15 @@ describe('Simple Records in Agreement', () => {
       await setRecord(records[0], app);
 
       // Set app addresses & msg senders
-      await transactionCtx.setAppAddress(app.address);
-      await transactionCtx.setMsgSender(alice.address);
-      await conditionContexts[0].setAppAddress(app.address);
-      await conditionContexts[0].setMsgSender(alice.address);
+      await setApp(transactionCtx, app, alice.address);
+      await setApp(conditionContexts[0], app, alice.address);
 
       // Parse all conditions and a transaction
       const condCtxLen = (await app.conditionContextsLen(recordId)).toNumber();
       expect(condCtxLen).to.equal(1);
       const condStrLen = (await app.conditionStringsLen(recordId)).toNumber();
       expect(condStrLen).to.equal(1);
+
       await parseConditions(recordId, parser, app, preprAddr);
       await parser.parse(preprAddr, transactionCtx.address, transactionStr);
 
@@ -748,11 +861,9 @@ describe('Simple Records in Agreement', () => {
       await setRecord(records[0], app);
 
       // Set app addresses & msg senders
-      await transactionCtx.setAppAddress(app.address);
-      await transactionCtx.setMsgSender(alice.address);
+      await setApp(transactionCtx, app, alice.address);
       await transactionCtx.setMsgSender(anybody.address);
-      await conditionContexts[0].setAppAddress(app.address);
-      await conditionContexts[0].setMsgSender(alice.address);
+      await setApp(conditionContexts[0], app, alice.address);
       await conditionContexts[0].setMsgSender(anybody.address);
 
       // Parse all conditions and a transaction
@@ -804,9 +915,5 @@ describe('Simple Records in Agreement', () => {
         app.addRecordTransaction(recordId, transactionStr, transactionCtx.address)
       ).to.be.revertedWith('AGR5');
     });
-  });
-
-  describe('Enable record', () => {
-    it('activates existing record', async () => {});
   });
 });

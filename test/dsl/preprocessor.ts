@@ -1912,7 +1912,7 @@ describe('Preprocessor', () => {
     });
   });
 
-  describe.skip('activate records', () => {
+  describe('activate records', () => {
     it('enable several records for several agreement', async () => {
       const input = `
         enable record 34 for 0xE1ec18D475D02a8219a13D045a15fe67db8e0774
