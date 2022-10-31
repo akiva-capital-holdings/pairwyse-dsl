@@ -16,7 +16,7 @@ import { ONE_MONTH } from '../utils/constants';
 
 const { ethers, network } = hre;
 
-describe.only('Governance', () => {
+describe('Governance', () => {
   let app: GovernanceMock;
   let context: string;
   let parserAddr: string;
@@ -261,5 +261,15 @@ describe.only('Governance', () => {
         .connect(alice)
         .update(ID4, [], [bob.address], 'uint256 111', ['2 < 3'], context, [context])
     ).to.be.revertedWith('AGR14');
+
+    // double check that DSL string code still are the same
+    let record = await app.records(0);
+    expect(record.transactionString).to.be.equal(record1);
+    record = await app.records(1);
+    expect(record.transactionString).to.be.equal(record2);
+    record = await app.records(2);
+    expect(record.transactionString).to.be.equal(record3);
+    record = await app.records(3);
+    expect(record.transactionString).to.be.equal(record4);
   });
 });
