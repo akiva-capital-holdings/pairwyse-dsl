@@ -16,11 +16,13 @@ import { ONE_MONTH } from '../utils/constants';
 
 const { ethers, network } = hre;
 
-describe('Governance', () => {
+describe.only('Governance', () => {
   let app: GovernanceMock;
+  let context: string;
   let parserAddr: string;
   let executorLibAddr: string;
   let alice: SignerWithAddress;
+  let bob: SignerWithAddress;
   let NEXT_MONTH: number;
   let snapshotId: number;
   let preprAddr: string;
@@ -40,7 +42,7 @@ describe('Governance', () => {
     ).timestamp;
     NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
 
-    [alice] = await ethers.getSigners();
+    [alice, bob] = await ethers.getSigners();
 
     // Deploy Token contract
     const token = await (await ethers.getContractFactory('Token'))
@@ -69,6 +71,7 @@ describe('Governance', () => {
     });
     app = await MockContract.deploy(parserAddr, alice.address, tokenAddr, NEXT_MONTH);
     await app.deployed();
+    context = await app.context();
   });
 
   beforeEach(async () => {
@@ -110,9 +113,8 @@ describe('Governance', () => {
     expect(record.transactionString).to.be.equal('');
   });
 
-  it('4 records can be executed', async () => {
+  it('4 pre-defined records can be executed', async () => {
     // create Stack instance
-    const context = await app.context();
     const ctx = await ethers.getContractAt('ContextMock', context);
     const stackAddr = await ctx.stack();
     const stack = await ethers.getContractAt('Stack', stackAddr);
@@ -156,7 +158,7 @@ describe('Governance', () => {
     // await checkStackTail(stack, [4, 6, 8, 1]);
   });
 
-  it('4 records cannot be modified or archived or made inactive', async () => {
+  it('4 pre-defined records cannot be activated', async () => {
     // check the first recors
     let record = await app.records(ID1);
     expect(record.isActive).to.be.equal(true);
@@ -172,19 +174,92 @@ describe('Governance', () => {
     await expect(app.connect(alice).deactivateRecord(ID3)).to.be.revertedWith('AGR14');
     await expect(app.connect(alice).deactivateRecord(ID4)).to.be.revertedWith('AGR14');
 
+    record = await app.records(ID1);
+    expect(record.isActive).to.be.equal(true);
+    record = await app.records(ID2);
+    expect(record.isActive).to.be.equal(true);
+    record = await app.records(ID3);
+    expect(record.isActive).to.be.equal(true);
+    record = await app.records(ID4);
+    expect(record.isActive).to.be.equal(true);
+
     await expect(app.connect(alice).activateRecord(ID1)).to.be.revertedWith('AGR14');
     await expect(app.connect(alice).activateRecord(ID2)).to.be.revertedWith('AGR14');
     await expect(app.connect(alice).activateRecord(ID3)).to.be.revertedWith('AGR14');
     await expect(app.connect(alice).activateRecord(ID4)).to.be.revertedWith('AGR14');
+
+    record = await app.records(ID1);
+    expect(record.isActive).to.be.equal(true);
+    record = await app.records(ID2);
+    expect(record.isActive).to.be.equal(true);
+    record = await app.records(ID3);
+    expect(record.isActive).to.be.equal(true);
+    record = await app.records(ID4);
+    expect(record.isActive).to.be.equal(true);
+  });
+
+  it('4 pre-defined records cannot be archived', async () => {
+    let record = await app.records(ID1);
+    expect(record.isArchived).to.be.equal(false);
+    record = await app.records(ID2);
+    expect(record.isArchived).to.be.equal(false);
+    record = await app.records(ID3);
+    expect(record.isArchived).to.be.equal(false);
+    record = await app.records(ID4);
+    expect(record.isArchived).to.be.equal(false);
+
+    await expect(app.connect(alice).archiveRecord(ID1)).to.be.revertedWith('AGR14');
+    await expect(app.connect(alice).archiveRecord(ID2)).to.be.revertedWith('AGR14');
+    await expect(app.connect(alice).archiveRecord(ID3)).to.be.revertedWith('AGR14');
+    await expect(app.connect(alice).archiveRecord(ID4)).to.be.revertedWith('AGR14');
+
+    record = await app.records(ID1);
+    expect(record.isArchived).to.be.equal(false);
+    record = await app.records(ID2);
+    expect(record.isArchived).to.be.equal(false);
+    record = await app.records(ID3);
+    expect(record.isArchived).to.be.equal(false);
+    record = await app.records(ID4);
+    expect(record.isArchived).to.be.equal(false);
 
     await expect(app.connect(alice).unarchiveRecord(ID1)).to.be.revertedWith('AGR14');
     await expect(app.connect(alice).unarchiveRecord(ID2)).to.be.revertedWith('AGR14');
     await expect(app.connect(alice).unarchiveRecord(ID3)).to.be.revertedWith('AGR14');
     await expect(app.connect(alice).unarchiveRecord(ID4)).to.be.revertedWith('AGR14');
 
-    await expect(app.connect(alice).archiveRecord(ID1)).to.be.revertedWith('AGR14');
-    await expect(app.connect(alice).archiveRecord(ID2)).to.be.revertedWith('AGR14');
-    await expect(app.connect(alice).archiveRecord(ID3)).to.be.revertedWith('AGR14');
-    await expect(app.connect(alice).archiveRecord(ID4)).to.be.revertedWith('AGR14');
+    record = await app.records(ID1);
+    expect(record.isArchived).to.be.equal(false);
+    record = await app.records(ID2);
+    expect(record.isArchived).to.be.equal(false);
+    record = await app.records(ID3);
+    expect(record.isArchived).to.be.equal(false);
+    record = await app.records(ID4);
+    expect(record.isArchived).to.be.equal(false);
+  });
+
+  it('4 pre-defined records cannot be updated', async () => {
+    await expect(
+      app
+        .connect(alice)
+        .update(ID1, [], [bob.address], 'uint256 111', ['2 < 3'], context, [context])
+    ).to.be.revertedWith('AGR14');
+
+    await expect(
+      app
+        .connect(alice)
+        .update(ID2, [], [bob.address], 'uint256 111', ['2 < 3'], context, [context])
+    ).to.be.revertedWith('AGR14');
+
+    await expect(
+      app
+        .connect(alice)
+        .update(ID3, [], [bob.address], 'uint256 111', ['2 < 3'], context, [context])
+    ).to.be.revertedWith('AGR14');
+
+    await expect(
+      app
+        .connect(alice)
+        .update(ID4, [], [bob.address], 'uint256 111', ['2 < 3'], context, [context])
+    ).to.be.revertedWith('AGR14');
   });
 });
