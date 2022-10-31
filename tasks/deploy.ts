@@ -42,3 +42,17 @@ task('deploy:context', 'Deploy a new Context contract for a provided Agreement')
     // Display deployed address
     console.log(`\x1b[42m Context address \x1b[0m\x1b[32m ${contextAddr}\x1b[0m`);
   });
+
+task('deploy-and-mint:erc20', 'To deploy erc20 mock')
+  .addParam('supply', 'total supply')
+  .setAction(async ({ supply: totalSupplyValue }, hre) => {
+    console.log(`Deploying Token address ${(await hre.ethers.getSigners())[0].address}`);
+
+    // Deploy the token
+    const token = await (
+      await hre.ethers.getContractFactory('Token')
+    ).deploy(hre.ethers.utils.parseEther(`${totalSupplyValue}`));
+
+    // Display deployed address
+    console.log(`\x1b[42m Token address \x1b[0m\x1b[32m ${token.address}\x1b[0m`);
+  });
