@@ -2,11 +2,10 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import * as hre from 'hardhat';
 import { ParserMock } from '../../typechain-types/dsl/mocks';
-import { addSteps, hex4Bytes, checkStackTail } from '../utils/utils';
+import { hex4Bytes, checkStackTail } from '../utils/utils';
 import { deployAgreementMock, deployParserMock } from '../../scripts/utils/deploy.utils.mock';
-import { setApp } from '../../scripts/utils/update.record.mock';
-
 import {
+  setApp,
   activateRecord,
   deactivateRecord,
   archiveRecord,
@@ -16,6 +15,7 @@ import {
   parseConditions,
   parseConditionsList,
 } from '../../scripts/utils/update.record.mock';
+
 import { deployPreprocessor } from '../../scripts/utils/deploy.utils';
 import { AgreementMock, ContextMock__factory } from '../../typechain-types';
 import { anyone, ONE_MONTH } from '../utils/constants';
@@ -65,14 +65,13 @@ describe('Simple Records in Agreement', () => {
     await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
     await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
-    // TODO: Make a snapshot. Test should not be depended on certain ID of record.
     // TODO: Tests can be simplified more to decrease time for its execution
-    // snapshotId = await network.provider.send('evm_snapshot');
+    snapshotId = await network.provider.send('evm_snapshot');
   });
 
   afterEach(async () => {
     // Return to the snapshot
-    // await network.provider.send('evm_revert', [snapshotId]);
+    await network.provider.send('evm_revert', [snapshotId]);
     records = [];
   });
 
@@ -256,18 +255,18 @@ describe('Simple Records in Agreement', () => {
 
       // creates Agreement2
       // Agreement is the owner of Agreement2
-      let aggr1 = app; // just to have normal names inside this test
-      let aggr2Addr = await deployAgreementMock(hre, appAddr);
+      const aggr1 = app; // just to have normal names inside this test
+      const aggr2Addr = await deployAgreementMock(hre, appAddr);
 
-      let aggr2 = await ethers.getContractAt('AgreementMock', aggr2Addr);
+      const aggr2 = await ethers.getContractAt('AgreementMock', aggr2Addr);
       const input = `enable record 23 for ${aggr2Addr}`;
 
       // uses for the Agreement2 (test will check that stack has
       // value `6` after execution)
-      const input2 = `uint256 6`;
+      const input2 = 'uint256 6';
 
       // record for the main agreement
-      let record = {
+      const record = {
         recordId: 13,
         requiredRecords: [],
         signatories: [bob.address],
@@ -278,7 +277,7 @@ describe('Simple Records in Agreement', () => {
       };
 
       // record for the Agreement2
-      let record2 = {
+      const record2 = {
         recordId: 23,
         requiredRecords: [],
         signatories: [bob.address],
@@ -349,12 +348,12 @@ describe('Simple Records in Agreement', () => {
     it('activates several existing records for two agreements', async () => {
       // creates Agreement2 + Agreement3
       // Agreement is the owner of Agreement2 and Agreement3
-      let aggr1 = app; // just to have normal names inside this test
-      let aggr2Addr = await deployAgreementMock(hre, appAddr);
-      let aggr3Addr = await deployAgreementMock(hre, appAddr);
+      const aggr1 = app; // just to have normal names inside this test
+      const aggr2Addr = await deployAgreementMock(hre, appAddr);
+      const aggr3Addr = await deployAgreementMock(hre, appAddr);
 
-      let aggr2 = await ethers.getContractAt('AgreementMock', aggr2Addr);
-      let aggr3 = await ethers.getContractAt('AgreementMock', aggr3Addr);
+      const aggr2 = await ethers.getContractAt('AgreementMock', aggr2Addr);
+      const aggr3 = await ethers.getContractAt('AgreementMock', aggr3Addr);
 
       // uses for the Agreement
       const input = `
@@ -363,13 +362,13 @@ describe('Simple Records in Agreement', () => {
         enable record 41 for ${aggr3Addr}
       `;
       // uses for the Agreement2
-      const input2 = `uint256 6`;
-      const input21 = `uint256 66`;
+      const input2 = 'uint256 6';
+      const input21 = 'uint256 66';
       // uses for the Agreement3
-      const input3 = `uint256 45`;
+      const input3 = 'uint256 45';
 
       // record for the main Agreement
-      let record = {
+      const record = {
         recordId: 40,
         requiredRecords: [],
         signatories: [bob.address],
@@ -380,7 +379,7 @@ describe('Simple Records in Agreement', () => {
       };
 
       // records for the Agreement2
-      let records2 = [
+      const records2 = [
         {
           recordId: 34,
           requiredRecords: [],
@@ -402,7 +401,7 @@ describe('Simple Records in Agreement', () => {
       ];
 
       // record for the Agreement3
-      let record3 = {
+      const record3 = {
         recordId: 41,
         requiredRecords: [],
         signatories: [bob.address],
@@ -538,24 +537,13 @@ describe('Simple Records in Agreement', () => {
 
       // Set records
       for (let i = 0; i < records.length; i++) {
-        const {
-          recordId,
-          requiredRecords,
-          signatories,
-          conditionContexts,
-          conditionStrings,
-          transactionCtx,
-          transactionStr,
-        } = records[i];
+        const { recordId, conditionContexts, transactionCtx, transactionStr } = records[i];
 
         await setRecord(records[i], app);
 
         // Set app and msg senders
         await setApp(recordContext, app, alice.address);
         await setApp(conditionContexts[0], app, alice.address);
-
-        // Parse all conditions and a transaction
-        const condCtxLen = (await app.conditionContextsLen(recordId)).toNumber();
 
         await parseConditions(recordId, parser, app, preprAddr);
         await parser.parse(preprAddr, transactionCtx.address, transactionStr);
