@@ -16,7 +16,7 @@ import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock
 
 const { ethers, network } = hre;
 
-describe.only('Agreement: Alice, Bob, Carl', () => {
+describe('Agreement: Alice, Bob, Carl', () => {
   let agreement: Agreement;
   let agreementAddr: string;
   let preprocessorAddr: string;
@@ -198,7 +198,7 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
     expect(await token.balanceOf(alice.address)).to.equal(0);
   });
 
-  it.only('Alice (borrower), Bob (lender), and Carl (insurer)', async () => {
+  it('Alice (borrower), Bob (lender), and Carl (insurer)', async () => {
     const token = await (await ethers.getContractFactory('Token'))
       .connect(bob)
       .deploy(parseEther('1000'));
@@ -217,7 +217,7 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
     await agreement.setStorageUint256(hex4Bytes('EXPIRY'), NEXT_MONTH);
     await agreement.setStorageAddress(hex4Bytes('BOB'), bob.address);
     await agreement.setStorageAddress(hex4Bytes('CARL'), carl.address);
-    await agreement.setStorageAddress(hex4Bytes('TRANSACTIONS'), agreementAddr);
+    await agreement.setStorageAddress(hex4Bytes('AGREEMENT'), agreementAddr);
 
     // Alice deposits 1 ETH to SC
     console.log('Alice deposits 1 ETH to SC');
@@ -227,10 +227,9 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
     // Carl deposits 10 tokens to SC
     console.log('Carl deposits 10 tokens to SC');
     await token.connect(carl).approve(agreementAddr, tenTokens);
-    const wallet = await ethers.provider.getSigner(agreementAddr);
     await expect(() => agreement.connect(carl).execute(32)).to.changeTokenBalance(
       token,
-      wallet,
+      ethers.provider.getSigner(agreementAddr),
       tenTokens
     );
 
@@ -288,7 +287,7 @@ describe.only('Agreement: Alice, Bob, Carl', () => {
       await agreement.setStorageAddress(hex4Bytes('GP'), carl.address);
       await agreement.setStorageAddress(hex4Bytes('DAI'), daiToken.address);
       await agreement.setStorageUint256(hex4Bytes('PURCHASE_PERCENT'), PURCHASE_PERCENT);
-      await agreement.setStorageUint256(hex4Bytes('TRANSACTIONS_CONT'), agreementAddr);
+      await agreement.setStorageUint256(hex4Bytes('AGREEMENT'), agreementAddr);
 
       const index = '4';
       const signatories = [anyone];
