@@ -16,7 +16,7 @@ import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock
 
 const { ethers, network } = hre;
 
-describe('Agreement: Alice, Bob, Carl', () => {
+describe.only('Agreement: Alice, Bob, Carl', () => {
   let agreement: Agreement;
   let agreementAddr: string;
   let preprocessorAddr: string;
@@ -198,7 +198,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
     expect(await token.balanceOf(alice.address)).to.equal(0);
   });
 
-  it('Alice (borrower), Bob (lender), and Carl (insurer)', async () => {
+  it.only('Alice (borrower), Bob (lender), and Carl (insurer)', async () => {
     const token = await (await ethers.getContractFactory('Token'))
       .connect(bob)
       .deploy(parseEther('1000'));
@@ -227,8 +227,12 @@ describe('Agreement: Alice, Bob, Carl', () => {
     // Carl deposits 10 tokens to SC
     console.log('Carl deposits 10 tokens to SC');
     await token.connect(carl).approve(agreementAddr, tenTokens);
-    await agreement.connect(carl).execute(32, { value: tenTokens });
-    expect(await ethers.provider.getBalance(agreementAddr)).to.equal(parseEther('11'));
+    const wallet = await ethers.provider.getSigner(agreementAddr);
+    await expect(() => agreement.connect(carl).execute(32)).to.changeTokenBalance(
+      token,
+      wallet,
+      tenTokens
+    );
 
     // Bob lends 10 tokens to Alice
     console.log('Bob lends 10 tokens to Alice');
