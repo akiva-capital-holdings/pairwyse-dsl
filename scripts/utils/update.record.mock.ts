@@ -40,7 +40,7 @@ export const unarchiveRecord = async (
   _multisig: MultisigMock,
   _recordId: number
 ) => {
-  const { data } = await _app.populateTransaction.unArchiveRecord(_recordId);
+  const { data } = await _app.populateTransaction.unarchiveRecord(_recordId);
   await _multisig.executeTransaction(_app.address, data as string, 0);
 };
 

@@ -23,11 +23,12 @@ import { StringUtils } from '../dsl/libs/StringUtils.sol';
  * Agreement contract that is used to implement any custom logic of a
  * financial agreement. Ex. lender-borrower agreement
  */
-contract Agreement {
+contract Governance {
     using UnstructuredStorage for bytes32;
 
     IParser public parser; // TODO: We can get rid of this dependency
     IContext public context;
+    uint256 public deadline;
     address public ownerAddr;
 
     event NewRecord(
@@ -52,6 +53,11 @@ contract Agreement {
         _;
     }
 
+    modifier isUpgradableRecord(uint256 _recordId) {
+        require(!baseRecord[_recordId], ErrorsAgreement.AGR14);
+        _;
+    }
+
     struct Record {
         address recordContext;
         bool isExecuted;
@@ -61,6 +67,7 @@ contract Agreement {
     }
 
     mapping(uint256 => Record) public records; // recordId => Record struct
+    mapping(uint256 => bool) public baseRecord; // recordId => true/false
     mapping(uint256 => address[]) public conditionContexts; // recordId => condition Context
     mapping(uint256 => string[]) public conditionStrings; // recordId => DSL condition as string
     mapping(uint256 => address[]) public signatories; // recordId => signatories
@@ -72,12 +79,22 @@ contract Agreement {
     /**
      * Sets parser address, creates new Context instance, and setups Context
      */
-    constructor(address _parser, address _ownerAddr) {
-        require(_ownerAddr != address(0), ErrorsAgreement.AGR12);
+    constructor(
+        address _parser,
+        address _ownerAddr,
+        address _token,
+        uint256 _deadline
+    ) {
+        require(_deadline > block.timestamp, ErrorsAgreement.AGR15);
+        require(_token != address(0), ErrorsAgreement.AGR12);
         ownerAddr = _ownerAddr;
-        parser = IParser(_parser);
-        context = new Context();
+        context = new Context(); // ~7.000.000 gas
         context.setAppAddress(address(this));
+        deadline = _deadline;
+        parser = IParser(_parser);
+
+        // all records use the same context
+        _setBaseRecords();
     }
 
     function getStorageBool(bytes32 position) external view returns (bool data) {
@@ -150,7 +167,7 @@ contract Agreement {
      */
     function getActiveRecords() external view returns (uint256[] memory) {
         uint256 count = 0;
-        uint256[] memory activeRecords = new uint256[](_activeRecordsLen());
+        uint256[] memory activeRecords = new uint256[](getActiveRecordsLen());
         for (uint256 i = 0; i < recordIds.length; i++) {
             if (
                 records[recordIds[i]].isActive &&
@@ -196,7 +213,7 @@ contract Agreement {
      * @dev archived any of the existing records by recordId.
      * @param _recordId Record ID
      */
-    function archiveRecord(uint256 _recordId) external onlyOwner {
+    function archiveRecord(uint256 _recordId) external onlyOwner isUpgradableRecord(_recordId) {
         require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         records[_recordId].isArchived = true;
     }
@@ -205,7 +222,7 @@ contract Agreement {
      * @dev unarchive any of the existing records by recordId
      * @param _recordId Record ID
      */
-    function unarchiveRecord(uint256 _recordId) external onlyOwner {
+    function unarchiveRecord(uint256 _recordId) external onlyOwner isUpgradableRecord(_recordId) {
         require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         require(records[_recordId].isArchived != false, ErrorsAgreement.AGR10);
         records[_recordId].isArchived = false;
@@ -215,7 +232,7 @@ contract Agreement {
      * @dev activates the existing records by recordId, only awailable for ownerAddr
      * @param _recordId Record ID
      */
-    function activateRecord(uint256 _recordId) external onlyOwner {
+    function activateRecord(uint256 _recordId) external onlyOwner isUpgradableRecord(_recordId) {
         require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         records[_recordId].isActive = true;
     }
@@ -224,7 +241,7 @@ contract Agreement {
      * @dev deactivates the existing records by recordId, only awailable for ownerAddr
      * @param _recordId Record ID
      */
-    function deactivateRecord(uint256 _recordId) external onlyOwner {
+    function deactivateRecord(uint256 _recordId) external onlyOwner isUpgradableRecord(_recordId) {
         require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         require(records[_recordId].isActive != false, ErrorsAgreement.AGR10);
         records[_recordId].isActive = false;
@@ -252,7 +269,7 @@ contract Agreement {
         string[] memory _conditionStrings,
         address _recordContext,
         address[] memory _conditionContexts
-    ) external {
+    ) public isUpgradableRecord(_recordId) {
         _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
         for (uint256 i = 0; i < _conditionContexts.length; i++) {
             _addRecordCondition(_recordId, _conditionStrings[i], _conditionContexts[i]);
@@ -261,7 +278,6 @@ contract Agreement {
         if (msg.sender == ownerAddr) {
             records[_recordId].isActive = true;
         }
-
         emit NewRecord(
             _recordId,
             _requiredRecords,
@@ -444,7 +460,7 @@ contract Agreement {
      * @dev return length of active records for getActiveRecords
      * @return count length of active records array
      */
-    function _activeRecordsLen() internal view returns (uint256) {
+    function getActiveRecordsLen() public view returns (uint256) {
         uint256 count = 0;
         for (uint256 i = 0; i < recordIds.length; i++) {
             if (
@@ -457,5 +473,32 @@ contract Agreement {
             }
         }
         return count;
+    }
+
+    function _updateRecord(uint256 _ID, string memory _record) internal {
+        address[] memory _signatories = new address[](1);
+        _signatories[0] = ownerAddr;
+        uint256[] memory _requiredRecords;
+        string[] memory _conditionStrings = new string[](1); // mocked
+        _conditionStrings[0] = 'bool true';
+        address[] memory _conditionContexts = new address[](1); // mocked
+        _conditionContexts[0] = address(context);
+        update(
+            _ID,
+            _requiredRecords,
+            _signatories,
+            _record,
+            _conditionStrings,
+            address(context),
+            _conditionContexts
+        );
+        baseRecord[_ID] = true;
+    }
+
+    function _setBaseRecords() internal {
+        _updateRecord(0, 'uint256 4');
+        _updateRecord(1, 'uint256 6');
+        _updateRecord(2, 'uint256 8');
+        _updateRecord(3, 'uint256 1');
     }
 }
