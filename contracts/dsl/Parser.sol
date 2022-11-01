@@ -336,6 +336,8 @@ contract Parser is IParser {
      *   lastPayment: 300
      * }
      *
+     * sumThroughStructs USERS.lastPayment
+     * or shorter version
      * sumOf USERS.lastPayment
      * ```
      */

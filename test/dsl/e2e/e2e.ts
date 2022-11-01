@@ -4,11 +4,16 @@ import { BigNumber } from 'ethers';
 
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
-import { E2EApp, Context, Preprocessor, Stack } from '../../../typechain-types';
+import { E2EApp, Context, Preprocessor, Stack, Agreement } from '../../../typechain-types';
 import { bnToLongHexString, checkStackTail, hex4Bytes, hex4BytesShort } from '../../utils/utils';
-import { deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
+import {
+  deployOpcodeLibs,
+  deployAgreement,
+  deployPreprocessor,
+} from '../../../scripts/utils/deploy.utils';
 import { deployBaseMock } from '../../../scripts/utils/deploy.utils.mock';
 import { getChainId } from '../../../utils/utils';
+import { ONE_DAY, ONE_MONTH } from '../../utils/constants';
 
 const { ethers, network } = hre;
 
@@ -1785,5 +1790,120 @@ describe('End-to-end', () => {
        */
       await checkStackTail(stack, [1, 1, 1, 1, 1, 1, 1]);
     });
+  });
+
+  describe('Governance', () => {
+    let agreement: Agreement;
+    let agreementAddr: string;
+    let preprocessorAddr: string;
+    let tokenAddr: string;
+    const oneEthBN = parseEther('1');
+    const tenTokens = parseEther('10');
+
+    before(async () => {
+      const LAST_BLOCK_TIMESTAMP = (
+        await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
+      ).timestamp;
+      NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
+
+      preprocessorAddr = await deployPreprocessor(hre);
+
+      // Deploy Token contract
+      const token = await (await ethers.getContractFactory('Token'))
+        .connect(alice)
+        .deploy(ethers.utils.parseEther('1000'));
+      await token.deployed();
+      tokenAddr = token.address;
+    });
+
+    it.only('Voting process', async () => {
+      // 1. Governance contract is deployed; it will be an owner of Agreement.
+      const [
+        comparisonOpcodesLibAddr,
+        branchingOpcodesLibAddr,
+        logicalOpcodesLibAddr,
+        otherOpcodesLibAddr,
+      ] = await deployOpcodeLibs(hre);
+      const [parserAddr, executorLibAddr, preprAddr] = await deployBaseMock(hre);
+      const MockContract = await hre.ethers.getContractFactory('GovernanceMock', {
+        libraries: {
+          ComparisonOpcodes: comparisonOpcodesLibAddr,
+          BranchingOpcodes: branchingOpcodesLibAddr,
+          LogicalOpcodes: logicalOpcodesLibAddr,
+          OtherOpcodes: otherOpcodesLibAddr,
+          Executor: executorLibAddr,
+        },
+      });
+      const governance = await MockContract.deploy(
+        parserAddr,
+        alice.address,
+        tokenAddr,
+        NEXT_MONTH
+      );
+      await governance.deployed();
+
+      // 2. Allice creates a new record in Agreement. This record is disabled
+      // Create Agreement contract
+      agreementAddr = await deployAgreement(hre, governance.address);
+      preprocessorAddr = await deployPreprocessor(hre);
+      agreement = await ethers.getContractAt('Agreement', agreementAddr);
+      const txId = '1';
+      const signatories = [alice.address];
+      const conditions = ['bool true'];
+      const transaction = 'uint256 5';
+
+      const recordContext = await (await ethers.getContractFactory('Context')).deploy();
+      const conditionContext = await (await ethers.getContractFactory('Context')).deploy();
+      await recordContext.setAppAddress(agreementAddr);
+      await conditionContext.setAppAddress(agreementAddr);
+      await agreement.parse(conditions[0], conditionContext.address, preprocessorAddr);
+      await agreement.parse(transaction, recordContext.address, preprocessorAddr);
+      await agreement.connect(alice).update(
+        txId,
+        [], // required records
+        [alice.address],
+        transaction,
+        conditions,
+        recordContext.address,
+        [conditionContext.address]
+      );
+      await expect(agreement.execute(txId)).to.be.revertedWith('AGR13');
+      let record = await agreement.records(txId);
+      expect(record.isActive).to.be.equal(false);
+
+      // 3. Governance voting occurs. If consensus is met -> enable the target record.
+      // TODO: what if the record was already executed? exeption for pre-defined 1 and 2 records
+      await governance.connect(alice).execute(0); // sets function
+      await governance.connect(david).execute(1); // votes YES
+      await governance.connect(bob).execute(2); // votes NO
+      await governance.connect(alice).execute(3); // Sum results
+
+      record = await agreement.records(txId);
+      expect(record.isActive).to.be.equal(false);
+
+      await governance.connect(bob).execute(2); // votes NO
+      await governance.connect(alice).execute(3); // Sum results
+
+      record = await agreement.records(txId);
+      expect(record.isActive).to.be.equal(false);
+
+      await governance.connect(alice).execute(1); // votes YES
+      await governance.connect(alice).execute(3); // Sum results
+
+      record = await agreement.records(txId);
+      expect(record.isActive).to.be.equal(true);
+
+      // check the stack data after execution of the record in agreement
+      const StackCont = await ethers.getContractFactory('Stack');
+      const contextStackAddress = await recordContext.stack();
+      stack = StackCont.attach(recordContext.address);
+      await checkStackTail(stack, []);
+      // checks tha active record can be executed
+      await agreement.connect(alice).execute(txId);
+
+      await checkStackTail(stack, [5]);
+    });
+
+    // TODO: create a test that checks date after deadline
   });
 });

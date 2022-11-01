@@ -16,7 +16,7 @@ import { ONE_MONTH } from '../utils/constants';
 
 const { ethers, network } = hre;
 
-describe.only('Governance', () => {
+describe('Governance', () => {
   let app: GovernanceMock;
   let context: string;
   let conditionContext: string;

@@ -478,42 +478,169 @@ contract Governance {
         return count;
     }
 
+    function _updateRecord(uint256 _recordId, string memory _record) internal {
+        // address[] memory _signatories = new address[](1);
+        // address[] memory _conditionContexts = new address[](1); // mocked
+        // string[] memory _conditionStrings = new string[](1); // mocked
+        // // uint256[] memory _requiredRecords; // mocked
+        // // _requiredRecords[0] = 0; // required 0 recordId
+        // // _conditionStrings[0] = 'bool true';
+        // _signatories[0] = context.anyone();
+        // _conditionContexts[0] = address(conditionContext);
+        // update(
+        //     _recordId,
+        //     _requiredRecords,
+        //     _signatories,
+        //     _record,
+        //     _conditionStrings,
+        //     address(context),
+        //     _conditionContexts
+        // );
+        // baseRecord[_recordId] = true;
+    }
+
     /**
-     * @dev Uploads pre-defined records to Governance contract directly.
+     * @dev Uploads 4 pre-defined records to Governance contract directly.
      * Uses a simple condition string `bool true`.
      * Records that are uploaded using `_updateRecord` still have to be
      * parsed using a preprocessor before execution. Such record becomes
      * non-upgradable. Check `isUpgradableRecord` modifier
-     * @param _recordId Record ID
-     * @param _record the DSL code string of the record
      */
-    function _updateRecord(uint256 _recordId, string memory _record) internal {
-        address[] memory _signatories = new address[](1); // mocked
-        address[] memory _conditionContexts = new address[](1); // mocked
-        string[] memory _conditionStrings = new string[](1); // mocked
-        uint256[] memory _requiredRecords; // mocked
+    function _setBaseRecords() internal {
+        _setBaseRecord();
+        _setYesRecord();
+        _setNoRecord();
+        _setCheckVotingRecord();
+    }
+
+    function _setBaseRecord() internal {
+        uint256 recordId = 0;
+        string memory record = 'declareArr struct VOTERS '
+        'struct VOTE_YES { voter: msgSender, vote: YES }'
+        'struct VOTE_NO { voter: msgSender, vote: NO }'
+        'func voteYes {'
+        'insert VOTE_YES into VOTERS'
+        '} '
+        'func voteNo { '
+        'insert VOTE_NO into VOTERS'
+        '} '
+        'func areMoreThan50PercentVotedYes {'
+        '(sumOf VOTES.vote) setUint256 YES_CTR'
+        '((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2'
+        'ifelse YES NO'
+        'end'
+        'YES {'
+        '1 setBool RESULT'
+        '} '
+        'NO {'
+        '0 setBool RESULT'
+        '} '
+        '} ';
+
+        uint256[] memory _requiredRecords; // no records required
+        address[] memory _signatories = new address[](1);
+        address[] memory _conditionContexts = new address[](1);
+        string[] memory _conditionStrings = new string[](1);
+
         _conditionStrings[0] = 'bool true';
-        _signatories[0] = ownerAddr;
+        _signatories[0] = context.anyone();
         _conditionContexts[0] = address(conditionContext);
         update(
-            _recordId,
+            recordId,
             _requiredRecords,
             _signatories,
-            _record,
+            record,
             _conditionStrings,
             address(context),
             _conditionContexts
         );
-        baseRecord[_recordId] = true;
+        _setBaseRecordStatus(recordId);
     }
 
-    /**
-     * @dev Sets 4 pre-defined records for Governance contract
-     */
-    function _setBaseRecords() internal {
-        _updateRecord(0, 'uint256 4');
-        _updateRecord(1, 'uint256 6');
-        _updateRecord(2, 'uint256 8');
-        _updateRecord(3, 'uint256 1');
+    function _setYesRecord() internal {
+        uint256 recordId = 1;
+        string memory record = 'voteYes';
+
+        uint256[] memory _requiredRecords = new uint256[](1);
+        address[] memory _signatories = new address[](1);
+        address[] memory _conditionContexts = new address[](2);
+        string[] memory _conditionStrings = new string[](2);
+
+        string memory _deadline = string(abi.encodePacked('blockTimestamp < ', deadline));
+        _conditionStrings[0] = 'balanceOf GOV_TOKEN_ADDR msgSender > 0';
+        _conditionStrings[1] = _deadline; // blockTimestamp < deadline value
+        _signatories[0] = context.anyone();
+        _conditionContexts[0] = address(conditionContext);
+        _conditionContexts[1] = address(conditionContext);
+        _requiredRecords[0] = 0; // required 0 recordId
+        update(
+            1,
+            _requiredRecords,
+            _signatories,
+            record,
+            _conditionStrings,
+            address(context),
+            _conditionContexts
+        );
+        _setBaseRecordStatus(recordId);
+    }
+
+    function _setNoRecord() internal {
+        uint256 recordId = 2;
+        string memory record = 'voteNo';
+        uint256[] memory _requiredRecords = new uint256[](1);
+        address[] memory _signatories = new address[](1);
+        address[] memory _conditionContexts = new address[](2);
+        string[] memory _conditionStrings = new string[](2);
+
+        string memory _deadline = string(abi.encodePacked('blockTimestamp < ', deadline));
+        _conditionStrings[0] = 'balanceOf GOV_TOKEN_ADDR msgSender > 0';
+        _conditionStrings[1] = _deadline; // blockTimestamp < deadline value
+        _signatories[0] = context.anyone();
+        _conditionContexts[0] = address(conditionContext);
+        _conditionContexts[1] = address(conditionContext);
+        _requiredRecords[0] = 0; // required 0 recordId
+        update(
+            recordId,
+            _requiredRecords,
+            _signatories,
+            record,
+            _conditionStrings,
+            address(context),
+            _conditionContexts
+        );
+        _setBaseRecordStatus(recordId);
+    }
+
+    function _setCheckVotingRecord() internal {
+        uint256 recordId = 3;
+        string memory record = 'if (areMoreThan50PercentVotedYes) {'
+        'enableRecord ID at AGREEMENT_ADDRESS'
+        '}';
+        uint256[] memory _requiredRecords = new uint256[](1);
+        address[] memory _signatories = new address[](1);
+        address[] memory _conditionContexts = new address[](2);
+        string[] memory _conditionStrings = new string[](2);
+
+        string memory _deadline = string(abi.encodePacked('blockTimestamp >= ', deadline));
+        _conditionStrings[0] = _deadline;
+        _signatories[0] = context.anyone();
+        _conditionContexts[0] = address(conditionContext);
+        _conditionContexts[1] = address(conditionContext);
+        _requiredRecords[0] = 0; // required 0 recordId
+        update(
+            recordId,
+            _requiredRecords,
+            _signatories,
+            record,
+            _conditionStrings,
+            address(context),
+            _conditionContexts
+        );
+        _setBaseRecordStatus(recordId);
+    }
+
+    function _setBaseRecordStatus(uint256 _recordId) internal {
+        baseRecord[_recordId] = true;
     }
 }
