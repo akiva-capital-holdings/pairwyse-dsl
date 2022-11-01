@@ -406,6 +406,26 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctx, uint256(result));
     }
 
+    function opEnableRecord(address _ctx) public {
+        bytes memory recordId = OpcodeHelpers.nextBytes(_ctx, 32);
+        bytes memory contractAddrBytes = OpcodeHelpers.nextBytes(_ctx, 20);
+        bytes32 contractAddrB32 = bytes32(contractAddrBytes);
+
+        /**
+         * Shift bytes to the left so that
+         * later conversion from bytes32 to address
+         */
+        contractAddrB32 >>= 96;
+        address contractAddr = address(uint160(uint256(contractAddrB32)));
+
+        (bool success, ) = contractAddr.call(
+            abi.encodeWithSignature('activateRecord(uint256)', uint256(bytes32(recordId)))
+        );
+
+        require(success, ErrorsGeneralOpcodes.OP3);
+        OpcodeHelpers.putToStack(_ctx, 1);
+    }
+
     /**
      * @dev Sums struct variables values from the `struct type` array
      * @param _ctx Context contract instance address

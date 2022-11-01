@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import * as hre from 'hardhat';
 
-import { AgreementMock } from '../../typechain-types';
+import { AgreementMock, ContextMock } from '../../typechain-types';
 import { ParserMock } from '../../typechain-types/dsl/mocks';
 import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
 import { Records } from '../../test/types';
@@ -54,7 +54,6 @@ export const setRecord = async (data: any, app: AgreementMock) => {
     transactionCtx,
     transactionStr,
   } = data;
-
   await app.addRecordBlueprint(recordId, requiredRecords, signatories);
   for (let j = 0; j < conditionContexts.length; j++) {
     await app.addRecordCondition(recordId, conditionStrings[j], conditionContexts[j].address);
@@ -81,5 +80,21 @@ export const parseConditions = async (
       await app.conditionContexts(recordId, j),
       await app.conditionStrings(recordId, j)
     );
+  }
+};
+
+export const setApp = async (ctx: ContextMock, app: AgreementMock, sender: string) => {
+  await ctx.setAppAddress(app.address);
+  await ctx.setMsgSender(sender);
+};
+
+export const parseConditionsList = async (
+  recordIds: number[],
+  parser: ParserMock,
+  app: AgreementMock,
+  preprAddr: string
+) => {
+  for (let j = 0; j < recordIds.length; j++) {
+    await parseConditions(recordIds[j], parser, app, preprAddr);
   }
 };

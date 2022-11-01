@@ -17,6 +17,18 @@ import { StringUtils } from '../../dsl/libs/StringUtils.sol';
 contract AgreementMock is Agreement {
     constructor(address _parser, address _ownerAddr) Agreement(_parser, _ownerAddr) {}
 
+    function verify(uint256 _recordId) public view returns (bool) {
+        return _verify(_recordId);
+    }
+
+    function validateRequiredRecords(uint256 _recordId) public view returns (bool) {
+        return _validateRequiredRecords(_recordId);
+    }
+
+    function validateConditions(uint256 _recordId, uint256 _msgValue) public returns (bool) {
+        return _validateConditions(_recordId, _msgValue);
+    }
+
     function addRecordBlueprint(
         uint256 _recordId,
         uint256[] memory _requiredRecords,
@@ -41,23 +53,15 @@ contract AgreementMock is Agreement {
         _addRecordTransaction(_recordId, _transactionString, _recordContext);
     }
 
-    function verify(uint256 _recordId) public view returns (bool) {
-        return _verify(_recordId);
-    }
-
-    function validateRequiredRecords(uint256 _recordId) public view returns (bool) {
-        return _validateRequiredRecords(_recordId);
-    }
-
-    function validateConditions(uint256 _recordId, uint256 _msgValue) public returns (bool) {
-        return _validateConditions(_recordId, _msgValue);
-    }
-
     function fulfill(
         uint256 _recordId,
         uint256 _msgValue,
         address _signatory
     ) external returns (bool) {
         return _fulfill(_recordId, _msgValue, _signatory);
+    }
+
+    function setRecordContext(uint256 _recordId, address _context) external {
+        records[_recordId].recordContext = _context;
     }
 }

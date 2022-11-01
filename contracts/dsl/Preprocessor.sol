@@ -258,6 +258,15 @@ contract Preprocessor is IPreprocessor {
         for (uint256 i = 0; i < _code.length; i++) {
             chunk = _code[i];
 
+            if (
+                result.length > 0 &&
+                result[result.length - 1].equal('enableRecord') &&
+                chunk.mayBeNumber()
+            ) {
+                result.push(chunk); // push the record ID to results
+                continue;
+            }
+
             // ---> starts sumOf block for array of structures
             if (chunk.equal('sumOf')) {
                 checkStructName = true;
@@ -841,6 +850,7 @@ contract Preprocessor is IPreprocessor {
             _chunk.equal('sendEth') ||
             _chunk.equal('transfer') ||
             _chunk.equal('get') ||
+            _chunk.equal('enableRecord') ||
             _isStruct
         ) {
             _isDirect = true;

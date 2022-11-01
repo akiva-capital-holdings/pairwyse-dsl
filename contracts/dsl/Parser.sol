@@ -468,6 +468,17 @@ contract Parser is IParser {
     }
 
     /**
+     * @dev Parses the `record id` and the `agreement address` parameters
+     * Ex. ['enable', '56', 'for', '9A676e781A523b5d0C0e43731313A708CB607508']
+     */
+    function asmEnableRecord() public {
+        asmUint256();
+        _nextCmd(); // skip `for` keyword
+        bytes memory _slicedAddress = bytes(_nextCmd()).slice(2, 42);
+        program = bytes.concat(program, bytes(_slicedAddress.fromHexBytes()));
+    }
+
+    /**
      * Internal functions
      */
 
@@ -497,6 +508,7 @@ contract Parser is IParser {
         // TODO: Parser: IContext(_ctxAddr).delegateCall('setProgram', program) to pass owner's
         //       address to the Context contract
         IContext(_ctxAddr).setProgram(program);
+        // console.logBytes(program);
     }
 
     /**
