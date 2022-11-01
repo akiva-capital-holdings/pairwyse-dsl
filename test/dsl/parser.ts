@@ -1072,15 +1072,15 @@ describe('Parser', () => {
   describe('activate records', () => {
     it('enable several records for several agreement', async () => {
       await app.parseCodeExt(ctxAddr, [
-        'enable',
+        'enableRecord',
         '34',
         'for',
         '0xE1ec18D475D02a8219a13D045a15fe67db8e0774',
-        'enable',
+        'enableRecord',
         '9',
         'for',
         '0xE2ec18D475D02a8219a13D045a15fe67db8e0773',
-        'enable',
+        'enableRecord',
         '1',
         'for',
         '0xE3ec18D475D02a8219a13D045a15fe67db8e0773',

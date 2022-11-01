@@ -829,9 +829,9 @@ describe('Other opcodes', () => {
   describe('opEnableRecord', () => {
     it('check that record 54 was activated', async () => {
       /*
-        `agreement` is the contract that stores 34 record, it has own _ctxAgreement
-        _ctxExecutive - context uses to execute 34 record from `agreement`
-        _ctxCondition - contest-helper just to set a context for the recordContext in agreement
+        `agreement` is the contract that stores record number 34, it has own _ctxAgreement
+        _ctxExecutive - context uses to execute record number 34 from `agreement`
+        _ctxCondition - context-helper just to set a context for the recordContext in agreement
       */
 
       // app is the owner of agreement (non-usable in prod)

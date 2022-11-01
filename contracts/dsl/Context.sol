@@ -593,11 +593,11 @@ contract Context is IContext {
         );
 
         // Activates record in Aggreement contract by Record ID
-        // Ex. `enable 5 for 0x9A676e781A523b5d0C0e43731313A708CB607508`,
+        // Ex. `enableRecord 5 at 0x9A676e781A523b5d0C0e43731313A708CB607508`,
         // where 5 is a `Record ID`;
         // `0x9A676e781A523b5d0C0e43731313A708CB607508` is an Agreement address
         addOpcode(
-            'enable',
+            'enableRecord',
             0x41,
             OtherOpcodes.opEnableRecord.selector,
             IParser.asmEnableRecord.selector,

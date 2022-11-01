@@ -1913,25 +1913,25 @@ describe('Preprocessor', () => {
   });
 
   describe('activate records', () => {
-    it('enable several records for several agreement', async () => {
+    it('enable several records at several agreement', async () => {
       const input = `
-        enable record 34 for 0xE1ec18D475D02a8219a13D045a15fe67db8e0774
-        enable record 15 for 0xE2ec18D475D02a8219a13D045a15fe67db8e0773
-        enable record 1 for 0xE3ec18D475D02a8219a13D045a15fe67db8e0773
+        enableRecord 34 at 0xE1ec18D475D02a8219a13D045a15fe67db8e0774
+        enableRecord 15 at 0xE2ec18D475D02a8219a13D045a15fe67db8e0773
+        enableRecord 1 at 0xE3ec18D475D02a8219a13D045a15fe67db8e0773
       `;
       const res = await app.callStatic.transform(ctxAddr, input);
       expect(res).to.eql([
-        'enable',
+        'enableRecord',
         '34',
-        'for',
+        'at',
         '0xE1ec18D475D02a8219a13D045a15fe67db8e0774',
-        'enable',
+        'enableRecord',
         '15',
-        'for',
+        'at',
         '0xE2ec18D475D02a8219a13D045a15fe67db8e0773',
-        'enable',
+        'enableRecord',
         '1',
-        'for',
+        'at',
         '0xE3ec18D475D02a8219a13D045a15fe67db8e0773',
       ]);
     });

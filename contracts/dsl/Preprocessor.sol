@@ -260,10 +260,9 @@ contract Preprocessor is IPreprocessor {
 
             if (
                 result.length > 0 &&
-                result[result.length - 1].equal('record') &&
+                result[result.length - 1].equal('enableRecord') &&
                 chunk.mayBeNumber()
             ) {
-                result.pop(); // 'record' word does not need anymore
                 result.push(chunk); // push the record ID to results
                 continue;
             }
@@ -851,7 +850,7 @@ contract Preprocessor is IPreprocessor {
             _chunk.equal('sendEth') ||
             _chunk.equal('transfer') ||
             _chunk.equal('get') ||
-            _chunk.equal('enable') ||
+            _chunk.equal('enableRecord') ||
             _isStruct
         ) {
             _isDirect = true;

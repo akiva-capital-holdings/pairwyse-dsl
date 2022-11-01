@@ -259,7 +259,7 @@ describe('Simple Records in Agreement', () => {
       const aggr2Addr = await deployAgreementMock(hre, appAddr);
 
       const aggr2 = await ethers.getContractAt('AgreementMock', aggr2Addr);
-      const input = `enable record 23 for ${aggr2Addr}`;
+      const input = `enableRecord 23 at ${aggr2Addr}`;
 
       // uses for the Agreement2 (test will check that stack has
       // value `6` after execution)
@@ -357,9 +357,9 @@ describe('Simple Records in Agreement', () => {
 
       // uses for the Agreement
       const input = `
-        enable record 34 for ${aggr2Addr}
-        enable record 15 for ${aggr2Addr}
-        enable record 41 for ${aggr3Addr}
+        enableRecord 34 at ${aggr2Addr}
+        enableRecord 15 at ${aggr2Addr}
+        enableRecord 41 at ${aggr3Addr}
       `;
       // uses for the Agreement2
       const input2 = 'uint256 6';
