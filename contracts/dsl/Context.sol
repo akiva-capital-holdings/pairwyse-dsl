@@ -41,6 +41,8 @@ contract Context is IContext {
 
     mapping(string => bytes1) public opCodeByName; // name => opcode (hex)
     mapping(bytes1 => bytes4) public selectorByOpcode; // opcode (hex) => selector (hex)
+    mapping(string => uint8) public numOfArgsByOpcode; // opcode name => number of arguments
+    mapping(string => bool) public isCommand; // opcode name => is opcode a command (command = !(math operator))
     // emun OpcodeLibNames {...} from IContext
     // Depending on the hex value, it will take the proper
     // library from the OpcodeLibNames enum check the library for each opcode
@@ -244,7 +246,8 @@ contract Context is IContext {
         /**
             bool true
             ifelse D E
-                uint2567 7000
+
+            uint2567 7000
             end
 
             D {
@@ -259,7 +262,9 @@ contract Context is IContext {
             0x23,
             BranchingOpcodes.opIfelse.selector,
             IParser.asmIfelse.selector,
-            OpcodeLibNames.BranchingOpcodes
+            OpcodeLibNames.BranchingOpcodes,
+            2,
+            true
         );
 
         /**
@@ -276,7 +281,9 @@ contract Context is IContext {
             0x25,
             BranchingOpcodes.opIf.selector,
             IParser.asmIf.selector,
-            OpcodeLibNames.BranchingOpcodes
+            OpcodeLibNames.BranchingOpcodes,
+            1,
+            true
         );
 
         /**
@@ -296,7 +303,9 @@ contract Context is IContext {
             0x24,
             BranchingOpcodes.opEnd.selector,
             0x0,
-            OpcodeLibNames.BranchingOpcodes
+            OpcodeLibNames.BranchingOpcodes,
+            0,
+            true
         );
 
         // Simple Opcodes
@@ -305,7 +314,9 @@ contract Context is IContext {
             0x15,
             OtherOpcodes.opBlockNumber.selector,
             0x0,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            0,
+            true
         );
 
         // Current block timestamp as seconds since unix epoch. Ex. `time <= FUTURE_TIME_VARIABLE`
@@ -314,7 +325,9 @@ contract Context is IContext {
             0x16,
             OtherOpcodes.opBlockTimestamp.selector,
             0x0,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            0,
+            true
         );
 
         // Current chain id. Ex. `blockChainId == 123`
@@ -323,7 +336,9 @@ contract Context is IContext {
             0x17,
             OtherOpcodes.opBlockChainId.selector,
             0x0,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            0,
+            true
         );
 
         // Ex. `bool true`
@@ -332,7 +347,9 @@ contract Context is IContext {
             0x18,
             OtherOpcodes.opBool.selector,
             IParser.asmBool.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            1,
+            true
         );
 
         // Ex. `uint256 567`
@@ -341,7 +358,9 @@ contract Context is IContext {
             0x1a,
             OtherOpcodes.opUint256.selector,
             IParser.asmUint256.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            1,
+            true
         );
 
         // Ex. `msgSender != 0x0000000000000000000000000000000000000000`
@@ -350,7 +369,9 @@ contract Context is IContext {
             0x1d,
             OtherOpcodes.opMsgSender.selector,
             0x0,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            0,
+            true
         );
 
         // Ex. `sendEth ETH_RECEIVER 1000000000000000000`
@@ -359,7 +380,9 @@ contract Context is IContext {
             0x1e,
             OtherOpcodes.opSendEth.selector,
             IParser.asmSend.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            2,
+            true
         );
 
         // Ex. `transfer TOKEN_ADDR TOKEN_RECEIVER 10`
@@ -368,7 +391,9 @@ contract Context is IContext {
             0x1f,
             OtherOpcodes.opTransfer.selector,
             IParser.asmTransfer.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            3,
+            true
         );
 
         // Ex. `transferVar DAI RECEIVER AMOUNT`
@@ -377,7 +402,9 @@ contract Context is IContext {
             0x2c,
             OtherOpcodes.opTransferVar.selector,
             IParser.asmTransferVar.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            3,
+            true
         );
 
         // Ex. `transferFrom DAI OWNER RECEIVER 10`
@@ -386,7 +413,9 @@ contract Context is IContext {
             0x20,
             OtherOpcodes.opTransferFrom.selector,
             IParser.asmTransferFrom.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            4,
+            true
         );
 
         // Ex. `transferFromVar DAI OWNER RECEIVER AMOUNT`
@@ -395,7 +424,9 @@ contract Context is IContext {
             0x2a,
             OtherOpcodes.opTransferFromVar.selector,
             IParser.asmTransferFromVar.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            4,
+            true
         );
 
         // Ex. `setLocalBool BOOLVAR true`
@@ -404,7 +435,9 @@ contract Context is IContext {
             0x21,
             OtherOpcodes.opSetLocalBool.selector,
             IParser.asmSetLocalBool.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            2,
+            true
         );
 
         // Ex. `(4 + 17) setUint256 VAR`
@@ -413,7 +446,9 @@ contract Context is IContext {
             0x2e,
             OtherOpcodes.opSetUint256.selector,
             IParser.asmSetUint256.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            1,
+            true
         );
 
         // Ex. (msgValue == 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266) setBool IS_OWNER
@@ -422,7 +457,9 @@ contract Context is IContext {
             0x22,
             OtherOpcodes.opMsgValue.selector,
             0x0,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            0,
+            true
         );
 
         // Ex. `balanceOf DAI USER`
@@ -431,7 +468,9 @@ contract Context is IContext {
             0x2b,
             OtherOpcodes.opBalanceOf.selector,
             IParser.asmBalanceOf.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            2,
+            true
         );
 
         /** Example:
@@ -447,7 +486,9 @@ contract Context is IContext {
             0x30,
             BranchingOpcodes.opFunc.selector,
             IParser.asmFunc.selector,
-            OpcodeLibNames.BranchingOpcodes
+            OpcodeLibNames.BranchingOpcodes,
+            0, // actually can be any number of params
+            true
         );
 
         // Push to array
@@ -457,7 +498,9 @@ contract Context is IContext {
             0x33,
             OtherOpcodes.opPush.selector,
             IParser.asmPush.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            2,
+            true
         );
 
         // Get length of array
@@ -467,7 +510,9 @@ contract Context is IContext {
             0x34,
             OtherOpcodes.opLengthOf.selector,
             IParser.asmLengthOf.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            1,
+            true
         );
 
         // Get element by index in the array
@@ -477,7 +522,9 @@ contract Context is IContext {
             0x35,
             OtherOpcodes.opGet.selector,
             IParser.asmGet.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            2,
+            true
         );
 
         // Sums all elements in an array
@@ -487,7 +534,9 @@ contract Context is IContext {
             0x40,
             OtherOpcodes.opSumOf.selector,
             IParser.asmSumOf.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            1,
+            true
         );
 
         /* Sums struct variables values from the `struct type` array
@@ -523,7 +572,9 @@ contract Context is IContext {
             0x38,
             OtherOpcodes.opSumThroughStructs.selector,
             IParser.asmSumThroughStructs.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            2,
+            true
         );
 
         // Creates structs
@@ -534,7 +585,9 @@ contract Context is IContext {
             0x36,
             OtherOpcodes.opStruct.selector,
             IParser.asmStruct.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            1,
+            true
         );
 
         /************
@@ -552,7 +605,9 @@ contract Context is IContext {
             0x37,
             BranchingOpcodes.opForLoop.selector,
             IParser.asmForLoop.selector,
-            OpcodeLibNames.BranchingOpcodes
+            OpcodeLibNames.BranchingOpcodes,
+            3,
+            true
         );
 
         // internal opcode that is added automatically by Preprocessor
@@ -562,7 +617,9 @@ contract Context is IContext {
             0x32,
             BranchingOpcodes.opStartLoop.selector,
             0x0,
-            OpcodeLibNames.BranchingOpcodes
+            OpcodeLibNames.BranchingOpcodes,
+            0,
+            true
         );
 
         // indicates the end of the for-loop block
@@ -571,7 +628,9 @@ contract Context is IContext {
             0x39,
             BranchingOpcodes.opEndLoop.selector,
             0x0,
-            OpcodeLibNames.BranchingOpcodes
+            OpcodeLibNames.BranchingOpcodes,
+            0,
+            true
         );
 
         // Complex Opcodes with sub Opcodes (branches)
@@ -589,7 +648,9 @@ contract Context is IContext {
             0x1b,
             OtherOpcodes.opLoadLocalUint256.selector,
             IParser.asmVar.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            1,
+            true
         );
 
         string memory name = 'loadRemote';
@@ -598,7 +659,9 @@ contract Context is IContext {
             0x1c,
             OtherOpcodes.opLoadRemoteAny.selector,
             IParser.asmLoadRemote.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            3,
+            true
         );
         // types that 'loadRemote' have for loading data
         _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadRemoteUint256.selector);
@@ -613,7 +676,9 @@ contract Context is IContext {
             0x31,
             OtherOpcodes.opDeclare.selector,
             IParser.asmDeclare.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            2,
+            true
         );
         // types of arrays for declaration
         _addOpcodeBranch(name, 'uint256', 0x01, IStorageUniversal.setStorageUint256.selector);
@@ -683,13 +748,16 @@ contract Context is IContext {
        from onle of library in `contracts/libs/opcodes/*`
      * @param _asmSelector is the selector of the function from the Parser for that opcode
      * @param _libName is the name of library that is used fot the opcode
+     * @param _numOfArgs The number of arguments for this opcode
      */
     function addOpcode(
         string memory _name,
         bytes1 _opcode,
         bytes4 _opSelector,
         bytes4 _asmSelector,
-        OpcodeLibNames _libName
+        OpcodeLibNames _libName,
+        uint8 _numOfArgs,
+        bool _isCommand
     ) public {
         require(_opSelector != bytes4(0), ErrorsContext.CTX2);
         require(
@@ -700,6 +768,8 @@ contract Context is IContext {
         selectorByOpcode[_opcode] = _opSelector;
         opcodeLibNameByOpcode[_opcode] = _libName;
         asmSelectors[_name] = _asmSelector;
+        numOfArgsByOpcode[_name] = _numOfArgs;
+        isCommand[_name] = _isCommand;
     }
 
     /**
@@ -840,7 +910,7 @@ contract Context is IContext {
         OpcodeLibNames _libName,
         uint256 _priority
     ) internal {
-        addOpcode(_name, _opcode, _opSelector, _asmSelector, _libName);
+        addOpcode(_name, _opcode, _opSelector, _asmSelector, _libName, 0, false);
         _addOperator(_name, _priority);
     }
 

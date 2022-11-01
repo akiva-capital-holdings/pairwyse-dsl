@@ -40,6 +40,10 @@ interface IContext {
 
     function selectorByOpcode(bytes1 _opcode) external view returns (bytes4 _selecotor);
 
+    function numOfArgsByOpcode(string memory _name) external view returns (uint8 _numOfArgs);
+
+    function isCommand(string memory _name) external view returns (bool _isCommand);
+
     function opcodeLibNameByOpcode(bytes1 _opcode) external view returns (OpcodeLibNames _name);
 
     function asmSelectors(string memory _name) external view returns (bytes4 _selecotor);
