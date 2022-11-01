@@ -262,6 +262,7 @@ contract Agreement {
         if (msg.sender == ownerAddr) {
             records[_recordId].isActive = true;
         }
+
         emit NewRecord(
             _recordId,
             _requiredRecords,
