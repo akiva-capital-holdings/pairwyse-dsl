@@ -1870,38 +1870,39 @@ describe('End-to-end', () => {
       await expect(agreement.execute(txId)).to.be.revertedWith('AGR13');
       let record = await agreement.records(txId);
       expect(record.isActive).to.be.equal(false);
+      // TODO: what is the logic of chosing ID for activation and AGREEMENT_ADDR?
 
       // 3. Governance voting occurs. If consensus is met -> enable the target record.
       // TODO: what if the record was already executed? exeption for pre-defined 1 and 2 records
-      await governance.connect(alice).execute(0); // sets function
-      await governance.connect(david).execute(1); // votes YES
-      await governance.connect(bob).execute(2); // votes NO
-      await governance.connect(alice).execute(3); // Sum results
+      // await governance.connect(alice).execute(0); // sets function
+      // await governance.connect(david).execute(1); // votes YES
+      // await governance.connect(bob).execute(2); // votes NO
+      // await governance.connect(alice).execute(3); // Sum results
 
-      record = await agreement.records(txId);
-      expect(record.isActive).to.be.equal(false);
+      // record = await agreement.records(txId);
+      // expect(record.isActive).to.be.equal(false);
 
-      await governance.connect(bob).execute(2); // votes NO
-      await governance.connect(alice).execute(3); // Sum results
+      // await governance.connect(bob).execute(2); // votes NO
+      // await governance.connect(alice).execute(3); // Sum results
 
-      record = await agreement.records(txId);
-      expect(record.isActive).to.be.equal(false);
+      // record = await agreement.records(txId);
+      // expect(record.isActive).to.be.equal(false);
 
-      await governance.connect(alice).execute(1); // votes YES
-      await governance.connect(alice).execute(3); // Sum results
+      // await governance.connect(alice).execute(1); // votes YES
+      // await governance.connect(alice).execute(3); // Sum results
 
-      record = await agreement.records(txId);
-      expect(record.isActive).to.be.equal(true);
+      // record = await agreement.records(txId);
+      // expect(record.isActive).to.be.equal(true);
 
-      // check the stack data after execution of the record in agreement
-      const StackCont = await ethers.getContractFactory('Stack');
-      const contextStackAddress = await recordContext.stack();
-      stack = StackCont.attach(recordContext.address);
-      await checkStackTail(stack, []);
-      // checks tha active record can be executed
-      await agreement.connect(alice).execute(txId);
+      // // check the stack data after execution of the record in agreement
+      // const StackCont = await ethers.getContractFactory('Stack');
+      // const contextStackAddress = await recordContext.stack();
+      // stack = StackCont.attach(recordContext.address);
+      // await checkStackTail(stack, []);
+      // // checks tha active record can be executed
+      // await agreement.connect(alice).execute(txId);
 
-      await checkStackTail(stack, [5]);
+      // await checkStackTail(stack, [5]);
     });
 
     // TODO: create a test that checks date after deadline

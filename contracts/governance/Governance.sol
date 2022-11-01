@@ -478,27 +478,6 @@ contract Governance {
         return count;
     }
 
-    function _updateRecord(uint256 _recordId, string memory _record) internal {
-        // address[] memory _signatories = new address[](1);
-        // address[] memory _conditionContexts = new address[](1); // mocked
-        // string[] memory _conditionStrings = new string[](1); // mocked
-        // // uint256[] memory _requiredRecords; // mocked
-        // // _requiredRecords[0] = 0; // required 0 recordId
-        // // _conditionStrings[0] = 'bool true';
-        // _signatories[0] = context.anyone();
-        // _conditionContexts[0] = address(conditionContext);
-        // update(
-        //     _recordId,
-        //     _requiredRecords,
-        //     _signatories,
-        //     _record,
-        //     _conditionStrings,
-        //     address(context),
-        //     _conditionContexts
-        // );
-        // baseRecord[_recordId] = true;
-    }
-
     /**
      * @dev Uploads 4 pre-defined records to Governance contract directly.
      * Uses a simple condition string `bool true`.
@@ -518,24 +497,13 @@ contract Governance {
         string memory record = 'declareArr struct VOTERS '
         'struct VOTE_YES { voter: msgSender, vote: YES }'
         'struct VOTE_NO { voter: msgSender, vote: NO }'
-        'func voteYes {'
-        'insert VOTE_YES into VOTERS'
-        '} '
-        'func voteNo { '
-        'insert VOTE_NO into VOTERS'
-        '} '
-        'func areMoreThan50PercentVotedYes {'
-        '(sumOf VOTES.vote) setUint256 YES_CTR'
+        'func voteYes {insert VOTE_YES into VOTERS} '
+        'func voteNo {insert VOTE_NO into VOTERS} '
+        'func areMoreThan50PercentVotedYes {(sumOf VOTES.vote) setUint256 YES_CTR'
         '((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2'
-        'ifelse YES NO'
-        'end'
-        'YES {'
-        '1 setBool RESULT'
-        '} '
-        'NO {'
-        '0 setBool RESULT'
-        '} '
-        '} ';
+        'ifelse YES NO end'
+        'YES {1 setBool RESULT} '
+        'NO {0 setBool RESULT}}';
 
         uint256[] memory _requiredRecords; // no records required
         address[] memory _signatories = new address[](1);
@@ -614,9 +582,9 @@ contract Governance {
 
     function _setCheckVotingRecord() internal {
         uint256 recordId = 3;
-        string memory record = 'if (areMoreThan50PercentVotedYes) {'
-        'enableRecord ID at AGREEMENT_ADDRESS'
-        '}';
+        // TODO: ID? AGREEMENT_ADDRESS?
+        string memory record = 'areMoreThan50PercentVotedYes if ENABLE_RECORD '
+        'ENABLE_RECORD {enableRecord 0 at AGREEMENT_ADDRESS}';
         uint256[] memory _requiredRecords = new uint256[](1);
         address[] memory _signatories = new address[](1);
         address[] memory _conditionContexts = new address[](2);
