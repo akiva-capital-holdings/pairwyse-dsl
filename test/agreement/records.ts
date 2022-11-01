@@ -495,7 +495,7 @@ describe('Simple Records in Agreement', () => {
         recordId: 9,
         requiredRecords: [],
         signatories: [alice.address],
-        transactionStr: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAINING',
+        transactionStr: 'transferFromVar DAI GP AGREEMENT GP_REMAINING',
         conditionStrings: [
           `var GP_INITIAL +
           var LP_TOTAL >= var INITIAL_FUNDS_TARGET`,
@@ -514,7 +514,7 @@ describe('Simple Records in Agreement', () => {
           }`,
           'time >= var LOW_LIM',
           'time <= var UP_LIM',
-          `(balanceOf DAI TRANSACTIONS_CONT) >=
+          `(balanceOf DAI AGREEMENT) >=
               ((var INITIAL_FUNDS_TARGET * var P1) / 100)`,
         ],
         transactionCtx: await ContextCont.deploy(),

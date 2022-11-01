@@ -309,7 +309,7 @@ export const businessCaseTest = ({
 
       await agreement.setStorageAddress(hex4Bytes('DAI'), dai.address);
       await agreement.setStorageAddress(hex4Bytes('GP'), GP.address);
-      await agreement.setStorageAddress(hex4Bytes('TRANSACTIONS_CONT'), agreement.address);
+      await agreement.setStorageAddress(hex4Bytes('AGREEMENT'), agreement.address);
       await agreement.setStorageUint256(hex4Bytes('INITIAL_FUNDS_TARGET'), INITIAL_FUNDS_TARGET);
       await agreement.setStorageUint256(hex4Bytes('GP_INITIAL'), GP_INITIAL);
       await agreement.setStorageUint256(hex4Bytes('MANAGEMENT_PERCENT'), MANAGEMENT_FEE_PERCENTAGE);
