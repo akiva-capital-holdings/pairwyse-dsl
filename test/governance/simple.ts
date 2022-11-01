@@ -16,9 +16,10 @@ import { ONE_MONTH } from '../utils/constants';
 
 const { ethers, network } = hre;
 
-describe('Governance', () => {
+describe.only('Governance', () => {
   let app: GovernanceMock;
   let context: string;
+  let conditionContext: string;
   let parserAddr: string;
   let executorLibAddr: string;
   let alice: SignerWithAddress;
@@ -72,6 +73,7 @@ describe('Governance', () => {
     app = await MockContract.deploy(parserAddr, alice.address, tokenAddr, NEXT_MONTH);
     await app.deployed();
     context = await app.context();
+    conditionContext = await app.conditionContext();
   });
 
   beforeEach(async () => {
@@ -120,18 +122,21 @@ describe('Governance', () => {
     const stack = await ethers.getContractAt('Stack', stackAddr);
 
     // check that stack is empty for the Aggreement2
-    // await checkStack(stack, 0, );
+    await checkStackTail(stack, []);
 
-    // check the first recors
+    let stackLen = await stack.length();
+    expect(stackLen).to.be.equal(0);
     let record = await app.records(ID1);
     expect(record.isExecuted).to.be.equal(false);
 
     await app.parse(record1, context, preprAddr);
+    await app.parse('bool true', conditionContext, preprAddr);
     expect(await app.connect(alice).execute(ID1));
     record = await app.records(ID1);
     expect(record.isExecuted).to.be.equal(true);
     await expect(app.connect(alice).execute(ID1)).to.be.revertedWith('AGR7');
-    // await checkStackTail(stack, [4]);
+    // value for record1
+    await checkStackTail(stack, [4]);
 
     // check the second record
     await app.parse(record2, context, preprAddr);
@@ -139,7 +144,8 @@ describe('Governance', () => {
     record = await app.records(ID2);
     expect(record.isExecuted).to.be.equal(true);
     await expect(app.connect(alice).execute(ID2)).to.be.revertedWith('AGR7');
-    // await checkStackTail(stack, [4, 6]);
+    // value for record2
+    await checkStackTail(stack, [6]);
 
     // check the third record
     await app.parse(record3, context, preprAddr);
@@ -147,7 +153,8 @@ describe('Governance', () => {
     record = await app.records(ID3);
     expect(record.isExecuted).to.be.equal(true);
     await expect(app.connect(alice).execute(ID3)).to.be.revertedWith('AGR7');
-    // await checkStackTail(stack, [4, 6, 8]);
+    // value for record3
+    await checkStackTail(stack, [8]);
 
     // check the forth record
     await app.parse(record4, context, preprAddr);
@@ -155,7 +162,8 @@ describe('Governance', () => {
     record = await app.records(ID4);
     expect(record.isExecuted).to.be.equal(true);
     await expect(app.connect(alice).execute(ID4)).to.be.revertedWith('AGR7');
-    // await checkStackTail(stack, [4, 6, 8, 1]);
+    // value for record4
+    await checkStackTail(stack, [1]);
   });
 
   it('4 pre-defined records cannot be activated', async () => {

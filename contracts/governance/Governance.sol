@@ -28,6 +28,7 @@ contract Governance {
 
     IParser public parser; // TODO: We can get rid of this dependency
     IContext public context;
+    IContext public conditionContext;
     uint256 public deadline;
     address public ownerAddr;
 
@@ -90,6 +91,8 @@ contract Governance {
         ownerAddr = _ownerAddr;
         context = new Context(); // ~7.000.000 gas
         context.setAppAddress(address(this));
+        conditionContext = new Context(); // ~7.000.000 gas
+        conditionContext.setAppAddress(address(this));
         deadline = _deadline;
         parser = IParser(_parser);
 
@@ -475,16 +478,25 @@ contract Governance {
         return count;
     }
 
-    function _updateRecord(uint256 _ID, string memory _record) internal {
-        address[] memory _signatories = new address[](1);
-        _signatories[0] = ownerAddr;
-        uint256[] memory _requiredRecords;
-        string[] memory _conditionStrings = new string[](1); // mocked
-        _conditionStrings[0] = 'bool true';
+    /**
+     * @dev Uploads pre-defined records to Governance contract directly.
+     * Uses a simple condition string `bool true`.
+     * Records that are uploaded using `_updateRecord` still have to be
+     * parsed using a preprocessor before execution. Such record becomes
+     * non-upgradable. Check `isUpgradableRecord` modifier
+     * @param _recordId Record ID
+     * @param _record the DSL code string of the record
+     */
+    function _updateRecord(uint256 _recordId, string memory _record) internal {
+        address[] memory _signatories = new address[](1); // mocked
         address[] memory _conditionContexts = new address[](1); // mocked
-        _conditionContexts[0] = address(context);
+        string[] memory _conditionStrings = new string[](1); // mocked
+        uint256[] memory _requiredRecords; // mocked
+        _conditionStrings[0] = 'bool true';
+        _signatories[0] = ownerAddr;
+        _conditionContexts[0] = address(conditionContext);
         update(
-            _ID,
+            _recordId,
             _requiredRecords,
             _signatories,
             _record,
@@ -492,9 +504,12 @@ contract Governance {
             address(context),
             _conditionContexts
         );
-        baseRecord[_ID] = true;
+        baseRecord[_recordId] = true;
     }
 
+    /**
+     * @dev Sets 4 pre-defined records for Governance contract
+     */
     function _setBaseRecords() internal {
         _updateRecord(0, 'uint256 4');
         _updateRecord(1, 'uint256 6');
