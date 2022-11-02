@@ -13,7 +13,7 @@ import { OtherOpcodes } from '../dsl/libs/opcodes/OtherOpcodes.sol';
 import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 // TODO: automatically make sure that no contract exceeds the maximum contract size
 
@@ -496,14 +496,7 @@ contract Governance {
         uint256 recordId = 0;
         string memory record = 'declareArr struct VOTERS '
         'struct VOTE_YES { voter: msgSender, vote: YES }'
-        'struct VOTE_NO { voter: msgSender, vote: NO }'
-        'func voteYes {insert VOTE_YES into VOTERS} '
-        'func voteNo {insert VOTE_NO into VOTERS} '
-        'func areMoreThan50PercentVotedYes {(sumOf VOTES.vote) setUint256 YES_CTR'
-        '((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2'
-        'ifelse YES NO end'
-        'YES {1 setBool RESULT} '
-        'NO {0 setBool RESULT}}';
+        'struct VOTE_NO { voter: msgSender, vote: NO }';
 
         uint256[] memory _requiredRecords; // no records required
         address[] memory _signatories = new address[](1);
@@ -527,15 +520,18 @@ contract Governance {
 
     function _setYesRecord() internal {
         uint256 recordId = 1;
-        string memory record = 'voteYes';
+        string memory record = 'insert VOTE_YES into VOTERS';
 
         uint256[] memory _requiredRecords = new uint256[](1);
         address[] memory _signatories = new address[](1);
         address[] memory _conditionContexts = new address[](2);
         string[] memory _conditionStrings = new string[](2);
 
-        string memory _deadline = string(abi.encodePacked('blockTimestamp < ', deadline));
-        _conditionStrings[0] = 'balanceOf GOV_TOKEN_ADDR msgSender > 0';
+        string memory _deadline = string(
+            abi.encodePacked('blockTimestamp < ', StringUtils.toString(deadline))
+        );
+        // TODO: make it - balanceOf GOV_TOKEN_ADDR msgSender
+        _conditionStrings[0] = 'GOV_BALANCE > 0';
         _conditionStrings[1] = _deadline; // blockTimestamp < deadline value
         _signatories[0] = context.anyone();
         _conditionContexts[0] = address(conditionContext);
@@ -555,14 +551,16 @@ contract Governance {
 
     function _setNoRecord() internal {
         uint256 recordId = 2;
-        string memory record = 'voteNo';
+        string memory record = 'insert VOTE_NO into VOTERS';
         uint256[] memory _requiredRecords = new uint256[](1);
         address[] memory _signatories = new address[](1);
         address[] memory _conditionContexts = new address[](2);
         string[] memory _conditionStrings = new string[](2);
 
-        string memory _deadline = string(abi.encodePacked('blockTimestamp < ', deadline));
-        _conditionStrings[0] = 'balanceOf GOV_TOKEN_ADDR msgSender > 0';
+        string memory _deadline = string(
+            abi.encodePacked('blockTimestamp < ', StringUtils.toString(deadline))
+        );
+        _conditionStrings[0] = 'GOV_BALANCE > 0';
         _conditionStrings[1] = _deadline; // blockTimestamp < deadline value
         _signatories[0] = context.anyone();
         _conditionContexts[0] = address(conditionContext);
@@ -583,18 +581,21 @@ contract Governance {
     function _setCheckVotingRecord() internal {
         uint256 recordId = 3;
         // TODO: ID? AGREEMENT_ADDRESS?
-        string memory record = 'areMoreThan50PercentVotedYes if ENABLE_RECORD '
-        'ENABLE_RECORD {enableRecord 0 at AGREEMENT_ADDRESS}';
+        string memory record = '(sumOf VOTERS.vote) setUint256 YES_CTR '
+        '(((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2) '
+        'if ENABLE_RECORD end '
+        'ENABLE_RECORD {enableRecord RECORD_ID at AGREEMENT_ADDR}';
         uint256[] memory _requiredRecords = new uint256[](1);
         address[] memory _signatories = new address[](1);
-        address[] memory _conditionContexts = new address[](2);
-        string[] memory _conditionStrings = new string[](2);
+        address[] memory _conditionContexts = new address[](1);
+        string[] memory _conditionStrings = new string[](1);
 
-        string memory _deadline = string(abi.encodePacked('blockTimestamp >= ', deadline));
+        string memory _deadline = string(
+            abi.encodePacked('blockTimestamp >= ', StringUtils.toString(deadline))
+        );
         _conditionStrings[0] = _deadline;
         _signatories[0] = context.anyone();
         _conditionContexts[0] = address(conditionContext);
-        _conditionContexts[1] = address(conditionContext);
         _requiredRecords[0] = 0; // required 0 recordId
         update(
             recordId,

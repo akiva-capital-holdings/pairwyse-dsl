@@ -10,7 +10,7 @@ import { ByteUtils } from './libs/ByteUtils.sol';
 import { Preprocessor } from './Preprocessor.sol';
 import { ErrorsParser } from './libs/Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Parser of DSL code
@@ -47,6 +47,10 @@ contract Parser is IParser {
         string memory _codeRaw
     ) external {
         string[] memory _code = IPreprocessor(_preprAddr).transform(_ctxAddr, _codeRaw);
+        // for(uint256 i = 0; i < _code.length; i++){
+        //     console.log('---->', _code[i]);
+        // }
+
         _parseCode(_ctxAddr, _code);
     }
 
@@ -471,13 +475,12 @@ contract Parser is IParser {
 
     /**
      * @dev Parses the `record id` and the `agreement address` parameters
-     * Ex. ['enable', '56', 'for', '9A676e781A523b5d0C0e43731313A708CB607508']
+     * Ex. ['enableRecord', 'RECORD_ID', 'at', 'AGREEMENT_ADDRESS']
      */
     function asmEnableRecord() public {
-        asmUint256();
-        _nextCmd(); // skip `for` keyword
-        bytes memory _slicedAddress = bytes(_nextCmd()).slice(2, 42);
-        program = bytes.concat(program, bytes(_slicedAddress.fromHexBytes()));
+        _parseVariable();
+        _nextCmd(); // skip `at` keyword
+        _parseVariable();
     }
 
     /**
@@ -523,7 +526,7 @@ contract Parser is IParser {
         // TODO: simplify
         bytes4 _selector = bytes4(keccak256(abi.encodePacked(cmd)));
         bool isStructVar = IContext(_ctxAddr).isStructVar(cmd);
-
+        // console.log(cmd);
         if (_isLabel(cmd)) {
             uint256 _branchLocation = program.length;
             bytes memory programBefore = program.slice(0, labelPos[cmd]);

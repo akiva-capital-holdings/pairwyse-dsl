@@ -8,7 +8,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
@@ -331,7 +331,7 @@ library OtherOpcodes {
         returns (bytes32 result)
     {
         bytes32 varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
-
+        console.logBytes32(varNameB32);
         // Load local variable by it's hex
         (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(funcSignature, varNameB32)
@@ -407,19 +407,17 @@ library OtherOpcodes {
     }
 
     function opEnableRecord(address _ctx) public {
-        bytes memory recordId = OpcodeHelpers.nextBytes(_ctx, 32);
-        bytes memory contractAddrBytes = OpcodeHelpers.nextBytes(_ctx, 20);
-        bytes32 contractAddrB32 = bytes32(contractAddrBytes);
-
-        /**
-         * Shift bytes to the left so that
-         * later conversion from bytes32 to address
-         */
-        contractAddrB32 >>= 96;
-        address contractAddr = address(uint160(uint256(contractAddrB32)));
-
+        bytes32 result = opLoadLocalGet(_ctx, 'getStorageUint256(bytes32)');
+        console.log('-!-');
+        console.logBytes32(result);
+        uint256 recordId = uint256(result);
+        bytes32 addr = opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)');
+        console.logBytes32(addr);
+        console.log('-!!-');
+        address payable contractAddr = payable(address(uint160(uint256(addr))));
+        // console.log(contractAddr);
         (bool success, ) = contractAddr.call(
-            abi.encodeWithSignature('activateRecord(uint256)', uint256(bytes32(recordId)))
+            abi.encodeWithSignature('activateRecord(uint256)', recordId)
         );
 
         require(success, ErrorsGeneralOpcodes.OP3);

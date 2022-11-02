@@ -14,7 +14,7 @@ import {
 import { deployBaseMock } from '../../../scripts/utils/deploy.utils.mock';
 import { getChainId } from '../../../utils/utils';
 import { ONE_DAY, ONE_MONTH } from '../../utils/constants';
-
+import { parseConditionsList } from '../../../scripts/utils/update.record.mock';
 const { ethers, network } = hre;
 
 describe('End-to-end', () => {
@@ -1797,6 +1797,10 @@ describe('End-to-end', () => {
     let agreementAddr: string;
     let preprocessorAddr: string;
     let tokenAddr: string;
+    let setRecord: string;
+    let yesRecord: string;
+    let noRecord: string;
+    let checkRecord: string;
     const oneEthBN = parseEther('1');
     const tenTokens = parseEther('10');
 
@@ -1834,6 +1838,7 @@ describe('End-to-end', () => {
           Executor: executorLibAddr,
         },
       });
+      const parser = await ethers.getContractAt('ParserMock', parserAddr);
       const governance = await MockContract.deploy(
         parserAddr,
         alice.address,
@@ -1841,6 +1846,9 @@ describe('End-to-end', () => {
         NEXT_MONTH
       );
       await governance.deployed();
+      const recordId32data = hex4Bytes('RECORD_ID');
+      const agr32data = hex4Bytes('AGREEMENT_ADDR');
+      const govToken32data = hex4Bytes('GOV_BALANCE');
 
       // 2. Allice creates a new record in Agreement. This record is disabled
       // Create Agreement contract
@@ -1852,10 +1860,16 @@ describe('End-to-end', () => {
       const conditions = ['bool true'];
       const transaction = 'uint256 5';
 
+      await governance.setStorageUint256(recordId32data, txId);
+      await governance.setStorageAddress(agr32data, agreementAddr);
+      await governance.setStorageUint256(govToken32data, 55);
+
       const recordContext = await (await ethers.getContractFactory('Context')).deploy();
       const conditionContext = await (await ethers.getContractFactory('Context')).deploy();
       await recordContext.setAppAddress(agreementAddr);
       await conditionContext.setAppAddress(agreementAddr);
+
+      // check that added record can not be executable for now
       await agreement.parse(conditions[0], conditionContext.address, preprocessorAddr);
       await agreement.parse(transaction, recordContext.address, preprocessorAddr);
       await agreement.connect(alice).update(
@@ -1874,8 +1888,39 @@ describe('End-to-end', () => {
 
       // 3. Governance voting occurs. If consensus is met -> enable the target record.
       // TODO: what if the record was already executed? exeption for pre-defined 1 and 2 records
-      // await governance.connect(alice).execute(0); // sets function
-      // await governance.connect(david).execute(1); // votes YES
+      await parseConditionsList([0, 1, 2, 3], parser, governance, preprAddr);
+      await governance.parse(
+        (
+          await governance.records(0)
+        ).transactionString,
+        recordContext.address,
+        preprAddr
+      );
+
+      // await governance.parse(
+      //   (
+      //     await governance.records(2)
+      //   ).transactionString,
+      //   recordContext.address,
+      //   preprAddr
+      // );
+      // await governance.parse(
+      //   (
+      //     await governance.records(3)
+      //   ).transactionString,
+      //   recordContext.address,
+      //   preprAddr
+      // );
+
+      await governance.connect(alice).execute(0); // sets function
+      await governance.parse(
+        (
+          await governance.records(1)
+        ).transactionString,
+        recordContext.address,
+        preprAddr
+      );
+      await governance.connect(alice).execute(1); // votes YES
       // await governance.connect(bob).execute(2); // votes NO
       // await governance.connect(alice).execute(3); // Sum results
 
