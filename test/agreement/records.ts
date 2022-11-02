@@ -179,7 +179,7 @@ describe('Simple Records in Agreement', () => {
       // Check that record deactivated yet
       expect(record.isActive).to.be.equal(false);
 
-      // Check that record does not exist when unArchiveRecord
+      // Check that record does not exist when unarchiveRecord
       // AGR9
       await expect(activateRecord(app, multisig, 999)).to.be.revertedWith('Delegate call failure');
 
@@ -198,7 +198,7 @@ describe('Simple Records in Agreement', () => {
         'Delegate call failure'
       ); // AGR10
 
-      // Check that record does not exist when unArchiveRecord
+      // Check that record does not exist when unarchiveRecord
       // AGR9
       await expect(deactivateRecord(app, multisig, 999)).to.be.revertedWith(
         'Delegate call failure'
@@ -239,7 +239,7 @@ describe('Simple Records in Agreement', () => {
         'Delegate call failure'
       ); // AGR10
 
-      // Check that returns error if executed unArchiveRecord for not-existing record
+      // Check that returns error if executed unarchiveRecord for not-existing record
       // AGR9
       await expect(unarchiveRecord(app, multisig, 999)).to.be.revertedWith('Delegate call failure');
 
