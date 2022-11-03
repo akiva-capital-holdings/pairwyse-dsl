@@ -843,10 +843,6 @@ describe('Other opcodes', () => {
       const recordId32data = hex4Bytes('RECORD_ID');
       const agr32data = hex4Bytes('AGREEMENT_ADDR');
       const agreementAddr = await deployAgreementMock(hre, app.address);
-      // console.log('---->', agreementAddr);
-      // console.log('---->', recordId32data);
-      // console.log('---->', agr32data);
-      // const agreementAddrExecutable = await deployAgreementMock(hre, alice.address);
       const agreement = await ethers.getContractAt('AgreementMock', agreementAddr);
       const _ctxAgreement = await (await ethers.getContractFactory('Context')).deploy();
       const _ctxCondition = await (await ethers.getContractFactory('Context')).deploy();

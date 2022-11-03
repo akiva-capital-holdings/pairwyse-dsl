@@ -1819,11 +1819,17 @@ describe('End-to-end', () => {
       await token.deployed();
       tokenAddr = token.address;
 
-      setRecord = `declareArr struct VOTERS struct VOTE_YES { vote: YES } struct VOTE_NO { vote: NO }`;
+      setRecord =
+        'declareArr struct VOTERS ' +
+        'struct VOTE_YES { vote: YES } ' +
+        'struct VOTE_NO { vote: NO }';
       yesRecord = 'insert VOTE_YES into VOTERS';
       noRecord = 'insert VOTE_NO into VOTERS';
       checkRecord =
-        '(sumOf VOTERS.vote) setUint256 YES_CTR (((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2) if ENABLE_RECORD end ENABLE_RECORD { enableRecord RECORD_ID at AGREEMENT_ADDR }';
+        '(sumOf VOTERS.vote) setUint256 YES_CTR ' +
+        '(((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2) ' +
+        'if ENABLE_RECORD end ' +
+        'ENABLE_RECORD { enableRecord RECORD_ID at AGREEMENT_ADDR }';
     });
 
     it.only('Voting process. Record in agreement is activated', async () => {
@@ -1853,7 +1859,7 @@ describe('End-to-end', () => {
       );
       await governance.deployed();
 
-      // 2. Allice creates a new record in Agreement. This record is disabled
+      // 2. Alice creates a new record in Agreement. This record is disabled
       // Create Agreement contract
       agreementAddr = await deployAgreement(hre, governance.address);
       agreement = await ethers.getContractAt('Agreement', agreementAddr);
@@ -1955,7 +1961,7 @@ describe('End-to-end', () => {
       await parseConditions(3, parser, governance, preprAddr);
       await governance.parse(recordGov.transactionString, recordGov.recordContext, preprAddr);
 
-      // Condition isn't satisfied
+      // Deadline condition isn't satisfied
       await expect(governance.connect(alice).execute(3)).to.be.revertedWith('AGR6');
 
       // Increase time that is more that deadline and execute the record
