@@ -540,9 +540,7 @@ contract Governance is LinkedList {
      */
     function _setBaseRecord() internal {
         uint256 recordId = 0;
-        string memory record = 'declareArr struct VOTERS '
-        'struct VOTE_YES { vote: YES } '
-        'struct VOTE_NO { vote: NO } '
+        string memory record = 'uint256[] VOTERS '
         'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
         string memory _condition = 'bool true';
         _setParameters(recordId, record, _condition, 0, contexts[0], contexts[1]);
@@ -556,7 +554,7 @@ contract Governance is LinkedList {
      */
     function _setYesRecord() internal {
         uint256 recordId = 1;
-        string memory record = 'insert VOTE_YES into VOTERS uint256 1';
+        string memory record = 'insert 1 into VOTERS uint256 1';
         // TODO: make it - balanceOf GOV_TOKEN_ADDR msgSender
         string memory _condition = string(
             abi.encodePacked(
@@ -576,7 +574,7 @@ contract Governance is LinkedList {
      */
     function _setNoRecord() internal {
         uint256 recordId = 2;
-        string memory record = 'insert VOTE_NO into VOTERS uint256 1';
+        string memory record = 'insert 0 into VOTERS uint256 1';
         string memory _condition = string(
             abi.encodePacked(
                 '(GOV_BALANCE > 0) and (blockTimestamp < ',
@@ -597,8 +595,7 @@ contract Governance is LinkedList {
      */
     function _setCheckVotingRecord() internal {
         uint256 recordId = 3;
-        string memory record = 'sumOf VOTERS.vote uint256 1';
-        // string memory record = '(sumOf VOTERS.vote) setUint256 YES_CTR'
+        string memory record = '(sumOf VOTERS) setUint256 YES_CTR';
         // 'YES_CTR uint256 1';
         // '(((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2) uint256 1';
         // 'if ENABLE_RECORD end '

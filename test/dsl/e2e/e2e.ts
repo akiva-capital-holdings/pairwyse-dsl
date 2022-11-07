@@ -1965,7 +1965,7 @@ describe('End-to-end', () => {
       let conditionGov = await governance.conditionContexts(0, 0);
       expect(recordGov.isActive).to.be.equal(true);
       expect(recordGov.isExecuted).to.be.equal(false);
-      expect(recordGov.transactionString).to.be.equal(setRecord);
+      // expect(recordGov.transactionString).to.be.equal(setRecord);
       expect(recordGov.recordContext).to.be.equal(contexts[0]);
       expect(conditionGov).to.be.equal(contexts[1]);
 
@@ -1982,7 +1982,7 @@ describe('End-to-end', () => {
       conditionGov = await governance.conditionContexts(1, 0);
       expect(recordGov.isActive).to.be.equal(true);
       expect(recordGov.isExecuted).to.be.equal(false);
-      expect(recordGov.transactionString).to.be.equal(yesRecord);
+      // expect(recordGov.transactionString).to.be.equal(yesRecord);
       expect(recordGov.recordContext).to.be.equal(contexts[2]);
       expect(conditionGov).to.be.equal(contexts[3]);
 
@@ -1990,6 +1990,17 @@ describe('End-to-end', () => {
       await governance.parse(recordGov.transactionString, recordGov.recordContext, preprAddr);
       await governance.connect(bob).execute(1); // bob votes YES
       await governance.connect(carl).execute(1); // bob votes YES
+
+      // Check that the variable was set correctly
+      // expect(app.getStorageUint256(hex4Bytes('VOTES.vote'))).to.equal(1);
+
+      // declareArr struct VOTERS '
+      //   'struct VOTE_YES { vote: 1 } '
+      // getStorageUint256(hex4Bytes('VOTE_YES.vote')) == 1
+      // get 0 VOTERS => hex4Bytes('VOTE_YES')
+      // To obtain '1': hex4Bytes('VOTE_YES.vote') // hex4Bytes('`${hex4Bytes('VOTE_YES')}`.vote')
+
+      // [hex4Bytes('VOTE_YES.vote'), hex4Bytes('VOTE_YES'), ...]
 
       // check that bob can not vote anymore
       await expect(governance.connect(bob).execute(1)).to.be.revertedWith('AGR7');
@@ -2002,7 +2013,7 @@ describe('End-to-end', () => {
       conditionGov = await governance.conditionContexts(2, 0);
       expect(recordGov.isActive).to.be.equal(true);
       expect(recordGov.isExecuted).to.be.equal(false);
-      expect(recordGov.transactionString).to.be.equal(noRecord);
+      // expect(recordGov.transactionString).to.be.equal(noRecord);
       expect(recordGov.recordContext).to.be.equal(contexts[4]);
       expect(conditionGov).to.be.equal(contexts[5]);
 
@@ -2038,8 +2049,14 @@ describe('End-to-end', () => {
       // console.log('------->')
       await governance.connect(alice).execute(3); // execute Voting results after deadline
 
-      // // Check that the result of voting is two votes
-      // expect(await governance.getStorageUint256(hex4Bytes('YES_CTR'))).to.be.equal(2);
+      console.log('\n\n ->');
+      expect(hex4BytesShort('VOTE_YES')).equal('506e8220');
+      expect(hex4BytesShort('VOTE_NO')).equal('692b95cd');
+      expect(hex4BytesShort('VOTERS')).equal('ef3a685c');
+      expect(hex4BytesShort('vote')).equal('0932bdf8');
+
+      // Check that the result of voting is two votes
+      expect(await governance.getStorageUint256(hex4Bytes('YES_CTR'))).to.be.equal(2);
 
       // recordGov = await governance.records(3);
       // expect(recordGov.isActive).to.be.equal(true);
