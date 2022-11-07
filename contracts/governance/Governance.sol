@@ -14,7 +14,7 @@ import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { LinkedList } from '../dsl/helpers/LinkedList.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 // TODO: automatically make sure that no contract exceeds the maximum contract size
 
@@ -28,10 +28,12 @@ contract Governance is LinkedList {
 
     IParser public parser; // TODO: We can get rid of this dependency
     IContext public context;
-    IContext public conditionContext;
     uint256 public deadline;
     address public ownerAddr;
     address public preProc;
+
+    uint256[] public recordIds; // array of recordId
+    address[] public contexts; // array of contexts
 
     event NewRecord(
         uint256 recordId,
@@ -76,7 +78,6 @@ contract Governance is LinkedList {
     mapping(uint256 => uint256[]) public requiredRecords; // recordId => requiredRecords[]
     // recordId => (signatory => was tx executed by signatory)
     mapping(uint256 => mapping(address => bool)) public isExecutedBySignatory;
-    uint256[] public recordIds; // array of recordId
 
     /**
      * Sets parser address, creates new Context instance, and setups Context
@@ -85,17 +86,17 @@ contract Governance is LinkedList {
         address _parser,
         address _ownerAddr,
         address _token,
-        uint256 _deadline
+        uint256 _deadline,
+        address[] memory _contexts
     ) {
         require(_deadline > block.timestamp, ErrorsAgreement.AGR15);
         require(_token != address(0), ErrorsAgreement.AGR12);
         ownerAddr = _ownerAddr;
         context = new Context(); // ~7.000.000 gas
-        conditionContext = new Context(); // ~7.000.000 gas
         context.setAppAddress(address(this));
-        conditionContext.setAppAddress(address(this));
         deadline = _deadline;
         parser = IParser(_parser);
+        contexts = _contexts;
         // all records use the same context
         _setBaseRecords();
     }
@@ -221,15 +222,15 @@ contract Governance is LinkedList {
         records[_recordId].isArchived = true;
     }
 
-    /**
-     * @dev unarchive any of the existing records by recordId
-     * @param _recordId Record ID
-     */
-    function unarchiveRecord(uint256 _recordId) external onlyOwner isUpgradableRecord(_recordId) {
-        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
-        require(records[_recordId].isArchived != false, ErrorsAgreement.AGR10);
-        records[_recordId].isArchived = false;
-    }
+    // /**
+    //  * @dev unarchive any of the existing records by recordId
+    //  * @param _recordId Record ID
+    //  */
+    // function unarchiveRecord(uint256 _recordId) external onlyOwner isUpgradableRecord(_recordId) {
+    //     require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+    //     require(records[_recordId].isArchived != false, ErrorsAgreement.AGR10);
+    //     records[_recordId].isArchived = false;
+    // }
 
     /**
      * @dev activates the existing records by recordId, only awailable for ownerAddr
@@ -442,7 +443,9 @@ contract Governance is LinkedList {
         require(!isExecutedBySignatory[_recordId][_signatory], ErrorsAgreement.AGR7);
 
         IContext(record.recordContext).setMsgValue(_msgValue);
+        console.logBytes(IContext(record.recordContext).program());
         Executor.execute(address(record.recordContext));
+
         isExecutedBySignatory[_recordId][_signatory] = true;
 
         // Check if record was executed by all signatories
@@ -457,6 +460,7 @@ contract Governance is LinkedList {
         }
 
         return IContext(record.recordContext).stack().seeLast() == 0 ? false : true;
+        // return true;
     }
 
     /**
@@ -498,7 +502,9 @@ contract Governance is LinkedList {
         uint256 _recordId,
         string memory _record,
         string memory _condition,
-        uint256 _requiredRecordsLength
+        uint256 _requiredRecordsLength,
+        address _context,
+        address _contextCondition
     ) internal {
         address[] memory _signatories = new address[](1);
         address[] memory _conditionContexts = new address[](1);
@@ -514,14 +520,14 @@ contract Governance is LinkedList {
             _signatories[0] = context.anyone();
         }
         _conditionStrings[0] = _condition;
-        _conditionContexts[0] = address(conditionContext);
+        _conditionContexts[0] = _contextCondition;
         update(
             _recordId,
             _requiredRecords,
             _signatories,
             _record,
             _conditionStrings,
-            address(context),
+            _context,
             _conditionContexts
         );
         _setBaseRecordStatus(_recordId);
@@ -536,9 +542,10 @@ contract Governance is LinkedList {
         uint256 recordId = 0;
         string memory record = 'declareArr struct VOTERS '
         'struct VOTE_YES { vote: YES } '
-        'struct VOTE_NO { vote: NO }';
+        'struct VOTE_NO { vote: NO } '
+        'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
         string memory _condition = 'bool true';
-        _setParameters(recordId, record, _condition, 0);
+        _setParameters(recordId, record, _condition, 0, contexts[0], contexts[1]);
     }
 
     /**
@@ -549,7 +556,7 @@ contract Governance is LinkedList {
      */
     function _setYesRecord() internal {
         uint256 recordId = 1;
-        string memory record = 'insert VOTE_YES into VOTERS';
+        string memory record = 'insert VOTE_YES into VOTERS uint256 1';
         // TODO: make it - balanceOf GOV_TOKEN_ADDR msgSender
         string memory _condition = string(
             abi.encodePacked(
@@ -558,7 +565,7 @@ contract Governance is LinkedList {
                 ' )'
             )
         );
-        _setParameters(recordId, record, _condition, 1);
+        _setParameters(recordId, record, _condition, 1, contexts[2], contexts[3]);
     }
 
     /**
@@ -569,7 +576,7 @@ contract Governance is LinkedList {
      */
     function _setNoRecord() internal {
         uint256 recordId = 2;
-        string memory record = 'insert VOTE_NO into VOTERS';
+        string memory record = 'insert VOTE_NO into VOTERS uint256 1';
         string memory _condition = string(
             abi.encodePacked(
                 '(GOV_BALANCE > 0) and (blockTimestamp < ',
@@ -577,7 +584,7 @@ contract Governance is LinkedList {
                 ' )'
             )
         );
-        _setParameters(recordId, record, _condition, 1);
+        _setParameters(recordId, record, _condition, 1, contexts[4], contexts[5]);
     }
 
     /**
@@ -590,15 +597,17 @@ contract Governance is LinkedList {
      */
     function _setCheckVotingRecord() internal {
         uint256 recordId = 3;
-        string memory record = '(sumOf VOTERS.vote) setUint256 YES_CTR '
-        '(((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2) '
-        'if ENABLE_RECORD end '
-        'ENABLE_RECORD { enableRecord RECORD_ID at AGREEMENT_ADDR }';
+        string memory record = 'sumOf VOTERS.vote uint256 1';
+        // string memory record = '(sumOf VOTERS.vote) setUint256 YES_CTR'
+        // 'YES_CTR uint256 1';
+        // '(((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2) uint256 1';
+        // 'if ENABLE_RECORD end '
+        // 'ENABLE_RECORD { enableRecord RECORD_ID at AGREEMENT_ADDR } uint256 1';
 
         string memory _condition = string(
             abi.encodePacked('blockTimestamp >= ', StringUtils.toString(deadline))
         );
-        _setParameters(recordId, record, _condition, 1);
+        _setParameters(recordId, record, _condition, 1, contexts[6], contexts[7]);
     }
 
     /**

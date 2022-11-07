@@ -1964,7 +1964,7 @@ describe('Preprocessor', () => {
 
         ENABLE_RECORD {
           enableRecord RECORD_ID at AGREEMENT_ADDR
-        }`;
+        } uint256 1`;
 
       const res = await app.callStatic.transform(ctxAddr, input);
       expect(res).to.eql([
@@ -1995,6 +1995,8 @@ describe('Preprocessor', () => {
         'at',
         'AGREEMENT_ADDR',
         'end',
+        'uint256',
+        '1',
       ]);
     });
   });
