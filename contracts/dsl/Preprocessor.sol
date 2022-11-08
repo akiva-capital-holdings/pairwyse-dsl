@@ -66,7 +66,7 @@ contract Preprocessor {
         _program = _cleanString(_program);
         string[] memory _code = _split(_program, '\n ,:(){}', '(){}');
         _code = _removeSyntacticSugar(_code);
-        _code = _simplifyCode(_code);
+        _code = _simplifyCode(_code, _ctxAddr);
         _code = _infixToPostfix(_ctxAddr, _code, tmpStrStack); // TODO: make `view`
         return _code;
     }
@@ -148,7 +148,8 @@ contract Preprocessor {
      * @param _program is a user's DSL code string
      * @return the list of commands that storing in `result`
      */
-    // _separatorsToKeep - we're using symbols from this string as separators but not removing them from the resulting array
+    // _separatorsToKeep - we're using symbols from this string as separators but not removing
+    // them from the resulting array
     function _split(
         string memory _program,
         string memory _separators,
@@ -213,26 +214,46 @@ contract Preprocessor {
         return _result;
     }
 
-    function _simplifyCode(string[] memory _code) internal view returns (string[] memory) {
+    function _simplifyCode(string[] memory _code, address _ctxAddr)
+        internal
+        view
+        returns (string[] memory)
+    {
         console.log('\n    -> Simplify Code');
         string[] memory _result = new string[](50);
         uint256 _resultCtr;
         string memory _chunk;
         string memory _prevChunk;
+        // uint256 _skipCtr; // counter to skip preprocessing of command params; just directly add them
+        // to the output
         uint256 i;
 
         while (i < _nonEmptyArrLen(_code)) {
             _prevChunk = i == 0 ? '' : _code[i - 1];
             _chunk = _code[i++];
 
-            if (_chunk.equal('insert')) {
+            console.log('chunk =', _chunk);
+
+            if (IContext(_ctxAddr).isCommand(_chunk)) {
+                (_result, _resultCtr, i) = _processCommand(
+                    _result,
+                    _code,
+                    _resultCtr,
+                    _ctxAddr,
+                    _chunk,
+                    i
+                );
+            } else if (_isCurlyBracket(_chunk)) {
+                console.log('curly bracket');
+                (_result, _resultCtr) = _processCurlyBracket(_result, _resultCtr, _chunk);
+            } else if (_isAlias(_ctxAddr, _chunk)) {
+                console.log('alias');
+                (_result, _resultCtr) = _processAlias(_result, _resultCtr, _ctxAddr, _chunk);
+            } else if (_chunk.equal('insert')) {
                 (_result, _resultCtr, i) = _processArrayInsert(_result, _resultCtr, _code, i);
-            } else if (_chunk.equal('sumOf')) {
-                (_result, _resultCtr, i) = _processSumOfCmd(_result, _resultCtr, _code, i);
-            } else if (_chunk.equal('struct')) {
-                (_result, _resultCtr, i) = _processStruct(_result, _resultCtr, _code, i);
             } else {
-                // (_result, _resultCtr) = _checkIsNumberOrAddress(_result, _resultCtr, _chunk);
+                console.log('other');
+                (_result, _resultCtr) = _checkIsNumberOrAddress(_result, _resultCtr, _chunk);
                 _result[_resultCtr++] = _chunk;
             }
         }
@@ -247,48 +268,17 @@ contract Preprocessor {
         console.log('\n    ->infix to postfix');
         string[] memory _result = new string[](50);
         uint256 _resultCtr;
-        string memory chunk;
-        string memory _prevChunk;
+        string memory _chunk;
         uint256 i;
-        uint256 _skipCtr; // counter to skip preprocessing of command params; just directly add them
-        // to the output
 
         // Cleanup
         _stack.clear();
 
-        // this is to remove empty strings in _code array
-        // console.log('_code.length =', _code.length);
         while (i < _nonEmptyArrLen(_code)) {
-            // // skip empty strings in code
-            // if (_code[i].equal('')) {
-            //     i++;
-            //     continue;
-            // }
+            _chunk = _code[i++];
+            console.log('chunk =', _chunk);
 
-            _prevChunk = i == 0 ? '' : _code[i - 1];
-            chunk = _code[i++];
-
-            console.log('chunk =', chunk);
-            // console.log('is alias?', _isAlias(_ctxAddr, chunk));
-            // console.log('resultCtr =', _resultCtr);
-
-            if (_skipCtr > 0) {
-                _result[_resultCtr++] = chunk;
-                console.log('Skipping chunk:', chunk);
-                _skipCtr--;
-                continue;
-            }
-
-            if (IContext(_ctxAddr).isCommand(chunk)) {
-                console.log('command');
-                (_result, _resultCtr, _skipCtr) = _processCommand(
-                    _result,
-                    _resultCtr,
-                    _ctxAddr,
-                    chunk,
-                    _skipCtr
-                );
-            } else if (_isOperator(_ctxAddr, chunk)) {
+            if (_isOperator(_ctxAddr, _chunk)) {
                 console.log('operator');
                 // operator
                 (_result, _resultCtr) = _processOperator(
@@ -296,25 +286,13 @@ contract Preprocessor {
                     _result,
                     _resultCtr,
                     _ctxAddr,
-                    chunk
+                    _chunk
                 );
-            } else if (_isParenthesis(chunk)) {
+            } else if (_isParenthesis(_chunk)) {
                 console.log('parenthesis');
-                (_result, _resultCtr) = _processParenthesis(_stack, _result, _resultCtr, chunk);
-            } else if (_isCurlyBracket(chunk)) {
-                console.log('curly bracket');
-                (_result, _resultCtr) = _processCurlyBracket(_result, _resultCtr, chunk);
-            } else if (_isAlias(_ctxAddr, chunk)) {
-                console.log('alias');
-                (_result, _resultCtr) = _processAlias(_result, _resultCtr, _ctxAddr, chunk);
-            }
-            /* else if (_isArrayDeclaration(chunk)) {
-                ()
-            } */
-            else {
-                console.log('other');
-                (_result, _resultCtr) = _checkIsNumberOrAddress(_result, _resultCtr, chunk);
-                _result[_resultCtr++] = chunk;
+                (_result, _resultCtr) = _processParenthesis(_stack, _result, _resultCtr, _chunk);
+            } else {
+                _result[_resultCtr++] = _chunk;
             }
         }
 
@@ -527,10 +505,12 @@ contract Preprocessor {
 
     function _processCommand(
         string[] memory _result,
+        string[] memory _code,
         uint256 _resultCtr,
         address _ctxAddr,
         string memory _chunk,
-        uint256 _skipCtr
+        // uint256 _skipCtr,
+        uint256 i // TODO: reduce the number of input & output params
     )
         internal
         view
@@ -540,14 +520,27 @@ contract Preprocessor {
             uint256
         )
     {
-        console.log('command');
+        console.log('process command');
 
-        _skipCtr = IContext(_ctxAddr).numOfArgsByOpcode(_chunk);
-        console.log(_skipCtr);
+        if (_chunk.equal('struct')) {
+            (_result, _resultCtr, i) = _processStruct(_result, _resultCtr, _code, i);
+        } else if (_chunk.equal('sumOf')) {
+            (_result, _resultCtr, i) = _processSumOfCmd(_result, _resultCtr, _code, i);
+        } else {
+            uint256 _skipCtr = IContext(_ctxAddr).numOfArgsByOpcode(_chunk) + 1;
+            console.log(_skipCtr);
 
-        _result[_resultCtr++] = _chunk; // add command name
+            // _result[_resultCtr++] = _chunk; // add command name
+            i--; // this is to include the command name in the loop below
+            // add command arguments
+            while (_skipCtr > 0) {
+                console.log('cmd argument =', _code[i + 1]);
+                _result[_resultCtr++] = _code[i++];
+                _skipCtr--;
+            }
+        }
 
-        return (_result, _resultCtr, _skipCtr);
+        return (_result, _resultCtr, i);
     }
 
     function _isParenthesis(string memory _chunk) internal pure returns (bool) {
