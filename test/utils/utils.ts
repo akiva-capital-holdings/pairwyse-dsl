@@ -120,9 +120,7 @@ export async function checkStackTail(
 /**
  * Creates different votes for governance
  * @param governance: Governance
- * @param account: SignerWithAddress
- * @param amount: amount of executed transactions for voting for the certain address
- * @param mark: type of voted transactions
+ * @param accounts: SignerWithAddress[]
  */
 export const createBulkVotes = async (governance: Governance, accounts: SignerWithAddress[]) => {
   await governance.connect(accounts[0]).execute(1);

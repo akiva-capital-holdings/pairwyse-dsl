@@ -222,15 +222,15 @@ contract Governance is LinkedList {
         records[_recordId].isArchived = true;
     }
 
-    // /**
-    //  * @dev unarchive any of the existing records by recordId
-    //  * @param _recordId Record ID
-    //  */
-    // function unarchiveRecord(uint256 _recordId) external onlyOwner isUpgradableRecord(_recordId) {
-    //     require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
-    //     require(records[_recordId].isArchived != false, ErrorsAgreement.AGR10);
-    //     records[_recordId].isArchived = false;
-    // }
+    /**
+     * @dev unarchive any of the existing records by recordId
+     * @param _recordId Record ID
+     */
+    function unarchiveRecord(uint256 _recordId) external onlyOwner isUpgradableRecord(_recordId) {
+        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+        require(records[_recordId].isArchived != false, ErrorsAgreement.AGR10);
+        records[_recordId].isArchived = false;
+    }
 
     /**
      * @dev activates the existing records by recordId, only awailable for ownerAddr
