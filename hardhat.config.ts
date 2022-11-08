@@ -10,6 +10,7 @@ import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-etherscan';
 import 'hardhat-gas-reporter';
 import 'solidity-coverage';
+import 'solidity-docgen';
 import 'hardhat-contract-sizer';
 import * as tdly from '@tenderly/hardhat-tenderly';
 
@@ -45,6 +46,7 @@ const config: HardhatUserConfig = {
       },
     },
   },
+  docgen: {},
   // Note: make `tenderly` to verify contracts on Tenderly during running deployment scripts
   defaultNetwork: 'hardhat',
   networks: {

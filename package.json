@@ -19,7 +19,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "lint-staged docgen"
     }
   },
   "lint-staged": {
@@ -34,9 +34,13 @@
       "git add"
     ]
   },
+  "docgen":[
+    "hardhat docgen"
+  ],
   "dependencies": {
     "hardhat": "^2.12.0",
-    "hardhat-contract-sizer": "^2.6.1"
+    "hardhat-contract-sizer": "^2.6.1",
+    "solidity-docgen": "^0.6.0-beta.29"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.0",
