@@ -121,10 +121,12 @@ library OtherOpcodes {
     function opSumThroughStructs(address _ctx) public {
         bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+
         _checkArrType(_ctx, _arrNameB32, 'struct');
         bytes32 _length = _getArrLength(_ctx, _arrNameB32);
         // sum items and store into the stack
         uint256 total = _sumOfStructVars(_ctx, _arrNameB32, bytes4(_varNameB32), _length);
+
         OpcodeHelpers.putToStack(_ctx, total);
     }
 
@@ -331,7 +333,6 @@ library OtherOpcodes {
         returns (bytes32 result)
     {
         bytes32 varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
-
         // Load local variable by it's hex
         (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(funcSignature, varNameB32)
@@ -407,19 +408,14 @@ library OtherOpcodes {
     }
 
     function opEnableRecord(address _ctx) public {
-        bytes memory recordId = OpcodeHelpers.nextBytes(_ctx, 32);
-        bytes memory contractAddrBytes = OpcodeHelpers.nextBytes(_ctx, 20);
-        bytes32 contractAddrB32 = bytes32(contractAddrBytes);
+        bytes32 result = opLoadLocalGet(_ctx, 'getStorageUint256(bytes32)');
 
-        /**
-         * Shift bytes to the left so that
-         * later conversion from bytes32 to address
-         */
-        contractAddrB32 >>= 96;
-        address contractAddr = address(uint160(uint256(contractAddrB32)));
+        uint256 recordId = uint256(result);
+        bytes32 addr = opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)');
 
+        address payable contractAddr = payable(address(uint160(uint256(addr))));
         (bool success, ) = contractAddr.call(
-            abi.encodeWithSignature('activateRecord(uint256)', uint256(bytes32(recordId)))
+            abi.encodeWithSignature('activateRecord(uint256)', recordId)
         );
 
         require(success, ErrorsGeneralOpcodes.OP3);
@@ -448,7 +444,7 @@ library OtherOpcodes {
             // get struct variable value
             bytes4 _fullName = IContext(_ctx).structParams(bytes4(item), _varName);
             (success, item) = IContext(_ctx).appAddr().call(
-                abi.encodeWithSignature('getStorageUint256(bytes32)', _fullName)
+                abi.encodeWithSignature('getStorageUint256(bytes32)', bytes32(_fullName))
             );
             require(success, ErrorsGeneralOpcodes.OP5);
             total += uint256(bytes32(item));
@@ -509,6 +505,7 @@ library OtherOpcodes {
         (success, _type) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
+
         require(success, ErrorsGeneralOpcodes.OP1);
         require(
             bytes1(_type) == IContext(_ctx).branchCodes('declareArr', _typeName),

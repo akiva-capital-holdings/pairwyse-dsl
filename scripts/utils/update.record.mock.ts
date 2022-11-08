@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import * as hre from 'hardhat';
 
-import { AgreementMock, ContextMock } from '../../typechain-types';
+import { AgreementMock, ContextMock, GovernanceMock } from '../../typechain-types';
 import { ParserMock } from '../../typechain-types/dsl/mocks';
 import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
 import { Records } from '../../test/types';
@@ -70,7 +70,7 @@ export const setRecords = async (records: Records[], app: AgreementMock) => {
 export const parseConditions = async (
   recordId: number,
   parser: ParserMock,
-  app: AgreementMock,
+  app: AgreementMock | GovernanceMock,
   preprAddr: string
 ) => {
   const condCtxLen = (await app.conditionContextsLen(recordId)).toNumber();
@@ -91,7 +91,7 @@ export const setApp = async (ctx: ContextMock, app: AgreementMock, sender: strin
 export const parseConditionsList = async (
   recordIds: number[],
   parser: ParserMock,
-  app: AgreementMock,
+  app: AgreementMock | GovernanceMock,
   preprAddr: string
 ) => {
   for (let j = 0; j < recordIds.length; j++) {

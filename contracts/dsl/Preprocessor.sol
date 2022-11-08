@@ -267,6 +267,14 @@ contract Preprocessor is IPreprocessor {
                 continue;
             }
 
+            if (s.isStructStart && chunk.equal('YES')) {
+                result.push('1');
+                continue;
+            } else if (s.isStructStart && chunk.equal('NO')) {
+                result.push('0');
+                continue;
+            }
+
             // ---> starts sumOf block for array of structures
             if (chunk.equal('sumOf')) {
                 checkStructName = true;

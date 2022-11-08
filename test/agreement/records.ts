@@ -259,7 +259,9 @@ describe('Simple Records in Agreement', () => {
       const aggr2Addr = await deployAgreementMock(hre, appAddr);
 
       const aggr2 = await ethers.getContractAt('AgreementMock', aggr2Addr);
-      const input = `enableRecord 23 at ${aggr2Addr}`;
+      await aggr1.setStorageUint256(hex4Bytes('RECORD_ID'), 23);
+      await aggr1.setStorageAddress(hex4Bytes('AGREEMENT_ADDR'), aggr2Addr);
+      const input = `enableRecord RECORD_ID at AGREEMENT_ADDR`;
 
       // uses for the Agreement2 (test will check that stack has
       // value `6` after execution)
@@ -354,12 +356,17 @@ describe('Simple Records in Agreement', () => {
 
       const aggr2 = await ethers.getContractAt('AgreementMock', aggr2Addr);
       const aggr3 = await ethers.getContractAt('AgreementMock', aggr3Addr);
-
+      await aggr1.setStorageUint256(hex4Bytes('RECORD_ID_1'), 34);
+      await aggr1.setStorageUint256(hex4Bytes('RECORD_ID_2'), 15);
+      await aggr1.setStorageUint256(hex4Bytes('RECORD_ID_3'), 41);
+      await aggr1.setStorageAddress(hex4Bytes('AGREEMENT_ADDR'), aggr2Addr);
+      await aggr1.setStorageAddress(hex4Bytes('AGREEMENT_ADDR_2'), aggr2Addr);
+      await aggr1.setStorageAddress(hex4Bytes('AGREEMENT_ADDR_3'), aggr3Addr);
       // uses for the Agreement
       const input = `
-        enableRecord 34 at ${aggr2Addr}
-        enableRecord 15 at ${aggr2Addr}
-        enableRecord 41 at ${aggr3Addr}
+        enableRecord RECORD_ID_1 at AGREEMENT_ADDR
+        enableRecord RECORD_ID_2 at AGREEMENT_ADDR_2
+        enableRecord RECORD_ID_3 at AGREEMENT_ADDR_3
       `;
       // uses for the Agreement2
       const input2 = 'uint256 6';

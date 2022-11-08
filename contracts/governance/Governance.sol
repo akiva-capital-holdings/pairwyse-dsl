@@ -12,6 +12,7 @@ import { LogicalOpcodes } from '../dsl/libs/opcodes/LogicalOpcodes.sol';
 import { OtherOpcodes } from '../dsl/libs/opcodes/OtherOpcodes.sol';
 import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
+import { LinkedList } from '../dsl/helpers/LinkedList.sol';
 
 // import 'hardhat/console.sol';
 
@@ -19,18 +20,20 @@ import { StringUtils } from '../dsl/libs/StringUtils.sol';
 
 /**
  * Financial Agreement written in DSL between two or more users
- *
  * Agreement contract that is used to implement any custom logic of a
  * financial agreement. Ex. lender-borrower agreement
  */
-contract Governance {
+contract Governance is LinkedList {
     using UnstructuredStorage for bytes32;
 
     IParser public parser; // TODO: We can get rid of this dependency
     IContext public context;
-    IContext public conditionContext;
     uint256 public deadline;
     address public ownerAddr;
+    address public preProc;
+
+    uint256[] public recordIds; // array of recordId
+    address[] public contexts; // array of contexts
 
     event NewRecord(
         uint256 recordId,
@@ -75,7 +78,6 @@ contract Governance {
     mapping(uint256 => uint256[]) public requiredRecords; // recordId => requiredRecords[]
     // recordId => (signatory => was tx executed by signatory)
     mapping(uint256 => mapping(address => bool)) public isExecutedBySignatory;
-    uint256[] public recordIds; // array of recordId
 
     /**
      * Sets parser address, creates new Context instance, and setups Context
@@ -84,18 +86,17 @@ contract Governance {
         address _parser,
         address _ownerAddr,
         address _token,
-        uint256 _deadline
+        uint256 _deadline,
+        address[] memory _contexts
     ) {
         require(_deadline > block.timestamp, ErrorsAgreement.AGR15);
         require(_token != address(0), ErrorsAgreement.AGR12);
         ownerAddr = _ownerAddr;
         context = new Context(); // ~7.000.000 gas
         context.setAppAddress(address(this));
-        conditionContext = new Context(); // ~7.000.000 gas
-        conditionContext.setAppAddress(address(this));
         deadline = _deadline;
         parser = IParser(_parser);
-
+        contexts = _contexts;
         // all records use the same context
         _setBaseRecords();
     }
@@ -443,6 +444,7 @@ contract Governance {
 
         IContext(record.recordContext).setMsgValue(_msgValue);
         Executor.execute(address(record.recordContext));
+
         isExecutedBySignatory[_recordId][_signatory] = true;
 
         // Check if record was executed by all signatories
@@ -479,41 +481,136 @@ contract Governance {
     }
 
     /**
-     * @dev Uploads pre-defined records to Governance contract directly.
-     * Uses a simple condition string `bool true`.
-     * Records that are uploaded using `_updateRecord` still have to be
-     * parsed using a preprocessor before execution. Such record becomes
-     * non-upgradable. Check `isUpgradableRecord` modifier
-     * @param _recordId Record ID
-     * @param _record the DSL code string of the record
+     * @dev Uploads 4 pre-defined records to Governance contract directly
      */
-    function _updateRecord(uint256 _recordId, string memory _record) internal {
-        address[] memory _signatories = new address[](1); // mocked
-        address[] memory _conditionContexts = new address[](1); // mocked
-        string[] memory _conditionStrings = new string[](1); // mocked
-        uint256[] memory _requiredRecords; // mocked
-        _conditionStrings[0] = 'bool true';
-        _signatories[0] = ownerAddr;
-        _conditionContexts[0] = address(conditionContext);
+    function _setBaseRecords() internal {
+        _setBaseRecord();
+        _setYesRecord();
+        _setNoRecord();
+        _setCheckVotingRecord();
+    }
+
+    /**
+     * @dev Uploads 4 pre-defined records to Governance contract directly.
+     * Uses a simple condition string `bool true`.
+     * Records still have to be parsed using a preprocessor before execution. Such record becomes
+     * non-upgradable. Check `isUpgradableRecord` modifier
+     */
+    function _setParameters(
+        uint256 _recordId,
+        string memory _record,
+        string memory _condition,
+        uint256 _requiredRecordsLength,
+        address _context,
+        address _contextCondition
+    ) internal {
+        address[] memory _signatories = new address[](1);
+        address[] memory _conditionContexts = new address[](1);
+        string[] memory _conditionStrings = new string[](1);
+        uint256[] memory _requiredRecords;
+        if (_requiredRecordsLength != 0) {
+            _requiredRecords = new uint256[](1);
+            _requiredRecords[0] = 0; // required alvays 0 record
+        }
+        if (_recordId == 0 || _recordId == 3) {
+            _signatories[0] = ownerAddr;
+        } else {
+            _signatories[0] = context.anyone();
+        }
+        _conditionStrings[0] = _condition;
+        _conditionContexts[0] = _contextCondition;
         update(
             _recordId,
             _requiredRecords,
             _signatories,
             _record,
             _conditionStrings,
-            address(context),
+            _context,
             _conditionContexts
         );
-        baseRecord[_recordId] = true;
+        _setBaseRecordStatus(_recordId);
     }
 
     /**
-     * @dev Sets 4 pre-defined records for Governance contract
+     * @dev Declares VOTERS list that will contain structures.
+     * In additional to that declares two structures that will be
+     * used for YES/NO voting
      */
-    function _setBaseRecords() internal {
-        _updateRecord(0, 'uint256 4');
-        _updateRecord(1, 'uint256 6');
-        _updateRecord(2, 'uint256 8');
-        _updateRecord(3, 'uint256 1');
+    function _setBaseRecord() internal {
+        uint256 recordId = 0;
+        string memory record = 'uint256[] VOTERS '
+        'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
+        string memory _condition = 'bool true';
+        _setParameters(recordId, record, _condition, 0, contexts[0], contexts[1]);
+    }
+
+    /**
+     * @dev Inserts VOTE_YES structure to the VOTERS list,
+     * this record can be executed only if deadline is not occurred
+     * TODO: and balance for
+     * msg.sender of Governance token will be more that 0
+     */
+    function _setYesRecord() internal {
+        uint256 recordId = 1;
+        string memory record = 'insert 1 into VOTERS '
+        'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
+        string memory _condition = string(
+            abi.encodePacked(
+                '(GOV_BALANCE > 0) and (blockTimestamp < ',
+                StringUtils.toString(deadline),
+                ' )'
+            )
+        );
+        _setParameters(recordId, record, _condition, 1, contexts[2], contexts[3]);
+    }
+
+    /**
+     * @dev Inserts VOTE_NO structure to the VOTERS list,
+     * this record can be executed only if deadline is not occurred
+     * TODO: and balance for
+     * msg.sender of Governance token will be more that 0
+     */
+    function _setNoRecord() internal {
+        uint256 recordId = 2;
+        string memory record = 'insert 0 into VOTERS '
+        'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
+        string memory _condition = string(
+            abi.encodePacked(
+                '(GOV_BALANCE > 0) and (blockTimestamp < ',
+                StringUtils.toString(deadline),
+                ' )'
+            )
+        );
+        _setParameters(recordId, record, _condition, 1, contexts[4], contexts[5]);
+    }
+
+    /**
+     * @dev Sums up the results of the voting, if results are more than 50%
+     * the record that is set as RECORD_ID for AGREEMENT_ADDR will be activated
+     * otherwise, the RECORD_ID record won't be activated.
+     * This record can be executed only if the deadline has already occurred
+     * TODO: change RECORD_ID and AGREEMENT_ADDR to the dynamical inside of
+     * the governance contract
+     */
+    function _setCheckVotingRecord() internal {
+        uint256 recordId = 3;
+        string memory record = '(sumOf VOTERS) setUint256 YES_CTR '
+        '(((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2)'
+        'if ENABLE_RECORD end '
+        'ENABLE_RECORD { enableRecord RECORD_ID at AGREEMENT_ADDR } '
+        'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
+
+        string memory _condition = string(
+            abi.encodePacked('blockTimestamp >= ', StringUtils.toString(deadline))
+        );
+        _setParameters(recordId, record, _condition, 1, contexts[6], contexts[7]);
+    }
+
+    /**
+     * @dev Sets the record as base record for the Governance contract
+     * @param _recordId is the record ID
+     */
+    function _setBaseRecordStatus(uint256 _recordId) internal {
+        baseRecord[_recordId] = true;
     }
 }

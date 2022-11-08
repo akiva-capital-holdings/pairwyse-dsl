@@ -6,7 +6,7 @@ import { BigNumber, Contract, ContractTransaction, utils } from 'ethers';
 import { formatEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 import { Suite, Test } from 'mocha';
-import { Stack__factory, Stack, Context, ERC20 } from '../../typechain-types';
+import { Stack__factory, Stack, Context, ERC20, Governance } from '../../typechain-types';
 import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
 import { DynamicTestData, OpConditionalTxFunc, TxObject } from '../types';
 import { ONE_DAY, ONE_MONTH, ONE_YEAR } from './constants';
@@ -116,6 +116,24 @@ export async function checkStackTail(
     );
   }
 }
+
+/**
+ * Creates different votes for governance
+ * @param governance: Governance
+ * @param accounts: SignerWithAddress[]
+ */
+export const createBulkVotes = async (governance: Governance, accounts: SignerWithAddress[]) => {
+  await governance.connect(accounts[0]).execute(1);
+  await governance.connect(accounts[1]).execute(1);
+  await governance.connect(accounts[2]).execute(2);
+  await governance.connect(accounts[3]).execute(1);
+  await governance.connect(accounts[4]).execute(1);
+  await governance.connect(accounts[5]).execute(2);
+  await governance.connect(accounts[6]).execute(1);
+  await governance.connect(accounts[7]).execute(1);
+  await governance.connect(accounts[8]).execute(2);
+  await governance.connect(accounts[9]).execute(2);
+};
 
 /**
  * Test stack with two values that combines into a single value after the
