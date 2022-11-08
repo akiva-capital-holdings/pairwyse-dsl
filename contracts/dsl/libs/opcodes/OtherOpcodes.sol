@@ -8,7 +8,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
@@ -111,8 +111,6 @@ library OtherOpcodes {
         bytes32 _length = _getArrLength(_ctx, _arrNameB32);
         // sum items and store into the stack
         uint256 total = _sumOfVars(_ctx, _arrNameB32, _length);
-        console.log('----->sumof 1<------');
-        console.log(total);
         OpcodeHelpers.putToStack(_ctx, total);
     }
 
@@ -123,16 +121,12 @@ library OtherOpcodes {
     function opSumThroughStructs(address _ctx) public {
         bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
-        console.log('----->sumof 2<------');
-        console.logBytes32(_arrNameB32);
-        console.logBytes32(_varNameB32);
+
         _checkArrType(_ctx, _arrNameB32, 'struct');
         bytes32 _length = _getArrLength(_ctx, _arrNameB32);
-        console.logBytes32(_length);
         // sum items and store into the stack
         uint256 total = _sumOfStructVars(_ctx, _arrNameB32, bytes4(_varNameB32), _length);
 
-        console.log(total);
         OpcodeHelpers.putToStack(_ctx, total);
     }
 
@@ -151,10 +145,7 @@ library OtherOpcodes {
         while (bytes4(_varNameB32) != 0xcb398fe1) {
             // get a variable value for current _varNameB32
             bytes32 _value = OpcodeHelpers.getNextBytes(_ctx, 32);
-            console.log('opStructWEIRD MARK');
-            console.log(uint256(_value));
-            console.logBytes32(_value);
-            console.log('\n');
+
             (bool success, ) = IContext(_ctx).appAddr().call(
                 abi.encodeWithSignature(
                     'setStorageUint256(bytes32,uint256)',
@@ -167,8 +158,6 @@ library OtherOpcodes {
             // get the next variable name in struct
             _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
         }
-
-        // OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     /**
@@ -185,10 +174,7 @@ library OtherOpcodes {
         );
         require(success, ErrorsGeneralOpcodes.OP1);
         require(bytes1(data) != bytes1(0x0), ErrorsGeneralOpcodes.OP4);
-        console.log('opPush MARK');
-        console.logBytes32(_varValue);
-        console.logBytes32(_arrNameB32);
-        console.log('\n');
+
         (success, ) = IContext(_ctx).appAddr().call(
             abi.encodeWithSignature(
                 'addItem(bytes32,bytes32)',
@@ -197,8 +183,6 @@ library OtherOpcodes {
             )
         );
         require(success, ErrorsGeneralOpcodes.OP1);
-
-        // OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     /**
@@ -464,10 +448,6 @@ library OtherOpcodes {
                 abi.encodeWithSignature('getStorageUint256(bytes32)', bytes32(_fullName))
             );
             require(success, ErrorsGeneralOpcodes.OP5);
-            console.log('WEIRD MARK');
-            console.log(uint256(bytes32(item)));
-            console.logBytes32(bytes32(item));
-            console.log('\n');
             total += uint256(bytes32(item));
         }
     }

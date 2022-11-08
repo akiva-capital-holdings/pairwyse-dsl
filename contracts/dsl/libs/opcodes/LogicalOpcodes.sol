@@ -8,7 +8,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 /**
  * @title Set operator opcodes
@@ -79,13 +79,9 @@ library LogicalOpcodes {
      * @param _ctx Context contract address
      */
     function opMul(address _ctx) public {
-        console.log('-------->* 1<------');
-        // uint256 last1 = IContext(_ctx).stack().pop();
         uint256 last = IContext(_ctx).stack().pop();
         uint256 prev = IContext(_ctx).stack().pop();
-        console.log(prev, last);
         OpcodeHelpers.putToStack(_ctx, prev * last);
-        console.log('-------->* 2<------');
     }
 
     /**
@@ -94,10 +90,8 @@ library LogicalOpcodes {
      * @param _ctx Context address
      */
     function opDiv(address _ctx) public {
-        console.log('-------->10<------');
         uint256 last = IContext(_ctx).stack().pop();
         uint256 prev = IContext(_ctx).stack().pop();
-        console.log('-------->1<------');
         OpcodeHelpers.putToStack(_ctx, prev / last);
     }
 }

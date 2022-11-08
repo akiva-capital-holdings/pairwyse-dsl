@@ -342,9 +342,6 @@ contract Parser is IParser {
      * ```
      */
     function asmSumThroughStructs() public {
-        // console.log('---asmSumThroughStructs');
-        // console.log(_nextCmd());
-        // console.log(_nextCmd());
         _parseVariable(); // array name
         _parseVariable(); // variable name
     }
@@ -454,13 +451,13 @@ contract Parser is IParser {
                 bytes memory _sliced = bytes(_value).slice(2, 42);
                 program = bytes.concat(program, bytes32(_sliced.fromHexBytes()));
             } else if (_value.mayBeNumber()) {
-                console.log('asmStruct');
-                console.log(_value.toUint256());
                 program = bytes.concat(program, bytes32(_value.toUint256()));
-            } else {
-                // if the name of the variable
-                program = bytes.concat(program, bytes32(keccak256(abi.encodePacked(_value))));
             }
+            // TODO:
+            // else {
+            //     // if the name of the variable
+            //     program = bytes.concat(program, bytes32(keccak256(abi.encodePacked(_value))));
+            // }
         } while (!(cmds[cmdIdx].equal('endStruct')));
 
         _parseVariable(); // parse the 'endStruct' word
@@ -517,7 +514,6 @@ contract Parser is IParser {
         // TODO: Parser: IContext(_ctxAddr).delegateCall('setProgram', program) to pass owner's
         //       address to the Context contract
         IContext(_ctxAddr).setProgram(program);
-        // console.logBytes(program);
     }
 
     /**

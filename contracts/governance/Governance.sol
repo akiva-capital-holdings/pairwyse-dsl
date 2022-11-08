@@ -14,7 +14,7 @@ import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { LinkedList } from '../dsl/helpers/LinkedList.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 // TODO: automatically make sure that no contract exceeds the maximum contract size
 
@@ -443,7 +443,6 @@ contract Governance is LinkedList {
         require(!isExecutedBySignatory[_recordId][_signatory], ErrorsAgreement.AGR7);
 
         IContext(record.recordContext).setMsgValue(_msgValue);
-        console.logBytes(IContext(record.recordContext).program());
         Executor.execute(address(record.recordContext));
 
         isExecutedBySignatory[_recordId][_signatory] = true;
@@ -460,7 +459,6 @@ contract Governance is LinkedList {
         }
 
         return IContext(record.recordContext).stack().seeLast() == 0 ? false : true;
-        // return true;
     }
 
     /**
@@ -554,8 +552,8 @@ contract Governance is LinkedList {
      */
     function _setYesRecord() internal {
         uint256 recordId = 1;
-        string memory record = 'insert 1 into VOTERS uint256 1';
-        // TODO: make it - balanceOf GOV_TOKEN_ADDR msgSender
+        string memory record = 'insert 1 into VOTERS '
+        'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
         string memory _condition = string(
             abi.encodePacked(
                 '(GOV_BALANCE > 0) and (blockTimestamp < ',
@@ -574,7 +572,8 @@ contract Governance is LinkedList {
      */
     function _setNoRecord() internal {
         uint256 recordId = 2;
-        string memory record = 'insert 0 into VOTERS uint256 1';
+        string memory record = 'insert 0 into VOTERS '
+        'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
         string memory _condition = string(
             abi.encodePacked(
                 '(GOV_BALANCE > 0) and (blockTimestamp < ',
@@ -595,11 +594,11 @@ contract Governance is LinkedList {
      */
     function _setCheckVotingRecord() internal {
         uint256 recordId = 3;
-        string memory record = '(sumOf VOTERS) setUint256 YES_CTR';
-        // 'YES_CTR uint256 1';
-        // '(((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2) uint256 1';
-        // 'if ENABLE_RECORD end '
-        // 'ENABLE_RECORD { enableRecord RECORD_ID at AGREEMENT_ADDR } uint256 1';
+        string memory record = '(sumOf VOTERS) setUint256 YES_CTR '
+        '(((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2)'
+        'if ENABLE_RECORD end '
+        'ENABLE_RECORD { enableRecord RECORD_ID at AGREEMENT_ADDR } '
+        'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
 
         string memory _condition = string(
             abi.encodePacked('blockTimestamp >= ', StringUtils.toString(deadline))
