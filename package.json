@@ -19,7 +19,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged docgen"
+      "pre-commit": "hardhat docgen lint-staged"
     }
   },
   "lint-staged": {
@@ -34,8 +34,8 @@
       "git add"
     ]
   },
-  "docgen":[
-    "hardhat docgen"
+  "hardhat-docgen":[
+    "yarn hardhat docgen"
   ],
   "dependencies": {
     "hardhat": "^2.12.0",
