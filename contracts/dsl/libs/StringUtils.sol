@@ -25,6 +25,18 @@ library StringUtils {
         return string(abi.encodePacked(s1, s2));
     }
 
+    /**
+     * @dev Checks is _char is present in the _string
+     * Ex. `_`.in('123_456') => true
+     * Ex. `8`.in('123456') => false
+     */
+    function isIn(string memory _char, string memory _string) public pure returns (bool) {
+        for (uint256 i = 0; i < length(_string); i++) {
+            if (equal(char(_string, i), _char)) return true;
+        }
+        return false;
+    }
+
     // Convert an hexadecimal string (without "0x" prefix) to raw bytes
     function fromHex(string memory s) public pure returns (bytes memory) {
         return fromHexBytes(bytes(s));

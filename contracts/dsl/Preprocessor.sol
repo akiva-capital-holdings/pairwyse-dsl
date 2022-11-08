@@ -34,9 +34,11 @@ contract Preprocessor {
     // Stack with elements of type string that is used to temporarily store data of `infixToPostfix` function
     StringStack internal tmpStrStack;
 
-    bytes1 private DOT_SYMBOL = 0x2e;
+    bytes1 internal DOT_SYMBOL = 0x2e;
 
     constructor() {
+        // TODO: make stack a function, not a contract;
+        //       then we could restrict functions like `infixToPostfix` to `view` to save gas
         tmpStrStack = new StringStack();
     }
 
@@ -57,12 +59,16 @@ contract Preprocessor {
      * @param _program is a user's DSL code string
      * @return the list of commands that storing `result`
      */
-    function transform(address _ctxAddr, string memory _program)
-        external
-        returns (string[] memory)
-    {
-        string[] memory code = split(_program);
-        return infixToPostfix(_ctxAddr, code, tmpStrStack);
+    function transform(
+        address _ctxAddr,
+        string memory _program // TODO: make `view`
+    ) external returns (string[] memory) {
+        _program = _cleanString(_program);
+        string[] memory _code = _split(_program, '\n ,:(){}', '(){}');
+        _code = _removeSyntacticSugar(_code);
+        _code = _simplifyCode(_code);
+        _code = _infixToPostfix(_ctxAddr, _code, tmpStrStack); // TODO: make `view`
+        return _code;
     }
 
     /**
@@ -80,8 +86,8 @@ contract Preprocessor {
      * @param _program is a current program string
      * @return _cleanedProgram new string program that contains only clean code without comments
      */
-    function cleanString(string memory _program)
-        public
+    function _cleanString(string memory _program)
+        internal
         pure
         returns (string memory _cleanedProgram)
     {
@@ -122,52 +128,159 @@ contract Preprocessor {
         }
     }
 
-    function infixToPostfix(
+    /**
+     * @dev Splits the user's DSL code string to the list of commands
+     * avoiding several symbols:
+     * - removes additional and useless symbols as ' ', `\\n`
+     * - defines and adding help 'end' symbol for the ifelse condition
+     * - defines and cleans the code from `{` and `}` symbols
+     *
+     * Example:
+     * The user's DSL code string is
+     * ```
+     * (var TIMESTAMP > var INIT)
+     * ```
+     * The end result after executing a `split()` function is
+     * ```
+     * ['var', 'TIMESTAMP', '>', 'var', 'INIT']
+     * ```
+     *
+     * @param _program is a user's DSL code string
+     * @return the list of commands that storing in `result`
+     */
+    // _separatorsToKeep - we're using symbols from this string as separators but not removing them from the resulting array
+    function _split(
+        string memory _program,
+        string memory _separators,
+        string memory _separatorsToKeep
+    ) internal pure returns (string[] memory) {
+        string[] memory _result = new string[](50);
+        uint256 resultCtr;
+        string memory buffer; // here we collect DSL commands, var names, etc. symbol by symbol
+        string memory char;
+
+        for (uint256 i = 0; i < _program.length(); i++) {
+            char = _program.char(i);
+
+            // char.isIn(_separators)
+            if (char.isIn(_separators)) {
+                // if (char.equal(' ') || char.equal('\n') || char.equal('(') || char.equal(')')) {
+                if (buffer.length() > 0) {
+                    _result[resultCtr++] = buffer;
+                    buffer = '';
+                }
+            } else {
+                buffer = buffer.concat(char);
+            }
+
+            if (char.isIn(_separatorsToKeep)) {
+                // if (char.equal('(') || char.equal(')')) {
+                _result[resultCtr++] = char;
+            }
+        }
+
+        if (buffer.length() > 0) {
+            _result[resultCtr++] = buffer;
+            buffer = '';
+        }
+
+        return _result;
+    }
+
+    // if chunk is a number removes scientific notation if any
+    function _removeSyntacticSugar(string[] memory _code) internal view returns (string[] memory) {
+        console.log('\n    -> removeSyntacticSugar');
+        string[] memory _result = new string[](50);
+        uint256 _resultCtr;
+        string memory chunk;
+        string memory _prevChunk;
+        uint256 i;
+
+        while (i < _nonEmptyArrLen(_code)) {
+            // // skip empty strings in code
+            // if (_code[i].equal('')) {
+            //     i++;
+            //     continue;
+            // }
+
+            _prevChunk = i == 0 ? '' : _code[i - 1];
+            chunk = _code[i++];
+
+            // if chunk is a number removes scientific notation if any
+            (_resultCtr, chunk) = _removeSyntacticSugar(_resultCtr, chunk, _prevChunk);
+            _result[_resultCtr++] = chunk;
+        }
+        return _result;
+    }
+
+    function _simplifyCode(string[] memory _code) internal view returns (string[] memory) {
+        console.log('\n    -> Simplify Code');
+        string[] memory _result = new string[](50);
+        uint256 _resultCtr;
+        string memory _chunk;
+        string memory _prevChunk;
+        uint256 i;
+
+        while (i < _nonEmptyArrLen(_code)) {
+            _prevChunk = i == 0 ? '' : _code[i - 1];
+            _chunk = _code[i++];
+
+            if (_chunk.equal('insert')) {
+                (_result, _resultCtr, i) = _processArrayInsert(_result, _resultCtr, _code, i);
+            } else if (_chunk.equal('sumOf')) {
+                (_result, _resultCtr, i) = _processSumOfCmd(_result, _resultCtr, _code, i);
+            } else if (_chunk.equal('struct')) {
+                (_result, _resultCtr, i) = _processStruct(_result, _resultCtr, _code, i);
+            } else {
+                // (_result, _resultCtr) = _checkIsNumberOrAddress(_result, _resultCtr, _chunk);
+                _result[_resultCtr++] = _chunk;
+            }
+        }
+        return _result;
+    }
+
+    function _infixToPostfix(
         address _ctxAddr,
         string[] memory _code,
         StringStack _stack
-    ) public returns (string[] memory) {
-        console.log('infix to postfix');
+    ) internal returns (string[] memory) {
+        console.log('\n    ->infix to postfix');
         string[] memory _result = new string[](50);
         uint256 _resultCtr;
         string memory chunk;
         string memory _prevChunk;
         uint256 i;
         uint256 _skipCtr; // counter to skip preprocessing of command params; just directly add them
-        // to te output
+        // to the output
 
-        console.log(1);
         // Cleanup
         _stack.clear();
-        // delete _result;
-
-        console.log(2);
 
         // this is to remove empty strings in _code array
-        while (!_code[i].equal('')) {
+        // console.log('_code.length =', _code.length);
+        while (i < _nonEmptyArrLen(_code)) {
+            // // skip empty strings in code
+            // if (_code[i].equal('')) {
+            //     i++;
+            //     continue;
+            // }
+
             _prevChunk = i == 0 ? '' : _code[i - 1];
             chunk = _code[i++];
-            console.log('is operator:', _isOperator(_ctxAddr, chunk));
 
             console.log('chunk =', chunk);
-            // if chunk is a number removes scientific notation if any
-            (_resultCtr, chunk) = _removeSyntacticSugar(_resultCtr, chunk, _prevChunk);
-            console.log('skip counter =', _skipCtr);
+            // console.log('is alias?', _isAlias(_ctxAddr, chunk));
+            // console.log('resultCtr =', _resultCtr);
 
             if (_skipCtr > 0) {
                 _result[_resultCtr++] = chunk;
+                console.log('Skipping chunk:', chunk);
                 _skipCtr--;
                 continue;
             }
 
-            if (_isAlias(_ctxAddr, chunk)) {
-                console.log('alias');
-                // alias
-                // Replace alises with base commands
-                chunk = IContext(_ctxAddr).aliases(chunk);
-            }
-
             if (IContext(_ctxAddr).isCommand(chunk)) {
+                console.log('command');
                 (_result, _resultCtr, _skipCtr) = _processCommand(
                     _result,
                     _resultCtr,
@@ -176,6 +289,7 @@ contract Preprocessor {
                     _skipCtr
                 );
             } else if (_isOperator(_ctxAddr, chunk)) {
+                console.log('operator');
                 // operator
                 (_result, _resultCtr) = _processOperator(
                     _stack,
@@ -185,10 +299,20 @@ contract Preprocessor {
                     chunk
                 );
             } else if (_isParenthesis(chunk)) {
+                console.log('parenthesis');
                 (_result, _resultCtr) = _processParenthesis(_stack, _result, _resultCtr, chunk);
             } else if (_isCurlyBracket(chunk)) {
+                console.log('curly bracket');
                 (_result, _resultCtr) = _processCurlyBracket(_result, _resultCtr, chunk);
-            } else {
+            } else if (_isAlias(_ctxAddr, chunk)) {
+                console.log('alias');
+                (_result, _resultCtr) = _processAlias(_result, _resultCtr, _ctxAddr, chunk);
+            }
+            /* else if (_isArrayDeclaration(chunk)) {
+                ()
+            } */
+            else {
+                console.log('other');
                 (_result, _resultCtr) = _checkIsNumberOrAddress(_result, _resultCtr, chunk);
                 _result[_resultCtr++] = chunk;
             }
@@ -205,17 +329,23 @@ contract Preprocessor {
         uint256 _resultCtr,
         string memory _chunk,
         string memory _prevChunk
-    ) private view returns (uint256, string memory) {
+    ) internal view returns (uint256, string memory) {
+        console.log('_removeSyntacticSugar');
         _chunk = _checkScientificNotation(_chunk);
         if (_isCurrencySymbol(_chunk)) {
             console.log('This is a currency symbol');
             (_resultCtr, _chunk) = _processCurrencySymbol(_resultCtr, _chunk, _prevChunk);
+            console.log('_removeSyntacticSugar 2');
         }
         console.log('_removeSyntacticSugar chunk =', _chunk);
         return (_resultCtr, _chunk);
     }
 
-    function _checkScientificNotation(string memory _chunk) private pure returns (string memory) {
+    function _checkScientificNotation(string memory _chunk) internal pure returns (string memory) {
+        // console.log('_checkScientificNotation');
+        // console.log('isAddress =', _chunk.mayBeAddress());
+        // console.log('isNumber =', _chunk.mayBeNumber());
+        // console.log('1111');
         if (_chunk.mayBeNumber() && !_chunk.mayBeAddress()) {
             return _parseScientificNotation(_chunk);
         }
@@ -242,24 +372,157 @@ contract Preprocessor {
         }
     }
 
+    function _processArrayInsert(
+        string[] memory _result,
+        uint256 _resultCtr,
+        string[] memory _code,
+        uint256 i
+    )
+        internal
+        view
+        returns (
+            string[] memory,
+            uint256,
+            uint256
+        )
+    {
+        console.log('_processArrayInsert');
+
+        // Get the necessary params of `insert` command
+        // Notice: `insert 1234 into NUMBERS` -> `push 1234 NUMBERS`
+        string memory _insertVal = _code[i];
+        string memory _arrName = _code[i + 2];
+
+        _result[_resultCtr++] = 'push';
+        _result[_resultCtr++] = _insertVal;
+        _result[_resultCtr++] = _arrName;
+
+        return (_result, _resultCtr, i + 3);
+    }
+
+    function _processSumOfCmd(
+        string[] memory _result,
+        uint256 _resultCtr,
+        string[] memory _code,
+        uint256 i
+    )
+        internal
+        view
+        returns (
+            string[] memory,
+            uint256,
+            uint256
+        )
+    {
+        console.log('_processSumOfCmd');
+
+        // Ex. (sumOf) `USERS.balance` -> ['USERS', 'balance']
+        // Ex. (sumOf) `USERS` ->['USERS']
+        string[] memory _sumOfArgs = _split(_code[i], '.', '');
+
+        // Ex. `sumOf USERS.balance` -> sum over array of structs
+        // Ex. `sumOf USERS` -> sum over a regular array
+        if (_nonEmptyArrLen(_sumOfArgs) == 2) {
+            // process `sumOf` over array of structs
+            _result[_resultCtr++] = 'sumThroughStructs';
+            _result[_resultCtr++] = _sumOfArgs[0];
+            _result[_resultCtr++] = _sumOfArgs[1];
+        } else {
+            // process `sumOf` over a regular array
+            _result[_resultCtr++] = 'sumOf';
+            _result[_resultCtr++] = _sumOfArgs[0];
+        }
+
+        return (_result, _resultCtr, i + 1);
+    }
+
+    function _processStruct(
+        string[] memory _result,
+        uint256 _resultCtr,
+        string[] memory _code,
+        uint256 i
+    )
+        internal
+        view
+        returns (
+            string[] memory,
+            uint256,
+            uint256
+        )
+    {
+        console.log('_processStruct');
+
+        // Ex. (sumOf) `USERS.balance` -> ['USERS', 'balance']
+        // Ex. (sumOf) `USERS` ->['USERS']
+        // 'struct', 'BOB', '{', 'balance', '456', '}'
+        _result[_resultCtr++] = 'struct';
+        console.log('struct name:', _code[i]);
+        _result[_resultCtr++] = _code[i]; // struct name
+        // skip `{` (index is i + 1)
+
+        uint256 j = i + 1;
+        while (!_code[j + 1].equal('}')) {
+            console.log('struct key:', _code[j + 1]);
+            console.log('struct value:', _code[j + 2]);
+            _result[_resultCtr++] = _code[j + 1]; // struct key
+            _result[_resultCtr++] = _code[j + 2]; // struct value
+
+            j = j + 2;
+        }
+        _result[_resultCtr++] = 'endStruct';
+
+        return (_result, _resultCtr, j + 2);
+    }
+
     function _processCurrencySymbol(
         uint256 _resultCtr,
         string memory _chunk,
         string memory _prevChunk
-    ) private pure returns (uint256, string memory) {
+    ) internal view returns (uint256, string memory) {
+        console.log('_processCurrencySymbol');
         uint256 _currencyMultiplier = _getCurrencyMultiplier(_chunk);
+        // console.log('_currencyMultiplier =', _currencyMultiplier);
 
         try _prevChunk.toUint256() {
+            console.log('try');
+            console.log(_prevChunk.toUint256() * _currencyMultiplier);
             _prevChunk = StringUtils.toString(_prevChunk.toUint256() * _currencyMultiplier);
         } catch {
+            console.log('catch');
             _prevChunk = StringUtils.toString(
                 _prevChunk.parseScientificNotation().toUint256() * _currencyMultiplier
             );
         }
 
-        --_resultCtr; // this is to rewrite old number (ex. 100) with an extended number (ex. 100 GWEI = 100000000000)
+        console.log('result ctr =', _resultCtr);
+        // this is to rewrite old number (ex. 100) with an extended number (ex. 100 GWEI = 100000000000)
+        if (_resultCtr > 0) {
+            --_resultCtr;
+        }
 
         return (_resultCtr, _prevChunk);
+    }
+
+    function _processAlias(
+        string[] memory _result,
+        uint256 _resultCtr,
+        address _ctxAddr,
+        string memory _chunk
+    ) internal view returns (string[] memory, uint256) {
+        uint256 i;
+
+        // Replace alises with base commands
+        _chunk = IContext(_ctxAddr).aliases(_chunk);
+
+        // Process multi-command aliases
+        // Ex. `uint256[]` -> `declareArr uint256`
+        string[] memory _chunks = _split(_chunk, ' ', '');
+
+        while (i < _nonEmptyArrLen(_chunks)) {
+            _result[_resultCtr++] = _chunks[i++];
+        }
+
+        return (_result, _resultCtr);
     }
 
     function _processCommand(
@@ -269,7 +532,7 @@ contract Preprocessor {
         string memory _chunk,
         uint256 _skipCtr
     )
-        private
+        internal
         view
         returns (
             string[] memory,
@@ -280,7 +543,6 @@ contract Preprocessor {
         console.log('command');
 
         _skipCtr = IContext(_ctxAddr).numOfArgsByOpcode(_chunk);
-        // _skipCtr = _skipCtr == 0 ? 0 : _skipCtr + 1; // we'll need to add `1` if the command actually has
         console.log(_skipCtr);
 
         _result[_resultCtr++] = _chunk; // add command name
@@ -288,11 +550,11 @@ contract Preprocessor {
         return (_result, _resultCtr, _skipCtr);
     }
 
-    function _isParenthesis(string memory _chunk) private pure returns (bool) {
+    function _isParenthesis(string memory _chunk) internal pure returns (bool) {
         return _chunk.equal('(') || _chunk.equal(')');
     }
 
-    function _isCurlyBracket(string memory _chunk) private pure returns (bool) {
+    function _isCurlyBracket(string memory _chunk) internal pure returns (bool) {
         return _chunk.equal('{') || _chunk.equal('}');
     }
 
@@ -301,7 +563,7 @@ contract Preprocessor {
         string[] memory _result,
         uint256 _resultCtr,
         string memory _chunk
-    ) private returns (string[] memory, uint256) {
+    ) internal returns (string[] memory, uint256) {
         if (_chunk.equal('(')) {
             // opening bracket
             _stack.push(_chunk);
@@ -313,11 +575,24 @@ contract Preprocessor {
         return (_result, _resultCtr);
     }
 
+    function _processClosingParenthesis(
+        StringStack _stack,
+        string[] memory _result,
+        uint256 _resultCtr
+    ) public returns (string[] memory, uint256) {
+        console.log('_processClosingParenthesis');
+        while (!_stack.seeLast().equal('(')) {
+            _result[_resultCtr++] = _stack.pop();
+        }
+        _stack.pop(); // remove '(' that is left
+        return (_result, _resultCtr);
+    }
+
     function _processCurlyBracket(
         string[] memory _result,
         uint256 _resultCtr,
         string memory _chunk
-    ) private pure returns (string[] memory, uint256) {
+    ) internal pure returns (string[] memory, uint256) {
         if (_chunk.equal('{')) {
             // do nothing
         } else if (_chunk.equal('}')) {
@@ -333,10 +608,11 @@ contract Preprocessor {
         uint256 _resultCtr,
         address _ctxAddr,
         string memory _chunk
-    ) private returns (string[] memory, uint256) {
+    ) internal returns (string[] memory, uint256) {
         if (_chunk.equal('if')) {
             // if operator
-            console.log('if operator');
+            // TODO: this branch should never be the case; check it -> remove it
+            console.log('!!!! THIS branch should NEVERS be the case!!! if operator');
         } else {
             while (
                 _stack.length() > 0 &&
@@ -351,23 +627,12 @@ contract Preprocessor {
         return (_result, _resultCtr);
     }
 
-    function _processClosingParenthesis(
-        StringStack _stack,
-        string[] memory _result,
-        uint256 _resultCtr
-    ) public returns (string[] memory, uint256) {
-        while (!_stack.seeLast().equal('(')) {
-            _result[_resultCtr++] = _stack.pop();
-        }
-        _stack.pop(); // remove '(' that is left
-        return (_result, _resultCtr);
-    }
-
     function _checkIsNumberOrAddress(
         string[] memory _result,
         uint256 _resultCtr,
         string memory _chunk
-    ) private pure returns (string[] memory, uint256) {
+    ) internal view returns (string[] memory, uint256) {
+        console.log('_checkIsNumberOrAddress');
         if (_chunk.mayBeAddress()) return (_result, _resultCtr);
         if (_chunk.mayBeNumber()) {
             (_result, _resultCtr) = _addUint256(_result, _resultCtr);
@@ -377,7 +642,7 @@ contract Preprocessor {
     }
 
     function _addUint256(string[] memory _result, uint256 _resultCtr)
-        private
+        internal
         pure
         returns (string[] memory, uint256)
     {
@@ -414,65 +679,6 @@ contract Preprocessor {
 
     //     ....
     // }
-
-    /**
-     * @dev Splits the user's DSL code string to the list of commands
-     * avoiding several symbols:
-     * - removes additional and useless symbols as ' ', `\\n`
-     * - defines and adding help 'end' symbol for the ifelse condition
-     * - defines and cleans the code from `{` and `}` symbols
-     *
-     * Example:
-     * The user's DSL code string is
-     * ```
-     * (var TIMESTAMP > var INIT)
-     * ```
-     * The end result after executing a `split()` function is
-     * ```
-     * ['var', 'TIMESTAMP', '>', 'var', 'INIT']
-     * ```
-     *
-     * @param _program is a user's DSL code string
-     * @return the list of commands that storing in `result`
-     */
-    function split(string memory _program) public returns (string[] memory) {
-        string[] memory _result = new string[](50);
-        uint256 resultCtr;
-        string memory buffer; // here we collect DSL commands, var names, etc. symbol by symbol
-        string memory char;
-
-        for (uint256 i = 0; i < _program.length(); i++) {
-            char = _program.char(i);
-
-            if (
-                char.equal(' ') ||
-                char.equal('\n') ||
-                char.equal('(') ||
-                char.equal(')') ||
-                char.equal('[') ||
-                char.equal(']') ||
-                char.equal(',')
-            ) {
-                if (buffer.length() > 0) {
-                    _result[resultCtr++] = buffer;
-                    buffer = '';
-                }
-            } else {
-                buffer = buffer.concat(char);
-            }
-
-            if (char.equal('(') || char.equal(')') || char.equal('[') || char.equal(']')) {
-                _result[resultCtr++] = char;
-            }
-        }
-
-        if (buffer.length() > 0) {
-            _result[resultCtr++] = buffer;
-            buffer = '';
-        }
-
-        return _result;
-    }
 
     /**
      * @dev Rebuild and transforms the user's DSL commands (can be prepared by
@@ -686,49 +892,49 @@ contract Preprocessor {
         } else return 0;
     }
 
-    /**
-     * @dev Searching for a `.` (dot) symbol  and returns names status for complex string name.
-     * Ex. `USERS.balance`:
-     * Where `success` = true`,
-     * `arrName` = `USERS`,
-     * `structVar` = `balance`; otherwise it returns `success` = false` with empty string results
-     * @param _chunk is a command from DSL command list
-     * @return success if user provides complex name,  result is true
-     * @return arrName if user provided complex name, result is the name of structure
-     * @return structVar if user provided complex name, result is the name of structure variable
-     */
-    function _getNames(string memory _chunk)
-        internal
-        view
-        returns (
-            bool success,
-            string memory arrName,
-            string memory structVar
-        )
-    {
-        // TODO: decrease amount of iterations
-        bytes memory symbols = bytes(_chunk);
-        bool isFound; // dot was found
-        for (uint256 i = 0; i < symbols.length; i++) {
-            if (!isFound) {
-                if (symbols[i] == DOT_SYMBOL) {
-                    isFound = true;
-                    continue;
-                }
-                arrName = arrName.concat(string(abi.encodePacked(symbols[i])));
-            } else {
-                structVar = structVar.concat(string(abi.encodePacked(symbols[i])));
-            }
-        }
-        if (isFound) return (true, arrName, structVar);
-    }
+    // /**
+    //  * @dev Searching for a `.` (dot) symbol  and returns names status for complex string name.
+    //  * Ex. `USERS.balance`:
+    //  * Where `success` = true`,
+    //  * `arrName` = `USERS`,
+    //  * `structVar` = `balance`; otherwise it returns `success` = false` with empty string results
+    //  * @param _chunk is a command from DSL command list
+    //  * @return success if user provides complex name,  result is true
+    //  * @return arrName if user provided complex name, result is the name of structure
+    //  * @return structVar if user provided complex name, result is the name of structure variable
+    //  */
+    // function _getNames(string memory _chunk)
+    //     internal
+    //     view
+    //     returns (
+    //         bool success,
+    //         string memory arrName,
+    //         string memory structVar
+    //     )
+    // {
+    //     // TODO: decrease amount of iterations
+    //     bytes memory symbols = bytes(_chunk);
+    //     bool isFound; // dot was found
+    //     for (uint256 i = 0; i < symbols.length; i++) {
+    //         if (!isFound) {
+    //             if (symbols[i] == DOT_SYMBOL) {
+    //                 isFound = true;
+    //                 continue;
+    //             }
+    //             arrName = arrName.concat(string(abi.encodePacked(symbols[i])));
+    //         } else {
+    //             structVar = structVar.concat(string(abi.encodePacked(symbols[i])));
+    //         }
+    //     }
+    //     if (isFound) return (true, arrName, structVar);
+    // }
 
     /**
      * @dev Check is chunk is a currency symbol
      * @param _chunk is a current chunk from the DSL string code
      * @return true or false based on whether chunk is a currency symbol or not
      */
-    function _isCurrencySymbol(string memory _chunk) private pure returns (bool) {
+    function _isCurrencySymbol(string memory _chunk) internal pure returns (bool) {
         if (_chunk.equal('ETH') || _chunk.equal('GWEI')) return true;
         return false;
     }
@@ -740,7 +946,7 @@ contract Preprocessor {
     //  * the last chunk that was added to results is not 'uint256'
     //  */
     // function _updateUINT256param(string[] memory _result, uint256 _resultCtr)
-    //     private
+    //     internal
     //     pure
     //     returns (string[] memory, uint256)
     // {
@@ -1090,5 +1296,15 @@ contract Preprocessor {
         }
 
         return (_flag, _count);
+    }
+
+    /**
+     * @dev Returns the length of a string array excluding empty elements
+     * Ex. nonEmptyArrLen['h', 'e', 'l', 'l', 'o', '', '', '']) == 5 (not 8)
+     */
+    function _nonEmptyArrLen(string[] memory _arr) internal pure returns (uint256 i) {
+        while (i < _arr.length && !_arr[i].equal('')) {
+            i++;
+        }
     }
 }

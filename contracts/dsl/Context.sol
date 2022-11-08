@@ -697,8 +697,15 @@ contract Context is IContext {
             Example of the alias of the base command:
                 `time < var FUND_INVESTMENT_DATE`
         */
+        // _addAlias(<original>, <alias>);
         _addAlias('time', 'blockTimestamp');
         _addAlias('end', 'branch');
+        _addAlias('declareArr uint256', 'uint256[]');
+        _addAlias('declareArr string', 'string[]');
+        _addAlias('declareArr bytes32', 'bytes32[]');
+        _addAlias('declareArr address', 'address[]');
+        _addAlias('declareArr bool', 'bool[]');
+        _addAlias('declareArr struct', 'struct[]');
     }
 
     /**
