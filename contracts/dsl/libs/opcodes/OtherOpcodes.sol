@@ -201,7 +201,6 @@ library OtherOpcodes {
             )
         );
         require(success, ErrorsGeneralOpcodes.OP1);
-        // OpcodeHelpers.putToStack(_ctx, 1);
     }
 
     function opLoadLocalUint256(address _ctx) public {
