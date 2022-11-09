@@ -4,6 +4,10 @@
 
 Execute: `yarn install`
 
+### Install Pandoc
+
+Find your system and install Pandoc https://pandoc.org/installing.html
+
 ### Compile contracts
 
 Execute: `yarn hardhat compile`
