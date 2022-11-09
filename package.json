@@ -35,7 +35,8 @@
     ]
   },
   "hardhat-docgen":[
-    "yarn hardhat docgen"
+    "yarn hardhat docgen",
+    "pandoc docs/index.md --from markdown --to rst -s -o docs/index.rst"
   ],
   "dependencies": {
     "hardhat": "^2.12.0",
