@@ -3,17 +3,16 @@ pragma solidity ^0.8.0;
 
 import { IContext } from './interfaces/IContext.sol';
 import { IPreprocessor } from './interfaces/IPreprocessor.sol';
-import { StringStack } from './helpers/StringStack.sol';
+import { StringStack } from './libs/StringStack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 import { ErrorsPreprocessor } from './libs/Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 /**
  * @dev Preprocessor of DSL code
  * @dev This contract is a singleton and should not be deployed more than once
  *
- * TODO: add description about Preprocessor as a single contract of the project
  * It can remove comments that were created by user in the DSL code string. It
  * transforms the users DSL code string to the list of commands that can be used
  * in a Parser contract.
@@ -21,26 +20,9 @@ import 'hardhat/console.sol';
  * DSL code in postfix notation as
  * user's string code -> Preprocessor -> each command is separated in the commands list
  */
-/*is IPreprocessor*/
-contract Preprocessor {
+contract Preprocessor is IPreprocessor {
     using StringUtils for string;
-
-    // Note: temporary variable
-    // param positional number -> parameter itself
-    // mapping(uint256 => FuncParameter) internal parameters;
-    // Note: temporary variable
-    // string[] internal tmpStrArray; // stores the list of commands after infixToPostfix transformation
-
-    // Stack with elements of type string that is used to temporarily store data of `infixToPostfix` function
-    // StringStack internal tmpStrStack;
-
-    // bytes1 internal DOT_SYMBOL = 0x2e;
-
-    // constructor() {
-    //     // TODO: make stack a function, not a contract;
-    //     //       then we could restrict functions like `infixToPostfix` to `view` to save gas
-    //     // tmpStrStack = new StringStack();
-    // }
+    using StringStack for string[];
 
     /**
      * @dev The main function that transforms the user's DSL code string to the list of commands.
@@ -132,93 +114,44 @@ contract Preprocessor {
         }
     }
 
+    // /**
+    //  * @dev Push element to array in the first position
+    //  * @dev As the array has fixed size, we drop the last element when addind a new one to the beginning of the array
+    //  */
     // function _pushToStack(string[] memory _stack, string memory _element)
     //     internal
-    //     view
+    //     pure
     //     returns (string[] memory)
     // {
-    //     _stack.push(data);
+    //     // console.log('push to stack');
+    //     _stack[_stackLength(_stack)] = _element;
+    //     return _stack;
     // }
 
-    // function pop() external returns (string memory) {
-    //     string memory data = _seeLast();
-    //     stack.pop();
-
-    //     return data;
+    // function _popFromStack(string[] memory _stack)
+    //     internal
+    //     pure
+    //     returns (string[] memory, string memory)
+    // {
+    //     // console.log('pop from stack');
+    //     string memory _topElement = _seeLastInStack(_stack);
+    //     _stack[_stackLength(_stack) - 1] = '';
+    //     return (_stack, _topElement);
     // }
 
-    // function _stackLength(string[] memory _stack) internal view returns (uint256) {
+    // function _stackLength(string[] memory _stack) internal pure returns (uint256) {
+    //     // console.log('_stackLength');
+    //     uint256 i;
     //     while (!_stack[i].equal('')) {
     //         i++;
     //     }
-    //     return i - 1;
+    //     return i;
     // }
 
-    // function _seeLast() internal view returns (string memory) {
-    //     require(_length() > 0, ErrorsStack.STK4);
-    //     return stack[_length() - 1];
+    // function _seeLastInStack(string[] memory _stack) internal pure returns (string memory) {
+    //     // console.log('last in stack is:', _stack[_stackLength(_stack) - 1]);
+    //     return _stack[_stackLength(_stack) - 1];
     // }
-
-    /**
-     * @dev Push element to array in the first position
-     * @dev As the array has fixed size, we drop the last element when addind a new one to the beginning of the array
-     */
-    function _pushToStack(string[] memory _stack, string memory _element)
-        internal
-        view
-        returns (string[] memory)
-    {
-        console.log('push to stack');
-        // for (uint256 i = _stackLength(_stack); i > 1; i--) {
-        //     if (_stack[i].equal('')) continue;
-        //     console.log('i =', i);
-        //     _stack[i - 1] = _stack[i - 2];
-        // }
-        // _stack[0] = _element;
-        // return _stack;
-
-        _stack[_stackLength(_stack)] = _element;
-        return _stack;
-    }
-
-    function _popFromStack(string[] memory _stack)
-        internal
-        view
-        returns (string[] memory, string memory)
-    {
-        console.log('pop from stack');
-        // string memory _topElement = _stack[0];
-        // uint256 _len = _stackLength(_stack);
-        // if (_len == 1) {
-        //     _stack[0] = '';
-        // }
-        // for (uint256 i = 0; i < _len - 1; i++) {
-        //     console.log('i =', i);
-        //     if (_stack[i].equal('')) break;
-        //     _stack[i] = _stack[i + 1];
-        // }
-        // return (_stack, _topElement);
-
-        string memory _topElement = _seeLastInStack(_stack);
-        _stack[_stackLength(_stack) - 1] = '';
-        return (_stack, _topElement);
-    }
-
-    function _stackLength(string[] memory _stack) internal view returns (uint256) {
-        console.log('_stackLength');
-        uint256 i;
-        while (!_stack[i].equal('')) {
-            i++;
-        }
-        console.log('i =', i);
-        console.log('stack length is:', i);
-        return i;
-    }
-
-    function _seeLastInStack(string[] memory _stack) internal view returns (string memory) {
-        console.log('last in stack is:', _stack[_stackLength(_stack) - 1]);
-        return _stack[_stackLength(_stack) - 1];
-    }
 
     /**
      * @dev Splits the user's DSL code string to the list of commands
@@ -281,7 +214,7 @@ contract Preprocessor {
     }
 
     // if chunk is a number removes scientific notation if any
-    function _removeSyntacticSugar(string[] memory _code) internal view returns (string[] memory) {
+    function _removeSyntacticSugar(string[] memory _code) internal pure returns (string[] memory) {
         // console.log('\n    -> removeSyntacticSugar');
         string[] memory _result = new string[](50);
         uint256 _resultCtr;
@@ -314,7 +247,7 @@ contract Preprocessor {
         view
         returns (string[] memory)
     {
-        console.log('\n    -> Simplify Code');
+        // console.log('\n    -> Simplify Code');
         string[] memory _result = new string[](50);
         uint256 _resultCtr;
         string memory _chunk;
@@ -327,9 +260,7 @@ contract Preprocessor {
             _prevChunk = i == 0 ? '' : _code[i - 1];
             _chunk = _code[i++];
 
-            console.log('chunk =', _chunk);
-
-            // (_resultCtr, _chunk) = _removeSyntacticSugar(_resultCtr, _chunk, _prevChunk);
+            // console.log('chunk =', _chunk);
 
             if (IContext(_ctxAddr).isCommand(_chunk)) {
                 (_result, _resultCtr, i) = _processCommand(
@@ -341,15 +272,15 @@ contract Preprocessor {
                     i
                 );
             } else if (_isCurlyBracket(_chunk)) {
-                console.log('curly bracket');
+                // console.log('curly bracket');
                 (_result, _resultCtr) = _processCurlyBracket(_result, _resultCtr, _chunk);
             } else if (_isAlias(_ctxAddr, _chunk)) {
-                console.log('alias');
+                // console.log('alias');
                 (_result, _resultCtr) = _processAlias(_result, _resultCtr, _ctxAddr, _chunk);
             } else if (_chunk.equal('insert')) {
                 (_result, _resultCtr, i) = _processArrayInsert(_result, _resultCtr, _code, i);
             } else {
-                console.log('other');
+                // console.log('other');
                 (_result, _resultCtr) = _checkIsNumberOrAddress(_result, _resultCtr, _chunk);
                 _result[_resultCtr++] = _chunk;
             }
@@ -362,22 +293,19 @@ contract Preprocessor {
         view
         returns (string[] memory)
     {
-        console.log('\n    ->infix to postfix');
+        // console.log('\n    ->infix to postfix');
         string[] memory _result = new string[](50);
         string[] memory _stack = new string[](50);
         uint256 _resultCtr;
         string memory _chunk;
         uint256 i;
 
-        // Cleanup
-        // _stack.clear();
-
         while (i < _nonEmptyArrLen(_code)) {
             _chunk = _code[i++];
-            console.log('chunk =', _chunk);
+            // console.log('chunk =', _chunk);
 
             if (_isOperator(_ctxAddr, _chunk)) {
-                console.log('operator');
+                // console.log('operator');
                 // operator
                 (_result, _resultCtr, _stack) = _processOperator(
                     _stack,
@@ -386,9 +314,9 @@ contract Preprocessor {
                     _ctxAddr,
                     _chunk
                 );
-                console.log('after operator');
+                // console.log('after operator');
             } else if (_isParenthesis(_chunk)) {
-                console.log('parenthesis');
+                // console.log('parenthesis');
                 (_result, _resultCtr, _stack) = _processParenthesis(
                     _stack,
                     _result,
@@ -400,9 +328,9 @@ contract Preprocessor {
             }
         }
 
-        console.log(4);
-        while (_stackLength(_stack) > 0) {
-            (_stack, _result[_resultCtr++]) = _popFromStack(_stack);
+        // console.log(4);
+        while (_stack.stackLength() > 0) {
+            (_stack, _result[_resultCtr++]) = _stack.popFromStack();
         }
         return _result;
     }
@@ -489,14 +417,14 @@ contract Preprocessor {
         uint256 i
     )
         internal
-        view
+        pure
         returns (
             string[] memory,
             uint256,
             uint256
         )
     {
-        console.log('_processSumOfCmd');
+        // console.log('_processSumOfCmd');
 
         // Ex. (sumOf) `USERS.balance` -> ['USERS', 'balance']
         // Ex. (sumOf) `USERS` ->['USERS']
@@ -525,27 +453,27 @@ contract Preprocessor {
         uint256 i
     )
         internal
-        view
+        pure
         returns (
             string[] memory,
             uint256,
             uint256
         )
     {
-        console.log('_processStruct');
+        // console.log('_processStruct');
 
         // Ex. (sumOf) `USERS.balance` -> ['USERS', 'balance']
         // Ex. (sumOf) `USERS` ->['USERS']
         // 'struct', 'BOB', '{', 'balance', '456', '}'
         _result[_resultCtr++] = 'struct';
-        console.log('struct name:', _code[i]);
+        // console.log('struct name:', _code[i]);
         _result[_resultCtr++] = _code[i]; // struct name
         // skip `{` (index is i + 1)
 
         uint256 j = i + 1;
         while (!_code[j + 1].equal('}')) {
-            console.log('struct key:', _code[j + 1]);
-            console.log('struct value:', _code[j + 2]);
+            // console.log('struct key:', _code[j + 1]);
+            // console.log('struct value:', _code[j + 2]);
             _result[_resultCtr++] = _code[j + 1]; // struct key
             _result[_resultCtr++] = _code[j + 2]; // struct value
 
@@ -560,17 +488,17 @@ contract Preprocessor {
         uint256 _resultCtr,
         string memory _chunk,
         string memory _prevChunk
-    ) internal view returns (uint256, string memory) {
-        console.log('_processCurrencySymbol');
+    ) internal pure returns (uint256, string memory) {
+        // console.log('_processCurrencySymbol');
         uint256 _currencyMultiplier = _getCurrencyMultiplier(_chunk);
-        console.log('_currencyMultiplier =', _currencyMultiplier);
+        // console.log('_currencyMultiplier =', _currencyMultiplier);
 
         try _prevChunk.toUint256() {
-            console.log('try');
-            console.log(_prevChunk.toUint256() * _currencyMultiplier);
+            // console.log('try');
+            // console.log(_prevChunk.toUint256() * _currencyMultiplier);
             _prevChunk = StringUtils.toString(_prevChunk.toUint256() * _currencyMultiplier);
         } catch {
-            console.log('catch');
+            // console.log('catch');
             _prevChunk = StringUtils.toString(
                 _prevChunk.parseScientificNotation().toUint256() * _currencyMultiplier
             );
@@ -624,7 +552,7 @@ contract Preprocessor {
             uint256
         )
     {
-        console.log('process command');
+        // console.log('process command');
 
         if (_chunk.equal('struct')) {
             (_result, _resultCtr, i) = _processStruct(_result, _resultCtr, _code, i);
@@ -632,13 +560,12 @@ contract Preprocessor {
             (_result, _resultCtr, i) = _processSumOfCmd(_result, _resultCtr, _code, i);
         } else {
             uint256 _skipCtr = IContext(_ctxAddr).numOfArgsByOpcode(_chunk) + 1;
-            console.log(_skipCtr);
+            // console.log(_skipCtr);
 
-            // _result[_resultCtr++] = _chunk; // add command name
             i--; // this is to include the command name in the loop below
             // add command arguments
             while (_skipCtr > 0) {
-                console.log('cmd argument =', _code[i + 1]);
+                // console.log('cmd argument =', _code[i + 1]);
                 _result[_resultCtr++] = _code[i++];
                 _skipCtr--;
             }
@@ -656,14 +583,13 @@ contract Preprocessor {
     }
 
     function _processParenthesis(
-        // StringStack _stack,
         string[] memory _stack,
         string[] memory _result,
         uint256 _resultCtr,
         string memory _chunk
     )
         internal
-        view
+        pure
         returns (
             string[] memory,
             uint256,
@@ -672,8 +598,7 @@ contract Preprocessor {
     {
         if (_chunk.equal('(')) {
             // opening bracket
-            // _stack.push(_chunk);
-            _stack = _pushToStack(_stack, _chunk);
+            _stack = _stack.pushToStack(_chunk);
         } else if (_chunk.equal(')')) {
             // closing bracket
             (_result, _resultCtr, _stack) = _processClosingParenthesis(_stack, _result, _resultCtr);
@@ -683,27 +608,23 @@ contract Preprocessor {
     }
 
     function _processClosingParenthesis(
-        // StringStack _stack,
         string[] memory _stack,
         string[] memory _result,
         uint256 _resultCtr
     )
         public
-        view
+        pure
         returns (
             string[] memory,
             uint256,
             string[] memory
         )
     {
-        console.log('_processClosingParenthesis');
-        // while (!_stack.seeLast().equal('(')) {
-        while (!_seeLastInStack(_stack).equal('(')) {
-            // _result[_resultCtr++] = _stack.pop();
-            (_stack, _result[_resultCtr++]) = _popFromStack(_stack);
+        // console.log('_processClosingParenthesis');
+        while (!_stack.seeLastInStack().equal('(')) {
+            (_stack, _result[_resultCtr++]) = _stack.popFromStack();
         }
-        // _stack.pop(); // remove '(' that is left
-        (_stack, ) = _popFromStack(_stack); // remove '(' that is left
+        (_stack, ) = _stack.popFromStack(); // remove '(' that is left
         return (_result, _resultCtr, _stack);
     }
 
@@ -721,7 +642,6 @@ contract Preprocessor {
     }
 
     function _processOperator(
-        // StringStack _stack,
         string[] memory _stack,
         string[] memory _result,
         uint256 _resultCtr,
@@ -736,25 +656,16 @@ contract Preprocessor {
             string[] memory
         )
     {
-        // if (_chunk.equal('if')) {
-        //     // if operator
-        //     // TODO: this branch should never be the case; check it -> remove it
-        //     // console.log('!!!! THIS branch should NEVERS be the case!!! if operator');
-        // } else {
-        // console.log('processing operator');
         while (
-            _stackLength(_stack) > 0 &&
+            _stack.stackLength() > 0 &&
             IContext(_ctxAddr).opsPriors(_chunk) <=
-            // IContext(_ctxAddr).opsPriors(_stack.seeLast())
-            IContext(_ctxAddr).opsPriors(_seeLastInStack(_stack))
+            IContext(_ctxAddr).opsPriors(_stack.seeLastInStack())
         ) {
             // console.log('while iteration');
-            // _result[_resultCtr++] = _stack.pop();
-            (_stack, _result[_resultCtr++]) = _popFromStack(_stack);
+            (_stack, _result[_resultCtr++]) = _stack.popFromStack();
         }
-        // _stack.push(_chunk);
         // console.log('_processOperator: push to stack');
-        _stack = _pushToStack(_stack, _chunk);
+        _stack = _stack.pushToStack(_chunk);
         // }
 
         // console.log('return updated chunk');
@@ -765,8 +676,8 @@ contract Preprocessor {
         string[] memory _result,
         uint256 _resultCtr,
         string memory _chunk
-    ) internal view returns (string[] memory, uint256) {
-        console.log('_checkIsNumberOrAddress');
+    ) internal pure returns (string[] memory, uint256) {
+        // console.log('_checkIsNumberOrAddress');
         if (_chunk.mayBeAddress()) return (_result, _resultCtr);
         if (_chunk.mayBeNumber()) {
             (_result, _resultCtr) = _addUint256(_result, _resultCtr);
@@ -786,231 +697,6 @@ contract Preprocessor {
         return (_result, _resultCtr);
     }
 
-    // function infixToPostfix() public view {
-    //     while (ptr < program.length) {
-
-    //         switch (program[prt]) {
-    //             case isComment:
-    //                 processComment();
-    //                 break;
-    //             case '(':
-    //                 ptr = processOpeningBrake(ptr);
-    //                 break;
-    //             case '{':
-    //                 ptr = processParentesis(ptr);
-    //                 break;
-    //             case isOpcode:
-    //                 processOpcode();
-    //                 break;
-    //             default:
-    //                 raise error;
-    //         }
-    //     }
-    // }
-
-    // function processFunc(ptr) view returns(uint256 newPtr) {
-    //     Stack memory result;
-
-    //     ....
-    // }
-
-    /**
-     * @dev Rebuild and transforms the user's DSL commands (can be prepared by
-     * the `split()` function) to the list of commands.
-     *
-     * Example:
-     * The user's DSL command contains
-     * ```
-     * ['1', '+', '2']
-     * ```
-     * The result after executing a `infixToPostfix()` function is
-     * ```
-     * ['uint256', '1', 'uint256', '2', '+']
-     * ```
-     *
-     * @param _ctxAddr is a context contract address
-     * @param _code is a DSL command list
-     * @return _stack uses for getting and storing temporary string data
-     * rebuild the list of commands
-     */
-    // function infixToPostfix(
-    //     address _ctxAddr,
-    //     string[] memory _code,
-    //     StringStack _stack
-    // ) public returns (string[] memory) {
-    //     PreprocessorInfo memory s;
-    //     // helps to separate a struct variable name and array's name for arrays with type `struct`
-    //     bool checkStructName;
-    //     string memory chunk;
-
-    //     // Cleanup
-    //     delete result;
-    //     _stack.clear();
-
-    //     // Infix to postfix
-    //     for (uint256 i = 0; i < _code.length; i++) {
-    //         chunk = _code[i];
-
-    //         // ---> starts sumOf block for array of structures
-    //         if (chunk.equal('sumOf')) {
-    //             checkStructName = true;
-    //             continue;
-    //         }
-
-    //         if (checkStructName) {
-    //             // returns success=true if user provides complex name, ex. `USERS.balance`
-    //             // where arrName = USERS, structVar = balance
-    //             (bool success, string memory arrName, string memory structVar) = _getNames(chunk);
-    //             if (success) {
-    //                 // use another internal command to sum variables - `sumThroughStructs`
-    //                 result.push('sumThroughStructs');
-    //                 result.push(arrName);
-    //                 result.push(structVar);
-    //             } else {
-    //                 // use simple sum command `sumOf`
-    //                 result.push('sumOf');
-    //                 result.push(chunk);
-    //             }
-    //             checkStructName = false;
-    //             continue;
-    //         }
-    //         // <--- ends sumOf block for array of structures
-
-    //         // struct
-    //         if (chunk.equal('struct')) {
-    //             s.isStructStart = true;
-    //             result.push(chunk);
-    //             continue;
-    //         }
-    //         if (chunk.equal('endStruct')) {
-    //             s.isStructStart = false;
-    //             result.push(chunk);
-    //             continue;
-    //         }
-
-    //         // returns true if the chunk can use uint256 directly
-    //         s.directUseUint256 = _isDirectUseUint256(s.directUseUint256, s.isStructStart, chunk);
-    //         // checks and updates if the chunk can use uint256 or it's loadRemote opcode
-    //         (s.loadRemoteFlag, s.loadRemoteVarCount) = _updateRemoteParams(
-    //             s.loadRemoteFlag,
-    //             s.loadRemoteVarCount,
-    //             chunk
-    //         );
-
-    //         // ---> start block for DSL arrays without types
-    //         // TODO: code for array tasks will be added below
-    //         if (chunk.equal('[') && !s.isArrayStart) {
-    //             s.isArrayStart = true;
-    //             continue;
-    //         } else if (s.isArrayStart && chunk.equal(']')) {
-    //             continue;
-    //         } else if (s.isArrayStart && !chunk.equal(']')) {
-    //             if (result.length > 0) {
-    //                 string memory _type = result[result.length - 1];
-    //                 result.pop();
-    //                 // TODO: move that to Parser or reorganise it to simple array structure?
-    //                 // EX. NUMBERS [1,2,3,4...]
-    //                 result.push('declareArr');
-    //                 result.push(_type);
-    //                 result.push(chunk);
-    //             }
-
-    //             s.isArrayStart = false;
-    //             continue;
-    //         }
-
-    //         if (chunk.equal('insert') && s.insertStep != 1) {
-    //             s.insertStep = 1;
-    //             result.push('push');
-    //             continue;
-    //         } else if (s.insertStep == 1 && !chunk.equal('into')) {
-    //             s.insertStep = 2;
-    //             result.push(chunk);
-    //             continue;
-    //         } else if (s.insertStep == 2) {
-    //             if (!chunk.equal('into')) {
-    //                 result.push(chunk);
-    //                 s.insertStep = 0;
-    //             }
-    //             continue;
-    //         }
-    //         // <--- end block for DSL arrays
-
-    //         // Replace alises with base commands
-    //         if (_isAlias(_ctxAddr, chunk)) {
-    //             chunk = IContext(_ctxAddr).aliases(chunk);
-    //         }
-
-    //         if (_isOperator(_ctxAddr, chunk)) {
-    //             while (
-    //                 _stackLength(_stack)() > 0 &&
-    //                 IContext(_ctxAddr).opsPriors(chunk) <=
-    //                 IContext(_ctxAddr).opsPriors(_stack.seeLast())
-    //             ) {
-    //                 result.push(_stack.pop());
-    //             }
-    //             _stack.push(chunk);
-    //         } else if (chunk.equal('(')) {
-    //             _stack.push(chunk);
-    //         } else if (chunk.equal(')')) {
-    //             while (!_stack.seeLast().equal('(')) {
-    //                 result.push(_stack.pop());
-    //             }
-    //             _stack.pop(); // remove '(' that is left
-    //         } else if (
-    //             !s.loadRemoteFlag && chunk.mayBeNumber() && !s.isFunc && !s.directUseUint256
-    //         ) {
-    //             _updateUINT256param();
-    //             if (i + 1 <= _code.length - 1) {
-    //                 result.push(_parseChunk(chunk, _getCurrencyMultiplier(_code[i + 1])));
-    //             } else {
-    //                 result.push(_parseChunk(chunk, 0));
-    //             }
-    //         } else if (
-    //             !chunk.mayBeAddress() && chunk.mayBeNumber() && !s.isFunc && s.directUseUint256
-    //         ) {
-    //             s.directUseUint256 = false;
-    //             if (i + 1 <= _code.length - 1) {
-    //                 result.push(_parseChunk(chunk, _getCurrencyMultiplier(_code[i + 1])));
-    //             } else {
-    //                 result.push(_parseChunk(chunk, 0));
-    //             }
-    //         } else if (chunk.equal('func')) {
-    //             // if the chunk is 'func' then `Functions block` will occur
-    //             s.isFunc = true;
-    //         } else if (s.isFunc && !s.isName) {
-    //             // `Functions block` started
-    //             // if was not set the name for a function
-    //             (s.isFunc, s.isName, s.name) = _parseFuncMainData(
-    //                 chunk,
-    //                 s.name,
-    //                 s.isFunc,
-    //                 s.isName
-    //             );
-    //         } else if (s.isFunc && s.isName) {
-    //             // `Functions block` finished
-    //             // if it was already set the name for a function
-    //             s.isName = false;
-    //             s.isFunc = _parseFuncParams(chunk, s.name, s.isFunc);
-    //         } else if (_isCurrencySymbol(chunk)) {
-    //             // we've already transformed the number before the keyword
-    //             // so we can safely skip the chunk
-    //             continue;
-    //         } else {
-    //             result.push(chunk);
-    //             if (s.loadRemoteVarCount == 4) {
-    //                 s.loadRemoteFlag = false;
-    //                 s.loadRemoteVarCount = 0;
-    //             }
-    //         }
-    //     }
-
-    //     while (_stackLength(_stack)() > 0) {
-    //         result.push(_stack.pop());
-    //     }
-    //     return result;
-    // }
-
     /**
      * @dev checks the value, and returns the corresponding multiplier.
      * If it is Ether, then it returns 1000000000000000000,
@@ -1026,43 +712,6 @@ contract Preprocessor {
         } else return 0;
     }
 
-    // /**
-    //  * @dev Searching for a `.` (dot) symbol  and returns names status for complex string name.
-    //  * Ex. `USERS.balance`:
-    //  * Where `success` = true`,
-    //  * `arrName` = `USERS`,
-    //  * `structVar` = `balance`; otherwise it returns `success` = false` with empty string results
-    //  * @param _chunk is a command from DSL command list
-    //  * @return success if user provides complex name,  result is true
-    //  * @return arrName if user provided complex name, result is the name of structure
-    //  * @return structVar if user provided complex name, result is the name of structure variable
-    //  */
-    // function _getNames(string memory _chunk)
-    //     internal
-    //     view
-    //     returns (
-    //         bool success,
-    //         string memory arrName,
-    //         string memory structVar
-    //     )
-    // {
-    //     // TODO: decrease amount of iterations
-    //     bytes memory symbols = bytes(_chunk);
-    //     bool isFound; // dot was found
-    //     for (uint256 i = 0; i < symbols.length; i++) {
-    //         if (!isFound) {
-    //             if (symbols[i] == DOT_SYMBOL) {
-    //                 isFound = true;
-    //                 continue;
-    //             }
-    //             arrName = arrName.concat(string(abi.encodePacked(symbols[i])));
-    //         } else {
-    //             structVar = structVar.concat(string(abi.encodePacked(symbols[i])));
-    //         }
-    //     }
-    //     if (isFound) return (true, arrName, structVar);
-    // }
-
     /**
      * @dev Check is chunk is a currency symbol
      * @param _chunk is a current chunk from the DSL string code
@@ -1072,47 +721,6 @@ contract Preprocessor {
         if (_chunk.equal('ETH') || _chunk.equal('GWEI')) return true;
         return false;
     }
-
-    // /**
-    //  * @dev Pushes additional 'uint256' string to results in case, if there are no
-    //  * types provided for uint256 values or
-    //  * loadRemote command, is not in the processing or
-    //  * the last chunk that was added to results is not 'uint256'
-    //  */
-    // function _updateUINT256param(string[] memory _result, uint256 _resultCtr)
-    //     internal
-    //     pure
-    //     returns (string[] memory, uint256)
-    // {
-    //     if (_resultCtr == 0 || (!(_result[_resultCtr - 1].equal('uint256')))) {
-    //         _result[_resultCtr] = 'uint256';
-    //     }
-    //     return (_result, _resultCtr);
-    // }
-
-    // /**
-    //  * @dev Checks parameters and updates DSL code depending on what
-    //  * kind of function was provided.
-    //  * This internal function expects 'func' that can be with and without parameters.
-    //  * @param _chunk is a current chunk from the DSL string code
-    //  * @param _currentName is a current name of function
-    //  * @param _isFunc describes if the func opcode was occured
-    //  */
-    // function _parseFuncParams(
-    //     string memory _chunk,
-    //     string memory _currentName,
-    //     bool _isFunc
-    // ) internal returns (bool) {
-    //     if (_chunk.equal('endf')) {
-    //         // if the function without parameters
-    //         _pushFuncName(_currentName);
-    //         return false;
-    //     } else {
-    //         // if the function with parameters
-    //         _rebuildParameters(_chunk.toUint256(), _currentName);
-    //         return _isFunc;
-    //     }
-    // }
 
     /**
      * @dev Returns updated parameters for the `func` opcode processing
@@ -1156,139 +764,6 @@ contract Preprocessor {
             return (_isFunc, true, _chunk);
         }
     }
-
-    // /**
-    //  * @dev Rebuilds parameters to DSL commands in result's list.
-    //  * Pushes the command that saves parameter in the smart contract instead
-    //  * of the parameters that were provided for parsing.
-    //  * The function will store the command like `uint256 7 setUint256 NUMBER_VAR` and
-    //  * remove the parameter like `uint256 7`.
-    //  * The DSL command will be stored before the function body.
-    //  * For the moment it works only with uint256 type.
-    //  * @param _paramsCount is an amount of parameters that provided after
-    //  * the name of function
-    //  * @param _nameOfFunc is a name of function that is used to generate
-    //  * the name of variables
-    //  */
-    // function _rebuildParameters(
-    //     uint256 _paramsCount,
-    //     string memory _nameOfFunc,
-    //     string[] memory _result
-    // ) internal {
-    //     /*
-    //     `chunks` list needs to store parameters temporarly and rewrite dsl string code
-
-    //     `_paramsCount * 2` includes type and value for the parameter
-
-    //     `indexFirst` is an index where the first parameter was pushed to results
-
-    //     For example:
-    //     if the function has 6 input parameters then the indexFirst will be set in
-    //     the index that shows, where it was the first parameter was stored before
-    //     the 'func', was occurred.
-    //     */
-
-    //     uint256 _totalParams = _paramsCount * 2;
-    //     require(_paramsCount > 0, ErrorsPreprocessor.PRP1);
-    //     string[] memory chunks = new string[](_totalParams);
-
-    //     require(_result.length >= _totalParams, ErrorsPreprocessor.PRP2);
-    //     uint256 indexFirst = _result.length - _totalParams;
-
-    //     // store paramerets that were already pushed to results
-    //     for (uint256 j = 0; j < _totalParams; j++) {
-    //         chunks[j] = _result[indexFirst + j];
-    //     }
-
-    //     _cleanCode(_totalParams);
-
-    //     for (uint256 j = 0; j < chunks.length; j += 2) {
-    //         _saveParameter(j, chunks[j], chunks[j + 1], _nameOfFunc);
-    //     }
-
-    //     _pushParameters(_paramsCount);
-    //     _pushFuncName(_nameOfFunc);
-    // }
-
-    // /**
-    //  * @dev Pushes parameters to result's list depend on their type for each value
-    //  * @param _count is an amount of parameters provided next to the name of func
-    //  */
-    // function _pushParameters(uint256 _count) internal {
-    //     for (uint256 j = 0; j < _count; j++) {
-    //         FuncParameter memory fp = parameters[j + 1];
-    //         _rebuildParameter(fp._type, fp.value, fp.nameOfVariable);
-    //         // clear mapping data to prevent collisions with values
-    //         parameters[j + 1] = FuncParameter('', '0', '');
-    //     }
-    // }
-
-    // /**
-    //  * @dev Saves parameters in mapping checking/using valid type for each value
-    //  * @param _index is a current chunk index from temporary chunks
-    //  * @param _type is a type of the parameter
-    //  * @param _value is a value of the parameter
-    //  * @param _nameOfFunc is a name of function that is used to generate
-    //  * the name of the current variable
-    //  */
-    // function _saveParameter(
-    //     uint256 _index,
-    //     string memory _type,
-    //     string memory _value,
-    //     string memory _nameOfFunc
-    // ) internal {
-    //     FuncParameter storage fp = parameters[_index / 2 + 1];
-    //     fp._type = _type;
-    //     fp.value = _value;
-    //     fp.nameOfVariable = string(
-    //         abi.encodePacked(_nameOfFunc, '_', StringUtils.toString(_index / 2 + 1))
-    //     );
-    // }
-
-    // /**
-    //  * @dev Clears useless variables from the DSL code string as
-    //  * all needed parameters are already stored in chunks list
-    //  * @param _count is an amount of parameters provided next
-    //  * to the name of func. As parameters are stored with their types,
-    //  * the _count variable was already multiplied to 2
-    //  */
-    // function _cleanCode(uint256 _count, string[] memory _result) internal {
-    //     for (uint256 j = 0; j < _count; j++) {
-    //         _result.pop();
-    //     }
-    // }
-
-    // /**
-    //  * @dev Preparing and pushes the DSL command to results.
-    //  * The comand will save this parameter and its name in the smart contract.
-    //  * For example: `uint256 7 setUint256 NUMBER_VAR`
-    //  * For the moment it works only with uint256 types.
-    //  * @param _type is a type of the parameter
-    //  * @param _value is a value of the parameter
-    //  * @param _variableName is a name of variable that was generated before
-    //  */
-    // function _rebuildParameter(
-    //     string memory _type,
-    //     string memory _value,
-    //     string memory _variableName,
-    //     string[] memory _result
-    // ) internal {
-    //     // TODO: '_type' - should be used in the future for other types
-    //     _result.push(_type);
-    //     _result.push(_value);
-    //     // TODO: setUint256 - update for other types in dependence on '_type'
-    //     _result.push('setUint256');
-    //     _result.push(_variableName);
-    // }
-
-    // /**
-    //  * @dev Pushes the func opcode and the name of the function
-    //  * @param _name is a current name of the function
-    //  */
-    // function _pushFuncName(string memory _name, string[] memory _result) internal {
-    //     _result.push('func');
-    //     _result.push(_name);
-    // }
 
     function _isOperator(address _ctxAddr, string memory op) internal view returns (bool) {
         for (uint256 i = 0; i < IContext(_ctxAddr).operatorsLen(); i++) {

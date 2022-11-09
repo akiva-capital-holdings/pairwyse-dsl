@@ -11,8 +11,9 @@ describe.only('Preprocessor', () => {
   let appAddrHex: string;
 
   before(async () => {
-    // Deploy StringUtils library
+    // Deploy required libraries
     const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
+    const strStackLib = await (await ethers.getContractFactory('StringStack')).deploy();
 
     // Deploy Context
     const ctx = await (await ethers.getContractFactory('ContextMock')).deploy();
@@ -41,7 +42,7 @@ describe.only('Preprocessor', () => {
     // Deploy PreprocessorMock
     app = await (
       await ethers.getContractFactory('PreprocessorMock', {
-        libraries: { StringUtils: stringLib.address },
+        libraries: { StringUtils: stringLib.address, StringStack: strStackLib.address },
       })
     ).deploy();
     // appAddrHex = app.address.slice(2);
@@ -1088,12 +1089,12 @@ describe.only('Preprocessor', () => {
         checkStringStack(cmds, ['uint256', parseUnits('1', 25).toString(), 'setUint256', 'SUM']);
       });
 
-      it('should return a simple number without decimals even using simplified method', async () => {
+      it('should return a simple number without decimals even with simplified method', async () => {
         const cmds = await app.callStatic.transform(ctxAddr, '(uint256 123e0) setUint256 SUM');
         checkStringStack(cmds, ['uint256', parseUnits('123', 0).toString(), 'setUint256', 'SUM']);
       });
 
-      it('should return a long number without decimals even using simplified method', async () => {
+      it('should return a long number without decimals even with simplified method', async () => {
         const cmds = await app.callStatic.transform(
           ctxAddr,
           '(uint256 1000000000000000e0) setUint256 SUM'
@@ -1380,7 +1381,7 @@ describe.only('Preprocessor', () => {
         ]);
       });
 
-      it('should return a simple number without decimals even using simplified method', async () => {
+      it('should return a simple number without decimals even with simplified method', async () => {
         const cmds = await app.callStatic.transform(
           ctxAddr,
           'transferFrom DAI OWNER RECEIVER 123e0'
@@ -1394,7 +1395,7 @@ describe.only('Preprocessor', () => {
         ]);
       });
 
-      it('should return a long number without decimals even using simplified method', async () => {
+      it('should return a long number without decimals even with simplified method', async () => {
         const cmds = await app.callStatic.transform(
           ctxAddr,
           'transferFrom DAI OWNER RECEIVER 1000000000000000e0'
@@ -1512,12 +1513,12 @@ describe.only('Preprocessor', () => {
         checkStringStack(cmds, ['transfer', 'DAI', 'RECEIVER', parseUnits('1', 25).toString()]);
       });
 
-      it('should return a simple number without decimals even using simplified method', async () => {
+      it('should return a simple number without decimals even with simplified method', async () => {
         const cmds = await app.callStatic.transform(ctxAddr, 'transfer DAI RECEIVER 123e0');
         checkStringStack(cmds, ['transfer', 'DAI', 'RECEIVER', parseUnits('123', 0).toString()]);
       });
 
-      it('should return a long number without decimals even using simplified method', async () => {
+      it('should return a long number without decimals even with simplified method', async () => {
         const cmds = await app.callStatic.transform(
           ctxAddr,
           'transfer DAI RECEIVER 1000000000000000e0'
@@ -1591,7 +1592,6 @@ describe.only('Preprocessor', () => {
           `;
 
           const cmds = await app.callStatic.transform(ctxAddr, input);
-          console.log(cmds);
           checkStringStack(cmds, [
             'declareArr',
             'uint256',
@@ -1854,14 +1854,16 @@ describe.only('Preprocessor', () => {
       });
 
       it('should return a simple struct with two address parameters', async () => {
-        const input =
-          'struct BOB {myAccount: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc, wifesAccount: 0x27f8a90ede3d84c7c0166bd84a4635e4675accfc}';
+        const input = `struct BOB {
+          myAccount: 0x47f8a90ede3d84c7c0166bd84a4635e4675accfc,
+          wifesAccount: 0x27f8a90ede3d84c7c0166bd84a4635e4675accfc
+        }`;
         const cmds = await app.callStatic.transform(ctxAddr, input);
         checkStringStack(cmds, [
           'struct',
           'BOB',
           'myAccount',
-          '0x47f8a90ede3d84c7c0166bd84a4635e4675accfc', // a. as a marker of address type of variable
+          '0x47f8a90ede3d84c7c0166bd84a4635e4675accfc',
           'wifesAccount',
           '0x27f8a90ede3d84c7c0166bd84a4635e4675accfc',
           'endStruct',
@@ -1898,7 +1900,6 @@ describe.only('Preprocessor', () => {
             (blockTimestamp < var EXPIRY) or (var RISK != bool true)
           `;
         const cmds = await app.callStatic.transform(ctxAddr, input);
-        console.log(cmds);
         checkStringStack(cmds, [
           'uint256',
           '4567',

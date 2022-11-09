@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { StringStack } from '../helpers/StringStack.sol';
 import { Preprocessor } from '../Preprocessor.sol';
 
 contract PreprocessorMock is Preprocessor {
@@ -15,16 +14,9 @@ contract PreprocessorMock is Preprocessor {
 
     function infixToPostfix(address _ctxAddr, string[] memory _code)
         external
-        returns (
-            // StringStack _stack
-            string[] memory
-        )
+        returns (string[] memory)
     {
-        return
-            _infixToPostfix(
-                _ctxAddr,
-                _code /*, _stack*/
-            );
+        return _infixToPostfix(_ctxAddr, _code);
     }
 
     function cleanString(string memory _program)
