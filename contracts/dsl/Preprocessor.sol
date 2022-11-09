@@ -29,18 +29,18 @@ contract Preprocessor {
     // param positional number -> parameter itself
     // mapping(uint256 => FuncParameter) internal parameters;
     // Note: temporary variable
-    string[] internal tmpStrArray; // stores the list of commands after infixToPostfix transformation
+    // string[] internal tmpStrArray; // stores the list of commands after infixToPostfix transformation
 
     // Stack with elements of type string that is used to temporarily store data of `infixToPostfix` function
-    StringStack internal tmpStrStack;
+    // StringStack internal tmpStrStack;
 
-    bytes1 internal DOT_SYMBOL = 0x2e;
+    // bytes1 internal DOT_SYMBOL = 0x2e;
 
-    constructor() {
-        // TODO: make stack a function, not a contract;
-        //       then we could restrict functions like `infixToPostfix` to `view` to save gas
-        tmpStrStack = new StringStack();
-    }
+    // constructor() {
+    //     // TODO: make stack a function, not a contract;
+    //     //       then we could restrict functions like `infixToPostfix` to `view` to save gas
+    //     // tmpStrStack = new StringStack();
+    // }
 
     /**
      * @dev The main function that transforms the user's DSL code string to the list of commands.
@@ -59,15 +59,19 @@ contract Preprocessor {
      * @param _program is a user's DSL code string
      * @return the list of commands that storing `result`
      */
-    function transform(
-        address _ctxAddr,
-        string memory _program // TODO: make `view`
-    ) external returns (string[] memory) {
+    function transform(address _ctxAddr, string memory _program)
+        external
+        view
+        returns (string[] memory)
+    {
         _program = _cleanString(_program);
         string[] memory _code = _split(_program, '\n ,:(){}', '(){}');
         _code = _removeSyntacticSugar(_code);
         _code = _simplifyCode(_code, _ctxAddr);
-        _code = _infixToPostfix(_ctxAddr, _code, tmpStrStack); // TODO: make `view`
+        _code = _infixToPostfix(
+            _ctxAddr,
+            _code /*, tmpStrStack*/
+        );
         return _code;
     }
 
@@ -126,6 +130,94 @@ contract Preprocessor {
             _cleanedProgram = _cleanedProgram.concat(char);
             i += 1;
         }
+    }
+
+    // function _pushToStack(string[] memory _stack, string memory _element)
+    //     internal
+    //     view
+    //     returns (string[] memory)
+    // {
+    //     _stack.push(data);
+    // }
+
+    // function pop() external returns (string memory) {
+    //     string memory data = _seeLast();
+    //     stack.pop();
+
+    //     return data;
+    // }
+
+    // function _stackLength(string[] memory _stack) internal view returns (uint256) {
+    //     while (!_stack[i].equal('')) {
+    //         i++;
+    //     }
+    //     return i - 1;
+    // }
+
+    // function _seeLast() internal view returns (string memory) {
+    //     require(_length() > 0, ErrorsStack.STK4);
+    //     return stack[_length() - 1];
+    // }
+
+    /**
+     * @dev Push element to array in the first position
+     * @dev As the array has fixed size, we drop the last element when addind a new one to the beginning of the array
+     */
+    function _pushToStack(string[] memory _stack, string memory _element)
+        internal
+        view
+        returns (string[] memory)
+    {
+        console.log('push to stack');
+        // for (uint256 i = _stackLength(_stack); i > 1; i--) {
+        //     if (_stack[i].equal('')) continue;
+        //     console.log('i =', i);
+        //     _stack[i - 1] = _stack[i - 2];
+        // }
+        // _stack[0] = _element;
+        // return _stack;
+
+        _stack[_stackLength(_stack)] = _element;
+        return _stack;
+    }
+
+    function _popFromStack(string[] memory _stack)
+        internal
+        view
+        returns (string[] memory, string memory)
+    {
+        console.log('pop from stack');
+        // string memory _topElement = _stack[0];
+        // uint256 _len = _stackLength(_stack);
+        // if (_len == 1) {
+        //     _stack[0] = '';
+        // }
+        // for (uint256 i = 0; i < _len - 1; i++) {
+        //     console.log('i =', i);
+        //     if (_stack[i].equal('')) break;
+        //     _stack[i] = _stack[i + 1];
+        // }
+        // return (_stack, _topElement);
+
+        string memory _topElement = _seeLastInStack(_stack);
+        _stack[_stackLength(_stack) - 1] = '';
+        return (_stack, _topElement);
+    }
+
+    function _stackLength(string[] memory _stack) internal view returns (uint256) {
+        console.log('_stackLength');
+        uint256 i;
+        while (!_stack[i].equal('')) {
+            i++;
+        }
+        console.log('i =', i);
+        console.log('stack length is:', i);
+        return i;
+    }
+
+    function _seeLastInStack(string[] memory _stack) internal view returns (string memory) {
+        console.log('last in stack is:', _stack[_stackLength(_stack) - 1]);
+        return _stack[_stackLength(_stack) - 1];
     }
 
     /**
@@ -190,26 +282,29 @@ contract Preprocessor {
 
     // if chunk is a number removes scientific notation if any
     function _removeSyntacticSugar(string[] memory _code) internal view returns (string[] memory) {
-        console.log('\n    -> removeSyntacticSugar');
+        // console.log('\n    -> removeSyntacticSugar');
         string[] memory _result = new string[](50);
         uint256 _resultCtr;
-        string memory chunk;
+        string memory _chunk;
         string memory _prevChunk;
         uint256 i;
 
         while (i < _nonEmptyArrLen(_code)) {
-            // // skip empty strings in code
-            // if (_code[i].equal('')) {
-            //     i++;
-            //     continue;
-            // }
-
             _prevChunk = i == 0 ? '' : _code[i - 1];
-            chunk = _code[i++];
+            _chunk = _code[i++];
 
             // if chunk is a number removes scientific notation if any
-            (_resultCtr, chunk) = _removeSyntacticSugar(_resultCtr, chunk, _prevChunk);
-            _result[_resultCtr++] = chunk;
+            // (_resultCtr, chunk) = _removeSyntacticSugar(_resultCtr, chunk, _prevChunk);
+
+            _chunk = _checkScientificNotation(_chunk);
+            // console.log('_removeSyntacticSugar chunk =', _chunk);
+            if (_isCurrencySymbol(_chunk)) {
+                // console.log('This is a currency symbol');
+                (_resultCtr, _chunk) = _processCurrencySymbol(_resultCtr, _chunk, _prevChunk);
+                // console.log('_removeSyntacticSugar 2');
+            }
+
+            _result[_resultCtr++] = _chunk;
         }
         return _result;
     }
@@ -233,6 +328,8 @@ contract Preprocessor {
             _chunk = _code[i++];
 
             console.log('chunk =', _chunk);
+
+            // (_resultCtr, _chunk) = _removeSyntacticSugar(_resultCtr, _chunk, _prevChunk);
 
             if (IContext(_ctxAddr).isCommand(_chunk)) {
                 (_result, _resultCtr, i) = _processCommand(
@@ -260,19 +357,20 @@ contract Preprocessor {
         return _result;
     }
 
-    function _infixToPostfix(
-        address _ctxAddr,
-        string[] memory _code,
-        StringStack _stack
-    ) internal returns (string[] memory) {
+    function _infixToPostfix(address _ctxAddr, string[] memory _code)
+        internal
+        view
+        returns (string[] memory)
+    {
         console.log('\n    ->infix to postfix');
         string[] memory _result = new string[](50);
+        string[] memory _stack = new string[](50);
         uint256 _resultCtr;
         string memory _chunk;
         uint256 i;
 
         // Cleanup
-        _stack.clear();
+        // _stack.clear();
 
         while (i < _nonEmptyArrLen(_code)) {
             _chunk = _code[i++];
@@ -281,43 +379,49 @@ contract Preprocessor {
             if (_isOperator(_ctxAddr, _chunk)) {
                 console.log('operator');
                 // operator
-                (_result, _resultCtr) = _processOperator(
+                (_result, _resultCtr, _stack) = _processOperator(
                     _stack,
                     _result,
                     _resultCtr,
                     _ctxAddr,
                     _chunk
                 );
+                console.log('after operator');
             } else if (_isParenthesis(_chunk)) {
                 console.log('parenthesis');
-                (_result, _resultCtr) = _processParenthesis(_stack, _result, _resultCtr, _chunk);
+                (_result, _resultCtr, _stack) = _processParenthesis(
+                    _stack,
+                    _result,
+                    _resultCtr,
+                    _chunk
+                );
             } else {
                 _result[_resultCtr++] = _chunk;
             }
         }
 
         console.log(4);
-        while (_stack.length() > 0) {
-            _result[_resultCtr++] = _stack.pop();
+        while (_stackLength(_stack) > 0) {
+            (_stack, _result[_resultCtr++]) = _popFromStack(_stack);
         }
         return _result;
     }
 
-    function _removeSyntacticSugar(
-        uint256 _resultCtr,
-        string memory _chunk,
-        string memory _prevChunk
-    ) internal view returns (uint256, string memory) {
-        console.log('_removeSyntacticSugar');
-        _chunk = _checkScientificNotation(_chunk);
-        if (_isCurrencySymbol(_chunk)) {
-            console.log('This is a currency symbol');
-            (_resultCtr, _chunk) = _processCurrencySymbol(_resultCtr, _chunk, _prevChunk);
-            console.log('_removeSyntacticSugar 2');
-        }
-        console.log('_removeSyntacticSugar chunk =', _chunk);
-        return (_resultCtr, _chunk);
-    }
+    // function _removeSyntacticSugar(
+    //     uint256 _resultCtr,
+    //     string memory _chunk,
+    //     string memory _prevChunk
+    // ) internal view returns (uint256, string memory) {
+    //     console.log('_removeSyntacticSugar');
+    //     _chunk = _checkScientificNotation(_chunk);
+    //     console.log('_removeSyntacticSugar chunk =', _chunk);
+    //     if (_isCurrencySymbol(_chunk)) {
+    //         console.log('This is a currency symbol');
+    //         (_resultCtr, _chunk) = _processCurrencySymbol(_resultCtr, _chunk, _prevChunk);
+    //         console.log('_removeSyntacticSugar 2');
+    //     }
+    //     return (_resultCtr, _chunk);
+    // }
 
     function _checkScientificNotation(string memory _chunk) internal pure returns (string memory) {
         // console.log('_checkScientificNotation');
@@ -357,14 +461,14 @@ contract Preprocessor {
         uint256 i
     )
         internal
-        view
+        pure
         returns (
             string[] memory,
             uint256,
             uint256
         )
     {
-        console.log('_processArrayInsert');
+        // console.log('_processArrayInsert');
 
         // Get the necessary params of `insert` command
         // Notice: `insert 1234 into NUMBERS` -> `push 1234 NUMBERS`
@@ -459,7 +563,7 @@ contract Preprocessor {
     ) internal view returns (uint256, string memory) {
         console.log('_processCurrencySymbol');
         uint256 _currencyMultiplier = _getCurrencyMultiplier(_chunk);
-        // console.log('_currencyMultiplier =', _currencyMultiplier);
+        console.log('_currencyMultiplier =', _currencyMultiplier);
 
         try _prevChunk.toUint256() {
             console.log('try');
@@ -472,7 +576,7 @@ contract Preprocessor {
             );
         }
 
-        console.log('result ctr =', _resultCtr);
+        // console.log('result ctr =', _resultCtr);
         // this is to rewrite old number (ex. 100) with an extended number (ex. 100 GWEI = 100000000000)
         if (_resultCtr > 0) {
             --_resultCtr;
@@ -552,33 +656,55 @@ contract Preprocessor {
     }
 
     function _processParenthesis(
-        StringStack _stack,
+        // StringStack _stack,
+        string[] memory _stack,
         string[] memory _result,
         uint256 _resultCtr,
         string memory _chunk
-    ) internal returns (string[] memory, uint256) {
+    )
+        internal
+        view
+        returns (
+            string[] memory,
+            uint256,
+            string[] memory
+        )
+    {
         if (_chunk.equal('(')) {
             // opening bracket
-            _stack.push(_chunk);
+            // _stack.push(_chunk);
+            _stack = _pushToStack(_stack, _chunk);
         } else if (_chunk.equal(')')) {
             // closing bracket
-            (_result, _resultCtr) = _processClosingParenthesis(_stack, _result, _resultCtr);
+            (_result, _resultCtr, _stack) = _processClosingParenthesis(_stack, _result, _resultCtr);
         }
 
-        return (_result, _resultCtr);
+        return (_result, _resultCtr, _stack);
     }
 
     function _processClosingParenthesis(
-        StringStack _stack,
+        // StringStack _stack,
+        string[] memory _stack,
         string[] memory _result,
         uint256 _resultCtr
-    ) public returns (string[] memory, uint256) {
+    )
+        public
+        view
+        returns (
+            string[] memory,
+            uint256,
+            string[] memory
+        )
+    {
         console.log('_processClosingParenthesis');
-        while (!_stack.seeLast().equal('(')) {
-            _result[_resultCtr++] = _stack.pop();
+        // while (!_stack.seeLast().equal('(')) {
+        while (!_seeLastInStack(_stack).equal('(')) {
+            // _result[_resultCtr++] = _stack.pop();
+            (_stack, _result[_resultCtr++]) = _popFromStack(_stack);
         }
-        _stack.pop(); // remove '(' that is left
-        return (_result, _resultCtr);
+        // _stack.pop(); // remove '(' that is left
+        (_stack, ) = _popFromStack(_stack); // remove '(' that is left
+        return (_result, _resultCtr, _stack);
     }
 
     function _processCurlyBracket(
@@ -586,9 +712,8 @@ contract Preprocessor {
         uint256 _resultCtr,
         string memory _chunk
     ) internal pure returns (string[] memory, uint256) {
-        if (_chunk.equal('{')) {
-            // do nothing
-        } else if (_chunk.equal('}')) {
+        // if `_chunk` equal `{` - do nothing
+        if (_chunk.equal('}')) {
             _result[_resultCtr++] = 'end';
         }
 
@@ -596,28 +721,44 @@ contract Preprocessor {
     }
 
     function _processOperator(
-        StringStack _stack,
+        // StringStack _stack,
+        string[] memory _stack,
         string[] memory _result,
         uint256 _resultCtr,
         address _ctxAddr,
         string memory _chunk
-    ) internal returns (string[] memory, uint256) {
-        if (_chunk.equal('if')) {
-            // if operator
-            // TODO: this branch should never be the case; check it -> remove it
-            console.log('!!!! THIS branch should NEVERS be the case!!! if operator');
-        } else {
-            while (
-                _stack.length() > 0 &&
-                IContext(_ctxAddr).opsPriors(_chunk) <=
-                IContext(_ctxAddr).opsPriors(_stack.seeLast())
-            ) {
-                _result[_resultCtr++] = _stack.pop();
-            }
-            _stack.push(_chunk);
+    )
+        internal
+        view
+        returns (
+            string[] memory,
+            uint256,
+            string[] memory
+        )
+    {
+        // if (_chunk.equal('if')) {
+        //     // if operator
+        //     // TODO: this branch should never be the case; check it -> remove it
+        //     // console.log('!!!! THIS branch should NEVERS be the case!!! if operator');
+        // } else {
+        // console.log('processing operator');
+        while (
+            _stackLength(_stack) > 0 &&
+            IContext(_ctxAddr).opsPriors(_chunk) <=
+            // IContext(_ctxAddr).opsPriors(_stack.seeLast())
+            IContext(_ctxAddr).opsPriors(_seeLastInStack(_stack))
+        ) {
+            // console.log('while iteration');
+            // _result[_resultCtr++] = _stack.pop();
+            (_stack, _result[_resultCtr++]) = _popFromStack(_stack);
         }
+        // _stack.push(_chunk);
+        // console.log('_processOperator: push to stack');
+        _stack = _pushToStack(_stack, _chunk);
+        // }
 
-        return (_result, _resultCtr);
+        // console.log('return updated chunk');
+        return (_result, _resultCtr, _stack);
     }
 
     function _checkIsNumberOrAddress(
@@ -802,7 +943,7 @@ contract Preprocessor {
 
     //         if (_isOperator(_ctxAddr, chunk)) {
     //             while (
-    //                 _stack.length() > 0 &&
+    //                 _stackLength(_stack)() > 0 &&
     //                 IContext(_ctxAddr).opsPriors(chunk) <=
     //                 IContext(_ctxAddr).opsPriors(_stack.seeLast())
     //             ) {
@@ -864,7 +1005,7 @@ contract Preprocessor {
     //         }
     //     }
 
-    //     while (_stack.length() > 0) {
+    //     while (_stackLength(_stack)() > 0) {
     //         result.push(_stack.pop());
     //     }
     //     return result;

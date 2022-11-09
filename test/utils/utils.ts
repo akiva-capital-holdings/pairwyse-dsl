@@ -12,7 +12,7 @@ import { DynamicTestData, OpConditionalTxFunc, TxObject } from '../types';
 import { ONE_DAY, ONE_MONTH, ONE_YEAR } from './constants';
 import { activateRecord } from '../../scripts/utils/update.record';
 
-export const jsTransform = (expr: string) =>
+export const split = (expr: string) =>
   expr
     .replaceAll('(', '@(@')
     .replaceAll(')', '@)@')

@@ -13,12 +13,18 @@ contract PreprocessorMock is Preprocessor {
         return _split(_program, _separators, _separatorsToKeep);
     }
 
-    function infixToPostfix(
-        address _ctxAddr,
-        string[] memory _code,
-        StringStack _stack
-    ) external returns (string[] memory) {
-        return _infixToPostfix(_ctxAddr, _code, _stack);
+    function infixToPostfix(address _ctxAddr, string[] memory _code)
+        external
+        returns (
+            // StringStack _stack
+            string[] memory
+        )
+    {
+        return
+            _infixToPostfix(
+                _ctxAddr,
+                _code /*, _stack*/
+            );
     }
 
     function cleanString(string memory _program)

@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { parseUnits } from 'ethers/lib/utils';
 
-import { PreprocessorMock, StringStack } from '../../typechain-types';
-import { checkStringStack, jsTransform } from '../utils/utils';
+import { PreprocessorMock } from '../../typechain-types';
+import { checkStringStack, split } from '../utils/utils';
 
 describe.only('Preprocessor', () => {
   let app: PreprocessorMock;
@@ -50,37 +50,28 @@ describe.only('Preprocessor', () => {
 
   // works, ok
   describe('infix to postfix', () => {
-    let stack: StringStack;
-    before(async () => {
-      stack = await (await ethers.getContractFactory('StringStack')).deploy();
-    });
-
-    afterEach(async () => {
-      await stack.clear();
-    });
-
     it('simple math', async () => {
-      const inputArr = jsTransform('uint256 1 + uint256 2');
-      const res = await app.callStatic.infixToPostfix(ctxAddr, inputArr, stack.address);
-      checkStringStack(res, ['uint256', '1', 'uint256', '2', '+']);
+      const code = split('uint256 1 + uint256 2');
+      const cmds = await app.callStatic.infixToPostfix(ctxAddr, code);
+      checkStringStack(cmds, ['uint256', '1', 'uint256', '2', '+']);
     });
 
     it('simple', async () => {
-      const inputArr = jsTransform('var SENDER == msgSender');
-      const res = await app.callStatic.infixToPostfix(ctxAddr, inputArr, stack.address);
-      checkStringStack(res, ['var', 'SENDER', 'msgSender', '==']);
+      const code = split('var SENDER == msgSender');
+      const cmds = await app.callStatic.infixToPostfix(ctxAddr, code);
+      checkStringStack(cmds, ['var', 'SENDER', 'msgSender', '==']);
     });
 
     it('complex', async () => {
-      const inputArr = jsTransform(`
+      const code = split(`
         (time > var INIT)
           and
         (time < var EXPIRY)
           or
         (var RISK != bool true)
       `);
-      const res = await app.callStatic.infixToPostfix(ctxAddr, inputArr, stack.address);
-      checkStringStack(res, [
+      const cmds = await app.callStatic.infixToPostfix(ctxAddr, code);
+      checkStringStack(cmds, [
         'time',
         'var',
         'INIT',
@@ -100,15 +91,15 @@ describe.only('Preprocessor', () => {
     });
 
     it('parenthesis #1', async () => {
-      const inputArr = jsTransform('uint256 1 or (uint256 5 or uint256 7)');
-      const res = await app.callStatic.infixToPostfix(ctxAddr, inputArr, stack.address);
-      checkStringStack(res, ['uint256', '1', 'uint256', '5', 'uint256', '7', 'or', 'or']);
+      const code = split('uint256 1 or (uint256 5 or uint256 7)');
+      const cmds = await app.callStatic.infixToPostfix(ctxAddr, code);
+      checkStringStack(cmds, ['uint256', '1', 'uint256', '5', 'uint256', '7', 'or', 'or']);
     });
 
     it('parenthesis #2', async () => {
-      const inputArr = jsTransform('((uint256 1 or (uint256 5 or uint256 7)) and uint256 0)');
-      const res = await app.callStatic.infixToPostfix(ctxAddr, inputArr, stack.address);
-      checkStringStack(res, [
+      const code = split('((uint256 1 or (uint256 5 or uint256 7)) and uint256 0)');
+      const cmds = await app.callStatic.infixToPostfix(ctxAddr, code);
+      checkStringStack(cmds, [
         'uint256',
         '1',
         'uint256',
@@ -129,18 +120,18 @@ describe.only('Preprocessor', () => {
     it('simple case', async () => {
       const input = 'var SENDER == msgSender';
       const res = await app.callStatic.split(input, '\n ,:(){}', '(){}');
-      checkStringStack(res, jsTransform(input));
+      checkStringStack(res, split(input));
     });
 
     it('extra spaces', async () => {
       const input = 'var      SENDER ==   msgSender';
       const res = await app.callStatic.split(input, '\n ,:(){}', '(){}');
-      checkStringStack(res, jsTransform(input));
+      checkStringStack(res, split(input));
     });
 
     it('parenthesis', async () => {
       const res = await app.callStatic.split('(((1 or 5) or 7) and 0)', '\n ,:(){}', '(){}');
-      checkStringStack(res, jsTransform('(((1 or 5) or 7) and 0)'));
+      checkStringStack(res, split('(((1 or 5) or 7) and 0)'));
     });
 
     it('new line symbol', async () => {
@@ -155,7 +146,7 @@ describe.only('Preprocessor', () => {
       );
       checkStringStack(
         res,
-        jsTransform(`
+        split(`
           var SENDER
             ==
           msgSender
@@ -185,7 +176,7 @@ describe.only('Preprocessor', () => {
       );
       checkStringStack(
         res,
-        jsTransform(`
+        split(`
         (
           (
             blockTimestamp > var INIT
@@ -890,14 +881,13 @@ describe.only('Preprocessor', () => {
 
   // doesn't work
   describe.skip('DSL functions', () => {
-    it('comand list for a SUM_OF_NUMBERS function (without parameters)', async () => {
+    it.skip('comand list for a SUM_OF_NUMBERS function (without parameters)', async () => {
       const cmds = await app.callStatic.transform(
         ctxAddr,
         `
-        func SUM_OF_NUMBERS endf
-        end
+        SUM_OF_NUMBERS()
 
-        SUM_OF_NUMBERS {
+        func SUM_OF_NUMBERS {
           (6 + 8) setUint256 SUM
         }
         `
