@@ -19,16 +19,20 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "hardhat docgen lint-staged"
+      "pre-commit": "lint-staged"
     }
   },
   "lint-staged": {
     "test/**.ts": [
+      "yarn hardhat docgen",
+      "pandoc docs/index.md --from markdown --to rst -s -o docs/index.rst",
       "eslint --fix --ext .ts",
       "prettier --write",
       "git add"
     ],
     "contracts/**/*.sol": [
+      "yarn hardhat docgen",
+      "pandoc docs/index.md --from markdown --to rst -s -o docs/index.rst",
       "eslint --fix --ext .sol",
       "prettier --write",
       "git add"
