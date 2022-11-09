@@ -20,9 +20,13 @@ import { ErrorsPreprocessor } from './libs/Errors.sol';
  * DSL code in postfix notation as
  * user's string code -> Preprocessor -> each command is separated in the commands list
  */
-contract Preprocessor is IPreprocessor {
+library Preprocessor {
     using StringUtils for string;
     using StringStack for string[];
+
+    /************************
+     * == MAIN FUNCTIONS == *
+     ***********************/
 
     /**
      * @dev The main function that transforms the user's DSL code string to the list of commands.
@@ -46,11 +50,11 @@ contract Preprocessor is IPreprocessor {
         view
         returns (string[] memory)
     {
-        _program = _cleanString(_program);
-        string[] memory _code = _split(_program, '\n ,:(){}', '(){}');
-        _code = _removeSyntacticSugar(_code);
-        _code = _simplifyCode(_code, _ctxAddr);
-        _code = _infixToPostfix(
+        _program = cleanString(_program);
+        string[] memory _code = split(_program, '\n ,:(){}', '(){}');
+        _code = removeSyntacticSugar(_code);
+        _code = simplifyCode(_code, _ctxAddr);
+        _code = infixToPostfix(
             _ctxAddr,
             _code /*, tmpStrStack*/
         );
@@ -72,8 +76,8 @@ contract Preprocessor is IPreprocessor {
      * @param _program is a current program string
      * @return _cleanedProgram new string program that contains only clean code without comments
      */
-    function _cleanString(string memory _program)
-        internal
+    function cleanString(string memory _program)
+        public
         pure
         returns (string memory _cleanedProgram)
     {
@@ -114,45 +118,6 @@ contract Preprocessor is IPreprocessor {
         }
     }
 
-    // /**
-    //  * @dev Push element to array in the first position
-    //  * @dev As the array has fixed size, we drop the last element when addind a new one to the beginning of the array
-    //  */
-    // function _pushToStack(string[] memory _stack, string memory _element)
-    //     internal
-    //     pure
-    //     returns (string[] memory)
-    // {
-    //     // console.log('push to stack');
-    //     _stack[_stackLength(_stack)] = _element;
-    //     return _stack;
-    // }
-
-    // function _popFromStack(string[] memory _stack)
-    //     internal
-    //     pure
-    //     returns (string[] memory, string memory)
-    // {
-    //     // console.log('pop from stack');
-    //     string memory _topElement = _seeLastInStack(_stack);
-    //     _stack[_stackLength(_stack) - 1] = '';
-    //     return (_stack, _topElement);
-    // }
-
-    // function _stackLength(string[] memory _stack) internal pure returns (uint256) {
-    //     // console.log('_stackLength');
-    //     uint256 i;
-    //     while (!_stack[i].equal('')) {
-    //         i++;
-    //     }
-    //     return i;
-    // }
-
-    // function _seeLastInStack(string[] memory _stack) internal pure returns (string memory) {
-    //     // console.log('last in stack is:', _stack[_stackLength(_stack) - 1]);
-    //     return _stack[_stackLength(_stack) - 1];
-    // }
-
     /**
      * @dev Splits the user's DSL code string to the list of commands
      * avoiding several symbols:
@@ -175,11 +140,11 @@ contract Preprocessor is IPreprocessor {
      */
     // _separatorsToKeep - we're using symbols from this string as separators but not removing
     // them from the resulting array
-    function _split(
+    function split(
         string memory _program,
         string memory _separators,
         string memory _separatorsToKeep
-    ) internal pure returns (string[] memory) {
+    ) public pure returns (string[] memory) {
         string[] memory _result = new string[](50);
         uint256 resultCtr;
         string memory buffer; // here we collect DSL commands, var names, etc. symbol by symbol
@@ -188,9 +153,7 @@ contract Preprocessor is IPreprocessor {
         for (uint256 i = 0; i < _program.length(); i++) {
             char = _program.char(i);
 
-            // char.isIn(_separators)
             if (char.isIn(_separators)) {
-                // if (char.equal(' ') || char.equal('\n') || char.equal('(') || char.equal(')')) {
                 if (buffer.length() > 0) {
                     _result[resultCtr++] = buffer;
                     buffer = '';
@@ -200,7 +163,6 @@ contract Preprocessor is IPreprocessor {
             }
 
             if (char.isIn(_separatorsToKeep)) {
-                // if (char.equal('(') || char.equal(')')) {
                 _result[resultCtr++] = char;
             }
         }
@@ -214,7 +176,7 @@ contract Preprocessor is IPreprocessor {
     }
 
     // if chunk is a number removes scientific notation if any
-    function _removeSyntacticSugar(string[] memory _code) internal pure returns (string[] memory) {
+    function removeSyntacticSugar(string[] memory _code) public pure returns (string[] memory) {
         // console.log('\n    -> removeSyntacticSugar');
         string[] memory _result = new string[](50);
         uint256 _resultCtr;
@@ -225,9 +187,6 @@ contract Preprocessor is IPreprocessor {
         while (i < _nonEmptyArrLen(_code)) {
             _prevChunk = i == 0 ? '' : _code[i - 1];
             _chunk = _code[i++];
-
-            // if chunk is a number removes scientific notation if any
-            // (_resultCtr, chunk) = _removeSyntacticSugar(_resultCtr, chunk, _prevChunk);
 
             _chunk = _checkScientificNotation(_chunk);
             // console.log('_removeSyntacticSugar chunk =', _chunk);
@@ -242,8 +201,8 @@ contract Preprocessor is IPreprocessor {
         return _result;
     }
 
-    function _simplifyCode(string[] memory _code, address _ctxAddr)
-        internal
+    function simplifyCode(string[] memory _code, address _ctxAddr)
+        public
         view
         returns (string[] memory)
     {
@@ -252,8 +211,6 @@ contract Preprocessor is IPreprocessor {
         uint256 _resultCtr;
         string memory _chunk;
         string memory _prevChunk;
-        // uint256 _skipCtr; // counter to skip preprocessing of command params; just directly add them
-        // to the output
         uint256 i;
 
         while (i < _nonEmptyArrLen(_code)) {
@@ -288,8 +245,8 @@ contract Preprocessor is IPreprocessor {
         return _result;
     }
 
-    function _infixToPostfix(address _ctxAddr, string[] memory _code)
-        internal
+    function infixToPostfix(address _ctxAddr, string[] memory _code)
+        public
         view
         returns (string[] memory)
     {
@@ -328,59 +285,15 @@ contract Preprocessor is IPreprocessor {
             }
         }
 
-        // console.log(4);
         while (_stack.stackLength() > 0) {
             (_stack, _result[_resultCtr++]) = _stack.popFromStack();
         }
         return _result;
     }
 
-    // function _removeSyntacticSugar(
-    //     uint256 _resultCtr,
-    //     string memory _chunk,
-    //     string memory _prevChunk
-    // ) internal view returns (uint256, string memory) {
-    //     console.log('_removeSyntacticSugar');
-    //     _chunk = _checkScientificNotation(_chunk);
-    //     console.log('_removeSyntacticSugar chunk =', _chunk);
-    //     if (_isCurrencySymbol(_chunk)) {
-    //         console.log('This is a currency symbol');
-    //         (_resultCtr, _chunk) = _processCurrencySymbol(_resultCtr, _chunk, _prevChunk);
-    //         console.log('_removeSyntacticSugar 2');
-    //     }
-    //     return (_resultCtr, _chunk);
-    // }
-
-    function _checkScientificNotation(string memory _chunk) internal pure returns (string memory) {
-        // console.log('_checkScientificNotation');
-        // console.log('isAddress =', _chunk.mayBeAddress());
-        // console.log('isNumber =', _chunk.mayBeNumber());
-        // console.log('1111');
-        if (_chunk.mayBeNumber() && !_chunk.mayBeAddress()) {
-            return _parseScientificNotation(_chunk);
-        }
-        return _chunk;
-    }
-
-    // /**
-    //  * @dev As the string of values can be simple and complex for DSL this function returns a number in
-    //  * Wei regardless of what type of number parameter was provided by the user.
-    //  * For example:
-    //  * `uint256 1000000` - simple
-    //  * `uint256 1e6 - complex`
-    //  * @param _chunk provided number
-    //  * @param _currencyMultiplier provided number of the multiplier
-    //  * @return updatedChunk amount in Wei of provided _chunk value
-    //  */
-    function _parseScientificNotation(
-        string memory _chunk /*, uint256 _currencyMultiplier*/
-    ) internal pure returns (string memory updatedChunk) {
-        try _chunk.toUint256() {
-            updatedChunk = _chunk;
-        } catch {
-            updatedChunk = _chunk.parseScientificNotation();
-        }
-    }
+    /***************************
+     * == PROCESS FUNCTIONS == *
+     **************************/
 
     function _processArrayInsert(
         string[] memory _result,
@@ -428,7 +341,7 @@ contract Preprocessor is IPreprocessor {
 
         // Ex. (sumOf) `USERS.balance` -> ['USERS', 'balance']
         // Ex. (sumOf) `USERS` ->['USERS']
-        string[] memory _sumOfArgs = _split(_code[i], '.', '');
+        string[] memory _sumOfArgs = split(_code[i], '.', '');
 
         // Ex. `sumOf USERS.balance` -> sum over array of structs
         // Ex. `sumOf USERS` -> sum over a regular array
@@ -526,7 +439,7 @@ contract Preprocessor is IPreprocessor {
 
         // Process multi-command aliases
         // Ex. `uint256[]` -> `declareArr uint256`
-        string[] memory _chunks = _split(_chunk, ' ', '');
+        string[] memory _chunks = split(_chunk, ' ', '');
 
         while (i < _nonEmptyArrLen(_chunks)) {
             _result[_resultCtr++] = _chunks[i++];
@@ -572,14 +485,6 @@ contract Preprocessor is IPreprocessor {
         }
 
         return (_result, _resultCtr, i);
-    }
-
-    function _isParenthesis(string memory _chunk) internal pure returns (bool) {
-        return _chunk.equal('(') || _chunk.equal(')');
-    }
-
-    function _isCurlyBracket(string memory _chunk) internal pure returns (bool) {
-        return _chunk.equal('{') || _chunk.equal('}');
     }
 
     function _processParenthesis(
@@ -672,6 +577,74 @@ contract Preprocessor is IPreprocessor {
         return (_result, _resultCtr, _stack);
     }
 
+    /**************************
+     * == HELPER FUNCTIONS == *
+     *************************/
+
+    /**
+     * @dev Check is chunk is a currency symbol
+     * @param _chunk is a current chunk from the DSL string code
+     * @return true or false based on whether chunk is a currency symbol or not
+     */
+    function _isCurrencySymbol(string memory _chunk) internal pure returns (bool) {
+        if (_chunk.equal('ETH') || _chunk.equal('GWEI')) return true;
+        return false;
+    }
+
+    function _isOperator(address _ctxAddr, string memory op) internal view returns (bool) {
+        for (uint256 i = 0; i < IContext(_ctxAddr).operatorsLen(); i++) {
+            if (op.equal(IContext(_ctxAddr).operators(i))) return true;
+        }
+        return false;
+    }
+
+    /**
+     * @dev Checks if a string is an alias to a command from DSL
+     */
+    function _isAlias(address _ctxAddr, string memory _cmd) internal view returns (bool) {
+        return !IContext(_ctxAddr).aliases(_cmd).equal('');
+    }
+
+    function _isParenthesis(string memory _chunk) internal pure returns (bool) {
+        return _chunk.equal('(') || _chunk.equal(')');
+    }
+
+    function _isCurlyBracket(string memory _chunk) internal pure returns (bool) {
+        return _chunk.equal('{') || _chunk.equal('}');
+    }
+
+    function _checkScientificNotation(string memory _chunk) internal pure returns (string memory) {
+        // console.log('_checkScientificNotation');
+        // console.log('isAddress =', _chunk.mayBeAddress());
+        // console.log('isNumber =', _chunk.mayBeNumber());
+        // console.log('1111');
+        if (_chunk.mayBeNumber() && !_chunk.mayBeAddress()) {
+            return _parseScientificNotation(_chunk);
+        }
+        return _chunk;
+    }
+
+    /**
+     * @dev As the string of values can be simple and complex for DSL this function returns a number in
+     * Wei regardless of what type of number parameter was provided by the user.
+     * For example:
+     * `uint256 1000000` - simple
+     * `uint256 1e6 - complex`
+     * @param _chunk provided number
+     * @return updatedChunk amount in Wei of provided _chunk value
+     */
+    function _parseScientificNotation(string memory _chunk)
+        internal
+        pure
+        returns (string memory updatedChunk)
+    {
+        try _chunk.toUint256() {
+            updatedChunk = _chunk;
+        } catch {
+            updatedChunk = _chunk.parseScientificNotation();
+        }
+    }
+
     function _checkIsNumberOrAddress(
         string[] memory _result,
         uint256 _resultCtr,
@@ -710,73 +683,6 @@ contract Preprocessor is IPreprocessor {
         } else if (_chunk.equal('GWEI')) {
             return 1000000000;
         } else return 0;
-    }
-
-    /**
-     * @dev Check is chunk is a currency symbol
-     * @param _chunk is a current chunk from the DSL string code
-     * @return true or false based on whether chunk is a currency symbol or not
-     */
-    function _isCurrencySymbol(string memory _chunk) internal pure returns (bool) {
-        if (_chunk.equal('ETH') || _chunk.equal('GWEI')) return true;
-        return false;
-    }
-
-    /**
-     * @dev Returns updated parameters for the `func` opcode processing
-     * Pushes the command that saves parameter in the smart contract instead
-     * of the parameters that were provided for parsing.
-     * The function will store the command like `uint256 7 setUint256 NUMBER_VAR` and
-     * remove the parameter like `uint256 7`.
-     * The DSL command will be stored before the function body.
-     * For the moment it works only with uint256 type.
-     * @param _chunk is a current chunk from the DSL string code
-     * @param _currentName is a current name of function
-     * @param _isFunc describes if the func opcode was occured
-     * @param _isName describes if the name for the function was already set
-     * @return isFunc the new state of _isFunc for function processing
-     * @return isName the new state of _isName for function processing
-     * @return name the new name of the function
-     */
-    function _parseFuncMainData(
-        string memory _chunk,
-        string memory _currentName,
-        bool _isFunc,
-        bool _isName
-    )
-        internal
-        pure
-        returns (
-            bool,
-            bool,
-            string memory
-        )
-    {
-        if (_chunk.equal('endf')) {
-            // finish `Functions block` process
-            // example: `func NAME <number_of_params> endf`
-            // updates only for: isFunc => false - end of func opcode
-            return (false, _isName, _currentName);
-        } else {
-            // updates only for:
-            // isName => true - setting the name of function has occurred
-            // name => current cunk
-            return (_isFunc, true, _chunk);
-        }
-    }
-
-    function _isOperator(address _ctxAddr, string memory op) internal view returns (bool) {
-        for (uint256 i = 0; i < IContext(_ctxAddr).operatorsLen(); i++) {
-            if (op.equal(IContext(_ctxAddr).operators(i))) return true;
-        }
-        return false;
-    }
-
-    /**
-     * @dev Checks if a string is an alias to a command from DSL
-     */
-    function _isAlias(address _ctxAddr, string memory _cmd) internal view returns (bool) {
-        return !IContext(_ctxAddr).aliases(_cmd).equal('');
     }
 
     /**
@@ -850,61 +756,6 @@ contract Preprocessor is IPreprocessor {
         } catch Error(string memory) {
             return false;
         }
-    }
-
-    /**
-     * @dev This function is used to check if 'transferFrom',
-     * 'sendEth' and 'transfer' functions(opcodes) won't use 'uint256' opcode during code
-     * execution directly. So it needs to be sure that executed code won't mess up
-     * parameters for the simple number and a number that be used for these functions.
-     * @param _directUseUint256 set by default from the outer function. Allows to keep current state of a contract
-     * @param _chunk is a current chunk from the outer function
-     * @return _isDirect is true if a chunk is matched one from the opcode list, otherwise is false
-     */
-    function _isDirectUseUint256(
-        bool _directUseUint256,
-        bool _isStruct,
-        string memory _chunk
-    ) internal pure returns (bool _isDirect) {
-        _isDirect = _directUseUint256;
-        if (
-            _chunk.equal('transferFrom') ||
-            _chunk.equal('sendEth') ||
-            _chunk.equal('transfer') ||
-            _chunk.equal('get') ||
-            _isStruct
-        ) {
-            _isDirect = true;
-        }
-    }
-
-    /**
-     * @dev As a 'loadRemote' opcode has 4 parameters in total and two of them are
-     * numbers, so it is important to be sure that executed code under 'loadRemote'
-     * won't mess parameters with the simple uint256 numbers.
-     * @param _loadRemoteFlag is used to check if it was started the set of parameters for 'loadRemote' opcode
-     * @param _loadRemoteVarCount is used to check if it was finished the set of parameters for 'loadRemote' opcode
-     * @param _chunk is a current chunk from the outer function
-     * @return _flag is an updated or current value of _loadRemoteFlag
-     * @return _count is an updated or current value of _loadRemoteVarCount
-     */
-    function _updateRemoteParams(
-        bool _loadRemoteFlag,
-        uint256 _loadRemoteVarCount,
-        string memory _chunk
-    ) internal pure returns (bool _flag, uint256 _count) {
-        _count = _loadRemoteVarCount;
-        _flag = _loadRemoteFlag;
-
-        if (_chunk.equal('loadRemote')) {
-            _flag = true;
-        }
-
-        if (_flag && _loadRemoteVarCount < 4) {
-            _count = _loadRemoteVarCount + 1;
-        }
-
-        return (_flag, _count);
     }
 
     /**

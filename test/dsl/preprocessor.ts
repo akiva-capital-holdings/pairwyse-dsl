@@ -2,11 +2,11 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { parseUnits } from 'ethers/lib/utils';
 
-import { PreprocessorMock } from '../../typechain-types';
+import { Preprocessor } from '../../typechain-types';
 import { checkStringStack, split } from '../utils/utils';
 
 describe.only('Preprocessor', () => {
-  let app: PreprocessorMock;
+  let app: Preprocessor;
   let ctxAddr: string;
   let appAddrHex: string;
 
@@ -39,9 +39,9 @@ describe.only('Preprocessor', () => {
     await ctx.addOperatorExt('>=', 1);
     await ctx.addOperatorExt('!=', 1);
 
-    // Deploy PreprocessorMock
+    // Deploy Preprocessor
     app = await (
-      await ethers.getContractFactory('PreprocessorMock', {
+      await ethers.getContractFactory('Preprocessor', {
         libraries: { StringUtils: stringLib.address, StringStack: strStackLib.address },
       })
     ).deploy();
