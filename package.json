@@ -17,32 +17,7 @@
     "coverage": "yarn hardhat coverage",
     "prepare": "husky install"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "test/**.ts": [
-      "yarn hardhat docgen",
-      "pandoc docs/index.md --from markdown --to rst -s -o docs/index.rst",
-      "eslint --fix --ext .ts",
-      "prettier --write",
-      "git add"
-    ],
-    "contracts/**/*.sol": [
-      "yarn hardhat docgen",
-      "pandoc docs/index.md --from markdown --to rst -s -o docs/index.rst",
-      "eslint --fix --ext .sol",
-      "prettier --write",
-      "git add"
-    ]
-  },
-  "hardhat-docgen":[
-    "yarn hardhat docgen",
-    "pandoc docs/index.md --from markdown --to rst -s -o docs/index.rst",
-    "git add"
-  ],
+  
   "dependencies": {
     "hardhat": "^2.12.0",
     "hardhat-contract-sizer": "^2.6.1",
