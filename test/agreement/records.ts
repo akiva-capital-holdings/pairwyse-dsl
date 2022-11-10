@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import * as hre from 'hardhat';
 import { ParserMock } from '../../typechain-types/dsl/mocks';
-import { addSteps, hex4Bytes } from '../utils/utils';
+import { hex4Bytes } from '../utils/utils';
 import { deployAgreementMock, deployParserMock } from '../../scripts/utils/deploy.utils.mock';
 import {
   activateRecord,
@@ -31,7 +31,6 @@ describe('Simple Records in Agreement', () => {
   let bob: SignerWithAddress;
   let anybody: SignerWithAddress;
   let NEXT_MONTH: number;
-  let snapshotId: number;
   let preprAddr: string;
   let ContextCont: ContextMock__factory;
 
@@ -301,15 +300,7 @@ describe('Simple Records in Agreement', () => {
 
       // Set records
       for (let i = 0; i < records.length; i++) {
-        const {
-          recordId,
-          requiredRecords,
-          signatories,
-          conditionContexts,
-          conditionStrings,
-          transactionCtx,
-          transactionStr,
-        } = records[i];
+        const { recordId, conditionContexts, transactionCtx, transactionStr } = records[i];
 
         await setRecord(records[i], app);
 
@@ -319,6 +310,7 @@ describe('Simple Records in Agreement', () => {
 
         // Parse all conditions and a transaction
         const condCtxLen = (await app.conditionContextsLen(recordId)).toNumber();
+        expect(condCtxLen).equal(records[i].conditionContexts.length);
 
         await parseConditions(recordId, parser, app, preprAddr);
         await parser.parse(preprAddr, transactionCtx.address, transactionStr);

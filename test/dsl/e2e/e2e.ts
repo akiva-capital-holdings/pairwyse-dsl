@@ -12,7 +12,7 @@ import { getChainId, removeEmptyValues } from '../../../utils/utils';
 
 const { ethers, network } = hre;
 
-describe.only('End-to-end', () => {
+describe('End-to-end', () => {
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
   let carl: SignerWithAddress;

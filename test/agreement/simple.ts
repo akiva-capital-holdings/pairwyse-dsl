@@ -197,7 +197,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await token.connect(carl).approve(agreementAddr, tenTokens);
     await expect(() => agreement.connect(carl).execute(32)).to.changeTokenBalance(
       token,
-      agreement,
+      ethers.provider.getSigner(agreement.address),
       tenTokens
     );
 
