@@ -8,10 +8,6 @@ contract ParserMock is Parser, UnstructuredStorageMock {
     // solhint-disable-next-line no-empty-blocks
     constructor() {}
 
-    function parseCodeExt(address _ctxAddr, string[] memory _code) external {
-        _parseCode(_ctxAddr, _code);
-    }
-
     function asmLoadRemoteExt(address _ctxAddr) external {
         asmLoadRemote(_ctxAddr);
     }

@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import { Preprocessor } from '../Preprocessor.sol';
-import { ParserMock } from '../mocks/ParserMock.sol';
 import { IContext } from '../interfaces/IContext.sol';
+import { IParser } from '../interfaces/IParser.sol';
 import { Executor } from '../libs/Executor.sol';
 import { LinkedList } from '../helpers/LinkedList.sol';
 import { UnstructuredStorageMock } from '../mocks/UnstructuredStorageMock.sol';
@@ -30,11 +30,11 @@ contract E2EApp is UnstructuredStorageMock, LinkedList {
     }
 
     function parse(string memory _program) external {
-        ParserMock(parser).parse(preprocessor, context, _program);
+        IParser(parser).parse(preprocessor, context, _program);
     }
 
     function parseCode(string[] memory _code) external {
-        ParserMock(parser).parseCodeExt(context, _code);
+        IParser(parser).parseCode(context, _code);
     }
 
     function execute() external payable {

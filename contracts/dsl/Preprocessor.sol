@@ -50,7 +50,7 @@ library Preprocessor {
         view
         returns (string[] memory)
     {
-        _program = cleanString(_program);
+        // _program = removeComments(_program);
         string[] memory _code = split(_program, '\n ,:(){}', '(){}');
         _code = removeSyntacticSugar(_code);
         _code = simplifyCode(_code, _ctxAddr);
@@ -66,14 +66,14 @@ library Preprocessor {
      *  bool true
      *  // uint256 2 * uint256 5
      * ```
-     * The end result after executing a `cleanString()` function is
+     * The end result after executing a `removeComments()` function is
      * ```
      * bool true
      * ```
      * @param _program is a current program string
      * @return _cleanedProgram new string program that contains only clean code without comments
      */
-    function cleanString(string memory _program)
+    function removeComments(string memory _program)
         public
         pure
         returns (string memory _cleanedProgram)

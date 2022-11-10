@@ -26,6 +26,27 @@ library StringUtils {
     }
 
     /**
+     * @dev Creates a substring from a string
+     * Ex. substr('0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE', 2, 42) => '9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE'
+     * @param _str Input string
+     * @param _start Start index (inclusive)
+     * @param _end End index (not inclusive)
+     * @return Substring
+     */
+    function substr(
+        string memory _str,
+        uint256 _start,
+        uint256 _end
+    ) public pure returns (string memory) {
+        bytes memory strBytes = bytes(_str);
+        bytes memory result = new bytes(_end - _start);
+        for (uint256 i = _start; i < _end; i++) {
+            result[i - _start] = strBytes[i];
+        }
+        return string(result);
+    }
+
+    /**
      * @dev Checks is _char is present in the _string
      * Ex. `_`.in('123_456') => true
      * Ex. `8`.in('123456') => false

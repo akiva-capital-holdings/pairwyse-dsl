@@ -69,7 +69,7 @@ library ErrorsBranchingOpcodes {
  * @title List of Parser errors
  */
 library ErrorsParser {
-    string constant PRS1 = 'PRS1'; // Parser: delegatecall to asmSelector faile
+    string constant PRS1 = 'PRS1'; // Parser: delegatecall to asmSelector failure
     string constant PRS2 = 'PRS2'; // Parser: the name of variable can not be empty
 }
 

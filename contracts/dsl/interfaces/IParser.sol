@@ -18,6 +18,8 @@ interface IParser {
         string memory _codeRaw
     ) external;
 
+    function parseCode(address _ctxAddr, string[] memory _code) external;
+
     function asmSetLocalBool() external;
 
     function asmSetUint256() external;
