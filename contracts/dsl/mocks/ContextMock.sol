@@ -4,6 +4,18 @@ pragma solidity ^0.8.0;
 import { Context } from '../Context.sol';
 
 contract ContextMock is Context {
+    function addOpcode(
+        string memory _name,
+        bytes1 _opcode,
+        bytes4 _opSelector,
+        bytes4 _asmSelector,
+        OpcodeLibNames _libName,
+        uint8 _numOfArgs,
+        bool _isCommand
+    ) external {
+        _addOpcode(_name, _opcode, _opSelector, _asmSelector, _libName, _numOfArgs, _isCommand);
+    }
+
     function addOpcodeBranchExt(
         string memory _baseOpName,
         string memory _branchName,

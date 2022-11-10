@@ -7,7 +7,7 @@ import { hex4Bytes } from '../utils/utils';
 
 const { ethers, network } = hre;
 
-describe.only('Parser', () => {
+describe('Parser', () => {
   let sender: SignerWithAddress;
   let app: ParserMock;
   let preprocessorAddr: string;

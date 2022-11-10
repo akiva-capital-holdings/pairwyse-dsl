@@ -257,7 +257,7 @@ contract Context is IContext {
                 uint2567 7000 + uint2567 1
             }
         */
-        addOpcode(
+        _addOpcode(
             'ifelse',
             0x23,
             BranchingOpcodes.opIfelse.selector,
@@ -276,7 +276,7 @@ contract Context is IContext {
                 ${FIVE}
             }
         */
-        addOpcode(
+        _addOpcode(
             'if',
             0x25,
             BranchingOpcodes.opIf.selector,
@@ -298,7 +298,7 @@ contract Context is IContext {
             }
             ```
         */
-        addOpcode(
+        _addOpcode(
             'end',
             0x24,
             BranchingOpcodes.opEnd.selector,
@@ -309,7 +309,7 @@ contract Context is IContext {
         );
 
         // Simple Opcodes
-        addOpcode(
+        _addOpcode(
             'blockNumber',
             0x15,
             OtherOpcodes.opBlockNumber.selector,
@@ -320,7 +320,7 @@ contract Context is IContext {
         );
 
         // Current block timestamp as seconds since unix epoch. Ex. `time <= FUTURE_TIME_VARIABLE`
-        addOpcode(
+        _addOpcode(
             'time',
             0x16,
             OtherOpcodes.opBlockTimestamp.selector,
@@ -331,7 +331,7 @@ contract Context is IContext {
         );
 
         // Current chain id. Ex. `blockChainId == 123`
-        addOpcode(
+        _addOpcode(
             'blockChainId',
             0x17,
             OtherOpcodes.opBlockChainId.selector,
@@ -342,7 +342,7 @@ contract Context is IContext {
         );
 
         // Ex. `bool true`
-        addOpcode(
+        _addOpcode(
             'bool',
             0x18,
             OtherOpcodes.opBool.selector,
@@ -353,7 +353,7 @@ contract Context is IContext {
         );
 
         // Ex. `uint256 567`
-        addOpcode(
+        _addOpcode(
             'uint256',
             0x1a,
             OtherOpcodes.opUint256.selector,
@@ -364,7 +364,7 @@ contract Context is IContext {
         );
 
         // Ex. `msgSender != 0x0000000000000000000000000000000000000000`
-        addOpcode(
+        _addOpcode(
             'msgSender',
             0x1d,
             OtherOpcodes.opMsgSender.selector,
@@ -375,7 +375,7 @@ contract Context is IContext {
         );
 
         // Ex. `sendEth ETH_RECEIVER 1000000000000000000`
-        addOpcode(
+        _addOpcode(
             'sendEth',
             0x1e,
             OtherOpcodes.opSendEth.selector,
@@ -386,7 +386,7 @@ contract Context is IContext {
         );
 
         // Ex. `transfer TOKEN_ADDR TOKEN_RECEIVER 10`
-        addOpcode(
+        _addOpcode(
             'transfer',
             0x1f,
             OtherOpcodes.opTransfer.selector,
@@ -397,7 +397,7 @@ contract Context is IContext {
         );
 
         // Ex. `transferVar DAI RECEIVER AMOUNT`
-        addOpcode(
+        _addOpcode(
             'transferVar',
             0x2c,
             OtherOpcodes.opTransferVar.selector,
@@ -408,7 +408,7 @@ contract Context is IContext {
         );
 
         // Ex. `transferFrom DAI OWNER RECEIVER 10`
-        addOpcode(
+        _addOpcode(
             'transferFrom',
             0x20,
             OtherOpcodes.opTransferFrom.selector,
@@ -419,7 +419,7 @@ contract Context is IContext {
         );
 
         // Ex. `transferFromVar DAI OWNER RECEIVER AMOUNT`
-        addOpcode(
+        _addOpcode(
             'transferFromVar',
             0x2a,
             OtherOpcodes.opTransferFromVar.selector,
@@ -430,7 +430,7 @@ contract Context is IContext {
         );
 
         // Ex. `setLocalBool BOOLVAR true`
-        addOpcode(
+        _addOpcode(
             'setLocalBool',
             0x21,
             OtherOpcodes.opSetLocalBool.selector,
@@ -441,7 +441,7 @@ contract Context is IContext {
         );
 
         // Ex. `(4 + 17) setUint256 VAR`
-        addOpcode(
+        _addOpcode(
             'setUint256',
             0x2e,
             OtherOpcodes.opSetUint256.selector,
@@ -452,7 +452,7 @@ contract Context is IContext {
         );
 
         // Ex. (msgValue == 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266) setBool IS_OWNER
-        addOpcode(
+        _addOpcode(
             'msgValue',
             0x22,
             OtherOpcodes.opMsgValue.selector,
@@ -463,7 +463,7 @@ contract Context is IContext {
         );
 
         // Ex. `balanceOf DAI USER`
-        addOpcode(
+        _addOpcode(
             'balanceOf',
             0x2b,
             OtherOpcodes.opBalanceOf.selector,
@@ -481,7 +481,7 @@ contract Context is IContext {
                 (6 + 8) setUint256 SUM
             }
         */
-        addOpcode(
+        _addOpcode(
             'func',
             0x30,
             BranchingOpcodes.opFunc.selector,
@@ -493,7 +493,7 @@ contract Context is IContext {
 
         // Push to array
         // Ex. `push 0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc USERS`
-        addOpcode(
+        _addOpcode(
             'push',
             0x33,
             OtherOpcodes.opPush.selector,
@@ -505,7 +505,7 @@ contract Context is IContext {
 
         // Get length of array
         // Ex. `lengthOf PARTNERS`
-        addOpcode(
+        _addOpcode(
             'lengthOf',
             0x34,
             OtherOpcodes.opLengthOf.selector,
@@ -517,7 +517,7 @@ contract Context is IContext {
 
         // Get element by index in the array
         // Ex. `get 3 USERS`
-        addOpcode(
+        _addOpcode(
             'get',
             0x35,
             OtherOpcodes.opGet.selector,
@@ -529,7 +529,7 @@ contract Context is IContext {
 
         // Sums all elements in an array
         // Ex. `sumOf ARR_NAME`
-        addOpcode(
+        _addOpcode(
             'sumOf',
             0x40,
             OtherOpcodes.opSumOf.selector,
@@ -567,7 +567,7 @@ contract Context is IContext {
                 // or command bellow will be preprocessed to the same `sumThroughStructs` format
                 sumOf USERS.lastPayment
         */
-        addOpcode(
+        _addOpcode(
             'sumThroughStructs',
             0x38,
             OtherOpcodes.opSumThroughStructs.selector,
@@ -580,7 +580,7 @@ contract Context is IContext {
         // Creates structs
         // Ex. `struct BOB { address: 0x123...456, lastDeposit: 3 }`
         // Ex. `BOB.lastDeposit >= 5`
-        addOpcode(
+        _addOpcode(
             'struct',
             0x36,
             OtherOpcodes.opStruct.selector,
@@ -600,7 +600,7 @@ contract Context is IContext {
         //   sendEth USER 1e18
         // }
         // ```
-        addOpcode(
+        _addOpcode(
             'for',
             0x37,
             BranchingOpcodes.opForLoop.selector,
@@ -612,7 +612,7 @@ contract Context is IContext {
 
         // internal opcode that is added automatically by Preprocessor
         // indicates the start of the for-loop block
-        addOpcode(
+        _addOpcode(
             'startLoop',
             0x32,
             BranchingOpcodes.opStartLoop.selector,
@@ -623,7 +623,7 @@ contract Context is IContext {
         );
 
         // indicates the end of the for-loop block
-        addOpcode(
+        _addOpcode(
             'endLoop',
             0x39,
             BranchingOpcodes.opEndLoop.selector,
@@ -643,7 +643,7 @@ contract Context is IContext {
             Where `*_STORED_VALUE` parameters can be set by using `setLocalBool`
             or `setUint256` opcodes
         */
-        addOpcode(
+        _addOpcode(
             'var',
             0x1b,
             OtherOpcodes.opLoadLocalUint256.selector,
@@ -654,7 +654,7 @@ contract Context is IContext {
         );
 
         string memory name = 'loadRemote';
-        addOpcode(
+        _addOpcode(
             name,
             0x1c,
             OtherOpcodes.opLoadRemoteAny.selector,
@@ -671,7 +671,7 @@ contract Context is IContext {
 
         // Ex. `declareArr uint256 BALANCES`
         name = 'declareArr';
-        addOpcode(
+        _addOpcode(
             name,
             0x31,
             OtherOpcodes.opDeclare.selector,
@@ -757,7 +757,7 @@ contract Context is IContext {
      * @param _libName is the name of library that is used fot the opcode
      * @param _numOfArgs The number of arguments for this opcode
      */
-    function addOpcode(
+    function _addOpcode(
         string memory _name,
         bytes1 _opcode,
         bytes4 _opSelector,
@@ -765,7 +765,7 @@ contract Context is IContext {
         OpcodeLibNames _libName,
         uint8 _numOfArgs,
         bool _isCommand
-    ) public {
+    ) internal {
         require(_opSelector != bytes4(0), ErrorsContext.CTX2);
         require(
             opCodeByName[_name] == bytes1(0) && selectorByOpcode[_opcode] == bytes4(0),
@@ -917,7 +917,7 @@ contract Context is IContext {
         OpcodeLibNames _libName,
         uint256 _priority
     ) internal {
-        addOpcode(_name, _opcode, _opSelector, _asmSelector, _libName, 0, false);
+        _addOpcode(_name, _opcode, _opSelector, _asmSelector, _libName, 0, false);
         _addOperator(_name, _priority);
     }
 

@@ -72,23 +72,57 @@ describe('Context', () => {
   describe('addOpcode', () => {
     it('error: empty opcode selector', async () => {
       await expect(
-        app.addOpcode('|', '0x91', '0x00000000', '0x00000000', OpcodeLibNames.ComparisonOpcodes)
+        app.addOpcode(
+          '|',
+          '0x91',
+          '0x00000000',
+          '0x00000000',
+          OpcodeLibNames.ComparisonOpcodes,
+          2,
+          true
+        )
       ).to.be.revertedWith('CTX2');
     });
+
     it('error: duplicate opcode', async () => {
       await expect(
-        app.addOpcode('+', '0x02', '0x00000001', '0x00000000', OpcodeLibNames.ComparisonOpcodes)
+        app.addOpcode(
+          '+',
+          '0x02',
+          '0x00000001',
+          '0x00000000',
+          OpcodeLibNames.ComparisonOpcodes,
+          2,
+          true
+        )
       ).to.be.revertedWith('CTX3');
       await expect(
-        app.addOpcode('*', '0x01', '0x00000001', '0x00000000', OpcodeLibNames.ComparisonOpcodes)
+        app.addOpcode(
+          '*',
+          '0x01',
+          '0x00000001',
+          '0x00000000',
+          OpcodeLibNames.ComparisonOpcodes,
+          2,
+          true
+        )
       ).to.be.revertedWith('CTX3');
     });
+
     it('success', async () => {
       const name = '|';
       const opcode = '0x91';
       const opSelector = '0x00000001';
       const asmSelector = '0x00000000';
-      await app.addOpcode(name, opcode, opSelector, asmSelector, OpcodeLibNames.ComparisonOpcodes);
+      await app.addOpcode(
+        name,
+        opcode,
+        opSelector,
+        asmSelector,
+        OpcodeLibNames.ComparisonOpcodes,
+        2,
+        true
+      );
       expect(await app.opCodeByName(name)).to.equal(opcode);
       expect(await app.selectorByOpcode(opcode)).to.equal(opSelector);
       expect(await app.asmSelectors(name)).to.equal(asmSelector);
