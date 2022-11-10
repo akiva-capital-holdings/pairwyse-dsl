@@ -12,15 +12,12 @@ import {
   hex4BytesShort,
   createBulkVotes,
 } from '../../utils/utils';
-import {
-  deployOpcodeLibs,
-  deployAgreement,
-  deployPreprocessor,
-} from '../../../scripts/utils/deploy.utils';
+import { deployOpcodeLibs, deployAgreement } from '../../../scripts/utils/deploy.utils';
 import { deployBaseMock } from '../../../scripts/utils/deploy.utils.mock';
 import { getChainId } from '../../../utils/utils';
-import { ONE_DAY, ONE_MONTH } from '../../utils/constants';
-import { parseConditions, parseConditionsList } from '../../../scripts/utils/update.record.mock';
+import { ONE_MONTH } from '../../utils/constants';
+import { parseConditionsList } from '../../../scripts/utils/update.record.mock';
+
 const { ethers, network } = hre;
 
 describe('End-to-end', () => {
@@ -34,7 +31,6 @@ describe('End-to-end', () => {
   let ctxAddr: string;
   let app: E2EApp;
   let NEXT_MONTH: number;
-  let NEXT_TWO_MONTH: number;
   let PREV_MONTH: number;
   let lastBlockTimestamp: number;
   let snapshotId: number;
@@ -1837,23 +1833,13 @@ describe('End-to-end', () => {
   describe('Governance', () => {
     let agreement: Agreement;
     let agreementAddr: string;
-    let preprocessorAddr: string;
     let tokenAddr: string;
-    let setRecord: string;
-    let yesRecord: string;
-    let noRecord: string;
-    let checkRecord: string;
-    const oneEthBN = parseEther('1');
-    const tenTokens = parseEther('10');
 
     before(async () => {
       const LAST_BLOCK_TIMESTAMP = (
         await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
       ).timestamp;
       NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
-      NEXT_TWO_MONTH = NEXT_MONTH + ONE_MONTH;
-
-      preprocessorAddr = await deployPreprocessor(hre);
 
       // Deploy Token contract
       const token = await (await ethers.getContractFactory('Token'))
@@ -1864,7 +1850,7 @@ describe('End-to-end', () => {
     });
 
     it('Voting process. Record in agreement is activated', async () => {
-      const Context = await ethers.getContractFactory('Context');
+      const ContextCont = await ethers.getContractFactory('Context');
       // 1. Governance contract is deployed; it will be an owner of Agreement.
       const [
         comparisonOpcodesLibAddr,
@@ -1884,32 +1870,32 @@ describe('End-to-end', () => {
       });
       const parser = await ethers.getContractAt('ParserMock', parserAddr);
 
-      const _contexts = [
-        await Context.deploy(),
-        await Context.deploy(),
-        await Context.deploy(),
-        await Context.deploy(),
-        await Context.deploy(),
-        await Context.deploy(),
-        await Context.deploy(),
-        await Context.deploy(),
+      const contextInstances = [
+        await ContextCont.deploy(),
+        await ContextCont.deploy(),
+        await ContextCont.deploy(),
+        await ContextCont.deploy(),
+        await ContextCont.deploy(),
+        await ContextCont.deploy(),
+        await ContextCont.deploy(),
+        await ContextCont.deploy(),
       ];
-      const contexts = [
-        _contexts[0].address,
-        _contexts[1].address,
-        _contexts[2].address,
-        _contexts[3].address,
-        _contexts[4].address,
-        _contexts[5].address,
-        _contexts[6].address,
-        _contexts[7].address,
+      const contextsAddrs = [
+        contextInstances[0].address,
+        contextInstances[1].address,
+        contextInstances[2].address,
+        contextInstances[3].address,
+        contextInstances[4].address,
+        contextInstances[5].address,
+        contextInstances[6].address,
+        contextInstances[7].address,
       ];
       const governance = await MockContract.deploy(
         parserAddr,
         alice.address,
         tokenAddr,
         NEXT_MONTH,
-        contexts
+        contextsAddrs
       );
       await governance.deployed();
 
@@ -1918,7 +1904,6 @@ describe('End-to-end', () => {
       agreementAddr = await deployAgreement(hre, governance.address);
       agreement = await ethers.getContractAt('Agreement', agreementAddr);
       const txId = '133';
-      const signatories = [alice.address];
       const conditions = ['bool true'];
       const transaction = '(uint256 5) setUint256 AGREEMENT_RESULT';
 
@@ -1926,18 +1911,18 @@ describe('End-to-end', () => {
       await governance.setStorageAddress(hex4Bytes('AGREEMENT_ADDR'), agreementAddr);
       await governance.setStorageUint256(hex4Bytes('GOV_BALANCE'), 55);
 
-      const recordContext = await Context.deploy();
-      const conditionContext = await Context.deploy();
+      const recordContext = await ContextCont.deploy();
+      const conditionContext = await ContextCont.deploy();
       await recordContext.setAppAddress(agreementAddr);
       await conditionContext.setAppAddress(agreementAddr);
-      await _contexts[0].setAppAddress(governance.address);
-      await _contexts[1].setAppAddress(governance.address);
-      await _contexts[2].setAppAddress(governance.address);
-      await _contexts[3].setAppAddress(governance.address);
-      await _contexts[4].setAppAddress(governance.address);
-      await _contexts[5].setAppAddress(governance.address);
-      await _contexts[6].setAppAddress(governance.address);
-      await _contexts[7].setAppAddress(governance.address);
+      await contextInstances[0].setAppAddress(governance.address);
+      await contextInstances[1].setAppAddress(governance.address);
+      await contextInstances[2].setAppAddress(governance.address);
+      await contextInstances[3].setAppAddress(governance.address);
+      await contextInstances[4].setAppAddress(governance.address);
+      await contextInstances[5].setAppAddress(governance.address);
+      await contextInstances[6].setAppAddress(governance.address);
+      await contextInstances[7].setAppAddress(governance.address);
 
       // check that added record can not be executable for now
       await agreement.parse(conditions[0], conditionContext.address, preprAddr);
@@ -1961,8 +1946,8 @@ describe('End-to-end', () => {
       let conditionGov = await governance.conditionContexts(0, 0);
       expect(recordGov.isActive).to.be.equal(true);
       expect(recordGov.isExecuted).to.be.equal(false);
-      expect(recordGov.recordContext).to.be.equal(contexts[0]);
-      expect(conditionGov).to.be.equal(contexts[1]);
+      expect(recordGov.recordContext).to.be.equal(contextsAddrs[0]);
+      expect(conditionGov).to.be.equal(contextsAddrs[1]);
 
       await parseConditionsList([0, 1, 2, 3], parser, governance, preprAddr);
       await governance.parse(recordGov.transactionString, recordGov.recordContext, preprAddr);
@@ -1978,8 +1963,8 @@ describe('End-to-end', () => {
       conditionGov = await governance.conditionContexts(1, 0);
       expect(recordGov.isActive).to.be.equal(true);
       expect(recordGov.isExecuted).to.be.equal(false);
-      expect(recordGov.recordContext).to.be.equal(contexts[2]);
-      expect(conditionGov).to.be.equal(contexts[3]);
+      expect(recordGov.recordContext).to.be.equal(contextsAddrs[2]);
+      expect(conditionGov).to.be.equal(contextsAddrs[3]);
 
       // -------> check the noRecord data and execution <-------
       recordGov = await governance.records(2);
@@ -1987,8 +1972,8 @@ describe('End-to-end', () => {
       conditionGov = await governance.conditionContexts(2, 0);
       expect(recordGov.isActive).to.be.equal(true);
       expect(recordGov.isExecuted).to.be.equal(false);
-      expect(recordGov.recordContext).to.be.equal(contexts[4]);
-      expect(conditionGov).to.be.equal(contexts[5]);
+      expect(recordGov.recordContext).to.be.equal(contextsAddrs[4]);
+      expect(conditionGov).to.be.equal(contextsAddrs[5]);
 
       const ctx2 = await ethers.getContractAt('Context', recordGov.recordContext);
       recordGov = await governance.records(1);
@@ -2031,10 +2016,9 @@ describe('End-to-end', () => {
       conditionGov = await governance.conditionContexts(3, 0);
       expect(recordGov.isActive).to.be.equal(true);
       expect(recordGov.isExecuted).to.be.equal(false);
-      expect(recordGov.recordContext).to.be.equal(contexts[6]);
-      expect(conditionGov).to.be.equal(contexts[7]);
+      expect(recordGov.recordContext).to.be.equal(contextsAddrs[6]);
+      expect(conditionGov).to.be.equal(contextsAddrs[7]);
 
-      // await parseConditions(3, parser, governance, preprAddr);
       await governance.parse(recordGov.transactionString, recordGov.recordContext, preprAddr);
 
       // Deadline condition isn't satisfied
