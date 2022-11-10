@@ -349,6 +349,23 @@ library Preprocessor {
         return (_result, _resultCtr, i + 1);
     }
 
+    function _processForCmd(
+        string[] memory _result,
+        uint256 _resultCtr,
+        string[] memory _code,
+        uint256 i
+    )
+        internal
+        pure
+        returns (
+            string[] memory,
+            uint256,
+            uint256
+        )
+    {
+        // TODO
+    }
+
     function _processStruct(
         string[] memory _result,
         uint256 _resultCtr,
@@ -459,6 +476,8 @@ library Preprocessor {
             (_result, _resultCtr, i) = _processStruct(_result, _resultCtr, _code, i);
         } else if (_chunk.equal('sumOf')) {
             (_result, _resultCtr, i) = _processSumOfCmd(_result, _resultCtr, _code, i);
+        } else if (_chunk.equal('for')) {
+            (_result, _resultCtr, i) = _processForCmd(_result, _resultCtr, _code, i);
         } else {
             uint256 _skipCtr = IContext(_ctxAddr).numOfArgsByOpcode(_chunk) + 1;
             // console.log(_skipCtr);
