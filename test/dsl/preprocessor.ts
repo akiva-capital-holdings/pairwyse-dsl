@@ -5,7 +5,7 @@ import { parseUnits } from 'ethers/lib/utils';
 import { Preprocessor } from '../../typechain-types';
 import { checkStringStack, split } from '../utils/utils';
 
-describe.only('Preprocessor', () => {
+describe('Preprocessor', () => {
   let app: Preprocessor;
   let ctxAddr: string;
   let appAddrHex: string;

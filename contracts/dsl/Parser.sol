@@ -30,7 +30,7 @@ contract Parser is IParser {
 
     // Note: temporary variables block
     bytes internal program; // raw bytecode of the program that preprocessor is generating
-    string[] internal cmds; // DSL code in postfix form (input from Preprocessor)
+    string[] internal cmds; // DSL code in postfix form (output of Preprocessor)
     uint256 internal cmdIdx; // Current parsing index of DSL code
     mapping(string => uint256) public labelPos;
 
@@ -482,10 +482,10 @@ contract Parser is IParser {
     /**
      * @dev Сonverts a list of commands to bytecode
      */
-    function _parseCode(address _ctxAddr, string[] memory code) internal {
+    function _parseCode(address _ctxAddr, string[] memory _code) internal {
         delete program;
         cmdIdx = 0;
-        cmds = code;
+        _setCmdsArray(_code);
 
         IContext(_ctxAddr).setPc(0);
         IContext(_ctxAddr).stack().clear();
@@ -562,5 +562,17 @@ contract Parser is IParser {
      */
     function _parseAddress() internal {
         program = bytes.concat(program, _nextCmd().fromHex());
+    }
+
+    /**
+     * @dev Deletes empty elements from the _input array and sets the result as a `cmds` storage array
+     */
+    function _setCmdsArray(string[] memory _input) internal {
+        uint256 i;
+        delete cmds;
+
+        while (i < _input.length && !_input[i].equal('')) {
+            cmds.push(_input[i++]);
+        }
     }
 }

@@ -54,10 +54,7 @@ library Preprocessor {
         string[] memory _code = split(_program, '\n ,:(){}', '(){}');
         _code = removeSyntacticSugar(_code);
         _code = simplifyCode(_code, _ctxAddr);
-        _code = infixToPostfix(
-            _ctxAddr,
-            _code /*, tmpStrStack*/
-        );
+        _code = infixToPostfix(_ctxAddr, _code);
         return _code;
     }
 
@@ -220,14 +217,7 @@ library Preprocessor {
             // console.log('chunk =', _chunk);
 
             if (IContext(_ctxAddr).isCommand(_chunk)) {
-                (_result, _resultCtr, i) = _processCommand(
-                    _result,
-                    _code,
-                    _resultCtr,
-                    _ctxAddr,
-                    _chunk,
-                    i
-                );
+                (_result, _resultCtr, i) = _processCommand(_result, _code, _resultCtr, _ctxAddr, i);
             } else if (_isCurlyBracket(_chunk)) {
                 // console.log('curly bracket');
                 (_result, _resultCtr) = _processCurlyBracket(_result, _resultCtr, _chunk);
@@ -453,9 +443,7 @@ library Preprocessor {
         string[] memory _code,
         uint256 _resultCtr,
         address _ctxAddr,
-        string memory _chunk,
-        // uint256 _skipCtr,
-        uint256 i // TODO: reduce the number of input & output params
+        uint256 i
     )
         internal
         view
@@ -466,7 +454,7 @@ library Preprocessor {
         )
     {
         // console.log('process command');
-
+        string memory _chunk = _code[i - 1];
         if (_chunk.equal('struct')) {
             (_result, _resultCtr, i) = _processStruct(_result, _resultCtr, _code, i);
         } else if (_chunk.equal('sumOf')) {
