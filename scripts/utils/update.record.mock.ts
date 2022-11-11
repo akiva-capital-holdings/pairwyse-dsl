@@ -14,7 +14,7 @@ export const activateRecord = async (
   _recordId: number
 ) => {
   const { data } = await _app.populateTransaction.activateRecord(_recordId);
-  await _multisig.executeTransaction(_app.address, data as string, 0);
+  return await _multisig.executeTransaction(_app.address, data as string, 0);
 };
 
 export const deactivateRecord = async (
@@ -23,7 +23,7 @@ export const deactivateRecord = async (
   _recordId: number
 ) => {
   const { data } = await _app.populateTransaction.deactivateRecord(_recordId);
-  await _multisig.executeTransaction(_app.address, data as string, 0);
+  return await _multisig.executeTransaction(_app.address, data as string, 0);
 };
 
 export const archiveRecord = async (
@@ -32,7 +32,7 @@ export const archiveRecord = async (
   _recordId: number
 ) => {
   const { data } = await _app.populateTransaction.archiveRecord(_recordId);
-  await _multisig.executeTransaction(_app.address, data as string, 0);
+  return await _multisig.executeTransaction(_app.address, data as string, 0);
 };
 
 export const unarchiveRecord = async (
@@ -41,7 +41,7 @@ export const unarchiveRecord = async (
   _recordId: number
 ) => {
   const { data } = await _app.populateTransaction.unarchiveRecord(_recordId);
-  await _multisig.executeTransaction(_app.address, data as string, 0);
+  return await _multisig.executeTransaction(_app.address, data as string, 0);
 };
 
 export const setRecord = async (data: any, app: AgreementMock) => {

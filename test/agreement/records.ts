@@ -166,11 +166,9 @@ describe('Simple Records in Agreement', () => {
 
       // Validate again
       expect(await app.callStatic.validateConditions(recordId, 0)).equal(true);
-
-      await expect(await app.fulfill(recordId, 0, alice.address)).to.changeEtherBalance(
-        bob,
-        oneEth
-      );
+      const result = await app.fulfill(recordId, 0, alice.address);
+      await expect(result).to.changeEtherBalance(bob, oneEth);
+      await expect(result).to.emit(app, 'Fulfilled').withArgs(alice.address, recordId, 0);
       await expect(app.fulfill(recordId, 0, alice.address)).to.be.revertedWith('AGR7');
     });
 
@@ -184,12 +182,14 @@ describe('Simple Records in Agreement', () => {
       await expect(activateRecord(app, multisig, 999)).to.be.revertedWith('Delegate call failure');
 
       // Check that record was activated
-      await activateRecord(app, multisig, recordId);
+      let result = await activateRecord(app, multisig, recordId);
+      await expect(result).to.emit(app, 'Record_Activated').withArgs(recordId);
       record = await app.records(recordId);
       expect(record.isActive).to.be.equal(true);
 
       // Check that record was deactivated
-      await deactivateRecord(app, multisig, recordId);
+      result = await deactivateRecord(app, multisig, recordId);
+      await expect(result).to.emit(app, 'Record_Deactivated').withArgs(recordId);
       record = await app.records(recordId);
       expect(record.isActive).to.be.equal(false);
 
@@ -205,7 +205,8 @@ describe('Simple Records in Agreement', () => {
       );
 
       // Check that record can be activated after deactivated status
-      await activateRecord(app, multisig, recordId);
+      result = await activateRecord(app, multisig, recordId);
+      await expect(result).to.emit(app, 'Record_Activated').withArgs(recordId);
       record = await app.records(recordId);
       expect(record.isActive).to.be.equal(true);
     });
@@ -225,12 +226,14 @@ describe('Simple Records in Agreement', () => {
       await expect(archiveRecord(app, multisig, 999)).to.be.revertedWith('Delegate call failure');
 
       // Check that archived record is still archived
-      await archiveRecord(app, multisig, recordId);
+      let result = await archiveRecord(app, multisig, recordId);
+      await expect(result).to.emit(app, 'Record_Archived').withArgs(recordId);
       record = await app.records(recordId);
       expect(record.isArchived).to.be.equal(true);
 
       // Check that record is unArchived
-      await unarchiveRecord(app, multisig, recordId);
+      result = await unarchiveRecord(app, multisig, recordId);
+      await expect(result).to.emit(app, 'Record_Unarchived').withArgs(recordId);
       record = await app.records(recordId);
       expect(record.isArchived).to.be.equal(false);
 
@@ -244,7 +247,8 @@ describe('Simple Records in Agreement', () => {
       await expect(unarchiveRecord(app, multisig, 999)).to.be.revertedWith('Delegate call failure');
 
       // Check that archived record is archived after unarchived processing
-      await archiveRecord(app, multisig, recordId);
+      result = await archiveRecord(app, multisig, recordId);
+      await expect(result).to.emit(app, 'Record_Archived').withArgs(recordId);
       record = await app.records(recordId);
       expect(record.isArchived).to.be.equal(true);
     });

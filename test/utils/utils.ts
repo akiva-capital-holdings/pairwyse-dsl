@@ -228,19 +228,30 @@ export const addSteps = async (
     const cdCtxsAddrs = []; // conditional context Addresses
 
     console.log('\nTerm Conditions');
+    let result;
 
     for (let j = 0; j < step.conditions.length; j++) {
       const conditionContract = await (await ethers.getContractFactory('Context')).deploy();
       await conditionContract.setAppAddress(agreementAddress);
       cdCtxsAddrs.push(conditionContract.address);
-      await agreement.parse(step.conditions[j], conditionContract.address, preprocessorAddr);
+      result = await agreement.parse(
+        step.conditions[j],
+        conditionContract.address,
+        preprocessorAddr
+      );
+      await expect(result)
+        .to.emit(agreement, 'Parsed')
+        .withArgs(preprocessorAddr, conditionContract.address, step.conditions[j]);
       console.log(
         `\n\taddress: \x1b[35m${conditionContract.address}\x1b[0m\n\tcondition ${
           j + 1
         }:\n\t\x1b[33m${step.conditions[j]}\x1b[0m`
       );
     }
-    await agreement.parse(step.transaction, recordContext.address, preprocessorAddr);
+    result = await agreement.parse(step.transaction, recordContext.address, preprocessorAddr);
+    await expect(result)
+      .to.emit(agreement, 'Parsed')
+      .withArgs(preprocessorAddr, recordContext.address, step.transaction);
     console.log('\nTerm transaction');
     console.log(`\n\taddress: \x1b[35m${recordContext.address}\x1b[0m`);
     console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);

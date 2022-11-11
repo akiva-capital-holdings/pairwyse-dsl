@@ -16,7 +16,7 @@ import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock
 
 const { ethers, network } = hre;
 
-describe('Agreement: Alice, Bob, Carl', () => {
+describe.only('Agreement: Alice, Bob, Carl', () => {
   let agreement: Agreement;
   let agreementAddr: string;
   let preprocessorAddr: string;
@@ -80,18 +80,44 @@ describe('Agreement: Alice, Bob, Carl', () => {
     const conditions = ['blockTimestamp > var LOCK_TIME'];
     const transaction = 'sendEth RECEIVER 1000000000000000000';
     // record by agreement owner
-    await updateAgreement
+    let result = await updateAgreement
       .connect(alice)
       .update(firstTxId, [], signatories, transaction, conditions, recordContext.address, [
         recordContext.address,
       ]);
 
+    await expect(result)
+      .to.emit(updateAgreement, 'RecordBlueprint_Added')
+      .withArgs(firstTxId, [], signatories);
+    await expect(result)
+      .to.emit(updateAgreement, 'RecordTransaction_Added')
+      .withArgs(firstTxId, recordContext.address, transaction);
+    await expect(result)
+      .to.emit(updateAgreement, 'RecordCondition_Added')
+      .withArgs(firstTxId, recordContext.address, conditions[0]);
+    await expect(result)
+      .to.emit(updateAgreement, 'NewRecord')
+      .withArgs(firstTxId, [], signatories, transaction, conditions);
+
     // record by other address
-    await updateAgreement
+    result = await updateAgreement
       .connect(bob)
       .update(secondTxId, [], signatories, transaction, conditions, recordContext.address, [
         recordContext.address,
       ]);
+
+    await expect(result)
+      .to.emit(updateAgreement, 'RecordBlueprint_Added')
+      .withArgs(secondTxId, [], signatories);
+    await expect(result)
+      .to.emit(updateAgreement, 'RecordTransaction_Added')
+      .withArgs(secondTxId, recordContext.address, transaction);
+    await expect(result)
+      .to.emit(updateAgreement, 'RecordCondition_Added')
+      .withArgs(secondTxId, recordContext.address, conditions[0]);
+    await expect(result)
+      .to.emit(updateAgreement, 'NewRecord')
+      .withArgs(secondTxId, [], signatories, transaction, conditions);
 
     // owner set isActive = true
     const trueResult = await updateAgreement.records(firstTxId);
@@ -130,7 +156,13 @@ describe('Agreement: Alice, Bob, Carl', () => {
     // Execute transaction
     await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
 
-    await expect(await agreement.connect(alice).execute(txId)).to.changeEtherBalance(bob, oneEthBN);
+    const result = await agreement.connect(alice).execute(txId);
+    await expect(result).to.changeEtherBalance(bob, oneEthBN);
+    await expect(result).to.emit(agreement, 'Verification_Passed').withArgs(txId);
+    await expect(result).to.emit(agreement, 'RequiredRecords_Validation_Passed').withArgs(txId);
+    await expect(result).to.emit(agreement, 'Conditions_Validation_Passed').withArgs(txId, 0);
+    await expect(result).to.emit(agreement, 'Fulfilled').withArgs(alice.address, txId, 0);
+    await expect(result).to.emit(agreement, 'RecordExecuted').withArgs(alice.address, txId);
 
     // Tx already executed
     await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('AGR7');
@@ -144,11 +176,21 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await addSteps(preprocessorAddr, oneEthToBobSteps(alice), agreementAddr, multisig);
 
     // Execute
-    await expect(await agreement.connect(alice).execute(1, { value: oneEthBN })).changeEtherBalance(
-      alice,
-      oneEthBN.mul(-1)
-    );
-    await expect(await agreement.connect(alice).execute(2)).to.changeEtherBalance(bob, oneEthBN);
+    let result = await agreement.connect(alice).execute(1, { value: oneEthBN });
+    await expect(result).changeEtherBalance(alice, oneEthBN.mul(-1));
+    await expect(result).to.emit(agreement, 'Verification_Passed').withArgs(1);
+    await expect(result).to.emit(agreement, 'RequiredRecords_Validation_Passed').withArgs(1);
+    await expect(result).to.emit(agreement, 'Conditions_Validation_Passed').withArgs(1, oneEthBN);
+    await expect(result).to.emit(agreement, 'Fulfilled').withArgs(alice.address, 1, oneEthBN);
+    await expect(result).to.emit(agreement, 'RecordExecuted').withArgs(alice.address, 1);
+
+    result = await agreement.connect(alice).execute(2);
+    await expect(result).to.changeEtherBalance(bob, oneEthBN);
+    await expect(result).to.emit(agreement, 'Verification_Passed').withArgs(2);
+    await expect(result).to.emit(agreement, 'RequiredRecords_Validation_Passed').withArgs(2);
+    await expect(result).to.emit(agreement, 'Conditions_Validation_Passed').withArgs(2, 0);
+    await expect(result).to.emit(agreement, 'Fulfilled').withArgs(alice.address, 2, 0);
+    await expect(result).to.emit(agreement, 'RecordExecuted').withArgs(alice.address, 2);
   });
 
   it('Alice (borrower) and Bob (lender)', async () => {
