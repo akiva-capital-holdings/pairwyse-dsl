@@ -87,15 +87,6 @@ describe('Agreement: Alice, Bob, Carl', () => {
       ]);
 
     await expect(result)
-      .to.emit(updateAgreement, 'RecordBlueprint_Added')
-      .withArgs(firstTxId, [], signatories);
-    await expect(result)
-      .to.emit(updateAgreement, 'RecordTransaction_Added')
-      .withArgs(firstTxId, recordContext.address, transaction);
-    await expect(result)
-      .to.emit(updateAgreement, 'RecordCondition_Added')
-      .withArgs(firstTxId, recordContext.address, conditions[0]);
-    await expect(result)
       .to.emit(updateAgreement, 'NewRecord')
       .withArgs(firstTxId, [], signatories, transaction, conditions);
 
@@ -106,15 +97,6 @@ describe('Agreement: Alice, Bob, Carl', () => {
         recordContext.address,
       ]);
 
-    await expect(result)
-      .to.emit(updateAgreement, 'RecordBlueprint_Added')
-      .withArgs(secondTxId, [], signatories);
-    await expect(result)
-      .to.emit(updateAgreement, 'RecordTransaction_Added')
-      .withArgs(secondTxId, recordContext.address, transaction);
-    await expect(result)
-      .to.emit(updateAgreement, 'RecordCondition_Added')
-      .withArgs(secondTxId, recordContext.address, conditions[0]);
     await expect(result)
       .to.emit(updateAgreement, 'NewRecord')
       .withArgs(secondTxId, [], signatories, transaction, conditions);
@@ -158,10 +140,6 @@ describe('Agreement: Alice, Bob, Carl', () => {
 
     const result = await agreement.connect(alice).execute(txId);
     await expect(result).to.changeEtherBalance(bob, oneEthBN);
-    await expect(result).to.emit(agreement, 'Verification_Passed').withArgs(txId);
-    await expect(result).to.emit(agreement, 'RequiredRecords_Validation_Passed').withArgs(txId);
-    await expect(result).to.emit(agreement, 'Conditions_Validation_Passed').withArgs(txId, 0);
-    await expect(result).to.emit(agreement, 'Fulfilled').withArgs(alice.address, txId, 0);
     await expect(result).to.emit(agreement, 'RecordExecuted').withArgs(alice.address, txId);
 
     // Tx already executed
@@ -178,19 +156,10 @@ describe('Agreement: Alice, Bob, Carl', () => {
     // Execute
     let result = await agreement.connect(alice).execute(1, { value: oneEthBN });
     await expect(result).changeEtherBalance(alice, oneEthBN.mul(-1));
-    await expect(result).to.emit(agreement, 'Verification_Passed').withArgs(1);
-    await expect(result).to.emit(agreement, 'RequiredRecords_Validation_Passed').withArgs(1);
-    await expect(result).to.emit(agreement, 'Conditions_Validation_Passed').withArgs(1, oneEthBN);
-    await expect(result).to.emit(agreement, 'Fulfilled').withArgs(alice.address, 1, oneEthBN);
-    await expect(result).to.emit(agreement, 'RecordExecuted').withArgs(alice.address, 1);
+    await expect(result).to.emit(agreement, 'RecordExecuted').withArgs(alice.address, 1, oneEthBN);
 
     result = await agreement.connect(alice).execute(2);
-    await expect(result).to.changeEtherBalance(bob, oneEthBN);
-    await expect(result).to.emit(agreement, 'Verification_Passed').withArgs(2);
-    await expect(result).to.emit(agreement, 'RequiredRecords_Validation_Passed').withArgs(2);
-    await expect(result).to.emit(agreement, 'Conditions_Validation_Passed').withArgs(2, 0);
-    await expect(result).to.emit(agreement, 'Fulfilled').withArgs(alice.address, 2, 0);
-    await expect(result).to.emit(agreement, 'RecordExecuted').withArgs(alice.address, 2);
+    await expect(result).to.emit(agreement, 'RecordExecuted').withArgs(alice.address, 2, 0);
   });
 
   it('Alice (borrower) and Bob (lender)', async () => {

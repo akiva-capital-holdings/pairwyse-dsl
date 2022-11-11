@@ -32,35 +32,16 @@ contract Agreement {
 
     event Parsed(address indexed preProccessor, address indexed context, string code);
 
-    event Record_Archived(uint256 recordId);
-    event Record_Unarchived(uint256 recordId);
-    event Record_Activated(uint256 recordId);
-    event Record_Deactivated(uint256 recordId);
+    event RecordArchived(uint256 indexed recordId);
+    event RecordUnarchived(uint256 indexed recordId);
+    event RecordActivated(uint256 indexed recordId);
+    event RecordDeactivated(uint256 indexed recordId);
 
-    event RecordBlueprint_Added(
+    event RecordExecuted(
+        address indexed signatory,
         uint256 indexed recordId,
-        uint256[] requiredRecords,
-        address[] signatories
+        uint256 providedAmount
     );
-    event RecordCondition_Added(
-        uint256 indexed recordId,
-        address conditionContext,
-        string conditionString
-    );
-    event RecordTransaction_Added(
-        uint256 indexed recordId,
-        address recordContext,
-        string transactionString
-    );
-
-    event Verification_Passed(uint256 recordId);
-    event RequiredRecords_Validation_Passed(uint256 recordId);
-    event Conditions_Validation_Passed(uint256 indexed recordId, uint256 msgValue);
-
-    event Fulfilled(address indexed signatory, uint256 recordId, uint256 msgValue);
-    event Fulfill_Failed(address indexed signatory, uint256 recordId, uint256 msgValue);
-
-    event RecordExecuted(address indexed signatory, uint256 recordId);
 
     event NewRecord(
         uint256 recordId,
@@ -232,7 +213,7 @@ contract Agreement {
         require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         records[_recordId].isArchived = true;
 
-        emit Record_Archived(_recordId);
+        emit RecordArchived(_recordId);
     }
 
     /**
@@ -244,7 +225,7 @@ contract Agreement {
         require(records[_recordId].isArchived != false, ErrorsAgreement.AGR10);
         records[_recordId].isArchived = false;
 
-        emit Record_Unarchived(_recordId);
+        emit RecordUnarchived(_recordId);
     }
 
     /**
@@ -255,7 +236,7 @@ contract Agreement {
         require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         records[_recordId].isActive = true;
 
-        emit Record_Activated(_recordId);
+        emit RecordActivated(_recordId);
     }
 
     /**
@@ -267,7 +248,7 @@ contract Agreement {
         require(records[_recordId].isActive != false, ErrorsAgreement.AGR10);
         records[_recordId].isActive = false;
 
-        emit Record_Deactivated(_recordId);
+        emit RecordDeactivated(_recordId);
     }
 
     /**
@@ -315,18 +296,11 @@ contract Agreement {
 
     function execute(uint256 _recordId) external payable {
         require(records[_recordId].isActive, ErrorsAgreement.AGR13);
-
         require(_verify(_recordId), ErrorsAgreement.AGR1);
-        emit Verification_Passed(_recordId);
-
         require(_validateRequiredRecords(_recordId), ErrorsAgreement.AGR2);
-        emit RequiredRecords_Validation_Passed(_recordId);
-
         require(_validateConditions(_recordId, msg.value), ErrorsAgreement.AGR6);
-        emit Conditions_Validation_Passed(_recordId, msg.value);
-
         require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
-        emit RecordExecuted(msg.sender, _recordId);
+        emit RecordExecuted(msg.sender, _recordId, msg.value);
     }
 
     // solhint-disable-next-line no-empty-blocks
@@ -401,8 +375,6 @@ contract Agreement {
         requiredRecords[_recordId] = _requiredRecords;
         records[_recordId] = record;
         recordIds.push(_recordId);
-
-        emit RecordBlueprint_Added(_recordId, _requiredRecords, _signatories);
     }
 
     /**
@@ -425,8 +397,6 @@ contract Agreement {
 
         conditionContexts[_recordId].push(_conditionCtx);
         conditionStrings[_recordId].push(_conditionStr);
-
-        emit RecordCondition_Added(_recordId, _conditionCtx, _conditionStr);
     }
 
     /**
@@ -446,8 +416,6 @@ contract Agreement {
 
         records[_recordId].recordContext = _recordContext;
         records[_recordId].transactionString = _transactionString;
-
-        emit RecordTransaction_Added(_recordId, _recordContext, _transactionString);
     }
 
     function _validateConditions(uint256 _recordId, uint256 _msgValue) internal returns (bool) {
@@ -490,12 +458,7 @@ contract Agreement {
             records[_recordId].isExecuted = true;
         }
 
-        result = IContext(record.recordContext).stack().seeLast() == 0 ? false : true;
-        if (result) {
-            emit Fulfilled(_signatory, _recordId, _msgValue);
-        } else {
-            emit Fulfill_Failed(_signatory, _recordId, _msgValue);
-        }
+        return IContext(record.recordContext).stack().seeLast() == 0 ? false : true;
     }
 
     /**
