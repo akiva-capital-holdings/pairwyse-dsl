@@ -46,7 +46,11 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  docgen: {},
+  docgen: {
+    pages: 'files',
+    templates: 'custom',
+    // theme: 'page'
+  },
   // Note: make `tenderly` to verify contracts on Tenderly during running deployment scripts
   defaultNetwork: 'hardhat',
   networks: {

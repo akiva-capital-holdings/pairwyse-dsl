@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-yarn hardhat docgen
-pandoc docs/index.md --from markdown --to rst -s -o docs/index.rst
-yarn lint-staged
-git add .
+# yarn hardhat docgen
+# pandoc docs/index.md --from markdown --to rst -s -o docs/index.rst
+# yarn lint-staged
+# git add .
