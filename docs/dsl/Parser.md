@@ -295,6 +295,8 @@ struct ALISA {
   lastPayment: 300
 }
 
+sumThroughStructs USERS.lastPayment
+or shorter version
 sumOf USERS.lastPayment
 ```_
 
@@ -396,7 +398,7 @@ function asmEnableRecord() public
 ```
 
 _Parses the `record id` and the `agreement address` parameters
-Ex. ['enable', '56', 'for', '9A676e781A523b5d0C0e43731313A708CB607508']_
+Ex. ['enableRecord', 'RECORD_ID', 'at', 'AGREEMENT_ADDRESS']_
 
 ### _isLabel
 
