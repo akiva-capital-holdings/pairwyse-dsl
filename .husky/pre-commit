@@ -1,7 +1,11 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# yarn hardhat docgen
-# pandoc docs/index.md --from markdown --to rst -s -o docs/index.rst
-# yarn lint-staged
-# git add .
+# Update project documentation
+yarn hardhat docgen
+
+# Run Solidity & TS liters
+yarn lint-staged
+
+# Add changed files to commit
+git add .
