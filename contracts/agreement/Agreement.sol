@@ -6,6 +6,7 @@ import { IContext } from '../dsl/interfaces/IContext.sol';
 import { Context } from '../dsl/Context.sol';
 import { ErrorsAgreement } from '../dsl/libs/Errors.sol';
 import { UnstructuredStorage } from '../dsl/libs/UnstructuredStorage.sol';
+import { LinkedList } from '../dsl/helpers/LinkedList.sol';
 import { ComparisonOpcodes } from '../dsl/libs/opcodes/ComparisonOpcodes.sol';
 import { BranchingOpcodes } from '../dsl/libs/opcodes/BranchingOpcodes.sol';
 import { LogicalOpcodes } from '../dsl/libs/opcodes/LogicalOpcodes.sol';
@@ -23,7 +24,7 @@ import { StringUtils } from '../dsl/libs/StringUtils.sol';
  * Agreement contract that is used to implement any custom logic of a
  * financial agreement. Ex. lender-borrower agreement
  */
-contract Agreement {
+contract Agreement is LinkedList {
     using UnstructuredStorage for bytes32;
 
     IParser public parser; // TODO: We can get rid of this dependency
@@ -53,15 +54,18 @@ contract Agreement {
     }
 
     struct Record {
-        address recordContext;
         bool isExecuted;
         bool isArchived;
         bool isActive;
         string transactionString;
     }
+    // record id -> program
+    mapping(uint256 => bytes) public recordProgram;
+    // record id -> conditional program list
+    mapping(uint256 => bytes[]) public conditionalPrograms;
 
     mapping(uint256 => Record) public records; // recordId => Record struct
-    mapping(uint256 => address[]) public conditionContexts; // recordId => condition Context
+    // mapping(uint256 => address[]) public conditionContexts; // recordId => condition Context
     mapping(uint256 => string[]) public conditionStrings; // recordId => DSL condition as string
     mapping(uint256 => address[]) public signatories; // recordId => signatories
     mapping(uint256 => uint256[]) public requiredRecords; // recordId => requiredRecords[]
@@ -78,6 +82,7 @@ contract Agreement {
         parser = IParser(_parser);
         context = new Context();
         context.setAppAddress(address(this));
+        _setLibOpcodes(); // set opcodes for the context
     }
 
     function getStorageBool(bytes32 position) external view returns (bool data) {
@@ -106,15 +111,6 @@ contract Agreement {
 
     function setStorageUint256(bytes32 position, uint256 data) external isReserved(position) {
         position.setStorageUint256(data);
-    }
-
-    /**
-     * @dev Based on Record ID returns the number of condition Context instances
-     * @param _recordId Record ID
-     * @return Number of condition Context instances of the Record
-     */
-    function conditionContextsLen(uint256 _recordId) external view returns (uint256) {
-        return conditionContexts[_recordId].length;
     }
 
     /**
@@ -155,8 +151,7 @@ contract Agreement {
             if (
                 records[recordIds[i]].isActive &&
                 !records[recordIds[i]].isArchived &&
-                !records[recordIds[i]].isExecuted &&
-                records[recordIds[i]].recordContext != address(0)
+                !records[recordIds[i]].isExecuted
             ) {
                 activeRecords[count] = recordIds[i];
                 count++;
@@ -197,7 +192,6 @@ contract Agreement {
      * @param _recordId Record ID
      */
     function archiveRecord(uint256 _recordId) external onlyOwner {
-        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         records[_recordId].isArchived = true;
     }
 
@@ -206,7 +200,6 @@ contract Agreement {
      * @param _recordId Record ID
      */
     function unarchiveRecord(uint256 _recordId) external onlyOwner {
-        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         require(records[_recordId].isArchived != false, ErrorsAgreement.AGR10);
         records[_recordId].isArchived = false;
     }
@@ -216,7 +209,6 @@ contract Agreement {
      * @param _recordId Record ID
      */
     function activateRecord(uint256 _recordId) external onlyOwner {
-        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         records[_recordId].isActive = true;
     }
 
@@ -225,39 +217,45 @@ contract Agreement {
      * @param _recordId Record ID
      */
     function deactivateRecord(uint256 _recordId) external onlyOwner {
-        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         require(records[_recordId].isActive != false, ErrorsAgreement.AGR10);
         records[_recordId].isActive = false;
+    }
+
+    function conditionConditionsLen(uint256 _recordId) external view returns (uint256) {
+        return conditionStrings[_recordId].length;
     }
 
     /**
      * @dev Parse DSL code from the user and set the program bytecode in Context contract
      * @param _code DSL code input from the user
-     * @param _context Context address
      * @param _preProc Preprocessor address
      */
     function parse(
         string memory _code,
-        address _context,
-        address _preProc
+        address _preProc,
+        uint256 _recordId, // we need this to store data
+        bool _isRecord
     ) external {
-        parser.parse(_preProc, _context, _code);
+        bytes memory _program = parser.parse(_preProc, address(context), _code);
+        if (_isRecord) {
+            conditionalPrograms[_recordId].push(_program);
+        } else {
+            recordProgram[_recordId] = _program;
+        }
     }
 
-    function update(
+    function _update(
         uint256 _recordId,
         uint256[] memory _requiredRecords,
         address[] memory _signatories,
         string memory _transactionString,
-        string[] memory _conditionStrings,
-        address _recordContext,
-        address[] memory _conditionContexts
-    ) external {
+        string[] memory _conditionStrings
+    ) internal {
         _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
-        for (uint256 i = 0; i < _conditionContexts.length; i++) {
-            _addRecordCondition(_recordId, _conditionStrings[i], _conditionContexts[i]);
+        for (uint256 i = 0; i < _conditionStrings.length; i++) {
+            _addRecordCondition(_recordId, _conditionStrings[i]);
         }
-        _addRecordTransaction(_recordId, _transactionString, _recordContext);
+        _addRecordTransaction(_recordId, _transactionString);
         if (msg.sender == ownerAddr) {
             records[_recordId].isActive = true;
         }
@@ -269,6 +267,16 @@ contract Agreement {
             _transactionString,
             _conditionStrings
         );
+    }
+
+    function update(
+        uint256 _recordId,
+        uint256[] memory _requiredRecords,
+        address[] memory _signatories,
+        string memory _transactionString,
+        string[] memory _conditionStrings
+    ) external {
+        _update(_recordId, _requiredRecords, _signatories, _transactionString, _conditionStrings);
     }
 
     function execute(uint256 _recordId) external payable {
@@ -348,7 +356,7 @@ contract Agreement {
         address[] memory _signatories
     ) internal {
         _checkSignatories(_signatories);
-        Record memory record = Record(address(0), false, false, false, '');
+        Record memory record = Record(false, false, false, '');
         signatories[_recordId] = _signatories;
         requiredRecords[_recordId] = _requiredRecords;
         records[_recordId] = record;
@@ -360,47 +368,34 @@ contract Agreement {
      * inside Record
      * @param _recordId Record ID
      * @param _conditionStr DSL code for condition
-     * @param _conditionCtx Context contract address for block of DSL code for `_conditionStr`
      */
-    function _addRecordCondition(
-        uint256 _recordId,
-        string memory _conditionStr,
-        address _conditionCtx
-    ) internal {
+    function _addRecordCondition(uint256 _recordId, string memory _conditionStr) internal {
         require(!StringUtils.equal(_conditionStr, ''), ErrorsAgreement.AGR5);
-        IContext(_conditionCtx).setComparisonOpcodesAddr(address(ComparisonOpcodes));
-        IContext(_conditionCtx).setBranchingOpcodesAddr(address(BranchingOpcodes));
-        IContext(_conditionCtx).setLogicalOpcodesAddr(address(LogicalOpcodes));
-        IContext(_conditionCtx).setOtherOpcodesAddr(address(OtherOpcodes));
-
-        conditionContexts[_recordId].push(_conditionCtx);
         conditionStrings[_recordId].push(_conditionStr);
+    }
+
+    function _setLibOpcodes() internal {
+        context.setComparisonOpcodesAddr(address(ComparisonOpcodes));
+        context.setBranchingOpcodesAddr(address(BranchingOpcodes));
+        context.setLogicalOpcodesAddr(address(LogicalOpcodes));
+        context.setOtherOpcodesAddr(address(OtherOpcodes));
     }
 
     /**
      * @dev Adds a transaction that should be executed if all
      * conditions inside Record are met
      */
-    function _addRecordTransaction(
-        uint256 _recordId,
-        string memory _transactionString,
-        address _recordContext
-    ) internal {
+    function _addRecordTransaction(uint256 _recordId, string memory _transactionString) internal {
         require(conditionStrings[_recordId].length > 0, ErrorsAgreement.AGR5);
-        IContext(_recordContext).setComparisonOpcodesAddr(address(ComparisonOpcodes));
-        IContext(_recordContext).setBranchingOpcodesAddr(address(BranchingOpcodes));
-        IContext(_recordContext).setLogicalOpcodesAddr(address(LogicalOpcodes));
-        IContext(_recordContext).setOtherOpcodesAddr(address(OtherOpcodes));
-
-        records[_recordId].recordContext = _recordContext;
         records[_recordId].transactionString = _transactionString;
     }
 
     function _validateConditions(uint256 _recordId, uint256 _msgValue) internal returns (bool) {
-        for (uint256 i = 0; i < conditionContexts[_recordId].length; i++) {
-            IContext(conditionContexts[_recordId][i]).setMsgValue(_msgValue);
-            Executor.execute(conditionContexts[_recordId][i]);
-            if (IContext(conditionContexts[_recordId][i]).stack().seeLast() == 0) return false;
+        for (uint256 i = 0; i < conditionStrings[_recordId].length; i++) {
+            context.setMsgValue(_msgValue);
+            // Executor.execute(conditionStrings[_recordId][i]);
+            Executor.execute(address(context));
+            if (context.stack().seeLast() == 0) return false;
         }
 
         return true;
@@ -422,8 +417,12 @@ contract Agreement {
 
         require(!isExecutedBySignatory[_recordId][_signatory], ErrorsAgreement.AGR7);
 
-        IContext(record.recordContext).setMsgValue(_msgValue);
-        Executor.execute(address(record.recordContext));
+        context.setMsgValue(_msgValue);
+        // TODO: executes context.. what contract should store a program code for conditions?
+        // context returns and save a program by ID?
+        // executor executes only program and who marked it as done?
+        Executor.execute(address(context));
+        // Executor.execute(record.program());
         isExecutedBySignatory[_recordId][_signatory] = true;
 
         // Check if record was executed by all signatories
@@ -437,7 +436,7 @@ contract Agreement {
             records[_recordId].isExecuted = true;
         }
 
-        return IContext(record.recordContext).stack().seeLast() == 0 ? false : true;
+        return context.stack().seeLast() == 0 ? false : true;
     }
 
     /**
@@ -450,8 +449,7 @@ contract Agreement {
             if (
                 records[recordIds[i]].isActive &&
                 !records[recordIds[i]].isArchived &&
-                !records[recordIds[i]].isExecuted &&
-                records[recordIds[i]].recordContext != address(0)
+                !records[recordIds[i]].isExecuted
             ) {
                 count++;
             }

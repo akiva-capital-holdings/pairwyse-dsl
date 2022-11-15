@@ -37,20 +37,12 @@ contract AgreementMock is Agreement {
         _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
     }
 
-    function addRecordCondition(
-        uint256 _recordId,
-        string memory _conditionStr,
-        address _conditionCtx
-    ) public {
-        _addRecordCondition(_recordId, _conditionStr, _conditionCtx);
+    function addRecordCondition(uint256 _recordId, string memory _conditionStr) public {
+        _addRecordCondition(_recordId, _conditionStr);
     }
 
-    function addRecordTransaction(
-        uint256 _recordId,
-        string memory _transactionString,
-        address _recordContext
-    ) public {
-        _addRecordTransaction(_recordId, _transactionString, _recordContext);
+    function addRecordTransaction(uint256 _recordId, string memory _transactionString) public {
+        _addRecordTransaction(_recordId, _transactionString);
     }
 
     function fulfill(
@@ -59,9 +51,5 @@ contract AgreementMock is Agreement {
         address _signatory
     ) external returns (bool) {
         return _fulfill(_recordId, _msgValue, _signatory);
-    }
-
-    function setRecordContext(uint256 _recordId, address _context) external {
-        records[_recordId].recordContext = _context;
     }
 }

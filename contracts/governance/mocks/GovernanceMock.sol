@@ -9,7 +9,6 @@ contract GovernanceMock is Governance {
         address _parser,
         address _onlyOwner,
         address _token,
-        uint256 _deadline,
-        address[] memory _contexts
-    ) Governance(_parser, _onlyOwner, _token, _deadline, _contexts) {}
+        uint256 _deadline
+    ) Governance(_parser, _onlyOwner, _token, _deadline) {}
 }

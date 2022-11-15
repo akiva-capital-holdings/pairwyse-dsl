@@ -73,13 +73,9 @@ export const parseConditions = async (
   app: AgreementMock | GovernanceMock,
   preprAddr: string
 ) => {
-  const condCtxLen = (await app.conditionContextsLen(recordId)).toNumber();
+  const condCtxLen = (await app.conditionConditionsLen(recordId)).toNumber();
   for (let j = 0; j < condCtxLen; j++) {
-    await parser.parse(
-      preprAddr,
-      await app.conditionContexts(recordId, j),
-      await app.conditionStrings(recordId, j)
-    );
+    await parser.parse(preprAddr, await app.context(), await app.conditionStrings(recordId, j));
   }
 };
 

@@ -45,9 +45,9 @@ contract Parser is IParser {
         address _preprAddr,
         address _ctxAddr,
         string memory _codeRaw
-    ) external {
+    ) external returns (bytes memory) {
         string[] memory _code = IPreprocessor(_preprAddr).transform(_ctxAddr, _codeRaw);
-        _parseCode(_ctxAddr, _code);
+        return _parseCode(_ctxAddr, _code);
     }
 
     /**
@@ -499,7 +499,7 @@ contract Parser is IParser {
     /**
      * @dev Сonverts a list of commands to bytecode
      */
-    function _parseCode(address _ctxAddr, string[] memory code) internal {
+    function _parseCode(address _ctxAddr, string[] memory code) internal returns (bytes memory) {
         delete program;
         cmdIdx = 0;
         cmds = code;
@@ -513,7 +513,7 @@ contract Parser is IParser {
 
         // TODO: Parser: IContext(_ctxAddr).delegateCall('setProgram', program) to pass owner's
         //       address to the Context contract
-        IContext(_ctxAddr).setProgram(program);
+        return program;
     }
 
     /**

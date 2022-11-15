@@ -16,7 +16,7 @@ interface IParser {
         address _preprAddr,
         address _ctxAddr,
         string memory _codeRaw
-    ) external;
+    ) external returns (bytes memory);
 
     function asmSetLocalBool() external;
 
