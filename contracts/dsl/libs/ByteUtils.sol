@@ -5,6 +5,9 @@ import { ErrorsByteUtils } from './Errors.sol';
 
 // import "hardhat/console.sol";
 
+/**
+ * Library to simplify working with bytes
+ */
 library ByteUtils {
     function slice(
         bytes calldata _data,
