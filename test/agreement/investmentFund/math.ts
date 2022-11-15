@@ -77,12 +77,6 @@ describe('Agreement: Investment Fund tests math', () => {
       await agreement.setStorageUint256(hex4Bytes('DEPOSIT_MIN_PERCENT'), DEPOSIT_MIN_PERCENT);
 
       const txn1 = await agreement.connect(GP).execute(txId);
-      await expect(txn1).to.emit(agreement, 'Verification_Passed').withArgs(txId);
-      await expect(txn1).to.emit(agreement, 'RequiredRecords_Validation_Passed').withArgs(txId);
-      await expect(txn1).to.emit(agreement, 'Conditions_Validation_Passed').withArgs(txId, 0);
-      await expect(txn1).to.emit(agreement, 'Fulfilled').withArgs(GP.address, txId, 0);
-      await expect(txn1).to.emit(agreement, 'RecordExecuted').withArgs(GP.address, txId);
-
       EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.add(GP_INITIAL);
       EXPECTED_CONTRACT_BAL += GP_INITIAL.toNumber();
       let daiBal = await dai.balanceOf(agreementAddr);
@@ -115,11 +109,6 @@ describe('Agreement: Investment Fund tests math', () => {
         await agreement.setStorageUint256(hex4Bytes('CLOSING_DATE'), NEXT_TWO_MONTH);
 
         const txn2 = await agreement.connect(LP).execute(txId);
-        await expect(txn2).to.emit(agreement, 'Verification_Passed').withArgs(txId);
-        await expect(txn2).to.emit(agreement, 'RequiredRecords_Validation_Passed').withArgs(txId);
-        await expect(txn2).to.emit(agreement, 'Conditions_Validation_Passed').withArgs(txId, 0);
-        await expect(txn2).to.emit(agreement, 'Fulfilled').withArgs(LP.address, txId, 0);
-        await expect(txn2).to.emit(agreement, 'RecordExecuted').withArgs(LP.address, txId);
 
         EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.add(LP_INITIAL);
         EXPECTED_CONTRACT_BAL += LP_INITIAL.toNumber();
@@ -178,14 +167,6 @@ describe('Agreement: Investment Fund tests math', () => {
           [GP_REMAINING_BN.mul(-1)]
         );
 
-        await expect(txn3Hash).to.emit(agreement, 'Verification_Passed').withArgs(txId);
-        await expect(txn3Hash)
-          .to.emit(agreement, 'RequiredRecords_Validation_Passed')
-          .withArgs(txId);
-        await expect(txn3Hash).to.emit(agreement, 'Conditions_Validation_Passed').withArgs(txId, 0);
-        await expect(txn3Hash).to.emit(agreement, 'Fulfilled').withArgs(GP.address, txId, 0);
-        await expect(txn3Hash).to.emit(agreement, 'RecordExecuted').withArgs(GP.address, txId);
-
         EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.add(GP_REMAINING_BN);
         EXPECTED_CONTRACT_BAL += GP_REMAINING;
         daiBal = await dai.balanceOf(agreementAddr);
@@ -228,15 +209,6 @@ describe('Agreement: Investment Fund tests math', () => {
             [GP, LP],
             [GP_INITIAL, LP_INITIAL]
           );
-          await expect(txn4Hash).to.emit(agreement, 'Verification_Passed').withArgs(txId);
-          await expect(txn4Hash)
-            .to.emit(agreement, 'RequiredRecords_Validation_Passed')
-            .withArgs(txId);
-          await expect(txn4Hash)
-            .to.emit(agreement, 'Conditions_Validation_Passed')
-            .withArgs(txId, 0);
-          await expect(txn4Hash).to.emit(agreement, 'Fulfilled').withArgs(GP.address, txId, 0);
-          await expect(txn4Hash).to.emit(agreement, 'RecordExecuted').withArgs(GP.address, txId);
           console.log(`txn hash: \x1b[35m${txn4Hash}\x1b[0m`);
         } else {
           await expect(agreement.connect(LP).execute(txId)).to.be.revertedWith('AGR6');
@@ -278,14 +250,6 @@ describe('Agreement: Investment Fund tests math', () => {
           [PURCHASE_AMOUNT_BN]
         );
 
-        await expect(txn5Hash).to.emit(agreement, 'Verification_Passed').withArgs(txId);
-        await expect(txn5Hash)
-          .to.emit(agreement, 'RequiredRecords_Validation_Passed')
-          .withArgs(txId);
-        await expect(txn5Hash).to.emit(agreement, 'Conditions_Validation_Passed').withArgs(txId, 0);
-        await expect(txn5Hash).to.emit(agreement, 'Fulfilled').withArgs(GP.address, txId, 0);
-        await expect(txn5Hash).to.emit(agreement, 'RecordExecuted').withArgs(GP.address, txId);
-
         EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.sub(PURCHASE_AMOUNT_BN);
         EXPECTED_CONTRACT_BAL -= PURCHASE_AMOUNT;
         daiBal = await dai.balanceOf(agreementAddr);
@@ -320,11 +284,6 @@ describe('Agreement: Investment Fund tests math', () => {
 
         const cashBalanceBefore = await dai.balanceOf(agreementAddr);
         const txn6 = await agreement.connect(GP).execute(txId);
-        await expect(txn6).to.emit(agreement, 'Verification_Passed').withArgs(txId);
-        await expect(txn6).to.emit(agreement, 'RequiredRecords_Validation_Passed').withArgs(txId);
-        await expect(txn6).to.emit(agreement, 'Conditions_Validation_Passed').withArgs(txId, 0);
-        await expect(txn6).to.emit(agreement, 'Fulfilled').withArgs(GP.address, txId, 0);
-        await expect(txn6).to.emit(agreement, 'RecordExecuted').withArgs(GP.address, txId);
         const cashBalanceAfter = await dai.balanceOf(agreementAddr);
 
         EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.add(GP_PURCHASE_RETURN_BN);
@@ -364,16 +323,6 @@ describe('Agreement: Investment Fund tests math', () => {
           [GP],
           [MANAGEMENT_FEE_BN]
         );
-
-        await expect(txn71Hash).to.emit(agreement, 'Verification_Passed').withArgs(txId);
-        await expect(txn71Hash)
-          .to.emit(agreement, 'RequiredRecords_Validation_Passed')
-          .withArgs(txId);
-        await expect(txn71Hash)
-          .to.emit(agreement, 'Conditions_Validation_Passed')
-          .withArgs(txId, 0);
-        await expect(txn71Hash).to.emit(agreement, 'Fulfilled').withArgs(GP.address, txId, 0);
-        await expect(txn71Hash).to.emit(agreement, 'RecordExecuted').withArgs(GP.address, txId);
 
         EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.sub(MANAGEMENT_FEE_BN);
         EXPECTED_CONTRACT_BAL -= MANAGEMENT_FEE;
@@ -430,16 +379,6 @@ describe('Agreement: Investment Fund tests math', () => {
           [CARRY_BN]
         );
 
-        await expect(txn72Hash).to.emit(agreement, 'Verification_Passed').withArgs(txId);
-        await expect(txn72Hash)
-          .to.emit(agreement, 'RequiredRecords_Validation_Passed')
-          .withArgs(txId);
-        await expect(txn72Hash)
-          .to.emit(agreement, 'Conditions_Validation_Passed')
-          .withArgs(txId, 0);
-        await expect(txn72Hash).to.emit(agreement, 'Fulfilled').withArgs(GP.address, txId, 0);
-        await expect(txn72Hash).to.emit(agreement, 'RecordExecuted').withArgs(GP.address, txId);
-
         EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.sub(CARRY_BN);
         EXPECTED_CONTRACT_BAL -= CARRY;
         daiBal = await dai.balanceOf(agreementAddr);
@@ -490,16 +429,6 @@ describe('Agreement: Investment Fund tests math', () => {
           [GP_PRINICIPAL_BN]
         );
 
-        await expect(txn73Hash).to.emit(agreement, 'Verification_Passed').withArgs(txId);
-        await expect(txn73Hash)
-          .to.emit(agreement, 'RequiredRecords_Validation_Passed')
-          .withArgs(txId);
-        await expect(txn73Hash)
-          .to.emit(agreement, 'Conditions_Validation_Passed')
-          .withArgs(txId, 0);
-        await expect(txn73Hash).to.emit(agreement, 'Fulfilled').withArgs(GP.address, txId, 0);
-        await expect(txn73Hash).to.emit(agreement, 'RecordExecuted').withArgs(GP.address, txId);
-
         EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.sub(GP_PRINICIPAL_BN);
         EXPECTED_CONTRACT_BAL -= GP_PRINICIPAL;
         daiBal = await dai.balanceOf(agreementAddr);
@@ -544,16 +473,6 @@ describe('Agreement: Investment Fund tests math', () => {
             [LP],
             [LP_PROFIT_BN]
           );
-
-          await expect(txn81Hash).to.emit(agreement, 'Verification_Passed').withArgs(txId);
-          await expect(txn81Hash)
-            .to.emit(agreement, 'RequiredRecords_Validation_Passed')
-            .withArgs(txId);
-          await expect(txn81Hash)
-            .to.emit(agreement, 'Conditions_Validation_Passed')
-            .withArgs(txId, 0);
-          await expect(txn81Hash).to.emit(agreement, 'Fulfilled').withArgs(LP.address, txId, 0);
-          await expect(txn81Hash).to.emit(agreement, 'RecordExecuted').withArgs(LP.address, txId);
 
           EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.sub(LP_PROFIT_BN);
           EXPECTED_CONTRACT_BAL -= LP_PROFIT;
@@ -602,16 +521,6 @@ describe('Agreement: Investment Fund tests math', () => {
             [LP],
             [LP_PRINCIPAL_BN]
           );
-
-          await expect(txn82Hash).to.emit(agreement, 'Verification_Passed').withArgs(txId);
-          await expect(txn82Hash)
-            .to.emit(agreement, 'RequiredRecords_Validation_Passed')
-            .withArgs(txId);
-          await expect(txn82Hash)
-            .to.emit(agreement, 'Conditions_Validation_Passed')
-            .withArgs(txId, 0);
-          await expect(txn82Hash).to.emit(agreement, 'Fulfilled').withArgs(LP.address, txId, 0);
-          await expect(txn82Hash).to.emit(agreement, 'RecordExecuted').withArgs(LP.address, txId);
 
           EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.sub(LP_PRINCIPAL_BN);
           EXPECTED_CONTRACT_BAL -= LP_PRINCIPAL;

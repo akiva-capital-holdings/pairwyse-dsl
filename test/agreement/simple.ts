@@ -80,26 +80,18 @@ describe('Agreement: Alice, Bob, Carl', () => {
     const conditions = ['blockTimestamp > var LOCK_TIME'];
     const transaction = 'sendEth RECEIVER 1000000000000000000';
     // record by agreement owner
-    let result = await updateAgreement
+    await updateAgreement
       .connect(alice)
       .update(firstTxId, [], signatories, transaction, conditions, recordContext.address, [
         recordContext.address,
       ]);
 
-    await expect(result)
-      .to.emit(updateAgreement, 'NewRecord')
-      .withArgs(firstTxId, [], signatories, transaction, conditions);
-
     // record by other address
-    result = await updateAgreement
+    await updateAgreement
       .connect(bob)
       .update(secondTxId, [], signatories, transaction, conditions, recordContext.address, [
         recordContext.address,
       ]);
-
-    await expect(result)
-      .to.emit(updateAgreement, 'NewRecord')
-      .withArgs(secondTxId, [], signatories, transaction, conditions);
 
     // owner set isActive = true
     const trueResult = await updateAgreement.records(firstTxId);
@@ -138,9 +130,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
     // Execute transaction
     await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
 
-    const result = await agreement.connect(alice).execute(txId);
-    await expect(result).to.changeEtherBalance(bob, oneEthBN);
-    await expect(result).to.emit(agreement, 'RecordExecuted').withArgs(alice.address, txId);
+    await expect(await agreement.connect(alice).execute(txId)).to.changeEtherBalance(bob, oneEthBN);
 
     // Tx already executed
     await expect(agreement.connect(alice).execute(txId)).to.be.revertedWith('AGR7');
@@ -154,12 +144,11 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await addSteps(preprocessorAddr, oneEthToBobSteps(alice), agreementAddr, multisig);
 
     // Execute
-    let result = await agreement.connect(alice).execute(1, { value: oneEthBN });
-    await expect(result).changeEtherBalance(alice, oneEthBN.mul(-1));
-    await expect(result).to.emit(agreement, 'RecordExecuted').withArgs(alice.address, 1, oneEthBN);
-
-    result = await agreement.connect(alice).execute(2);
-    await expect(result).to.emit(agreement, 'RecordExecuted').withArgs(alice.address, 2, 0);
+    await expect(await agreement.connect(alice).execute(1, { value: oneEthBN })).changeEtherBalance(
+      alice,
+      oneEthBN.mul(-1)
+    );
+    await expect(await agreement.connect(alice).execute(2)).to.changeEtherBalance(bob, oneEthBN);
   });
 
   it('Alice (borrower) and Bob (lender)', async () => {
@@ -336,4 +325,62 @@ describe('Agreement: Alice, Bob, Carl', () => {
       );
     }
   );
+
+  it('checks events', async () => {
+    const updateAgreementAddr = await deployAgreement(hre, alice.address);
+    const updateAgreement = await ethers.getContractAt('AgreementMock', updateAgreementAddr);
+    const recordContext = await (await ethers.getContractFactory('Context')).deploy();
+    const conditionContext = await (await ethers.getContractFactory('Context')).deploy();
+    await recordContext.setAppAddress(updateAgreement.address);
+    await conditionContext.setAppAddress(updateAgreement.address);
+    const txId = 1;
+    const signatories = [alice.address];
+    const conditions = ['1 > 0'];
+    const transaction = 'uint256 10';
+    // ----> check Parsed event <----
+    let result = await updateAgreement.parse(
+      conditions[0],
+      conditionContext.address,
+      preprocessorAddr
+    );
+    await expect(result)
+      .to.emit(updateAgreement, 'Parsed')
+      .withArgs(preprocessorAddr, conditionContext.address, conditions[0]);
+    result = await updateAgreement.parse(transaction, recordContext.address, preprocessorAddr);
+    await expect(result)
+      .to.emit(updateAgreement, 'Parsed')
+      .withArgs(preprocessorAddr, recordContext.address, transaction);
+
+    // ----> check NewRecord event <----
+    result = await updateAgreement
+      .connect(alice)
+      .update(txId, [], signatories, transaction, conditions, recordContext.address, [
+        conditionContext.address,
+      ]);
+    await expect(result)
+      .to.emit(updateAgreement, 'NewRecord')
+      .withArgs(txId, [], signatories, transaction, conditions);
+
+    // ----> check RecordDeactivated event <----
+    result = await updateAgreement.connect(alice).deactivateRecord(txId);
+    await expect(result).to.emit(updateAgreement, 'RecordDeactivated').withArgs(txId);
+
+    // ----> check RecordArchived event <----
+    result = await updateAgreement.connect(alice).archiveRecord(txId);
+    await expect(result).to.emit(updateAgreement, 'RecordArchived').withArgs(txId);
+
+    // ----> check RecordUnarchived event <----
+    result = await updateAgreement.connect(alice).unarchiveRecord(txId);
+    await expect(result).to.emit(updateAgreement, 'RecordUnarchived').withArgs(txId);
+
+    // ----> check RecordActivated event <----
+    result = await updateAgreement.connect(alice).activateRecord(txId);
+    await expect(result).to.emit(updateAgreement, 'RecordActivated').withArgs(txId);
+
+    // ----> check Executed event <----
+    result = await updateAgreement.connect(alice).execute(txId);
+    await expect(result)
+      .to.emit(updateAgreement, 'RecordExecuted')
+      .withArgs(alice.address, txId, 0, 'uint256 10');
+  });
 });

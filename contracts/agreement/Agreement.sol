@@ -40,7 +40,8 @@ contract Agreement {
     event RecordExecuted(
         address indexed signatory,
         uint256 indexed recordId,
-        uint256 providedAmount
+        uint256 providedAmount,
+        string transaction
     );
 
     event NewRecord(
@@ -300,7 +301,7 @@ contract Agreement {
         require(_validateRequiredRecords(_recordId), ErrorsAgreement.AGR2);
         require(_validateConditions(_recordId, msg.value), ErrorsAgreement.AGR6);
         require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
-        emit RecordExecuted(msg.sender, _recordId, msg.value);
+        emit RecordExecuted(msg.sender, _recordId, msg.value, records[_recordId].transactionString);
     }
 
     // solhint-disable-next-line no-empty-blocks
