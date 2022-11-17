@@ -3,8 +3,7 @@ import { expect } from 'chai';
 import * as hre from 'hardhat';
 import { deployBaseMock } from '../../scripts/utils/deploy.utils.mock';
 import { Context, ParserMock } from '../../typechain-types';
-import { hex4Bytes } from '../utils/utils';
-
+import { hex4Bytes, bnToLongHexString } from '../utils/utils';
 const { ethers, network } = hre;
 
 describe('Parser', () => {
@@ -1064,5 +1063,99 @@ describe('Parser', () => {
     // test function calls inside a for loop
     // test if inside a for loop
     // test if-else inside a for loop
+  });
+
+  describe('activate records', () => {
+    it('enable several records for several agreements', async () => {
+      await app.parseCodeExt(ctxAddr, [
+        'enableRecord',
+        'RECORD_ID',
+        'at',
+        'AGREEMENT_ADDR_1',
+        'enableRecord',
+        'RECORD_ID_1',
+        'at',
+        'AGREEMENT_ADDR_2',
+        'enableRecord',
+        'RECORD_ID_2',
+        'at',
+        'AGREEMENT_ADDR_3',
+      ]);
+
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '41' + // enableRecord
+          '2c610312' + // RECORD_ID
+          '57b12c58' + // AGREEMENT_ADDR_1
+          '41' + // enableRecord
+          '906b8b75' + // RECORD_ID_1
+          'e7738f5c' + // AGREEMENT_ADDR_2
+          '41' + // enableRecord
+          'f505530c' + // RECORD_ID_2
+          'ea1daa93' // AGREEMENT_ADDR_3
+      );
+    });
+  });
+
+  describe('Governannce pre-defined commands', () => {
+    it('check record', async () => {
+      await app.parseCodeExt(ctxAddr, [
+        'sumThroughStructs',
+        'VOTES',
+        'vote',
+        'setUint256',
+        'YES_CTR',
+        'lengthOf',
+        'VOTERS',
+        'uint256',
+        '10000000000',
+        '*',
+        'YES_CTR',
+        'uint256',
+        '10000000000',
+        '*',
+        '/',
+        'uint256',
+        '2',
+        '<',
+        'if',
+        'ENABLE_RECORD',
+        'end',
+        'ENABLE_RECORD',
+        'enableRecord',
+        'RECORD_ID',
+        'at',
+        'AGREEMENT_ADDR',
+        'end',
+      ]);
+
+      expect(await ctx.program()).to.equal(
+        '0x' +
+          '38' + // sumThroughStructs
+          'c3ea08e5' + // VOTES
+          '0932bdf8' + // vote
+          '2e' + // setUint256
+          'cd97e36c' + // YES_CTR
+          '34' + // lengthOf
+          'ef3a685c' + // VOTERS
+          '1a' + // uint256
+          `${bnToLongHexString('10000000000')}` +
+          '28' + // *
+          '1b' + // var
+          'cd97e36c' + // YES_CTR
+          '1a' + // uint256
+          `${bnToLongHexString('10000000000')}` +
+          '28' + // *
+          '29' + // /
+          '1a' + // uint256
+          `${bnToLongHexString('2')}` +
+          '03250083' + // ENABLE_RECORD
+          '24' + // end
+          '41' + // enableRecord
+          '2c610312' + // RECORD_ID
+          'ca2bf0ef' + // AGREEMENT_ADDR
+          '24'
+      );
+    });
   });
 });

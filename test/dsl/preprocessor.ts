@@ -2001,4 +2001,118 @@ describe('Preprocessor', () => {
       });
     });
   });
+
+  describe('Governannce pre-defined commands', () => {
+    it('setup record', async () => {
+      const input = `declareArr struct VOTERS
+        struct VOTE_YES { voter: msgSender, vote: YES }
+        struct VOTE_NO { voter: msgSender, vote: NO }
+      `;
+
+      const res = await app.callStatic.transform(ctxAddr, input);
+      expect(res).to.eql([
+        'declareArr',
+        'struct',
+        'VOTERS',
+        'struct',
+        'VOTE_YES',
+        'voter',
+        'msgSender',
+        'vote',
+        '1',
+        'endStruct',
+        'struct',
+        'VOTE_NO',
+        'voter',
+        'msgSender',
+        'vote',
+        '0',
+        'endStruct',
+      ]);
+    });
+
+    it('yes record', async () => {
+      const input = `insert VOTE_YES into VOTERS`;
+
+      const res = await app.callStatic.transform(ctxAddr, input);
+      expect(res).to.eql(['push', 'VOTE_YES', 'VOTERS']);
+    });
+
+    it('no record', async () => {
+      const input = `insert VOTE_NO into VOTERS`;
+
+      const res = await app.callStatic.transform(ctxAddr, input);
+      expect(res).to.eql(['push', 'VOTE_NO', 'VOTERS']);
+    });
+
+    it('check record', async () => {
+      const input = `
+      (sumOf VOTES.vote) setUint256 YES_CTR
+        (((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2)
+        if ENABLE_RECORD
+        end
+
+        ENABLE_RECORD {
+          enableRecord RECORD_ID at AGREEMENT_ADDR
+        } uint256 1`;
+
+      const res = await app.callStatic.transform(ctxAddr, input);
+      expect(res).to.eql([
+        'sumThroughStructs',
+        'VOTES',
+        'vote',
+        'setUint256',
+        'YES_CTR',
+        'lengthOf',
+        'VOTERS',
+        'uint256',
+        '10000000000',
+        '*',
+        'YES_CTR',
+        'uint256',
+        '10000000000',
+        '*',
+        '/',
+        'uint256',
+        '2',
+        '<',
+        'if',
+        'ENABLE_RECORD',
+        'end',
+        'ENABLE_RECORD',
+        'enableRecord',
+        'RECORD_ID',
+        'at',
+        'AGREEMENT_ADDR',
+        'end',
+        'uint256',
+        '1',
+      ]);
+    });
+  });
+
+  describe('activate records', () => {
+    it('enable several records at several agreement', async () => {
+      const input = `
+        enableRecord RECORD_ID at AGREEMENT_ADDR
+        enableRecord RECORD_ID_2 at AGREEMENT_ADDR_2
+        enableRecord RECORD_ID_3 at AGREEMENT_ADDR_3
+      `;
+      const res = await app.callStatic.transform(ctxAddr, input);
+      expect(res).to.eql([
+        'enableRecord',
+        'RECORD_ID',
+        'at',
+        'AGREEMENT_ADDR',
+        'enableRecord',
+        'RECORD_ID_2',
+        'at',
+        'AGREEMENT_ADDR_2',
+        'enableRecord',
+        'RECORD_ID_3',
+        'at',
+        'AGREEMENT_ADDR_3',
+      ]);
+    });
+  });
 });

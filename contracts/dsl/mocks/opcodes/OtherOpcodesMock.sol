@@ -140,4 +140,8 @@ contract OtherOpcodesMock {
     function opLengthOf(address _ctx) public {
         OtherOpcodes.opLengthOf(_ctx);
     }
+
+    function opEnableRecord(address _ctx) public {
+        OtherOpcodes.opEnableRecord(_ctx);
+    }
 }

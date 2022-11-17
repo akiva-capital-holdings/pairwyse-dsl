@@ -74,7 +74,7 @@ export const aliceBobAndCarl = (
     txId: '32',
     requiredTxs: [],
     signatories: [carl.address],
-    transaction: `transferFrom TOKEN_ADDR CARL TRANSACTIONS ${tenTokens.toString()}`,
+    transaction: `transferFrom TOKEN_ADDR CARL AGREEMENT ${tenTokens.toString()}`,
     conditions: ['bool true'],
   },
   // Bob lends 10 tokens to Alice
@@ -127,8 +127,7 @@ export const businessCaseSteps = (
     txId: index.concat('1'),
     requiredTxs: [],
     signatories: [GPAddr],
-    // TODO: replace TRANSACTIONS_CONT name with AGREEMENT
-    transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_INITIAL',
+    transaction: 'transferFromVar DAI GP AGREEMENT GP_INITIAL',
     conditions: [
       `(time < var PLACEMENT_DATE)
        and (
@@ -141,7 +140,7 @@ export const businessCaseSteps = (
     txId: index.concat('2'),
     requiredTxs: [index.concat('1')],
     signatories: LPsAddrs,
-    transaction: `(transferFromVar DAI LP TRANSACTIONS_CONT LP_INITIAL)
+    transaction: `(transferFromVar DAI LP AGREEMENT LP_INITIAL)
           and
         (var LP_TOTAL + var LP_INITIAL) setUint256 LP_TOTAL`,
     conditions: ['time >= var PLACEMENT_DATE', 'time < var CLOSING_DATE'],
@@ -150,7 +149,7 @@ export const businessCaseSteps = (
     txId: index.concat('3'),
     requiredTxs: [index.concat('2')],
     signatories: [GPAddr],
-    transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAINING',
+    transaction: 'transferFromVar DAI GP AGREEMENT GP_REMAINING',
     conditions: [
       'var GP_INITIAL + var LP_TOTAL >= var INITIAL_FUNDS_TARGET',
       '(var DEPOSIT_MIN_PERCENT * var LP_TOTAL / var P1) setUint256 TWO_PERCENT',
@@ -167,7 +166,7 @@ export const businessCaseSteps = (
       }`,
       'time >= var LOW_LIM',
       'time <= var UP_LIM',
-      '(balanceOf DAI TRANSACTIONS_CONT) >= ((var INITIAL_FUNDS_TARGET * var P1) / 100)',
+      '(balanceOf DAI AGREEMENT) >= ((var INITIAL_FUNDS_TARGET * var P1) / 100)',
     ],
   },
   {
@@ -198,7 +197,7 @@ export const businessCaseSteps = (
     conditions: [
       `(time >= var FUND_INVESTMENT_DATE)
          and
-       (100 * var PURCHASE_AMOUNT <= var PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,
+       (100 * var PURCHASE_AMOUNT <= var PURCHASE_PERCENT * (balanceOf DAI AGREEMENT))`,
     ],
   },
   {
@@ -210,7 +209,7 @@ export const businessCaseSteps = (
     requiredTxs: [],
     signatories: [GPAddr],
     // TODO: swap ETH for DAI
-    transaction: 'transferFromVar DAI WHALE TRANSACTIONS_CONT GP_PURCHASE_RETURN',
+    transaction: 'transferFromVar DAI WHALE AGREEMENT GP_PURCHASE_RETURN',
     conditions: ['time >= var FUND_INVESTMENT_DATE + var ONE_YEAR'],
   },
   {
@@ -230,12 +229,12 @@ export const businessCaseSteps = (
     transaction: 'transferVar DAI GP CARRY',
     conditions: [
       '(var GP_INITIAL + var LP_TOTAL + var GP_REMAINING) setUint256 INITIAL_DEPOSIT',
-      `(balanceOf DAI TRANSACTIONS_CONT > (var INITIAL_DEPOSIT - var MANAGEMENT_FEE))
+      `(balanceOf DAI AGREEMENT > (var INITIAL_DEPOSIT - var MANAGEMENT_FEE))
         ifelse HAS_PROFIT NO_PROFIT
         end
 
         HAS_PROFIT {
-          (balanceOf DAI TRANSACTIONS_CONT +
+          (balanceOf DAI AGREEMENT +
             var MANAGEMENT_FEE -
             var INITIAL_DEPOSIT
           ) setUint256 PROFIT
@@ -279,7 +278,7 @@ export const businessCaseSteps = (
         (var GP_INITIAL +
           var LP_TOTAL +
           var GP_REMAINING -
-          (balanceOf DAI TRANSACTIONS_CONT) -
+          (balanceOf DAI AGREEMENT) -
           var MANAGEMENT_FEE
         ) setUint256 LOSS
       }`,
@@ -346,7 +345,7 @@ export const businessCaseStepsSimplified = (
     txId: index.concat('1'),
     requiredTxs: [],
     signatories: [GPAddr],
-    transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_INITIAL',
+    transaction: 'transferFromVar DAI GP AGREEMENT GP_INITIAL',
     conditions: [
       `(time < PLACEMENT_DATE)
        and (GP_INITIAL >= ((INITIAL_FUNDS_TARGET * DEPOSIT_MIN_PERCENT) / 100))`,
@@ -356,7 +355,7 @@ export const businessCaseStepsSimplified = (
     txId: index.concat('2'),
     requiredTxs: [index.concat('1')],
     signatories: LPsAddrs,
-    transaction: `(transferFromVar DAI LP TRANSACTIONS_CONT LP_INITIAL)
+    transaction: `(transferFromVar DAI LP AGREEMENT LP_INITIAL)
       and (LP_TOTAL + LP_INITIAL) setUint256 LP_TOTAL`,
     conditions: ['time >= PLACEMENT_DATE', 'time < CLOSING_DATE'],
   },
@@ -364,7 +363,7 @@ export const businessCaseStepsSimplified = (
     txId: index.concat('3'),
     requiredTxs: [index.concat('2')],
     signatories: [GPAddr],
-    transaction: 'transferFromVar DAI GP TRANSACTIONS_CONT GP_REMAINING',
+    transaction: 'transferFromVar DAI GP AGREEMENT GP_REMAINING',
     conditions: [
       'GP_INITIAL + LP_TOTAL >= INITIAL_FUNDS_TARGET',
       '(DEPOSIT_MIN_PERCENT * LP_TOTAL / P1) setUint256 TWO_PERCENT',
@@ -381,7 +380,7 @@ export const businessCaseStepsSimplified = (
       }`,
       'time >= LOW_LIM',
       'time <= UP_LIM',
-      '(balanceOf DAI TRANSACTIONS_CONT) >= ((INITIAL_FUNDS_TARGET * P1) / 100)',
+      '(balanceOf DAI AGREEMENT) >= ((INITIAL_FUNDS_TARGET * P1) / 100)',
     ],
   },
   {
@@ -411,7 +410,7 @@ export const businessCaseStepsSimplified = (
     conditions: [
       `(time >= FUND_INVESTMENT_DATE)
          and
-       (100 * PURCHASE_AMOUNT <= PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,
+       (100 * PURCHASE_AMOUNT <= PURCHASE_PERCENT * (balanceOf DAI AGREEMENT))`,
     ],
   },
   {
@@ -423,7 +422,7 @@ export const businessCaseStepsSimplified = (
     requiredTxs: [],
     signatories: [GPAddr],
     // TODO: swap ETH for DAI
-    transaction: 'transferFromVar DAI WHALE TRANSACTIONS_CONT GP_PURCHASE_RETURN',
+    transaction: 'transferFromVar DAI WHALE AGREEMENT GP_PURCHASE_RETURN',
     conditions: ['time >= FUND_INVESTMENT_DATE + ONE_YEAR'],
   },
   {
@@ -443,12 +442,12 @@ export const businessCaseStepsSimplified = (
     transaction: 'transferVar DAI GP CARRY',
     conditions: [
       '(GP_INITIAL + LP_TOTAL + GP_REMAINING) setUint256 INITIAL_DEPOSIT',
-      `(balanceOf DAI TRANSACTIONS_CONT > (INITIAL_DEPOSIT - MANAGEMENT_FEE))
+      `(balanceOf DAI AGREEMENT > (INITIAL_DEPOSIT - MANAGEMENT_FEE))
         ifelse HAS_PROFIT NO_PROFIT
         end
 
         HAS_PROFIT {
-          (balanceOf DAI TRANSACTIONS_CONT + MANAGEMENT_FEE - INITIAL_DEPOSIT) setUint256 PROFIT
+          (balanceOf DAI AGREEMENT + MANAGEMENT_FEE - INITIAL_DEPOSIT) setUint256 PROFIT
         }
 
         NO_PROFIT {
@@ -487,7 +486,7 @@ export const businessCaseStepsSimplified = (
 
       NONZERO_LOSS {
         (GP_INITIAL + LP_TOTAL + GP_REMAINING -
-          (balanceOf DAI TRANSACTIONS_CONT) - MANAGEMENT_FEE
+          (balanceOf DAI AGREEMENT) - MANAGEMENT_FEE
         ) setUint256 LOSS
       }
       `,
@@ -550,7 +549,7 @@ export const aliceAndAnybodySteps = (OtherSigners: string[], index: string) => [
     transaction: 'transferVar DAI GP PURCHASE_AMOUNT',
     conditions: [
       `(time >= var FUND_INVESTMENT_DATE) and
-       (100 * var PURCHASE_AMOUNT <= var PURCHASE_PERCENT * (balanceOf DAI TRANSACTIONS_CONT))`,
+       (100 * var PURCHASE_AMOUNT <= var PURCHASE_PERCENT * (balanceOf DAI AGREEMENT))`,
     ],
   },
 ];

@@ -352,6 +352,8 @@ contract Parser is IParser {
      *   lastPayment: 300
      * }
      *
+     * sumThroughStructs USERS.lastPayment
+     * or shorter version
      * sumOf USERS.lastPayment
      * ```
      */
@@ -467,6 +469,11 @@ contract Parser is IParser {
             } else if (_value.mayBeNumber()) {
                 program = bytes.concat(program, bytes32(_value.toUint256()));
             }
+            // TODO:
+            // else {
+            //     // if the name of the variable
+            //     program = bytes.concat(program, bytes32(keccak256(abi.encodePacked(_value))));
+            // }
         } while (!(cmds[cmdIdx].equal('endStruct')));
 
         _parseVariable(); // parse the 'endStruct' word
@@ -480,6 +487,16 @@ contract Parser is IParser {
         // parse temporary variable name
         _parseVariable();
         _nextCmd(); // skip `in` keyword
+        _parseVariable();
+    }
+
+    /**
+     * @dev Parses the `record id` and the `agreement address` parameters
+     * Ex. ['enableRecord', 'RECORD_ID', 'at', 'AGREEMENT_ADDRESS']
+     */
+    function asmEnableRecord() public {
+        _parseVariable();
+        _nextCmd(); // skip `at` keyword
         _parseVariable();
     }
 
@@ -505,7 +522,6 @@ contract Parser is IParser {
         // TODO: simplify
         bytes4 _selector = bytes4(keccak256(abi.encodePacked(cmd)));
         bool isStructVar = IContext(_ctxAddr).isStructVar(cmd);
-
         if (_isLabel(cmd)) {
             uint256 _branchLocation = program.length;
             bytes memory programBefore = program.slice(0, labelPos[cmd]);

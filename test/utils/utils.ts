@@ -6,7 +6,7 @@ import { BigNumber, Contract, ContractTransaction, utils } from 'ethers';
 import { formatEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 import { Suite, Test } from 'mocha';
-import { Stack__factory, Stack, Context, ERC20 } from '../../typechain-types';
+import { Stack__factory, Stack, Context, ERC20, Governance } from '../../typechain-types';
 import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
 import { DynamicTestData, OpConditionalTxFunc, TxObject } from '../types';
 import { ONE_DAY, ONE_MONTH, ONE_YEAR } from './constants';
@@ -129,6 +129,24 @@ export async function checkStackTail(
 }
 
 /**
+ * Creates different votes for governance
+ * @param governance: Governance
+ * @param accounts: SignerWithAddress[]
+ */
+export const createBulkVotes = async (governance: Governance, accounts: SignerWithAddress[]) => {
+  await governance.connect(accounts[0]).execute(1);
+  await governance.connect(accounts[1]).execute(1);
+  await governance.connect(accounts[2]).execute(2);
+  await governance.connect(accounts[3]).execute(1);
+  await governance.connect(accounts[4]).execute(1);
+  await governance.connect(accounts[5]).execute(2);
+  await governance.connect(accounts[6]).execute(1);
+  await governance.connect(accounts[7]).execute(1);
+  await governance.connect(accounts[8]).execute(2);
+  await governance.connect(accounts[9]).execute(2);
+};
+
+/**
  * Test stack with two values that combines into a single value after the
  * operation. Ex. 1 > 2 = 0
  * @param ST Stack: Stack__factory
@@ -221,19 +239,30 @@ export const addSteps = async (
     const cdCtxsAddrs = []; // conditional context Addresses
 
     console.log('\nTerm Conditions');
+    let result;
 
     for (let j = 0; j < step.conditions.length; j++) {
       const conditionContract = await (await ethers.getContractFactory('Context')).deploy();
       await conditionContract.setAppAddress(agreementAddress);
       cdCtxsAddrs.push(conditionContract.address);
-      await agreement.parse(step.conditions[j], conditionContract.address, preprocessorAddr);
+      result = await agreement.parse(
+        step.conditions[j],
+        conditionContract.address,
+        preprocessorAddr
+      );
+      await expect(result)
+        .to.emit(agreement, 'Parsed')
+        .withArgs(preprocessorAddr, conditionContract.address, step.conditions[j]);
       console.log(
         `\n\taddress: \x1b[35m${conditionContract.address}\x1b[0m\n\tcondition ${
           j + 1
         }:\n\t\x1b[33m${step.conditions[j]}\x1b[0m`
       );
     }
-    await agreement.parse(step.transaction, recordContext.address, preprocessorAddr);
+    result = await agreement.parse(step.transaction, recordContext.address, preprocessorAddr);
+    await expect(result)
+      .to.emit(agreement, 'Parsed')
+      .withArgs(preprocessorAddr, recordContext.address, step.transaction);
     console.log('\nTerm transaction');
     console.log(`\n\taddress: \x1b[35m${recordContext.address}\x1b[0m`);
     console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
@@ -320,7 +349,7 @@ export const businessCaseTest = ({
 
       await agreement.setStorageAddress(hex4Bytes('DAI'), dai.address);
       await agreement.setStorageAddress(hex4Bytes('GP'), GP.address);
-      await agreement.setStorageAddress(hex4Bytes('TRANSACTIONS_CONT'), agreement.address);
+      await agreement.setStorageAddress(hex4Bytes('AGREEMENT'), agreement.address);
       await agreement.setStorageUint256(hex4Bytes('INITIAL_FUNDS_TARGET'), INITIAL_FUNDS_TARGET);
       await agreement.setStorageUint256(hex4Bytes('GP_INITIAL'), GP_INITIAL);
       await agreement.setStorageUint256(hex4Bytes('MANAGEMENT_PERCENT'), MANAGEMENT_FEE_PERCENTAGE);

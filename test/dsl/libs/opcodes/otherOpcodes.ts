@@ -1,4 +1,4 @@
-import { ethers, network } from 'hardhat';
+import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
@@ -10,6 +10,7 @@ import {
   OtherOpcodesMock,
   ERC20Mintable,
   BaseStorage,
+  AgreementMock,
 } from '../../../../typechain-types';
 import {
   checkStack,
@@ -17,7 +18,12 @@ import {
   hex4Bytes,
   uint256StrToHex,
   pushToStack,
+  bnToLongHexString,
 } from '../../../utils/utils';
+import { deployAgreementMock, deployParserMock } from '../../../../scripts/utils/deploy.utils.mock';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+
+const { ethers, network } = hre;
 
 describe('Other opcodes', () => {
   let StackCont: Stack__factory;
@@ -32,6 +38,7 @@ describe('Other opcodes', () => {
   let addressType: string;
   let structType: string;
   let snapshotId: number;
+  let otherOpcodesLibAddr: string;
   const testAmount = '1000';
   const zero32bytes = `0x${new Array(65).join('0')}`;
 
@@ -48,7 +55,7 @@ describe('Other opcodes', () => {
         libraries: { OpcodeHelpers: opcodeHelpersLib.address },
       })
     ).deploy();
-
+    otherOpcodesLibAddr = otherOpcodesLib.address;
     // Deploy OtherOpcodesMock
     app = await (
       await ethers.getContractFactory('OtherOpcodesMock', {
@@ -816,6 +823,48 @@ describe('Other opcodes', () => {
         // returned 2 as a length of items that stored in PARTNERS
         await checkStack(stack, 1, 2);
       });
+    });
+  });
+
+  describe('opEnableRecord', () => {
+    it.skip('check that record 54 was activated', async () => {
+      // can not be testet right now directly
+      // here shouldd be the storage for RECORD_ID and AGREEMENT_ADDR in the executable agreement
+      /*
+        `agreement` is the contract that stores record number 34, it has own _ctxAgreement
+        _ctxExecutive - context uses to execute record number 34 from `agreement`
+        _ctxCondition - context-helper just to set a context for the recordContext in agreement
+      */
+
+      // app is the owner of agreement (non-usable in prod)
+      // it sets just to check that onlyOwner modifier works well
+      const ID = 34;
+
+      const recordId32data = hex4Bytes('RECORD_ID');
+      const agr32data = hex4Bytes('AGREEMENT_ADDR');
+      const agreementAddr = await deployAgreementMock(hre, app.address);
+      const agreement = await ethers.getContractAt('AgreementMock', agreementAddr);
+      const _ctxAgreement = await (await ethers.getContractFactory('Context')).deploy();
+      const _ctxCondition = await (await ethers.getContractFactory('Context')).deploy();
+      const _ctxExecutive = await (await ethers.getContractFactory('Context')).deploy();
+
+      // Setup
+      await _ctxAgreement.setAppAddress(app.address);
+      await _ctxAgreement.setOtherOpcodesAddr(otherOpcodesLibAddr);
+      await agreement.setStorageUint256(recordId32data, ID);
+      await agreement.setStorageAddress(agr32data, agreementAddr);
+      await agreement.setRecordContext(ID, _ctxCondition.address);
+
+      await _ctxExecutive.setProgram(`0x${recordId32data.substring(2)}${agr32data.substring(2)}`);
+
+      let record = await agreement.records(ID);
+
+      expect(record.isActive).to.be.equal(false);
+
+      await app.opEnableRecord(_ctxExecutive.address);
+
+      record = await agreement.records(ID);
+      expect(record.isActive).to.be.equal(true);
     });
   });
 });

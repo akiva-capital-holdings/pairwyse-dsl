@@ -14,6 +14,7 @@ import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 
 // import 'hardhat/console.sol';
+
 // TODO: automatically make sure that no contract exceeds the maximum contract size
 
 /**
@@ -28,6 +29,20 @@ contract Agreement {
     IParser public parser; // TODO: We can get rid of this dependency
     IContext public context;
     address public ownerAddr;
+
+    event Parsed(address indexed preProccessor, address indexed context, string code);
+
+    event RecordArchived(uint256 indexed recordId);
+    event RecordUnarchived(uint256 indexed recordId);
+    event RecordActivated(uint256 indexed recordId);
+    event RecordDeactivated(uint256 indexed recordId);
+
+    event RecordExecuted(
+        address indexed signatory,
+        uint256 indexed recordId,
+        uint256 providedAmount,
+        string transaction
+    );
 
     event NewRecord(
         uint256 recordId,
@@ -46,7 +61,6 @@ contract Agreement {
         _;
     }
 
-    // Only GnosisSafe
     modifier onlyOwner() {
         require(msg.sender == ownerAddr, ErrorsAgreement.AGR11);
         _;
@@ -201,16 +215,20 @@ contract Agreement {
     function archiveRecord(uint256 _recordId) external onlyOwner {
         require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         records[_recordId].isArchived = true;
+
+        emit RecordArchived(_recordId);
     }
 
     /**
      * @dev unarchive any of the existing records by recordId
      * @param _recordId Record ID
      */
-    function unArchiveRecord(uint256 _recordId) external onlyOwner {
+    function unarchiveRecord(uint256 _recordId) external onlyOwner {
         require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         require(records[_recordId].isArchived != false, ErrorsAgreement.AGR10);
         records[_recordId].isArchived = false;
+
+        emit RecordUnarchived(_recordId);
     }
 
     /**
@@ -220,6 +238,8 @@ contract Agreement {
     function activateRecord(uint256 _recordId) external onlyOwner {
         require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         records[_recordId].isActive = true;
+
+        emit RecordActivated(_recordId);
     }
 
     /**
@@ -230,6 +250,8 @@ contract Agreement {
         require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
         require(records[_recordId].isActive != false, ErrorsAgreement.AGR10);
         records[_recordId].isActive = false;
+
+        emit RecordDeactivated(_recordId);
     }
 
     /**
@@ -240,6 +262,8 @@ contract Agreement {
      */
     function parse(string memory _code, address _context, address _preProc) external {
         parser.parse(_preProc, _context, _code);
+
+        emit Parsed(_preProc, _context, _code);
     }
 
     function update(
@@ -250,12 +274,15 @@ contract Agreement {
         string[] memory _conditionStrings,
         address _recordContext,
         address[] memory _conditionContexts
-    ) external onlyOwner {
+    ) external {
         _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
         for (uint256 i = 0; i < _conditionContexts.length; i++) {
             _addRecordCondition(_recordId, _conditionStrings[i], _conditionContexts[i]);
         }
         _addRecordTransaction(_recordId, _transactionString, _recordContext);
+        if (msg.sender == ownerAddr) {
+            records[_recordId].isActive = true;
+        }
 
         emit NewRecord(
             _recordId,
@@ -272,6 +299,7 @@ contract Agreement {
         require(_validateRequiredRecords(_recordId), ErrorsAgreement.AGR2);
         require(_validateConditions(_recordId, msg.value), ErrorsAgreement.AGR6);
         require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
+        emit RecordExecuted(msg.sender, _recordId, msg.value, records[_recordId].transactionString);
     }
 
     // solhint-disable-next-line no-empty-blocks
@@ -304,14 +332,11 @@ contract Agreement {
      */
     function _verify(uint256 _recordId) internal view returns (bool) {
         address[] memory signatoriesOfRecord = signatories[_recordId];
-        if (signatoriesOfRecord.length == 1 && signatoriesOfRecord[0] == context.anyone()) {
+        if (signatoriesOfRecord.length == 1 && signatoriesOfRecord[0] == context.anyone())
             return true;
-        }
 
         for (uint256 i = 0; i < signatoriesOfRecord.length; i++) {
-            if (signatories[_recordId][i] == msg.sender) {
-                return true;
-            }
+            if (signatories[_recordId][i] == msg.sender) return true;
         }
         return false;
     }
@@ -328,6 +353,7 @@ contract Agreement {
             requiredRecord = records[_requiredRecords[i]];
             if (!requiredRecord.isExecuted) return false;
         }
+
         return true;
     }
 
@@ -397,7 +423,6 @@ contract Agreement {
             Executor.execute(conditionContexts[_recordId][i]);
             if (IContext(conditionContexts[_recordId][i]).stack().seeLast() == 0) return false;
         }
-
         return true;
     }
 
@@ -406,13 +431,13 @@ contract Agreement {
      * @param _recordId Record ID to execute
      * @param _msgValue Value that were sent along with function execution // TODO: possibly remove this argument
      * @param _signatory The user that is executing the Record
-     * @return Boolean whether the record was successfully executed or not
+     * @return result Boolean whether the record was successfully executed or not
      */
     function _fulfill(
         uint256 _recordId,
         uint256 _msgValue,
         address _signatory
-    ) internal returns (bool) {
+    ) internal returns (bool result) {
         Record memory record = records[_recordId];
 
         require(!isExecutedBySignatory[_recordId][_signatory], ErrorsAgreement.AGR7);

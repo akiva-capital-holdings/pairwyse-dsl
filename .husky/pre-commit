@@ -1,4 +1,11 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+# Update project documentation
+yarn hardhat docgen
+
+# Run Solidity & TS liters
 yarn lint-staged
+
+# Add changed files to commit
+git add .

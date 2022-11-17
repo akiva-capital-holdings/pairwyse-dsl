@@ -17,9 +17,11 @@ library ErrorsAgreement {
     string constant AGR8 = 'AGR8'; // Agreement: the variable name is reserved
     string constant AGR9 = 'AGR9'; // Agreement: this record does not exist
     string constant AGR10 = 'AGR10'; // Agreement: this record has not yet been archived
-    string constant AGR11 = 'AGR11'; // Agreement: not a GnosisSafe
+    string constant AGR11 = 'AGR11'; // Agreement: not an owner
     string constant AGR12 = 'AGR12'; // Agreement: zero address
     string constant AGR13 = 'AGR13'; // Agreement: the record is not activated
+    string constant AGR14 = 'AGR14'; // Agreement: the record is pre-define. can not be changed
+    string constant AGR15 = 'AGR15'; // Agreement: time can not be in the past
 }
 
 /**

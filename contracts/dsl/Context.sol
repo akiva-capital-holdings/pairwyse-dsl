@@ -653,6 +653,18 @@ contract Context is IContext {
             true
         );
 
+        // Activates record in Aggreement contract by Record ID
+        // Ex. `enableRecord 5 at 0x9A676e781A523b5d0C0e43731313A708CB607508`,
+        // where 5 is a `Record ID`;
+        // `0x9A676e781A523b5d0C0e43731313A708CB607508` is an Agreement address
+        addOpcode(
+            'enableRecord',
+            0x41,
+            OtherOpcodes.opEnableRecord.selector,
+            IParser.asmEnableRecord.selector,
+            OpcodeLibNames.OtherOpcodes
+        );
+
         string memory name = 'loadRemote';
         _addOpcode(
             name,

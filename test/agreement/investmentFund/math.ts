@@ -69,7 +69,7 @@ describe('Agreement: Investment Fund tests math', () => {
       console.log(`GP Initial Deposit = ${formatEther(GP_INITIAL)} DAI`);
       await agreement.setStorageAddress(hex4Bytes('DAI'), dai.address);
       await agreement.setStorageAddress(hex4Bytes('GP'), GP.address);
-      await agreement.setStorageAddress(hex4Bytes('TRANSACTIONS_CONT'), agreementAddr);
+      await agreement.setStorageAddress(hex4Bytes('AGREEMENT'), agreementAddr);
       await agreement.setStorageUint256(hex4Bytes('INITIAL_FUNDS_TARGET'), INITIAL_FUNDS_TARGET);
       await agreement.setStorageUint256(hex4Bytes('GP_INITIAL'), GP_INITIAL);
       await agreement.setStorageUint256(hex4Bytes('PLACEMENT_DATE'), NEXT_MONTH);
