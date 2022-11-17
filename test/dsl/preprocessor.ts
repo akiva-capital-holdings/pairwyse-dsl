@@ -461,12 +461,12 @@ describe('Preprocessor', () => {
   describe('Remove comments', async () => {
     describe('Single line comment in user-input', async () => {
       it('commented one-line command', async () => {
-        const cleanString = await app.callStatic.cleanString('// uint256 2 * uint256 5');
+        const cleanString = await app.callStatic.removeComments('// uint256 2 * uint256 5');
         expect(cleanString).to.eql('');
       });
 
       it('commented all lines of program', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           // uint256 2 * uint256 5
           // bool true
         `);
@@ -475,7 +475,7 @@ describe('Preprocessor', () => {
       });
 
       it('a comment located next to the command line', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           // uint256 2 * uint256 5
           bool true
         `);
@@ -484,7 +484,7 @@ describe('Preprocessor', () => {
       });
 
       it('a comment located between two lines of commands', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           bool false
           // uint256 2 * uint256 5
           bool true
@@ -494,7 +494,7 @@ describe('Preprocessor', () => {
       });
 
       it('a comment located next to the command (w/o spaces) ', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           bool true//uint256 2 * uint256 5
         `);
         const cmds = await app.callStatic.transform(ctxAddr, cleanString);
@@ -502,7 +502,7 @@ describe('Preprocessor', () => {
       });
 
       it('a comment located just after the command (with end line) ', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           bool true//smth
           bool false
         `);
@@ -511,7 +511,7 @@ describe('Preprocessor', () => {
       });
 
       it('a comment located next to the command (with space)', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           bool true// uint256 2 * uint256 5
         `);
         const cmds = await app.callStatic.transform(ctxAddr, cleanString);
@@ -519,7 +519,7 @@ describe('Preprocessor', () => {
       });
 
       it('a comment located just before the command (with space)', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           bool true //uint256 2 * uint256 5
         `);
         const cmds = await app.callStatic.transform(ctxAddr, cleanString);
@@ -527,7 +527,7 @@ describe('Preprocessor', () => {
       });
 
       it('comments located before and below the command', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           //123
           bool true
           // uint256 2 * uint256 5
@@ -537,7 +537,7 @@ describe('Preprocessor', () => {
       });
 
       it('a comment contains another single comment', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           //bool false//uint256 2 * uint256 5
           bool true
         `);
@@ -546,7 +546,7 @@ describe('Preprocessor', () => {
       });
 
       it('a comment contains a multiple comment', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           //bool false/*uint256 2 * uint256 5*/bool true
           bool true
         `);
@@ -555,7 +555,7 @@ describe('Preprocessor', () => {
       });
 
       it('a comment located before the command', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           //bool false
           bool true
         `);
@@ -564,7 +564,7 @@ describe('Preprocessor', () => {
       });
 
       it('a comment located below the command', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           bool true
           //bool false
         `);
@@ -575,7 +575,7 @@ describe('Preprocessor', () => {
 
     describe('Multiple line comments in user-input', async () => {
       it('commented one-line command with spaces', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           /* uint256 2 * uint256 5 */
         `);
         const cmds = await app.callStatic.transform(ctxAddr, cleanString);
@@ -583,7 +583,7 @@ describe('Preprocessor', () => {
       });
 
       it('commented all lines of program with \\n symbols', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           /*
           uint256 2 * uint256 5
           bool true
@@ -596,7 +596,7 @@ describe('Preprocessor', () => {
 
       it('a multi comment that located next to the command line', async () => {
         // contains a single comment inside
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           2 * 5
           /*
           //bool true
@@ -608,7 +608,7 @@ describe('Preprocessor', () => {
       });
 
       it('comments located before and below the command', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           2 * 5
           /*
           //123
@@ -622,7 +622,7 @@ describe('Preprocessor', () => {
 
       it('if a comment was not closed', async () => {
         // returns only the first command
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           bool false
           // wow test
           /*
@@ -634,7 +634,7 @@ describe('Preprocessor', () => {
       });
 
       it('different comments located between two lines of commands', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           // wow test
           2 * 5
           /*
@@ -649,7 +649,7 @@ describe('Preprocessor', () => {
       });
 
       it('comment contains the command (w/o spaces) ', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           /*2 * 5*/
         `);
         const cmds = await app.callStatic.transform(ctxAddr, cleanString);
@@ -657,7 +657,7 @@ describe('Preprocessor', () => {
       });
 
       it('a comment opens before and closes at the beginning of the command', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           /*
           uint256 2 * uint256 5
           */bool true
@@ -667,7 +667,7 @@ describe('Preprocessor', () => {
       });
 
       it('a comment located before the command', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           /*
           uint256 2 * uint256 5
           */bool true
@@ -677,7 +677,7 @@ describe('Preprocessor', () => {
       });
 
       it('a comment located below the command', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           bool true
           /*
           uint256 2 * uint256 5
@@ -688,7 +688,7 @@ describe('Preprocessor', () => {
       });
 
       it('a comment contains a multiple comment', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           bool true
           /*
           uint256 /*2 * uint256 5*/
@@ -699,7 +699,7 @@ describe('Preprocessor', () => {
       });
 
       it('a comment opens next to the command and closes below', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           bool true/*uint256 2 * uint256 5
           */
           `);
@@ -708,7 +708,7 @@ describe('Preprocessor', () => {
       });
 
       it('mix comments and commands', async () => {
-        const cleanString = await app.callStatic.cleanString(`
+        const cleanString = await app.callStatic.removeComments(`
           /**
            * 123
            */
