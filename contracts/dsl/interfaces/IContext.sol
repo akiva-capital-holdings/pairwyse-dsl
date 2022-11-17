@@ -12,7 +12,7 @@ interface IContext {
     }
 
     // Variables
-    function anyone() external view returns (address);
+    function ANYONE() external view returns (address);
 
     function stack() external view returns (Stack);
 

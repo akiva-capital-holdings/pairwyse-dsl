@@ -1067,7 +1067,7 @@ describe('Parser', () => {
 
   describe('activate records', () => {
     it('enable several records for several agreements', async () => {
-      await app.parseCodeExt(ctxAddr, [
+      await app.parseCode(ctxAddr, [
         'enableRecord',
         'RECORD_ID',
         'at',
@@ -1099,7 +1099,7 @@ describe('Parser', () => {
 
   describe('Governannce pre-defined commands', () => {
     it('check record', async () => {
-      await app.parseCodeExt(ctxAddr, [
+      await app.parseCode(ctxAddr, [
         'sumThroughStructs',
         'VOTES',
         'vote',

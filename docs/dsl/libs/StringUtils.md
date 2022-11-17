@@ -24,6 +24,39 @@ function length(string s) internal pure returns (uint256)
 function concat(string s1, string s2) internal pure returns (string)
 ```
 
+### substr
+
+```solidity
+function substr(string _str, uint256 _start, uint256 _end) public pure returns (string)
+```
+
+_Creates a substring from a string
+Ex. substr('0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE', 2, 42) => '9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE'_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _str | string | Input string |
+| _start | uint256 | Start index (inclusive) |
+| _end | uint256 | End index (not inclusive) |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string | Substring |
+
+### isIn
+
+```solidity
+function isIn(string _char, string _string) public pure returns (bool)
+```
+
+_Checks is _char is present in the _string
+Ex. `_`.in('123_456') => true
+Ex. `8`.in('123456') => false_
+
 ### fromHex
 
 ```solidity
@@ -50,10 +83,10 @@ _Converts a `uint256` to its ASCII `string` decimal representation._
 function toUint256(string s) public pure returns (uint256 value)
 ```
 
-### getWei
+### parseScientificNotation
 
 ```solidity
-function getWei(string _s) public pure returns (string result)
+function parseScientificNotation(string _s) public pure returns (string result)
 ```
 
 ### mayBeNumber

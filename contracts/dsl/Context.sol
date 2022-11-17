@@ -23,7 +23,7 @@ import { ErrorsContext } from './libs/Errors.sol';
  */
 contract Context is IContext {
     // The address that is used to symbolyze any signer inside Conditional Transaction
-    address public constant anyone = 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF;
+    address public constant ANYONE = 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF;
 
     // stack is used by Opcode libraries like `libs/opcodes/*`
     // to store and analyze values and removing after usage
@@ -657,12 +657,14 @@ contract Context is IContext {
         // Ex. `enableRecord 5 at 0x9A676e781A523b5d0C0e43731313A708CB607508`,
         // where 5 is a `Record ID`;
         // `0x9A676e781A523b5d0C0e43731313A708CB607508` is an Agreement address
-        addOpcode(
+        _addOpcode(
             'enableRecord',
             0x41,
             OtherOpcodes.opEnableRecord.selector,
             IParser.asmEnableRecord.selector,
-            OpcodeLibNames.OtherOpcodes
+            OpcodeLibNames.OtherOpcodes,
+            1,
+            true
         );
 
         string memory name = 'loadRemote';

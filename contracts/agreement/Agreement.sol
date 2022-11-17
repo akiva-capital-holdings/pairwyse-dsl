@@ -310,8 +310,8 @@ contract Agreement {
      *********************/
 
     /**
-     * @dev Checks input _signatures that only one  'anyone' address exists in the
-     * list or that 'anyone' address does not exist in signatures at all
+     * @dev Checks input _signatures that only one 'ANYONE' address exists in the
+     * list or that 'ANYONE' address does not exist in signatures at all
      * @param _signatories the list of addresses
      */
     function _checkSignatories(address[] memory _signatories) internal view {
@@ -320,7 +320,7 @@ contract Agreement {
         if (_signatories.length > 1) {
             for (uint256 i = 0; i < _signatories.length; i++) {
                 require(_signatories[i] != address(0), ErrorsAgreement.AGR4);
-                require(_signatories[i] != context.anyone(), ErrorsAgreement.AGR4);
+                require(_signatories[i] != context.ANYONE(), ErrorsAgreement.AGR4);
             }
         }
     }
@@ -332,7 +332,7 @@ contract Agreement {
      */
     function _verify(uint256 _recordId) internal view returns (bool) {
         address[] memory signatoriesOfRecord = signatories[_recordId];
-        if (signatoriesOfRecord.length == 1 && signatoriesOfRecord[0] == context.anyone())
+        if (signatoriesOfRecord.length == 1 && signatoriesOfRecord[0] == context.ANYONE())
             return true;
 
         for (uint256 i = 0; i < signatoriesOfRecord.length; i++) {

@@ -2009,8 +2009,8 @@ describe('Preprocessor', () => {
         struct VOTE_NO { voter: msgSender, vote: NO }
       `;
 
-      const res = await app.callStatic.transform(ctxAddr, input);
-      expect(res).to.eql([
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      checkStringStack(cmds, [
         'declareArr',
         'struct',
         'VOTERS',
@@ -2019,30 +2019,30 @@ describe('Preprocessor', () => {
         'voter',
         'msgSender',
         'vote',
-        '1',
+        'YES',
         'endStruct',
         'struct',
         'VOTE_NO',
         'voter',
         'msgSender',
         'vote',
-        '0',
+        'NO',
         'endStruct',
       ]);
     });
 
     it('yes record', async () => {
-      const input = `insert VOTE_YES into VOTERS`;
+      const input = 'insert VOTE_YES into VOTERS';
 
-      const res = await app.callStatic.transform(ctxAddr, input);
-      expect(res).to.eql(['push', 'VOTE_YES', 'VOTERS']);
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      checkStringStack(cmds, ['push', 'VOTE_YES', 'VOTERS']);
     });
 
     it('no record', async () => {
-      const input = `insert VOTE_NO into VOTERS`;
+      const input = 'insert VOTE_NO into VOTERS';
 
-      const res = await app.callStatic.transform(ctxAddr, input);
-      expect(res).to.eql(['push', 'VOTE_NO', 'VOTERS']);
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      checkStringStack(cmds, ['push', 'VOTE_NO', 'VOTERS']);
     });
 
     it('check record', async () => {
@@ -2056,8 +2056,8 @@ describe('Preprocessor', () => {
           enableRecord RECORD_ID at AGREEMENT_ADDR
         } uint256 1`;
 
-      const res = await app.callStatic.transform(ctxAddr, input);
-      expect(res).to.eql([
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      checkStringStack(cmds, [
         'sumThroughStructs',
         'VOTES',
         'vote',
@@ -2098,8 +2098,8 @@ describe('Preprocessor', () => {
         enableRecord RECORD_ID_2 at AGREEMENT_ADDR_2
         enableRecord RECORD_ID_3 at AGREEMENT_ADDR_3
       `;
-      const res = await app.callStatic.transform(ctxAddr, input);
-      expect(res).to.eql([
+      const cmds = await app.callStatic.transform(ctxAddr, input);
+      checkStringStack(cmds, [
         'enableRecord',
         'RECORD_ID',
         'at',
