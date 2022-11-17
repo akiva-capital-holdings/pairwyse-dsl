@@ -325,4 +325,62 @@ describe('Agreement: Alice, Bob, Carl', () => {
       );
     }
   );
+
+  it('checks events', async () => {
+    const updateAgreementAddr = await deployAgreement(hre, alice.address);
+    const updateAgreement = await ethers.getContractAt('AgreementMock', updateAgreementAddr);
+    const recordContext = await (await ethers.getContractFactory('Context')).deploy();
+    const conditionContext = await (await ethers.getContractFactory('Context')).deploy();
+    await recordContext.setAppAddress(updateAgreement.address);
+    await conditionContext.setAppAddress(updateAgreement.address);
+    const txId = 1;
+    const signatories = [alice.address];
+    const conditions = ['1 > 0'];
+    const transaction = 'uint256 10';
+    // ----> check Parsed event <----
+    let result = await updateAgreement.parse(
+      conditions[0],
+      conditionContext.address,
+      preprocessorAddr
+    );
+    await expect(result)
+      .to.emit(updateAgreement, 'Parsed')
+      .withArgs(preprocessorAddr, conditionContext.address, conditions[0]);
+    result = await updateAgreement.parse(transaction, recordContext.address, preprocessorAddr);
+    await expect(result)
+      .to.emit(updateAgreement, 'Parsed')
+      .withArgs(preprocessorAddr, recordContext.address, transaction);
+
+    // ----> check NewRecord event <----
+    result = await updateAgreement
+      .connect(alice)
+      .update(txId, [], signatories, transaction, conditions, recordContext.address, [
+        conditionContext.address,
+      ]);
+    await expect(result)
+      .to.emit(updateAgreement, 'NewRecord')
+      .withArgs(txId, [], signatories, transaction, conditions);
+
+    // ----> check RecordDeactivated event <----
+    result = await updateAgreement.connect(alice).deactivateRecord(txId);
+    await expect(result).to.emit(updateAgreement, 'RecordDeactivated').withArgs(txId);
+
+    // ----> check RecordArchived event <----
+    result = await updateAgreement.connect(alice).archiveRecord(txId);
+    await expect(result).to.emit(updateAgreement, 'RecordArchived').withArgs(txId);
+
+    // ----> check RecordUnarchived event <----
+    result = await updateAgreement.connect(alice).unarchiveRecord(txId);
+    await expect(result).to.emit(updateAgreement, 'RecordUnarchived').withArgs(txId);
+
+    // ----> check RecordActivated event <----
+    result = await updateAgreement.connect(alice).activateRecord(txId);
+    await expect(result).to.emit(updateAgreement, 'RecordActivated').withArgs(txId);
+
+    // ----> check Executed event <----
+    result = await updateAgreement.connect(alice).execute(txId);
+    await expect(result)
+      .to.emit(updateAgreement, 'RecordExecuted')
+      .withArgs(alice.address, txId, 0, 'uint256 10');
+  });
 });

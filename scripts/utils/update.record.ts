@@ -14,5 +14,5 @@ export const activateRecord = async (
   _recordId: number
 ) => {
   const { data } = await _app.populateTransaction.activateRecord(_recordId);
-  await executeTransaction(_app.address, _multisig, data as string);
+  return await executeTransaction(_app.address, _multisig, data as string);
 };
