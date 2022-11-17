@@ -21,11 +21,7 @@ contract App is UnstructuredStorageMock, LinkedList {
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    constructor(
-        address _parserAddr,
-        address _preprocessorAddr,
-        address _ctxAddr
-    ) {
+    constructor(address _parserAddr, address _preprocessorAddr, address _ctxAddr) {
         parserAddr = _parserAddr;
         preprocessorAddr = _preprocessorAddr;
         ctxAddr = _ctxAddr;

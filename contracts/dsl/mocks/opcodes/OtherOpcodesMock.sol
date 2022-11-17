@@ -94,10 +94,10 @@ contract OtherOpcodesMock {
         return OtherOpcodes.opUint256Get(_ctx);
     }
 
-    function opLoadLocalGet(address _ctx, string memory funcSignature)
-        public
-        returns (bytes32 result)
-    {
+    function opLoadLocalGet(
+        address _ctx,
+        string memory funcSignature
+    ) public returns (bytes32 result) {
         return OtherOpcodes.opLoadLocalGet(_ctx, funcSignature);
     }
 

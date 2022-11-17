@@ -137,7 +137,7 @@ library StringUtils {
 
         require(!equal(base, ''), ErrorsStringUtils.SUT9);
         require(!equal(decimals, ''), ErrorsStringUtils.SUT6);
-        result = toString(toUint256(base) * (10**toUint256(decimals)));
+        result = toString(toUint256(base) * (10 ** toUint256(decimals)));
     }
 
     /**

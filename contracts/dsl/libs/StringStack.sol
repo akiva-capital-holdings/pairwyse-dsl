@@ -12,21 +12,18 @@ library StringStack {
      * @dev Push element to array in the first position
      * @dev As the array has fixed size, we drop the last element when addind a new one to the beginning of the array
      */
-    function pushToStack(string[] memory _stack, string memory _element)
-        external
-        pure
-        returns (string[] memory)
-    {
+    function pushToStack(
+        string[] memory _stack,
+        string memory _element
+    ) external pure returns (string[] memory) {
         // console.log('push to stack');
         _stack[stackLength(_stack)] = _element;
         return _stack;
     }
 
-    function popFromStack(string[] memory _stack)
-        external
-        pure
-        returns (string[] memory, string memory)
-    {
+    function popFromStack(
+        string[] memory _stack
+    ) external pure returns (string[] memory, string memory) {
         // console.log('pop from stack');
         string memory _topElement = seeLastInStack(_stack);
         _stack[stackLength(_stack) - 1] = '';

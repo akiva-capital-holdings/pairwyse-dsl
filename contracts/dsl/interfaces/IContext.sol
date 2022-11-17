@@ -52,15 +52,15 @@ interface IContext {
 
     function operators(uint256 _index) external view returns (string memory _operator);
 
-    function branchSelectors(string memory _baseOpName, bytes1 _branchCode)
-        external
-        view
-        returns (bytes4 _selector);
+    function branchSelectors(
+        string memory _baseOpName,
+        bytes1 _branchCode
+    ) external view returns (bytes4 _selector);
 
-    function branchCodes(string memory _baseOpName, string memory _branchName)
-        external
-        view
-        returns (bytes1 _branchCode);
+    function branchCodes(
+        string memory _baseOpName,
+        string memory _branchName
+    ) external view returns (bytes1 _branchCode);
 
     function aliases(string memory _alias) external view returns (string memory _baseCmd);
 
@@ -108,10 +108,10 @@ interface IContext {
         string memory _fullName
     ) external;
 
-    function structParams(bytes4 _structName, bytes4 _varName)
-        external
-        view
-        returns (bytes4 _fullName);
+    function structParams(
+        bytes4 _structName,
+        bytes4 _varName
+    ) external view returns (bytes4 _fullName);
 
     function setForLoopIterationsRemaining(uint256 _forLoopIterationsRemaining) external;
 }

@@ -172,11 +172,9 @@ contract LinkedList is ILinkedList {
      * @return data is a current data stored in the _position
      * @return nextPosition is a next position to the next item in the array
      */
-    function _getData(bytes32 _position)
-        internal
-        view
-        returns (bytes32 data, bytes32 nextPosition)
-    {
+    function _getData(
+        bytes32 _position
+    ) internal view returns (bytes32 data, bytes32 nextPosition) {
         assembly {
             data := sload(_position)
             nextPosition := sload(add(_position, 0x20)) // 0x20 is the size from data

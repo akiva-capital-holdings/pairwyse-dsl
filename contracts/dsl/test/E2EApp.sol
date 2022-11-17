@@ -18,11 +18,7 @@ contract E2EApp is UnstructuredStorageMock, LinkedList {
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    constructor(
-        address _parserAddr,
-        address _preprAddr,
-        address _ctx
-    ) {
+    constructor(address _parserAddr, address _preprAddr, address _ctx) {
         parser = _parserAddr;
         preprocessor = _preprAddr;
         context = _ctx;

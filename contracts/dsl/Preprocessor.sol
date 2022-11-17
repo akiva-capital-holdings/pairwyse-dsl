@@ -45,11 +45,10 @@ library Preprocessor {
      * @param _program is a user's DSL code string
      * @return the list of commands that storing `result`
      */
-    function transform(address _ctxAddr, string memory _program)
-        external
-        view
-        returns (string[] memory)
-    {
+    function transform(
+        address _ctxAddr,
+        string memory _program
+    ) external view returns (string[] memory) {
         // _program = removeComments(_program);
         string[] memory _code = split(_program, '\n ,:(){}', '(){}');
         _code = removeSyntacticSugar(_code);
@@ -73,11 +72,9 @@ library Preprocessor {
      * @param _program is a current program string
      * @return _cleanedProgram new string program that contains only clean code without comments
      */
-    function removeComments(string memory _program)
-        public
-        pure
-        returns (string memory _cleanedProgram)
-    {
+    function removeComments(
+        string memory _program
+    ) public pure returns (string memory _cleanedProgram) {
         bool isCommented;
 
         // searchedSymbolLen is a flag that uses for searching a correct end symbol
@@ -198,11 +195,10 @@ library Preprocessor {
         return _result;
     }
 
-    function simplifyCode(string[] memory _code, address _ctxAddr)
-        public
-        view
-        returns (string[] memory)
-    {
+    function simplifyCode(
+        string[] memory _code,
+        address _ctxAddr
+    ) public view returns (string[] memory) {
         // console.log('\n    -> Simplify Code');
         string[] memory _result = new string[](50);
         uint256 _resultCtr;
@@ -235,11 +231,10 @@ library Preprocessor {
         return _result;
     }
 
-    function infixToPostfix(address _ctxAddr, string[] memory _code)
-        public
-        view
-        returns (string[] memory)
-    {
+    function infixToPostfix(
+        address _ctxAddr,
+        string[] memory _code
+    ) public view returns (string[] memory) {
         // console.log('\n    ->infix to postfix');
         string[] memory _result = new string[](50);
         string[] memory _stack = new string[](50);
@@ -290,15 +285,7 @@ library Preprocessor {
         uint256 _resultCtr,
         string[] memory _code,
         uint256 i
-    )
-        internal
-        pure
-        returns (
-            string[] memory,
-            uint256,
-            uint256
-        )
-    {
+    ) internal pure returns (string[] memory, uint256, uint256) {
         // console.log('_processArrayInsert');
 
         // Get the necessary params of `insert` command
@@ -318,15 +305,7 @@ library Preprocessor {
         uint256 _resultCtr,
         string[] memory _code,
         uint256 i
-    )
-        internal
-        pure
-        returns (
-            string[] memory,
-            uint256,
-            uint256
-        )
-    {
+    ) internal pure returns (string[] memory, uint256, uint256) {
         // console.log('_processSumOfCmd');
 
         // Ex. (sumOf) `USERS.balance` -> ['USERS', 'balance']
@@ -354,15 +333,7 @@ library Preprocessor {
         uint256 _resultCtr,
         string[] memory _code,
         uint256 i
-    )
-        internal
-        pure
-        returns (
-            string[] memory,
-            uint256,
-            uint256
-        )
-    {
+    ) internal pure returns (string[] memory, uint256, uint256) {
         // TODO
     }
 
@@ -371,15 +342,7 @@ library Preprocessor {
         uint256 _resultCtr,
         string[] memory _code,
         uint256 i
-    )
-        internal
-        pure
-        returns (
-            string[] memory,
-            uint256,
-            uint256
-        )
-    {
+    ) internal pure returns (string[] memory, uint256, uint256) {
         // console.log('_processStruct');
 
         // Ex. (sumOf) `USERS.balance` -> ['USERS', 'balance']
@@ -461,15 +424,7 @@ library Preprocessor {
         uint256 _resultCtr,
         address _ctxAddr,
         uint256 i
-    )
-        internal
-        view
-        returns (
-            string[] memory,
-            uint256,
-            uint256
-        )
-    {
+    ) internal view returns (string[] memory, uint256, uint256) {
         // console.log('process command');
         string memory _chunk = _code[i - 1];
         if (_chunk.equal('struct')) {
@@ -499,15 +454,7 @@ library Preprocessor {
         string[] memory _result,
         uint256 _resultCtr,
         string memory _chunk
-    )
-        internal
-        pure
-        returns (
-            string[] memory,
-            uint256,
-            string[] memory
-        )
-    {
+    ) internal pure returns (string[] memory, uint256, string[] memory) {
         if (_chunk.equal('(')) {
             // opening bracket
             _stack = _stack.pushToStack(_chunk);
@@ -523,15 +470,7 @@ library Preprocessor {
         string[] memory _stack,
         string[] memory _result,
         uint256 _resultCtr
-    )
-        public
-        pure
-        returns (
-            string[] memory,
-            uint256,
-            string[] memory
-        )
-    {
+    ) public pure returns (string[] memory, uint256, string[] memory) {
         // console.log('_processClosingParenthesis');
         while (!_stack.seeLastInStack().equal('(')) {
             (_stack, _result[_resultCtr++]) = _stack.popFromStack();
@@ -559,15 +498,7 @@ library Preprocessor {
         uint256 _resultCtr,
         address _ctxAddr,
         string memory _chunk
-    )
-        internal
-        view
-        returns (
-            string[] memory,
-            uint256,
-            string[] memory
-        )
-    {
+    ) internal view returns (string[] memory, uint256, string[] memory) {
         while (
             _stack.stackLength() > 0 &&
             IContext(_ctxAddr).opsPriors(_chunk) <=
@@ -640,11 +571,9 @@ library Preprocessor {
      * @param _chunk provided number
      * @return updatedChunk amount in Wei of provided _chunk value
      */
-    function _parseScientificNotation(string memory _chunk)
-        internal
-        pure
-        returns (string memory updatedChunk)
-    {
+    function _parseScientificNotation(
+        string memory _chunk
+    ) internal pure returns (string memory updatedChunk) {
         try _chunk.toUint256() {
             updatedChunk = _chunk;
         } catch {
@@ -666,11 +595,10 @@ library Preprocessor {
         return (_result, _resultCtr);
     }
 
-    function _addUint256(string[] memory _result, uint256 _resultCtr)
-        internal
-        pure
-        returns (string[] memory, uint256)
-    {
+    function _addUint256(
+        string[] memory _result,
+        uint256 _resultCtr
+    ) internal pure returns (string[] memory, uint256) {
         if (_resultCtr == 0 || (!(_result[_resultCtr - 1].equal('uint256')))) {
             _result[_resultCtr++] = 'uint256';
         }
@@ -705,15 +633,7 @@ library Preprocessor {
         uint256 _index,
         string memory _program,
         string memory char
-    )
-        internal
-        pure
-        returns (
-            uint256,
-            uint256,
-            bool
-        )
-    {
+    ) internal pure returns (uint256, uint256, bool) {
         if (_canGetSymbol(_index + 1, _program)) {
             string memory nextChar = _program.char(_index + 1);
             if (char.equal('/') && nextChar.equal('/')) {
