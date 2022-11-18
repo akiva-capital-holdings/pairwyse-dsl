@@ -7,8 +7,6 @@ import { StringStack } from './libs/StringStack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 import { ErrorsPreprocessor } from './libs/Errors.sol';
 
-// import 'hardhat/console.sol';
-
 /**
  * @dev Preprocessor of DSL code
  * @dev This contract is a singleton and should not be deployed more than once
@@ -171,7 +169,6 @@ library Preprocessor {
 
     // if chunk is a number removes scientific notation if any
     function removeSyntacticSugar(string[] memory _code) public pure returns (string[] memory) {
-        // console.log('\n    -> removeSyntacticSugar');
         string[] memory _result = new string[](50);
         uint256 _resultCtr;
         string memory _chunk;
@@ -183,11 +180,8 @@ library Preprocessor {
             _chunk = _code[i++];
 
             _chunk = _checkScientificNotation(_chunk);
-            // console.log('_removeSyntacticSugar chunk =', _chunk);
             if (_isCurrencySymbol(_chunk)) {
-                // console.log('This is a currency symbol');
                 (_resultCtr, _chunk) = _processCurrencySymbol(_resultCtr, _chunk, _prevChunk);
-                // console.log('_removeSyntacticSugar 2');
             }
 
             _result[_resultCtr++] = _chunk;
@@ -199,7 +193,6 @@ library Preprocessor {
         string[] memory _code,
         address _ctxAddr
     ) public view returns (string[] memory) {
-        // console.log('\n    -> Simplify Code');
         string[] memory _result = new string[](50);
         uint256 _resultCtr;
         string memory _chunk;
@@ -210,20 +203,15 @@ library Preprocessor {
             _prevChunk = i == 0 ? '' : _code[i - 1];
             _chunk = _code[i++];
 
-            // console.log('chunk =', _chunk);
-
             if (IContext(_ctxAddr).isCommand(_chunk)) {
                 (_result, _resultCtr, i) = _processCommand(_result, _code, _resultCtr, _ctxAddr, i);
             } else if (_isCurlyBracket(_chunk)) {
-                // console.log('curly bracket');
                 (_result, _resultCtr) = _processCurlyBracket(_result, _resultCtr, _chunk);
             } else if (_isAlias(_ctxAddr, _chunk)) {
-                // console.log('alias');
                 (_result, _resultCtr) = _processAlias(_result, _resultCtr, _ctxAddr, _chunk);
             } else if (_chunk.equal('insert')) {
                 (_result, _resultCtr, i) = _processArrayInsert(_result, _resultCtr, _code, i);
             } else {
-                // console.log('other');
                 (_result, _resultCtr) = _checkIsNumberOrAddress(_result, _resultCtr, _chunk);
                 _result[_resultCtr++] = _chunk;
             }
@@ -235,7 +223,6 @@ library Preprocessor {
         address _ctxAddr,
         string[] memory _code
     ) public view returns (string[] memory) {
-        // console.log('\n    ->infix to postfix');
         string[] memory _result = new string[](50);
         string[] memory _stack = new string[](50);
         uint256 _resultCtr;
@@ -244,10 +231,8 @@ library Preprocessor {
 
         while (i < _nonEmptyArrLen(_code)) {
             _chunk = _code[i++];
-            // console.log('chunk =', _chunk);
 
             if (_isOperator(_ctxAddr, _chunk)) {
-                // console.log('operator');
                 // operator
                 (_result, _resultCtr, _stack) = _processOperator(
                     _stack,
@@ -256,9 +241,7 @@ library Preprocessor {
                     _ctxAddr,
                     _chunk
                 );
-                // console.log('after operator');
             } else if (_isParenthesis(_chunk)) {
-                // console.log('parenthesis');
                 (_result, _resultCtr, _stack) = _processParenthesis(
                     _stack,
                     _result,
@@ -286,8 +269,6 @@ library Preprocessor {
         string[] memory _code,
         uint256 i
     ) internal pure returns (string[] memory, uint256, uint256) {
-        // console.log('_processArrayInsert');
-
         // Get the necessary params of `insert` command
         // Notice: `insert 1234 into NUMBERS` -> `push 1234 NUMBERS`
         string memory _insertVal = _code[i];
@@ -306,8 +287,6 @@ library Preprocessor {
         string[] memory _code,
         uint256 i
     ) internal pure returns (string[] memory, uint256, uint256) {
-        // console.log('_processSumOfCmd');
-
         // Ex. (sumOf) `USERS.balance` -> ['USERS', 'balance']
         // Ex. (sumOf) `USERS` ->['USERS']
         string[] memory _sumOfArgs = split(_code[i], '.', '');
@@ -343,20 +322,15 @@ library Preprocessor {
         string[] memory _code,
         uint256 i
     ) internal pure returns (string[] memory, uint256, uint256) {
-        // console.log('_processStruct');
-
         // Ex. (sumOf) `USERS.balance` -> ['USERS', 'balance']
         // Ex. (sumOf) `USERS` ->['USERS']
         // 'struct', 'BOB', '{', 'balance', '456', '}'
         _result[_resultCtr++] = 'struct';
-        // console.log('struct name:', _code[i]);
         _result[_resultCtr++] = _code[i]; // struct name
         // skip `{` (index is i + 1)
 
         uint256 j = i + 1;
         while (!_code[j + 1].equal('}')) {
-            // console.log('struct key:', _code[j + 1]);
-            // console.log('struct value:', _code[j + 2]);
             _result[_resultCtr++] = _code[j + 1]; // struct key
             _result[_resultCtr++] = _code[j + 2]; // struct value
 
@@ -372,22 +346,16 @@ library Preprocessor {
         string memory _chunk,
         string memory _prevChunk
     ) internal pure returns (uint256, string memory) {
-        // console.log('_processCurrencySymbol');
         uint256 _currencyMultiplier = _getCurrencyMultiplier(_chunk);
-        // console.log('_currencyMultiplier =', _currencyMultiplier);
 
         try _prevChunk.toUint256() {
-            // console.log('try');
-            // console.log(_prevChunk.toUint256() * _currencyMultiplier);
             _prevChunk = StringUtils.toString(_prevChunk.toUint256() * _currencyMultiplier);
         } catch {
-            // console.log('catch');
             _prevChunk = StringUtils.toString(
                 _prevChunk.parseScientificNotation().toUint256() * _currencyMultiplier
             );
         }
 
-        // console.log('result ctr =', _resultCtr);
         // this is to rewrite old number (ex. 100) with an extended number (ex. 100 GWEI = 100000000000)
         if (_resultCtr > 0) {
             --_resultCtr;
@@ -425,7 +393,6 @@ library Preprocessor {
         address _ctxAddr,
         uint256 i
     ) internal view returns (string[] memory, uint256, uint256) {
-        // console.log('process command');
         string memory _chunk = _code[i - 1];
         if (_chunk.equal('struct')) {
             (_result, _resultCtr, i) = _processStruct(_result, _resultCtr, _code, i);
@@ -435,12 +402,10 @@ library Preprocessor {
             (_result, _resultCtr, i) = _processForCmd(_result, _resultCtr, _code, i);
         } else {
             uint256 _skipCtr = IContext(_ctxAddr).numOfArgsByOpcode(_chunk) + 1;
-            // console.log(_skipCtr);
 
             i--; // this is to include the command name in the loop below
             // add command arguments
             while (_skipCtr > 0) {
-                // console.log('cmd argument =', _code[i + 1]);
                 _result[_resultCtr++] = _code[i++];
                 _skipCtr--;
             }
@@ -471,7 +436,6 @@ library Preprocessor {
         string[] memory _result,
         uint256 _resultCtr
     ) public pure returns (string[] memory, uint256, string[] memory) {
-        // console.log('_processClosingParenthesis');
         while (!_stack.seeLastInStack().equal('(')) {
             (_stack, _result[_resultCtr++]) = _stack.popFromStack();
         }
@@ -504,14 +468,11 @@ library Preprocessor {
             IContext(_ctxAddr).opsPriors(_chunk) <=
             IContext(_ctxAddr).opsPriors(_stack.seeLastInStack())
         ) {
-            // console.log('while iteration');
             (_stack, _result[_resultCtr++]) = _stack.popFromStack();
         }
-        // console.log('_processOperator: push to stack');
         _stack = _stack.pushToStack(_chunk);
         // }
 
-        // console.log('return updated chunk');
         return (_result, _resultCtr, _stack);
     }
 
@@ -552,10 +513,6 @@ library Preprocessor {
     }
 
     function _checkScientificNotation(string memory _chunk) internal pure returns (string memory) {
-        // console.log('_checkScientificNotation');
-        // console.log('isAddress =', _chunk.mayBeAddress());
-        // console.log('isNumber =', _chunk.mayBeNumber());
-        // console.log('1111');
         if (_chunk.mayBeNumber() && !_chunk.mayBeAddress()) {
             return _parseScientificNotation(_chunk);
         }
@@ -586,7 +543,6 @@ library Preprocessor {
         uint256 _resultCtr,
         string memory _chunk
     ) internal pure returns (string[] memory, uint256) {
-        // console.log('_checkIsNumberOrAddress');
         if (_chunk.mayBeAddress()) return (_result, _resultCtr);
         if (_chunk.mayBeNumber()) {
             (_result, _resultCtr) = _addUint256(_result, _resultCtr);
