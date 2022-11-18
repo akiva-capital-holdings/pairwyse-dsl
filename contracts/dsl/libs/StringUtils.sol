@@ -3,26 +3,50 @@ pragma solidity ^0.8.0;
 
 import { ErrorsStringUtils } from './Errors.sol';
 
-// import 'hardhat/console.sol';
-
+/**
+ * @dev Library that simplifies working with strings in Solidity
+ */
 library StringUtils {
-    function char(string memory s, uint256 index) public pure returns (string memory) {
-        require(index < length(s), ErrorsStringUtils.SUT1);
-        bytes memory sBytes = new bytes(1);
-        sBytes[0] = bytes(s)[index];
-        return string(sBytes);
+    /**
+     * @dev Get character in string by index
+     * @param _s Input string
+     * @param _index Target index in the string
+     * @return Character by index
+     */
+    function char(string memory _s, uint256 _index) public pure returns (string memory) {
+        require(_index < length(_s), ErrorsStringUtils.SUT1);
+        bytes memory _sBytes = new bytes(1);
+        _sBytes[0] = bytes(_s)[_index];
+        return string(_sBytes);
     }
 
-    function equal(string memory s1, string memory s2) internal pure returns (bool) {
-        return keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2));
+    /**
+     * @dev Compares two strings
+     * @param _s1 One string
+     * @param _s2 Another string
+     * @return Are string equal
+     */
+    function equal(string memory _s1, string memory _s2) internal pure returns (bool) {
+        return keccak256(abi.encodePacked(_s1)) == keccak256(abi.encodePacked(_s2));
     }
 
-    function length(string memory s) internal pure returns (uint256) {
-        return bytes(s).length;
+    /**
+     * @dev Gets length of the string
+     * @param _s Input string
+     * @return The lenght of the string
+     */
+    function length(string memory _s) internal pure returns (uint256) {
+        return bytes(_s).length;
     }
 
-    function concat(string memory s1, string memory s2) internal pure returns (string memory) {
-        return string(abi.encodePacked(s1, s2));
+    /**
+     * @dev Concats two strings
+     * @param _s1 One string
+     * @param _s2 Another string
+     * @return The concatenation of the strings
+     */
+    function concat(string memory _s1, string memory _s2) internal pure returns (string memory) {
+        return string(abi.encodePacked(_s1, _s2));
     }
 
     /**
@@ -50,6 +74,9 @@ library StringUtils {
      * @dev Checks is _char is present in the _string
      * Ex. `_`.in('123_456') => true
      * Ex. `8`.in('123456') => false
+     * @param _char Searched character
+     * @param _string String to search in
+     * @return Is the character presented in the string
      */
     function isIn(string memory _char, string memory _string) public pure returns (bool) {
         for (uint256 i = 0; i < length(_string); i++) {
@@ -58,50 +85,64 @@ library StringUtils {
         return false;
     }
 
-    // Convert an hexadecimal string (without "0x" prefix) to raw bytes
-    function fromHex(string memory s) public pure returns (bytes memory) {
-        return fromHexBytes(bytes(s));
+    /**
+     * @dev Converts a hex string (without "0x" prefix) to raw bytes
+     * @param _s Hex string
+     * @return Bytes resulter from hex sting
+     */
+    function fromHex(string memory _s) public pure returns (bytes memory) {
+        return fromHexBytes(bytes(_s));
     }
 
-    // Convert an hexadecimal string in bytes (without "0x" prefix) to raw bytes
     // TODO: move this to BytesUtils lib
-    function fromHexBytes(bytes memory ss) public pure returns (bytes memory) {
-        require(ss.length % 2 == 0, ErrorsStringUtils.SUT2); // length must be even
-        bytes memory r = new bytes(ss.length / 2);
-        for (uint256 i = 0; i < ss.length / 2; ++i) {
-            r[i] = bytes1(fromHexChar(ss[2 * i]) * 16 + fromHexChar(ss[2 * i + 1]));
+    // TODO: @shadowsupercoder to provide better comments to the function
+    /**
+     * @dev Converts a hexadecimal string in hex format (without "0x" prefix) to raw bytes
+     * @param _b Input bytes
+     * @return Raw bytes
+     */
+    function fromHexBytes(bytes memory _b) public pure returns (bytes memory) {
+        require(_b.length % 2 == 0, ErrorsStringUtils.SUT2); // length must be even
+        bytes memory _r = new bytes(_b.length / 2);
+        for (uint256 i = 0; i < _b.length / 2; ++i) {
+            _r[i] = bytes1(fromHexChar(_b[2 * i]) * 16 + fromHexChar(_b[2 * i + 1]));
         }
-        return r;
+        return _r;
     }
 
     /**
-     * @dev Converts a `uint256` to its ASCII `string` decimal representation.
+     * @dev Converts a `uint256` to its ASCII `string` decimal representation
+     * @notice Inspired by OraclizeAPI's implementation - MIT licence
+     * https://github.com/oraclize/ethereum-api/blob/b42146b063c7d6ee1358846c198246239e9360e8/oraclizeAPI_0.4.25.sol
+     * @param _num Input number
+     * @return Number represented as a string
      */
-    function toString(uint256 value) internal pure returns (string memory) {
-        // Inspired by OraclizeAPI's implementation - MIT licence
-        // https://github.com/oraclize/ethereum-api/blob/b42146b063c7d6ee1358846c198246239e9360e8/oraclizeAPI_0.4.25.sol
-
-        if (value == 0) {
+    function toString(uint256 _num) internal pure returns (string memory) {
+        if (_num == 0) {
             return '0';
         }
-        uint256 temp = value;
-        uint256 digits;
-        while (temp != 0) {
-            digits++;
-            temp /= 10;
+        uint256 _temp = _num;
+        uint256 _digits;
+        while (_temp != 0) {
+            _digits++;
+            _temp /= 10;
         }
-        bytes memory buffer = new bytes(digits);
-        while (value != 0) {
-            digits -= 1;
-            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
-            value /= 10;
+        bytes memory _buffer = new bytes(_digits);
+        while (_num != 0) {
+            _digits -= 1;
+            _buffer[_digits] = bytes1(uint8(48 + uint256(_num % 10)));
+            _num /= 10;
         }
-        return string(buffer);
+        return string(_buffer);
     }
 
-    // string decimal number to uint256
-    function toUint256(string memory s) public pure returns (uint256 value) {
-        bytes memory b = bytes(s);
+    /**
+     * @dev Converts a decimal number (provided as a string) to uint256
+     * @param _s Input decimal number (provided as a string)
+     * @return value Unsigned integer from input string
+     */
+    function toUint256(string memory _s) public pure returns (uint256 value) {
+        bytes memory b = bytes(_s);
         uint256 tmp;
         for (uint256 i = 0; i < b.length; i++) {
             tmp = uint8(b[i]);
@@ -110,7 +151,11 @@ library StringUtils {
         }
     }
 
-    // string decimal number with e symbol (1e18) to uint256 (in wei)
+    /**
+     * @dev Converts a decimal number (provided as a string) with e symbol (1e18) to number (returned as a string)
+     * @param _s Input decimal number (provided as a string)
+     * @return result Unsigned integer in a string format
+     */
     function parseScientificNotation(string memory _s) public pure returns (string memory result) {
         bool isFound; // was `e` symbol found
         uint256 tmp;
@@ -165,16 +210,20 @@ library StringUtils {
         return uint8(_byte) == 48 && uint8(_byte2) == 120;
     }
 
-    // Convert an hexadecimal character to their value
-    function fromHexChar(bytes1 c) public pure returns (uint8) {
-        if (c >= bytes1('0') && c <= bytes1('9')) {
-            return uint8(c) - uint8(bytes1('0'));
+    /**
+     * @dev Converts a hexadecimal character from bytes to number
+     * @param _c Hexadecimal character
+     * @return The number from hex character
+     */
+    function fromHexChar(bytes1 _c) public pure returns (uint8) {
+        if (_c >= bytes1('0') && _c <= bytes1('9')) {
+            return uint8(_c) - uint8(bytes1('0'));
         }
-        if (c >= bytes1('a') && c <= bytes1('f')) {
-            return 10 + uint8(c) - uint8(bytes1('a'));
+        if (_c >= bytes1('a') && _c <= bytes1('f')) {
+            return 10 + uint8(_c) - uint8(bytes1('a'));
         }
-        if (c >= bytes1('A') && c <= bytes1('F')) {
-            return 10 + uint8(c) - uint8(bytes1('A'));
+        if (_c >= bytes1('A') && _c <= bytes1('F')) {
+            return 10 + uint8(_c) - uint8(bytes1('A'));
         }
         revert(ErrorsStringUtils.SUT8);
     }
