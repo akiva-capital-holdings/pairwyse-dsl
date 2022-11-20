@@ -24,6 +24,10 @@ contract OpcodeHelpersMock {
         OpcodeHelpers.mustCall(_addr, _data);
     }
 
+    function mustDelegateCall(address _addr, bytes memory _data) public {
+        OpcodeHelpers.mustDelegateCall(_addr, _data);
+    }
+
     function getNextBytes(address _ctx, uint256 _bytesNum) public returns (bytes32) {
         return OpcodeHelpers.getNextBytes(_ctx, _bytesNum);
     }

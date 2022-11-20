@@ -23,6 +23,42 @@ contract IContext context
 address ownerAddr
 ```
 
+### Parsed
+
+```solidity
+event Parsed(address preProccessor, address context, string code)
+```
+
+### RecordArchived
+
+```solidity
+event RecordArchived(uint256 recordId)
+```
+
+### RecordUnarchived
+
+```solidity
+event RecordUnarchived(uint256 recordId)
+```
+
+### RecordActivated
+
+```solidity
+event RecordActivated(uint256 recordId)
+```
+
+### RecordDeactivated
+
+```solidity
+event RecordDeactivated(uint256 recordId)
+```
+
+### RecordExecuted
+
+```solidity
+event RecordExecuted(address signatory, uint256 recordId, uint256 providedAmount, string transaction)
+```
+
 ### NewRecord
 
 ```solidity
@@ -459,7 +495,7 @@ function _validateConditions(uint256 _recordId, uint256 _msgValue) internal retu
 ### _fulfill
 
 ```solidity
-function _fulfill(uint256 _recordId, uint256 _msgValue, address _signatory) internal returns (bool)
+function _fulfill(uint256 _recordId, uint256 _msgValue, address _signatory) internal returns (bool result)
 ```
 
 _Fulfill Record_
@@ -476,7 +512,7 @@ _Fulfill Record_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bool | Boolean whether the record was successfully executed or not |
+| result | bool | Boolean whether the record was successfully executed or not |
 
 ### _activeRecordsLen
 
