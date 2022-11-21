@@ -33,6 +33,8 @@ library ErrorsContext {
     string constant CTX3 = 'CTX3'; // Context: duplicate opcode name or code
     string constant CTX4 = 'CTX4'; // Context: slicing out of range
     string constant CTX5 = 'CTX5'; // Context: duplicate opcode branch
+    string constant CTX6 = 'CTX6'; // Context: wrong application address
+    string constant CTX7 = 'CTX7'; // Context: the application address has already set
 }
 
 /**
@@ -106,6 +108,7 @@ library ErrorsExecutor {
     string constant EXC1 = 'EXC1'; // Executor: empty program
     string constant EXC2 = 'EXC2'; // Executor: did not find selector for opcode
     string constant EXC3 = 'EXC3'; // Executor: call not success
+    string constant EXC4 = 'EXC4'; // Executor: call to program context not success
 }
 
 /**

@@ -122,6 +122,18 @@ string CTX4
 string CTX5
 ```
 
+### CTX6
+
+```solidity
+string CTX6
+```
+
+### CTX7
+
+```solidity
+string CTX7
+```
+
 ## ErrorsStack
 
 ### STK1
@@ -286,6 +298,12 @@ string EXC2
 
 ```solidity
 string EXC3
+```
+
+### EXC4
+
+```solidity
+string EXC4
 ```
 
 ## ErrorsStringUtils

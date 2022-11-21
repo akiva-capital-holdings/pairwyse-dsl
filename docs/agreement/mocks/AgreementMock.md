@@ -3,7 +3,7 @@
 ### constructor
 
 ```solidity
-constructor(address _parser, address _ownerAddr) public
+constructor(address _parser, address _ownerAddr, address _contextDSL) public
 ```
 
 ### verify
@@ -33,24 +33,18 @@ function addRecordBlueprint(uint256 _recordId, uint256[] _requiredRecords, addre
 ### addRecordCondition
 
 ```solidity
-function addRecordCondition(uint256 _recordId, string _conditionStr, address _conditionCtx) public
+function addRecordCondition(uint256 _recordId, string _conditionStr) public
 ```
 
 ### addRecordTransaction
 
 ```solidity
-function addRecordTransaction(uint256 _recordId, string _transactionString, address _recordContext) public
+function addRecordTransaction(uint256 _recordId, string _transactionString) public
 ```
 
 ### fulfill
 
 ```solidity
 function fulfill(uint256 _recordId, uint256 _msgValue, address _signatory) external returns (bool)
-```
-
-### setRecordContext
-
-```solidity
-function setRecordContext(uint256 _recordId, address _context) external
 ```
 

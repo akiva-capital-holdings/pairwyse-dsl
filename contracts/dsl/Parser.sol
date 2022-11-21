@@ -2,7 +2,8 @@
 pragma solidity ^0.8.0;
 
 import { IERC20 } from './interfaces/IERC20.sol';
-import { IContext } from './interfaces/IContext.sol';
+import { IDSLContext } from './interfaces/IDSLContext.sol';
+import { IProgramContext } from './interfaces/IProgramContext.sol';
 import { IParser } from './interfaces/IParser.sol';
 import { IPreprocessor } from './interfaces/IPreprocessor.sol';
 import { StringUtils } from './libs/StringUtils.sol';
@@ -27,9 +28,7 @@ contract Parser is IParser {
     // TODO: move using bytes from StringUtils to ByteUtils
     using StringUtils for bytes;
     using ByteUtils for bytes;
-
-    // Note: temporary variables block
-    bytes internal program; // raw bytecode of the program that preprocessor is generating
+    bytes program;
     string[] internal cmds; // DSL code in postfix form (output of Preprocessor)
     uint256 internal cmdIdx; // Current parsing index of DSL code
     mapping(string => uint256) public labelPos;
@@ -50,20 +49,18 @@ contract Parser is IParser {
      * @dev Сonverts a list of commands to bytecode
      */
     function parseCode(address _ctxAddr, string[] memory _code) public {
-        delete program;
         cmdIdx = 0;
         _setCmdsArray(_code);
 
-        IContext(_ctxAddr).setPc(0);
-        IContext(_ctxAddr).stack().clear();
+        IProgramContext(_ctxAddr).setPc(0);
+        IProgramContext(_ctxAddr).stack().clear();
 
         while (cmdIdx < cmds.length) {
             _parseOpcodeWithParams(_ctxAddr);
         }
 
-        // TODO: Parser: IContext(_ctxAddr).delegateCall('setProgram', program) to pass owner's
-        //       address to the Context contract
-        IContext(_ctxAddr).setProgram(program);
+        // return program;
+        // return bytes; //mocked
     }
 
     /**
@@ -456,7 +453,7 @@ contract Parser is IParser {
             // create the struct name of variable - `BOB.balance`, `BOB.account`
             string memory _name = _structName.concat('.').concat(_variable);
             // TODO: let's think how not to use setter in Parser here..
-            IContext(_ctxAddr).setStructVars(_structName, _variable, _name);
+            IProgramContext(_ctxAddr).setStructVars(_structName, _variable, _name);
             // TODO: store sertain bytes for each word separate in bytes string?
             program = bytes.concat(program, bytes4(keccak256(abi.encodePacked(_name))));
             // parse the value of `balance` variable - `456`, `0x345...`
@@ -518,10 +515,10 @@ contract Parser is IParser {
      */
     function _parseOpcodeWithParams(address _ctxAddr) internal {
         string storage cmd = _nextCmd();
-        bytes1 opcode = IContext(_ctxAddr).opCodeByName(cmd);
+        bytes1 opcode = IDSLContext(_ctxAddr).opCodeByName(cmd);
         // TODO: simplify
         bytes4 _selector = bytes4(keccak256(abi.encodePacked(cmd)));
-        bool isStructVar = IContext(_ctxAddr).isStructVar(cmd);
+        bool isStructVar = IProgramContext(_ctxAddr).isStructVar(cmd);
         if (_isLabel(cmd)) {
             uint256 _branchLocation = program.length;
             bytes memory programBefore = program.slice(0, labelPos[cmd]);
@@ -530,16 +527,16 @@ contract Parser is IParser {
             // TODO: move isValidVarName() check to Preprocessor
             //       (it should automatically add `var` before all variable names)
         } else if (cmd.isValidVarName() || isStructVar) {
-            opcode = IContext(_ctxAddr).opCodeByName('var');
+            opcode = IDSLContext(_ctxAddr).opCodeByName('var');
             program = bytes.concat(program, opcode, _selector);
         } else if (opcode == 0x0) {
             revert(string(abi.encodePacked('Parser: "', cmd, '" command is unknown')));
         } else {
             program = bytes.concat(program, opcode);
-            _selector = IContext(_ctxAddr).asmSelectors(cmd);
+            _selector = IDSLContext(_ctxAddr).asmSelectors(cmd);
             if (_selector != 0x0) {
                 (bool success, ) = address(this).delegatecall(
-                    abi.encodeWithSelector(_selector, IContext(_ctxAddr))
+                    abi.encodeWithSelector(_selector, _ctxAddr)
                 );
                 require(success, ErrorsParser.PRS1);
             }
@@ -568,7 +565,7 @@ contract Parser is IParser {
      * of command and its additional used type
      */
     function _parseBranchOf(address _ctxAddr, string memory baseOpName) internal {
-        program = bytes.concat(program, IContext(_ctxAddr).branchCodes(baseOpName, _nextCmd()));
+        program = bytes.concat(program, IDSLContext(_ctxAddr).branchCodes(baseOpName, _nextCmd()));
     }
 
     /**

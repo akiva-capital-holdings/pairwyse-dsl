@@ -1,22 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IParser } from '../interfaces/IParser.sol';
+import { Preprocessor } from '../Preprocessor.sol';
 import { IProgramContext } from '../interfaces/IProgramContext.sol';
+import { IParser } from '../interfaces/IParser.sol';
 import { Executor } from '../libs/Executor.sol';
-import { StringUtils } from '../libs/StringUtils.sol';
-import { BaseStorage } from './BaseStorage.sol';
+import { LinkedList } from '../helpers/LinkedList.sol';
+import { UnstructuredStorageMock } from '../mocks/UnstructuredStorageMock.sol';
 
-// import 'hardhat/console.sol';
+// import "hardhat/console.sol";
 
-// TODO: do we need this contract actually? Will it be usable after making Roles?
-contract BaseApplication is BaseStorage {
-    using StringUtils for string;
-
+contract E2EApp is UnstructuredStorageMock, LinkedList {
     address public parserAddr;
+    address public preprocessorAddr;
     address public dslContext;
     address public programContext;
-    address public preprocessorAddr;
 
     constructor(
         address _parserAddr,
@@ -28,7 +26,7 @@ contract BaseApplication is BaseStorage {
         preprocessorAddr = _preprocessorAddr;
         dslContext = _dslContext;
         programContext = _programContext;
-        _setupContext();
+        setupContext();
     }
 
     // solhint-disable-next-line no-empty-blocks
@@ -47,7 +45,7 @@ contract BaseApplication is BaseStorage {
         Executor.execute(dslContext, programContext, address(this));
     }
 
-    function _setupContext() internal {
+    function setupContext() internal {
         IProgramContext(programContext).setMsgSender(msg.sender);
     }
 }

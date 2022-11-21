@@ -6,10 +6,16 @@
 address parserAddr
 ```
 
-### ctxAddr
+### dslContext
 
 ```solidity
-address ctxAddr
+address dslContext
+```
+
+### programContext
+
+```solidity
+address programContext
 ```
 
 ### preprocessorAddr
@@ -18,16 +24,16 @@ address ctxAddr
 address preprocessorAddr
 ```
 
+### constructor
+
+```solidity
+constructor(address _parserAddr, address _preprocessorAddr, address _dslContext, address _programContext) public
+```
+
 ### receive
 
 ```solidity
 receive() external payable
-```
-
-### constructor
-
-```solidity
-constructor(address _parserAddr, address _preprocessorAddr, address _ctxAddr) public
 ```
 
 ### parse
