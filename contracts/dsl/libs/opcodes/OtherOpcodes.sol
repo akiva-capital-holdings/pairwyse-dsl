@@ -17,7 +17,7 @@ library OtherOpcodes {
     function opLoadRemoteAny(address _ctx) public {
         address libAddr = IContext(_ctx).otherOpcodes();
         bytes4 selector = OpcodeHelpers.nextBranchSelector(_ctx, 'loadRemote');
-        OpcodeHelpers.mustCall(libAddr, abi.encodeWithSelector(selector, _ctx));
+        OpcodeHelpers.mustDelegateCall(libAddr, abi.encodeWithSelector(selector, _ctx));
     }
 
     function opBlockNumber(address _ctx) public {
@@ -51,10 +51,10 @@ library OtherOpcodes {
         bool _boolVal = uint8(data[0]) == 1;
 
         // Set local variable by it's hex
-        (bool success, ) = IContext(_ctx).appAddr().call(
+        OpcodeHelpers.mustCall(
+            IContext(_ctx).appAddr(),
             abi.encodeWithSignature('setStorageBool(bytes32,bool)', _varNameB32, _boolVal)
         );
-        require(success, ErrorsGeneralOpcodes.OP1);
         OpcodeHelpers.putToStack(_ctx, 1);
     }
 
@@ -66,10 +66,10 @@ library OtherOpcodes {
         uint256 _val = IContext(_ctx).stack().pop();
 
         // Set local variable by it's hex
-        (bool success, ) = IContext(_ctx).appAddr().call(
+        OpcodeHelpers.mustCall(
+            IContext(_ctx).appAddr(),
             abi.encodeWithSignature('setStorageUint256(bytes32,uint256)', _varNameB32, _val)
         );
-        require(success, ErrorsGeneralOpcodes.OP1);
         OpcodeHelpers.putToStack(_ctx, 1);
     }
 
@@ -82,21 +82,19 @@ library OtherOpcodes {
         bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
 
         // check if the array exists
-        (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
+        bytes memory data = OpcodeHelpers.mustCall(
+            IContext(_ctx).appAddr(),
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
-
-        require(success, ErrorsGeneralOpcodes.OP1);
         require(bytes1(data) != bytes1(0x0), ErrorsGeneralOpcodes.OP2);
-        (success, data) = IContext(_ctx).appAddr().call(
+        (data) = OpcodeHelpers.mustCall(
+            IContext(_ctx).appAddr(),
             abi.encodeWithSignature(
                 'get(uint256,bytes32)',
                 _index, // index of the searched item
                 _arrNameB32 // array name, ex. INDEX_LIST, PARTNERS
             )
         );
-        require(success, ErrorsGeneralOpcodes.OP1);
-
         OpcodeHelpers.putToStack(_ctx, uint256(bytes32(data)));
     }
 
@@ -145,16 +143,14 @@ library OtherOpcodes {
         while (bytes4(_varNameB32) != 0xcb398fe1) {
             // get a variable value for current _varNameB32
             bytes32 _value = OpcodeHelpers.getNextBytes(_ctx, 32);
-
-            (bool success, ) = IContext(_ctx).appAddr().call(
+            OpcodeHelpers.mustCall(
+                IContext(_ctx).appAddr(),
                 abi.encodeWithSignature(
                     'setStorageUint256(bytes32,uint256)',
                     _varNameB32,
                     uint256(_value)
                 )
             );
-            require(success, ErrorsGeneralOpcodes.OP1);
-
             // get the next variable name in struct
             _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
         }
@@ -169,20 +165,19 @@ library OtherOpcodes {
         bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
 
         // check if the array exists
-        (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
+        bytes memory data = OpcodeHelpers.mustCall(
+            IContext(_ctx).appAddr(),
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
-        require(success, ErrorsGeneralOpcodes.OP1);
         require(bytes1(data) != bytes1(0x0), ErrorsGeneralOpcodes.OP4);
-
-        (success, ) = IContext(_ctx).appAddr().call(
+        OpcodeHelpers.mustCall(
+            IContext(_ctx).appAddr(),
             abi.encodeWithSignature(
                 'addItem(bytes32,bytes32)',
                 _varValue, // value that pushes to the array
                 _arrNameB32 // array name, ex. INDEX_LIST, PARTNERS
             )
         );
-        require(success, ErrorsGeneralOpcodes.OP1);
     }
 
     /**
@@ -193,14 +188,14 @@ library OtherOpcodes {
         bytes32 _arrType = OpcodeHelpers.getNextBytes(_ctx, 1);
         bytes32 _arrName = OpcodeHelpers.getNextBytes(_ctx, 4);
 
-        (bool success, ) = IContext(_ctx).appAddr().call(
+        OpcodeHelpers.mustCall(
+            IContext(_ctx).appAddr(),
             abi.encodeWithSignature(
                 'declare(bytes1,bytes32)',
                 bytes1(_arrType), // type of the array
                 _arrName
             )
         );
-        require(success, ErrorsGeneralOpcodes.OP1);
     }
 
     function opLoadLocalUint256(address _ctx) public {
@@ -334,11 +329,10 @@ library OtherOpcodes {
     ) public returns (bytes32 result) {
         bytes32 varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
         // Load local variable by it's hex
-        (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
+        bytes memory data = OpcodeHelpers.mustCall(
+            IContext(_ctx).appAddr(),
             abi.encodeWithSignature(funcSignature, varNameB32)
         );
-        require(success, ErrorsGeneralOpcodes.OP5);
-
         // Convert bytes to bytes32
         assembly {
             result := mload(add(data, 0x20))
@@ -393,11 +387,10 @@ library OtherOpcodes {
         address contractAddr = address(uint160(uint256(contractAddrB32)));
 
         // Load local value by it's hex
-        (bool success, bytes memory data) = contractAddr.call(
+        bytes memory data = OpcodeHelpers.mustCall(
+            contractAddr,
             abi.encodeWithSignature(funcSignature, varNameB32)
         );
-        require(success, ErrorsGeneralOpcodes.OP3);
-
         // Convert bytes to bytes32
         bytes32 result;
         assembly {
@@ -414,11 +407,11 @@ library OtherOpcodes {
         bytes32 addr = opLoadLocalGet(_ctx, 'getStorageAddress(bytes32)');
 
         address payable contractAddr = payable(address(uint160(uint256(addr))));
-        (bool success, ) = contractAddr.call(
+
+        OpcodeHelpers.mustCall(
+            contractAddr,
             abi.encodeWithSignature('activateRecord(uint256)', recordId)
         );
-
-        require(success, ErrorsGeneralOpcodes.OP3);
         OpcodeHelpers.putToStack(_ctx, 1);
     }
 
@@ -436,17 +429,16 @@ library OtherOpcodes {
         bytes4 _varName,
         bytes32 _length
     ) internal returns (uint256 total) {
-        bool success;
         for (uint256 i = 0; i < uint256(_length); i++) {
             // get the name of a struct
             bytes memory item = _getItem(_ctx, i, _arrNameB32);
 
             // get struct variable value
             bytes4 _fullName = IContext(_ctx).structParams(bytes4(item), _varName);
-            (success, item) = IContext(_ctx).appAddr().call(
+            (item) = OpcodeHelpers.mustCall(
+                IContext(_ctx).appAddr(),
                 abi.encodeWithSignature('getStorageUint256(bytes32)', bytes32(_fullName))
             );
-            require(success, ErrorsGeneralOpcodes.OP5);
             total += uint256(bytes32(item));
         }
     }
@@ -463,10 +455,10 @@ library OtherOpcodes {
         uint256 _index,
         bytes32 _arrNameB32
     ) internal returns (bytes memory) {
-        (bool success, bytes memory item) = IContext(_ctx).appAddr().call(
+        bytes memory item = OpcodeHelpers.mustCall(
+            IContext(_ctx).appAddr(),
             abi.encodeWithSignature('get(uint256,bytes32)', _index, _arrNameB32)
         );
-        require(success, ErrorsGeneralOpcodes.OP1);
         return item;
     }
 
@@ -494,15 +486,17 @@ library OtherOpcodes {
      * @param _arrNameB32 Array's name in bytecode
      * @param _typeName Type of the array, ex. `uint256`, `address`, `struct`
      */
-    function _checkArrType(address _ctx, bytes32 _arrNameB32, string memory _typeName) internal {
-        bool success;
+    function _checkArrType(
+        address _ctx,
+        bytes32 _arrNameB32,
+        string memory _typeName
+    ) internal {
         bytes memory _type;
         // check if the array exists
-        (success, _type) = IContext(_ctx).appAddr().call(
+        (_type) = OpcodeHelpers.mustCall(
+            IContext(_ctx).appAddr(),
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
-
-        require(success, ErrorsGeneralOpcodes.OP1);
         require(
             bytes1(_type) == IContext(_ctx).branchCodes('declareArr', _typeName),
             ErrorsGeneralOpcodes.OP8
@@ -516,10 +510,10 @@ library OtherOpcodes {
      * @return Array's length in bytecode
      */
     function _getArrLength(address _ctx, bytes32 _arrNameB32) internal returns (bytes32) {
-        (bool success, bytes memory data) = IContext(_ctx).appAddr().call(
+        bytes memory data = OpcodeHelpers.mustCall(
+            IContext(_ctx).appAddr(),
             abi.encodeWithSignature('getLength(bytes32)', _arrNameB32)
         );
-        require(success, ErrorsGeneralOpcodes.OP1);
         return bytes32(data);
     }
 }

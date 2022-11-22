@@ -56,9 +56,28 @@ library OpcodeHelpers {
         return IContext(_ctx).branchSelectors(baseOpName, branchCode);
     }
 
-    function mustCall(address addr, bytes memory data) public {
-        (bool success, ) = addr.delegatecall(data);
+    /**
+     * @dev Check .call() function and returns data
+     * @param addr Context contract address
+     * @param data Abi fubction with params
+     * @return callData returns data from call
+     */
+    function mustCall(address addr, bytes memory data) public returns (bytes memory) {
+        (bool success, bytes memory callData) = addr.call(data);
         require(success, ErrorsOpcodeHelpers.OPH1);
+        return callData;
+    }
+
+    /**
+     * @dev Check .delegatecall() function and returns data
+     * @param addr Context contract address
+     * @param data Abi fubction with params
+     * @return delegateCallData returns data from call
+     */
+    function mustDelegateCall(address addr, bytes memory data) public returns (bytes memory) {
+        (bool success, bytes memory delegateCallData) = addr.delegatecall(data);
+        require(success, ErrorsOpcodeHelpers.OPH2);
+        return delegateCallData;
     }
 
     function getNextBytes(address _ctx, uint256 _bytesNum) public returns (bytes32 varNameB32) {

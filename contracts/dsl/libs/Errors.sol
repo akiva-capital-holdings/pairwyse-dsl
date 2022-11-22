@@ -88,6 +88,7 @@ library ErrorsPreprocessor {
  */
 library ErrorsOpcodeHelpers {
     string constant OPH1 = 'OPH1'; // Opcodes: mustCall call not success
+    string constant OPH2 = 'OPH2'; // Opcodes: mustDelegateCall call not success
 }
 
 /**

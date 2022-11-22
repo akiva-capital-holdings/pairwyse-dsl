@@ -69,10 +69,10 @@ library BranchingOpcodes {
         bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
 
         // check if the array exists
-        (bool success1, bytes memory data1) = IContext(_ctx).appAddr().call(
+        bytes memory data1 = OpcodeHelpers.mustCall(
+            IContext(_ctx).appAddr(),
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
-        require(success1, ErrorsBranchingOpcodes.BR1);
         require(bytes1(data1) != bytes1(0x0), ErrorsBranchingOpcodes.BR2);
 
         // Set loop
@@ -104,7 +104,7 @@ library BranchingOpcodes {
         // Set the temporary variable value: TMP_VAR = ARR_NAME[i]
         bytes32 _tempVarNameB32 = OpcodeHelpers.readBytesSlice(_ctx, _currPc - 8, _currPc - 4);
         bytes4 setFuncSelector = IContext(_ctx).branchSelectors('declareArr', _arrType);
-        OpcodeHelpers.mustCall(
+        OpcodeHelpers.mustDelegateCall(
             IContext(_ctx).appAddr(),
             abi.encodeWithSelector(setFuncSelector, _tempVarNameB32, _elem)
         );
