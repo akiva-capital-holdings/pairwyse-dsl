@@ -128,10 +128,11 @@ library Preprocessor {
      * ```
      *
      * @param _program is a user's DSL code string
-     * @return the list of commands that storing in `result`
+     * @param _separators Separators that will be used to split the string
+     * @param _separatorsToKeep we're using symbols from this string as separators but not removing
+     *                          them from the resulting array
+     * @return The list of commands that storing in `result`
      */
-    // _separatorsToKeep - we're using symbols from this string as separators but not removing
-    // them from the resulting array
     function split(
         string memory _program,
         string memory _separators,
@@ -167,7 +168,15 @@ library Preprocessor {
         return _result;
     }
 
-    // if chunk is a number removes scientific notation if any
+    /**
+     * @dev Removes scientific notation from numbers and removes currency symbols
+     * Example
+     * 1e3 = 1,000
+     * 1 GWEI = 1,000,000,000
+     * 1 ETH = 1,000,000,000,000,000,000
+     * @param _code Array of DSL commands
+     * @return Code without syntactic sugar
+     */
     function removeSyntacticSugar(string[] memory _code) public pure returns (string[] memory) {
         string[] memory _result = new string[](50);
         uint256 _resultCtr;
@@ -189,6 +198,12 @@ library Preprocessor {
         return _result;
     }
 
+    /**
+     * @dev Depending on the type of the command it gets simplified
+     * @param _code Array of DSL commands
+     * @param _ctxAddr Context contract address
+     * @return Simplified code
+     */
     function simplifyCode(
         string[] memory _code,
         address _ctxAddr
@@ -204,10 +219,10 @@ library Preprocessor {
             _chunk = _code[i++];
 
             if (IContext(_ctxAddr).isCommand(_chunk)) {
-                (_result, _resultCtr, i) = _processCommand(_result, _code, _resultCtr, _ctxAddr, i);
+                (_result, _resultCtr, i) = _processCommand(_result, _resultCtr, _code, i, _ctxAddr);
             } else if (_isCurlyBracket(_chunk)) {
                 (_result, _resultCtr) = _processCurlyBracket(_result, _resultCtr, _chunk);
-            } else if (_isAlias(_ctxAddr, _chunk)) {
+            } else if (_isAlias(_chunk, _ctxAddr)) {
                 (_result, _resultCtr) = _processAlias(_result, _resultCtr, _ctxAddr, _chunk);
             } else if (_chunk.equal('insert')) {
                 (_result, _resultCtr, i) = _processArrayInsert(_result, _resultCtr, _code, i);
@@ -219,6 +234,13 @@ library Preprocessor {
         return _result;
     }
 
+    // TODO: switch _ctxAddr & _code params order
+    /**
+     * @dev Transforms code in infix format to the postfix format
+     * @param _code Array of DSL commands
+     * @param _ctxAddr Context contract address
+     * @return Code in the postfix format
+     */
     function infixToPostfix(
         address _ctxAddr,
         string[] memory _code
@@ -232,8 +254,7 @@ library Preprocessor {
         while (i < _nonEmptyArrLen(_code)) {
             _chunk = _code[i++];
 
-            if (_isOperator(_ctxAddr, _chunk)) {
-                // operator
+            if (_isOperator(_chunk, _ctxAddr)) {
                 (_result, _resultCtr, _stack) = _processOperator(
                     _stack,
                     _result,
@@ -253,6 +274,8 @@ library Preprocessor {
             }
         }
 
+        // Note: now we have a stack with DSL commands and we will pop from it and save to the resulting array to move
+        //       from postfix to infix notation
         while (_stack.stackLength() > 0) {
             (_stack, _result[_resultCtr++]) = _stack.popFromStack();
         }
@@ -263,6 +286,14 @@ library Preprocessor {
      * == PROCESS FUNCTIONS == *
      **************************/
 
+    /**
+     * @dev Process insert into array command
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _code Current DSL code that we're processing
+     * @param i Current pointer to the element in _code array that we're processing
+     * @return Modified _result array, mofified _resultCtr, and modified `i`
+     */
     function _processArrayInsert(
         string[] memory _result,
         uint256 _resultCtr,
@@ -281,6 +312,14 @@ library Preprocessor {
         return (_result, _resultCtr, i + 3);
     }
 
+    /**
+     * @dev Process summing over array comand
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _code Current DSL code that we're processing
+     * @param i Current pointer to the element in _code array that we're processing
+     * @return Modified _result array, mofified _resultCtr, and modified `i`
+     */
     function _processSumOfCmd(
         string[] memory _result,
         uint256 _resultCtr,
@@ -307,6 +346,14 @@ library Preprocessor {
         return (_result, _resultCtr, i + 1);
     }
 
+    /**
+     * @dev Process for-loop
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _code Current DSL code that we're processing
+     * @param i Current pointer to the element in _code array that we're processing
+     * @return Modified _result array, mofified _resultCtr, and modified `i`
+     */
     function _processForCmd(
         string[] memory _result,
         uint256 _resultCtr,
@@ -316,14 +363,20 @@ library Preprocessor {
         // TODO
     }
 
+    /**
+     * @dev Process `struct` comand
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _code Current DSL code that we're processing
+     * @param i Current pointer to the element in _code array that we're processing
+     * @return Modified _result array, mofified _resultCtr, and modified `i`
+     */
     function _processStruct(
         string[] memory _result,
         uint256 _resultCtr,
         string[] memory _code,
         uint256 i
     ) internal pure returns (string[] memory, uint256, uint256) {
-        // Ex. (sumOf) `USERS.balance` -> ['USERS', 'balance']
-        // Ex. (sumOf) `USERS` ->['USERS']
         // 'struct', 'BOB', '{', 'balance', '456', '}'
         _result[_resultCtr++] = 'struct';
         _result[_resultCtr++] = _code[i]; // struct name
@@ -341,6 +394,13 @@ library Preprocessor {
         return (_result, _resultCtr, j + 2);
     }
 
+    /**
+     * @dev Process `ETH`, `WEI` symbols in the code
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _chunk The current piece of code that we're processing (should be the currency symbol)
+     * @param _prevChunk The previous piece of code
+     * @return Mofified _resultCtr, and modified `_prevChunk`
+     */
     function _processCurrencySymbol(
         uint256 _resultCtr,
         string memory _chunk,
@@ -364,6 +424,14 @@ library Preprocessor {
         return (_resultCtr, _prevChunk);
     }
 
+    /**
+     * @dev Process DSL alias
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _ctxAddr Context contract address
+     * @param _chunk The current piece of code that we're processing
+     * @return Modified _result array, mofified _resultCtr, and modified `i`
+     */
     function _processAlias(
         string[] memory _result,
         uint256 _resultCtr,
@@ -379,6 +447,7 @@ library Preprocessor {
         // Ex. `uint256[]` -> `declareArr uint256`
         string[] memory _chunks = split(_chunk, ' ', '');
 
+        // while we've not finished processing all the program - keep going
         while (i < _nonEmptyArrLen(_chunks)) {
             _result[_resultCtr++] = _chunks[i++];
         }
@@ -386,12 +455,21 @@ library Preprocessor {
         return (_result, _resultCtr);
     }
 
+    /**
+     * @dev Process any DSL command
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _code Current DSL code that we're processing
+     * @param i Current pointer to the element in _code array that we're processing
+     * @param _ctxAddr Context contract address
+     * @return Modified _result array, mofified _resultCtr, and modified `i`
+     */
     function _processCommand(
         string[] memory _result,
-        string[] memory _code,
         uint256 _resultCtr,
-        address _ctxAddr,
-        uint256 i
+        string[] memory _code,
+        uint256 i,
+        address _ctxAddr
     ) internal view returns (string[] memory, uint256, uint256) {
         string memory _chunk = _code[i - 1];
         if (_chunk.equal('struct')) {
@@ -414,6 +492,14 @@ library Preprocessor {
         return (_result, _resultCtr, i);
     }
 
+    /**
+     * @dev Process open and closed parenthesis
+     * @param _stack Stack that is used to process parenthesis
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _chunk The current piece of code that we're processing
+     * @return Modified _result array, mofified _resultCtr, and modified _stack
+     */
     function _processParenthesis(
         string[] memory _stack,
         string[] memory _result,
@@ -431,6 +517,13 @@ library Preprocessor {
         return (_result, _resultCtr, _stack);
     }
 
+    /**
+     * @dev Process closing parenthesis
+     * @param _stack Stack that is used to process parenthesis
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @return Modified _result array, mofified _resultCtr, and modified _stack
+     */
     function _processClosingParenthesis(
         string[] memory _stack,
         string[] memory _result,
@@ -443,6 +536,13 @@ library Preprocessor {
         return (_result, _resultCtr, _stack);
     }
 
+    /**
+     * @dev Process curly brackets
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _chunk The current piece of code that we're processing
+     * @return Modified _result array, mofified _resultCtr
+     */
     function _processCurlyBracket(
         string[] memory _result,
         uint256 _resultCtr,
@@ -456,6 +556,15 @@ library Preprocessor {
         return (_result, _resultCtr);
     }
 
+    /**
+     * @dev Process any operator in DSL
+     * @param _stack Stack that is used to process parenthesis
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _ctxAddr Context contract address
+     * @param _chunk The current piece of code that we're processing
+     * @return Modified _result array, mofified _resultCtr, and modified _stack
+     */
     function _processOperator(
         string[] memory _stack,
         string[] memory _result,
@@ -471,7 +580,6 @@ library Preprocessor {
             (_stack, _result[_resultCtr++]) = _stack.popFromStack();
         }
         _stack = _stack.pushToStack(_chunk);
-        // }
 
         return (_result, _resultCtr, _stack);
     }
@@ -481,37 +589,61 @@ library Preprocessor {
      *************************/
 
     /**
-     * @dev Check is chunk is a currency symbol
+     * @dev Checks if chunk is a currency symbol
      * @param _chunk is a current chunk from the DSL string code
-     * @return true or false based on whether chunk is a currency symbol or not
+     * @return True or false based on whether chunk is a currency symbol or not
      */
     function _isCurrencySymbol(string memory _chunk) internal pure returns (bool) {
         if (_chunk.equal('ETH') || _chunk.equal('GWEI')) return true;
         return false;
     }
 
-    function _isOperator(address _ctxAddr, string memory op) internal view returns (bool) {
+    /**
+     * @dev Checks if chunk is an operator
+     * @param _chunk Current piece of code that we're processing
+     * @param _ctxAddr Context contract address
+     * @return True or false based on whether chunk is an operator or not
+     */
+    function _isOperator(string memory _chunk, address _ctxAddr) internal view returns (bool) {
         for (uint256 i = 0; i < IContext(_ctxAddr).operatorsLen(); i++) {
-            if (op.equal(IContext(_ctxAddr).operators(i))) return true;
+            if (_chunk.equal(IContext(_ctxAddr).operators(i))) return true;
         }
         return false;
     }
 
     /**
      * @dev Checks if a string is an alias to a command from DSL
+     * @param _chunk Current piece of code that we're processing
+     * @param _ctxAddr Context contract address
+     * @return True or false based on whether chunk is an alias or not
      */
-    function _isAlias(address _ctxAddr, string memory _cmd) internal view returns (bool) {
-        return !IContext(_ctxAddr).aliases(_cmd).equal('');
+    function _isAlias(string memory _chunk, address _ctxAddr) internal view returns (bool) {
+        return !IContext(_ctxAddr).aliases(_chunk).equal('');
     }
 
+    /**
+     * @dev Checks if chunk is a parenthesis
+     * @param _chunk Current piece of code that we're processing
+     * @return True or false based on whether chunk is a parenthesis or not
+     */
     function _isParenthesis(string memory _chunk) internal pure returns (bool) {
         return _chunk.equal('(') || _chunk.equal(')');
     }
 
+    /**
+     * @dev Checks if chunk is a curly bracket
+     * @param _chunk Current piece of code that we're processing
+     * @return True or false based on whether chunk is a curly bracket or not
+     */
     function _isCurlyBracket(string memory _chunk) internal pure returns (bool) {
         return _chunk.equal('{') || _chunk.equal('}');
     }
 
+    /**
+     * @dev Parses scientific notation in the chunk if there is any
+     * @param _chunk Current piece of code that we're processing
+     * @return Chunk without a scientific notation
+     */
     function _checkScientificNotation(string memory _chunk) internal pure returns (string memory) {
         if (_chunk.mayBeNumber() && !_chunk.mayBeAddress()) {
             return _parseScientificNotation(_chunk);
@@ -538,6 +670,13 @@ library Preprocessor {
         }
     }
 
+    /**
+     * @dev Checks if chunk is a number or address and processes it if so
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _chunk Current piece of code that we're processing
+     * @return Modified _result array, mofified _resultCtr
+     */
     function _checkIsNumberOrAddress(
         string[] memory _result,
         uint256 _resultCtr,
@@ -551,6 +690,12 @@ library Preprocessor {
         return (_result, _resultCtr);
     }
 
+    /**
+     * @dev Adds `uint256` to a number
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @return Modified _result array, mofified _resultCtr
+     */
     function _addUint256(
         string[] memory _result,
         uint256 _resultCtr
@@ -581,20 +726,21 @@ library Preprocessor {
      * no-comment symbol avoiding an additional iteration
      * @param _index is a current index of a char that might be changed
      * @param _program is a current program string
-     * @return new index
-     * @return searchedSymbolLen
-     * @return isCommeted
+     * @param _char Current character
+     * @return Searched symbol length
+     * @return New index
+     * @return Is code commented or not
      */
     function _getCommentSymbol(
         uint256 _index,
         string memory _program,
-        string memory char
+        string memory _char
     ) internal pure returns (uint256, uint256, bool) {
         if (_canGetSymbol(_index + 1, _program)) {
             string memory nextChar = _program.char(_index + 1);
-            if (char.equal('/') && nextChar.equal('/')) {
+            if (_char.equal('/') && nextChar.equal('/')) {
                 return (1, _index + 2, true);
-            } else if (char.equal('/') && nextChar.equal('*')) {
+            } else if (_char.equal('/') && nextChar.equal('*')) {
                 return (2, _index + 2, true);
             }
         }
@@ -604,21 +750,22 @@ library Preprocessor {
     /**
      * @dev Checks if a symbol is an end symbol of a comment, then increases _index to the next
      * no-comment symbol avoiding an additional iteration
-     * @param _i is a current index of a char that might be changed
      * @param _ssl is a searched symbol len that might be 0, 1, 2
+     * @param _i is a current index of a char that might be changed
      * @param _p is a current program string
-     * @return index is a new index of a char
-     * @return isCommeted
+     * @param _char Current character
+     * @return A new index of a char
+     * @return Is code commented or not
      */
     function _getEndCommentSymbol(
         uint256 _ssl,
         uint256 _i,
         string memory _p,
-        string memory char
+        string memory _char
     ) internal pure returns (uint256, bool) {
-        if (_ssl == 1 && char.equal('\n')) {
+        if (_ssl == 1 && _char.equal('\n')) {
             return (_i + 1, false);
-        } else if (_ssl == 2 && char.equal('*') && _canGetSymbol(_i + 1, _p)) {
+        } else if (_ssl == 2 && _char.equal('*') && _canGetSymbol(_i + 1, _p)) {
             string memory nextChar = _p.char(_i + 1);
             if (nextChar.equal('/')) {
                 return (_i + 2, false);
@@ -631,7 +778,7 @@ library Preprocessor {
      * @dev Checks if it is possible to get next char from a _program
      * @param _index is a current index of a char
      * @param _program is a current program string
-     * @return true if program has the next symbol, otherwise is false
+     * @return True if program has the next symbol, otherwise is false
      */
     function _canGetSymbol(uint256 _index, string memory _program) internal pure returns (bool) {
         try _program.char(_index) {
@@ -644,6 +791,8 @@ library Preprocessor {
     /**
      * @dev Returns the length of a string array excluding empty elements
      * Ex. nonEmptyArrLen['h', 'e', 'l', 'l', 'o', '', '', '']) == 5 (not 8)
+     * @param _arr Input string array
+     * @return i The legth of the array excluding empty elements
      */
     function _nonEmptyArrLen(string[] memory _arr) internal pure returns (uint256 i) {
         while (i < _arr.length && !_arr[i].equal('')) {
