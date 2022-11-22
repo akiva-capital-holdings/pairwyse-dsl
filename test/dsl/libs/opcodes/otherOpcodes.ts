@@ -94,18 +94,18 @@ describe('Other opcodes', () => {
 
   it('opLoadLocalGet', async () => {
     await ctx.setProgram('0x1a000000');
-    await expect(app.opLoadLocalGet(ctxAddr, 'hey()')).to.be.revertedWith('OP5');
+    await expect(app.opLoadLocalGet(ctxAddr, 'hey()')).to.be.revertedWith('OPH1');
   });
 
   it('opLoadRemote', async () => {
     const ctxAddrCut = ctxAddr.substring(2);
     await ctx.setProgram(`0x1a000000${ctxAddrCut}`);
-    await expect(app.opLoadRemote(ctxAddr, 'hey()')).to.be.revertedWith('OP3');
+    await expect(app.opLoadRemote(ctxAddr, 'hey()')).to.be.revertedWith('OPH1');
   });
 
   it('opLoadRemoteAny', async () => {
     await ctx.setProgram('0x1a');
-    await expect(app.opLoadRemoteAny(ctxAddr)).to.be.revertedWith('OPH1');
+    await expect(app.opLoadRemoteAny(ctxAddr)).to.be.revertedWith('OPH2');
   });
 
   describe('block', () => {
@@ -227,7 +227,7 @@ describe('Other opcodes', () => {
       await ctx.setProgram(`0x${bytesVarName}01`);
       const badContract = await (await ethers.getContractFactory('StorageWithRevert')).deploy();
       await ctx.setAppAddress(badContract.address);
-      await expect(app.opSetLocalBool(ctxAddr)).to.be.revertedWith('OP1');
+      await expect(app.opSetLocalBool(ctxAddr)).to.be.revertedWith('OPH1');
       await ctx.setAppAddress(clientApp.address);
     });
 
@@ -252,7 +252,7 @@ describe('Other opcodes', () => {
 
       const badContract = await (await ethers.getContractFactory('StorageWithRevert')).deploy();
       await ctx.setAppAddress(badContract.address);
-      await expect(app.opSetUint256(ctxAddr)).to.be.revertedWith('OP1');
+      await expect(app.opSetUint256(ctxAddr)).to.be.revertedWith('OPH1');
       await ctx.setAppAddress(clientApp.address);
     });
 

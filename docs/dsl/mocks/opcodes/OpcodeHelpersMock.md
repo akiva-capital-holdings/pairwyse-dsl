@@ -30,6 +30,12 @@ function nextBranchSelector(address _ctx, string _baseOpName) public returns (by
 function mustCall(address _addr, bytes _data) public
 ```
 
+### mustDelegateCall
+
+```solidity
+function mustDelegateCall(address _addr, bytes _data) public
+```
+
 ### getNextBytes
 
 ```solidity
