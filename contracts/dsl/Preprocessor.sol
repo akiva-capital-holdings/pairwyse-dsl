@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IContext } from './interfaces/IContext.sol';
+import { IDSLContext } from './interfaces/IDSLContext.sol';
 import { IPreprocessor } from './interfaces/IPreprocessor.sol';
 import { StringStack } from './libs/StringStack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
@@ -218,8 +218,8 @@ library Preprocessor {
             _prevChunk = i == 0 ? '' : _code[i - 1];
             _chunk = _code[i++];
 
-            if (IContext(_ctxAddr).isCommand(_chunk)) {
-                (_result, _resultCtr, i) = _processCommand(_result, _resultCtr, _code, i, _ctxAddr);
+            if (IDSLContext(_ctxAddr).isCommand(_chunk)) {
+                (_result, _resultCtr, i) = _processCommand(_result, _code, _resultCtr, _ctxAddr, i);
             } else if (_isCurlyBracket(_chunk)) {
                 (_result, _resultCtr) = _processCurlyBracket(_result, _resultCtr, _chunk);
             } else if (_isAlias(_chunk, _ctxAddr)) {
@@ -441,7 +441,7 @@ library Preprocessor {
         uint256 i;
 
         // Replace alises with base commands
-        _chunk = IContext(_ctxAddr).aliases(_chunk);
+        _chunk = IDSLContext(_ctxAddr).aliases(_chunk);
 
         // Process multi-command aliases
         // Ex. `uint256[]` -> `declareArr uint256`
@@ -479,7 +479,7 @@ library Preprocessor {
         } else if (_chunk.equal('for')) {
             (_result, _resultCtr, i) = _processForCmd(_result, _resultCtr, _code, i);
         } else {
-            uint256 _skipCtr = IContext(_ctxAddr).numOfArgsByOpcode(_chunk) + 1;
+            uint256 _skipCtr = IDSLContext(_ctxAddr).numOfArgsByOpcode(_chunk) + 1;
 
             i--; // this is to include the command name in the loop below
             // add command arguments
@@ -574,8 +574,8 @@ library Preprocessor {
     ) internal view returns (string[] memory, uint256, string[] memory) {
         while (
             _stack.stackLength() > 0 &&
-            IContext(_ctxAddr).opsPriors(_chunk) <=
-            IContext(_ctxAddr).opsPriors(_stack.seeLastInStack())
+            IDSLContext(_ctxAddr).opsPriors(_chunk) <=
+            IDSLContext(_ctxAddr).opsPriors(_stack.seeLastInStack())
         ) {
             (_stack, _result[_resultCtr++]) = _stack.popFromStack();
         }
@@ -603,9 +603,9 @@ library Preprocessor {
      * @param _ctxAddr Context contract address
      * @return True or false based on whether chunk is an operator or not
      */
-    function _isOperator(string memory _chunk, address _ctxAddr) internal view returns (bool) {
-        for (uint256 i = 0; i < IContext(_ctxAddr).operatorsLen(); i++) {
-            if (_chunk.equal(IContext(_ctxAddr).operators(i))) return true;
+    function _isOperator(address _ctxAddr, string memory op) internal view returns (bool) {
+        for (uint256 i = 0; i < IDSLContext(_ctxAddr).operatorsLen(); i++) {
+            if (op.equal(IDSLContext(_ctxAddr).operators(i))) return true;
         }
         return false;
     }
@@ -616,8 +616,13 @@ library Preprocessor {
      * @param _ctxAddr Context contract address
      * @return True or false based on whether chunk is an alias or not
      */
+<<<<<<< HEAD
     function _isAlias(string memory _chunk, address _ctxAddr) internal view returns (bool) {
         return !IContext(_ctxAddr).aliases(_chunk).equal('');
+=======
+    function _isAlias(address _ctxAddr, string memory _cmd) internal view returns (bool) {
+        return !IDSLContext(_ctxAddr).aliases(_cmd).equal('');
+>>>>>>> 975e969 (fixed opcodes, basic tests with string lib, fixed contexts depencies)
     }
 
     /**

@@ -65,6 +65,12 @@ mapping(string => bool) isStructVar
 mapping(bytes4 => mapping(bytes4 => bytes4)) structParams
 ```
 
+### labelPos
+
+```solidity
+mapping(string => uint256) labelPos
+```
+
 ### forLoopIterationsRemaining
 
 ```solidity
@@ -125,6 +131,12 @@ _Returns the slice of the program using a step value_
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | bytes | the slice of provided _payload bytecode |
+
+### programAt
+
+```solidity
+function programAt(uint256 _start, uint256 _size) external view returns (bytes)
+```
 
 ### currentProgram
 
@@ -239,4 +251,10 @@ _Sets the number of iterations for the for-loop that is being executed_
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _forLoopIterationsRemaining | uint256 | The number of iterations of the loop |
+
+### setLabelPos
+
+```solidity
+function setLabelPos(string _name, uint256 _value) external
+```
 

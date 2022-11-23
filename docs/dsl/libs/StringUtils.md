@@ -294,6 +294,7 @@ _Converts a hexadecimal character from bytes to number_
 | ---- | ---- | ----------- |
 | [0] | uint8 | The number from hex character |
 
+
 ### isValidVarName
 
 ```solidity

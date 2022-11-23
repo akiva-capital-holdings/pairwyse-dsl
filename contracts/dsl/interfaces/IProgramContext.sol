@@ -13,6 +13,8 @@ interface IProgramContext {
 
     function currentProgram() external view returns (bytes memory);
 
+    function programAt(uint256 _start, uint256 _size) external view returns (bytes memory);
+
     function pc() external view returns (uint256);
 
     function nextpc() external view returns (uint256);
@@ -24,6 +26,10 @@ interface IProgramContext {
     function msgValue() external view returns (uint256);
 
     function isStructVar(string memory _varName) external view returns (bool);
+
+    function labelPos(string memory _name) external view returns (uint256);
+
+    function setLabelPos(string memory _name, uint256 _value) external;
 
     function forLoopIterationsRemaining() external view returns (uint256);
 

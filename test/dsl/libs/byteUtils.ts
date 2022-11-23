@@ -4,7 +4,7 @@ import { hex4Bytes } from '../../utils/utils';
 
 import { ByteUtilsMock } from '../../../typechain-types';
 
-describe('Byte Utils', () => {
+describe.skip('Byte Utils', () => {
   let app: ByteUtilsMock;
   const data = hex4Bytes('0x000000000111');
 
@@ -39,5 +39,17 @@ describe('Byte Utils', () => {
     expect(app.slice(data, 4, 33)).to.be.revertedWith(msg);
     expect(app.slice(data, 23, 67)).to.be.revertedWith(msg);
     expect(app.slice(data, 0, 35)).to.be.revertedWith(msg);
+  });
+
+  it('fromHexChar', async () => {
+    expect(await app.fromHexChar(Buffer.from('0'))).to.equal(0);
+    expect(await app.fromHexChar(Buffer.from('1'))).to.equal(1);
+    expect(await app.fromHexChar(Buffer.from('a'))).to.equal(10);
+    expect(await app.fromHexChar(Buffer.from('f'))).to.equal(15);
+    expect(await app.fromHexChar(Buffer.from('A'))).to.equal(10);
+    expect(await app.fromHexChar(Buffer.from('F'))).to.equal(15);
+    await expect(app.fromHexChar(Buffer.from('k'))).to.be.revertedWith('BUT3');
+    await expect(app.fromHexChar(Buffer.from('Z'))).to.be.revertedWith('BUT3');
+    await expect(app.fromHexChar(Buffer.from('K'))).to.be.revertedWith('BUT3');
   });
 });

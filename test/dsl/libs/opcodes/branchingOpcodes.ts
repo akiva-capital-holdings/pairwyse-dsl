@@ -4,7 +4,7 @@ import { ethers } from 'hardhat';
 import { Stack__factory, Context, Stack, BranchingOpcodesMock } from '../../../../typechain-types';
 import { getBytesStringLength, pushToStack, uint256StrToHex } from '../../../utils/utils';
 
-describe('Branching opcodes', () => {
+describe.only('Branching opcodes', () => {
   let StackCont: Stack__factory;
   /* eslint-enable camelcase */
   let app: BranchingOpcodesMock;

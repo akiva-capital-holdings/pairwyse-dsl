@@ -3,16 +3,21 @@ import { ethers } from 'hardhat';
 import { parseUnits } from 'ethers/lib/utils';
 
 import { Preprocessor } from '../../typechain-types';
-import { checkStringStack, split } from '../utils/utils';
+import { checkStringStack, split, deployPreprocessor } from '../utils/utils';
 
-describe('Preprocessor', () => {
+describe.skip('Preprocessor', () => {
   let app: Preprocessor;
   let ctxAddr: string;
   let appAddrHex: string;
 
   before(async () => {
     // Deploy required libraries
-    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
+    const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
+    const stringLib = await (
+      await ethers.getContractFactory('StringUtils', {
+        libraries: { ByteUtils: byteLib.address },
+      })
+    ).deploy();
     const strStackLib = await (await ethers.getContractFactory('StringStack')).deploy();
 
     // Deploy Context

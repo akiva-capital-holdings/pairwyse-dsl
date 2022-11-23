@@ -280,6 +280,18 @@ string BUT1
 string BUT2
 ```
 
+### BUT3
+
+```solidity
+string BUT3
+```
+
+### BUT4
+
+```solidity
+string BUT4
+```
+
 ## ErrorsExecutor
 
 ### EXC1
@@ -314,12 +326,6 @@ string EXC4
 string SUT1
 ```
 
-### SUT2
-
-```solidity
-string SUT2
-```
-
 ### SUT3
 
 ```solidity
@@ -348,12 +354,6 @@ string SUT6
 
 ```solidity
 string SUT7
-```
-
-### SUT8
-
-```solidity
-string SUT8
 ```
 
 ### SUT9

@@ -35,11 +35,11 @@ contract BaseApplication is BaseStorage {
     receive() external payable {}
 
     function parse(string memory _program) external {
-        IParser(parserAddr).parse(preprocessorAddr, dslContext, _program);
+        IParser(parserAddr).parse(preprocessorAddr, dslContext, programContext, _program);
     }
 
     function parseCode(string[] memory _code) external {
-        IParser(parserAddr).parseCode(dslContext, _code);
+        IParser(parserAddr).parseCode(dslContext, programContext, _code);
     }
 
     function execute() external payable {

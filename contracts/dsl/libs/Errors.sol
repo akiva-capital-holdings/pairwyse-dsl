@@ -99,6 +99,8 @@ library ErrorsOpcodeHelpers {
 library ErrorsByteUtils {
     string constant BUT1 = 'BUT1'; // ByteUtils: 'end' index must be greater than 'start'
     string constant BUT2 = 'BUT2'; // ByteUtils: 'end' is greater than the length of the array
+    string constant BUT3 = 'BUT3'; // ByteUtils: a hex value not from the range 0-9, a-f, A-F
+    string constant BUT4 = 'BUT4'; // ByteUtils: hex lenght not even
 }
 
 /**
@@ -116,12 +118,10 @@ library ErrorsExecutor {
  */
 library ErrorsStringUtils {
     string constant SUT1 = 'SUT1'; // StringUtils: index out of range
-    string constant SUT2 = 'SUT2'; // StringUtils: hex lenght not even
     string constant SUT3 = 'SUT3'; // StringUtils: non-decimal character
     string constant SUT4 = 'SUT4'; // StringUtils: base was not provided
     string constant SUT5 = 'SUT5'; // StringUtils: invalid format
     string constant SUT6 = 'SUT6'; // StringUtils: decimals were not provided
     string constant SUT7 = 'SUT7'; // StringUtils: a string was not provided
-    string constant SUT8 = 'SUT8'; // StringUtils: a hex value not from the range 0-9, a-f, A-F
     string constant SUT9 = 'SUT9'; // StringUtils: base was not provided
 }

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IContext } from '../../interfaces/IContext.sol';
+import { IDSLContext } from '../../interfaces/IDSLContext.sol';
+import { IProgramContext } from '../../interfaces/IProgramContext.sol';
 import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { ErrorsOpcodeHelpers } from '../Errors.sol';
@@ -19,12 +20,12 @@ library OpcodeHelpers {
 
     // TODO: get rid of putToStack function
     function putToStack(address _ctx, uint256 _value) public {
-        IContext(_ctx).stack().push(_value);
+        IProgramContext(_ctx).stack().push(_value);
     }
 
     function nextBytes(address _ctx, uint256 size) public returns (bytes memory out) {
-        out = IContext(_ctx).programAt(IContext(_ctx).pc(), size);
-        IContext(_ctx).incPc(size);
+        out = IProgramContext(_ctx).programAt(IProgramContext(_ctx).pc(), size);
+        IProgramContext(_ctx).incPc(size);
     }
 
     function nextBytes1(address _ctx) public returns (bytes1) {
@@ -44,7 +45,7 @@ library OpcodeHelpers {
         uint256 _start,
         uint256 _end
     ) public view returns (bytes32 res) {
-        bytes memory slice = IContext(_ctx).programAt(_start, _end - _start);
+        bytes memory slice = IProgramContext(_ctx).programAt(_start, _end - _start);
         // Convert bytes to bytes32
         assembly {
             res := mload(add(slice, 0x20))
@@ -53,7 +54,7 @@ library OpcodeHelpers {
 
     function nextBranchSelector(address _ctx, string memory baseOpName) public returns (bytes4) {
         bytes1 branchCode = nextBytes1(_ctx);
-        return IContext(_ctx).branchSelectors(baseOpName, branchCode);
+        return IDSLContext(_ctx).branchSelectors(baseOpName, branchCode);
     }
 
     /**

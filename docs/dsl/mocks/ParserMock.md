@@ -9,6 +9,6 @@ constructor() public
 ### asmLoadRemoteExt
 
 ```solidity
-function asmLoadRemoteExt(address _ctxAddr) external
+function asmLoadRemoteExt(bytes _program, address _dslCtxAddr) external
 ```
 

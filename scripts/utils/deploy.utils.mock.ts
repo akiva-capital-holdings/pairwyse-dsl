@@ -4,8 +4,12 @@ import { deployExecutor, deployOpcodeLibs, deployPreprocessor } from './deploy.u
 
 export const deployParserMock = async (hre: HardhatRuntimeEnvironment) => {
   // Deploy libraries
-  const stringLib = await (await hre.ethers.getContractFactory('StringUtils')).deploy();
   const byteLib = await (await hre.ethers.getContractFactory('ByteUtils')).deploy();
+  const stringLib = await (
+    await hre.ethers.getContractFactory('StringUtils', {
+      libraries: { ByteUtils: byteLib.address },
+    })
+  ).deploy();
 
   const ParserMockContract = await hre.ethers.getContractFactory('ParserMock', {
     libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },

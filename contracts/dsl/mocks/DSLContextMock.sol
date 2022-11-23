@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { Context } from '../Context.sol';
+import { DSLContext } from '../DSLContext.sol';
 
-contract ContextMock is Context {
+contract DSLContextMock is DSLContext {
+    constructor(
+        address _comparisonOpcodes,
+        address _branchingOpcodes,
+        address _logicalOpcodes,
+        address _otherOpcodes
+    ) DSLContext(_comparisonOpcodes, _branchingOpcodes, _logicalOpcodes, _otherOpcodes) {}
+
     function addOpcode(
         string memory _name,
         bytes1 _opcode,

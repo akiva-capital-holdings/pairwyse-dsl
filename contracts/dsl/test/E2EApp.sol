@@ -37,7 +37,7 @@ contract E2EApp is UnstructuredStorageMock, LinkedList {
     }
 
     function parseCode(string[] memory _code) external {
-        IParser(parserAddr).parseCode(dslContext, _code);
+        IParser(parser).parseCode(dslContext, programContext, _code);
     }
 
     function execute() external payable {

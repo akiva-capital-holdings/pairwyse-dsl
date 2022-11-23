@@ -35,6 +35,8 @@ contract ProgramContext is IProgramContext {
 
     mapping(string => bool) public isStructVar;
     mapping(bytes4 => mapping(bytes4 => bytes4)) public structParams;
+    mapping(string => uint256) public labelPos; // stores if/ifelse branch positions
+
     // Counter for the number of iterations for every for-loop in DSL code
     uint256 public forLoopIterationsRemaining;
 
@@ -78,6 +80,10 @@ contract ProgramContext is IProgramContext {
     ) public pure returns (bytes memory) {
         require(_payload.length > _index, ErrorsContext.CTX4);
         return _payload[_index:_index + _step];
+    }
+
+    function programAt(uint256 _start, uint256 _size) external view returns (bytes memory) {
+        return this.programSlice(program, _start, _size);
     }
 
     /**
@@ -153,5 +159,9 @@ contract ProgramContext is IProgramContext {
      */
     function setForLoopIterationsRemaining(uint256 _forLoopIterationsRemaining) external {
         forLoopIterationsRemaining = _forLoopIterationsRemaining;
+    }
+
+    function setLabelPos(string memory _name, uint256 _value) external {
+        labelPos[_name] = _value;
     }
 }

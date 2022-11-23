@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IContext } from '../../interfaces/IContext.sol';
+import { IProgramContext } from '../../interfaces/IProgramContext.sol';
 import { IERC20 } from '../../interfaces/IERC20.sol';
 import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
@@ -24,8 +24,8 @@ library LogicalOpcodes {
      * @param _ctx Context contract address
      */
     function opAnd(address _ctx) public {
-        uint256 last = IContext(_ctx).stack().pop();
-        uint256 prev = IContext(_ctx).stack().pop();
+        uint256 last = IProgramContext(_ctx).stack().pop();
+        uint256 prev = IProgramContext(_ctx).stack().pop();
         OpcodeHelpers.putToStack(_ctx, (prev > 0) && (last > 0) ? 1 : 0);
     }
 
@@ -35,8 +35,8 @@ library LogicalOpcodes {
      * @param _ctx Context contract address
      */
     function opOr(address _ctx) public {
-        uint256 last = IContext(_ctx).stack().pop();
-        uint256 prev = IContext(_ctx).stack().pop();
+        uint256 last = IProgramContext(_ctx).stack().pop();
+        uint256 prev = IProgramContext(_ctx).stack().pop();
         OpcodeHelpers.putToStack(_ctx, (prev > 0) || (last > 0) ? 1 : 0);
     }
 
@@ -46,8 +46,8 @@ library LogicalOpcodes {
      * @param _ctx Context contract address
      */
     function opXor(address _ctx) public {
-        uint256 last = IContext(_ctx).stack().pop();
-        uint256 prev = IContext(_ctx).stack().pop();
+        uint256 last = IProgramContext(_ctx).stack().pop();
+        uint256 prev = IProgramContext(_ctx).stack().pop();
         OpcodeHelpers.putToStack(
             _ctx,
             ((prev > 0) && (last == 0)) || ((prev == 0) && (last > 0)) ? 1 : 0
@@ -59,8 +59,8 @@ library LogicalOpcodes {
      * @param _ctx Context contract address
      */
     function opAdd(address _ctx) public {
-        uint256 last = IContext(_ctx).stack().pop();
-        uint256 prev = IContext(_ctx).stack().pop();
+        uint256 last = IProgramContext(_ctx).stack().pop();
+        uint256 prev = IProgramContext(_ctx).stack().pop();
         OpcodeHelpers.putToStack(_ctx, prev + last);
     }
 
@@ -69,8 +69,8 @@ library LogicalOpcodes {
      * @param _ctx Context contract address
      */
     function opSub(address _ctx) public {
-        uint256 last = IContext(_ctx).stack().pop();
-        uint256 prev = IContext(_ctx).stack().pop();
+        uint256 last = IProgramContext(_ctx).stack().pop();
+        uint256 prev = IProgramContext(_ctx).stack().pop();
         OpcodeHelpers.putToStack(_ctx, prev - last);
     }
 
@@ -79,8 +79,8 @@ library LogicalOpcodes {
      * @param _ctx Context contract address
      */
     function opMul(address _ctx) public {
-        uint256 last = IContext(_ctx).stack().pop();
-        uint256 prev = IContext(_ctx).stack().pop();
+        uint256 last = IProgramContext(_ctx).stack().pop();
+        uint256 prev = IProgramContext(_ctx).stack().pop();
         OpcodeHelpers.putToStack(_ctx, prev * last);
     }
 
@@ -90,8 +90,8 @@ library LogicalOpcodes {
      * @param _ctx Context address
      */
     function opDiv(address _ctx) public {
-        uint256 last = IContext(_ctx).stack().pop();
-        uint256 prev = IContext(_ctx).stack().pop();
+        uint256 last = IProgramContext(_ctx).stack().pop();
+        uint256 prev = IProgramContext(_ctx).stack().pop();
         OpcodeHelpers.putToStack(_ctx, prev / last);
     }
 }

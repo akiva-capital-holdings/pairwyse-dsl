@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IContext } from '../../interfaces/IContext.sol';
+import { IDSLContext } from '../../interfaces/IDSLContext.sol';
+import { IProgramContext } from '../../interfaces/IProgramContext.sol';
 import { IERC20 } from '../../interfaces/IERC20.sol';
 import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
@@ -15,7 +16,7 @@ library OtherOpcodes {
     using StringUtils for string;
 
     function opLoadRemoteAny(address _ctx) public {
-        address libAddr = IContext(_ctx).otherOpcodes();
+        address libAddr = IDSLContext(_ctx).otherOpcodes();
         bytes4 selector = OpcodeHelpers.nextBranchSelector(_ctx, 'loadRemote');
         OpcodeHelpers.mustDelegateCall(libAddr, abi.encodeWithSelector(selector, _ctx));
     }
@@ -33,11 +34,11 @@ library OtherOpcodes {
     }
 
     function opMsgSender(address _ctx) public {
-        OpcodeHelpers.putToStack(_ctx, uint256(uint160(IContext(_ctx).msgSender())));
+        OpcodeHelpers.putToStack(_ctx, uint256(uint160(IProgramContext(_ctx).msgSender())));
     }
 
     function opMsgValue(address _ctx) public {
-        OpcodeHelpers.putToStack(_ctx, uint256(uint160(IContext(_ctx).msgValue())));
+        OpcodeHelpers.putToStack(_ctx, uint256(uint160(IProgramContext(_ctx).msgValue())));
     }
 
     /**
@@ -52,7 +53,7 @@ library OtherOpcodes {
 
         // Set local variable by it's hex
         OpcodeHelpers.mustCall(
-            IContext(_ctx).appAddr(),
+            ProgramContext(_ctx).appAddr(),
             abi.encodeWithSignature('setStorageBool(bytes32,bool)', _varNameB32, _boolVal)
         );
         OpcodeHelpers.putToStack(_ctx, 1);
@@ -63,11 +64,11 @@ library OtherOpcodes {
      */
     function opSetUint256(address _ctx) public {
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
-        uint256 _val = IContext(_ctx).stack().pop();
+        uint256 _val = IProgramContext(_ctx).stack().pop();
 
         // Set local variable by it's hex
         OpcodeHelpers.mustCall(
-            IContext(_ctx).appAddr(),
+            IProgramContext(_ctx).appAddr(),
             abi.encodeWithSignature('setStorageUint256(bytes32,uint256)', _varNameB32, _val)
         );
         OpcodeHelpers.putToStack(_ctx, 1);
@@ -83,12 +84,12 @@ library OtherOpcodes {
 
         // check if the array exists
         bytes memory data = OpcodeHelpers.mustCall(
-            IContext(_ctx).appAddr(),
+            IProgramContext(_ctx).appAddr(),
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
         require(bytes1(data) != bytes1(0x0), ErrorsGeneralOpcodes.OP2);
         (data) = OpcodeHelpers.mustCall(
-            IContext(_ctx).appAddr(),
+            IProgramContext(_ctx).appAddr(),
             abi.encodeWithSignature(
                 'get(uint256,bytes32)',
                 _index, // index of the searched item
@@ -144,7 +145,7 @@ library OtherOpcodes {
             // get a variable value for current _varNameB32
             bytes32 _value = OpcodeHelpers.getNextBytes(_ctx, 32);
             OpcodeHelpers.mustCall(
-                IContext(_ctx).appAddr(),
+                IProgramContext(_ctx).appAddr(),
                 abi.encodeWithSignature(
                     'setStorageUint256(bytes32,uint256)',
                     _varNameB32,
@@ -166,12 +167,12 @@ library OtherOpcodes {
 
         // check if the array exists
         bytes memory data = OpcodeHelpers.mustCall(
-            IContext(_ctx).appAddr(),
+            IProgramContext(_ctx).appAddr(),
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
         require(bytes1(data) != bytes1(0x0), ErrorsGeneralOpcodes.OP4);
         OpcodeHelpers.mustCall(
-            IContext(_ctx).appAddr(),
+            IProgramContext(_ctx).appAddr(),
             abi.encodeWithSignature(
                 'addItem(bytes32,bytes32)',
                 _varValue, // value that pushes to the array
@@ -189,7 +190,7 @@ library OtherOpcodes {
         bytes32 _arrName = OpcodeHelpers.getNextBytes(_ctx, 4);
 
         OpcodeHelpers.mustCall(
-            IContext(_ctx).appAddr(),
+            IProgramContext(_ctx).appAddr(),
             abi.encodeWithSignature(
                 'declare(bytes1,bytes32)',
                 bytes1(_arrType), // type of the array
@@ -331,14 +332,15 @@ library OtherOpcodes {
         bytes memory data;
         bytes32 varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
         if (varNameB32 == MSG_SENDER) {
-            data = abi.encode(IContext(_ctx).msgSender());
+            data = abi.encode(IProgramContext(_ctx).msgSender());
         } else {
             // Load local variable by it's hex
             data = OpcodeHelpers.mustCall(
-                IContext(_ctx).appAddr(),
+                IProgramContext(_ctx).appAddr(),
                 abi.encodeWithSignature(funcSignature, varNameB32)
             );
         }
+
         // Convert bytes to bytes32
         assembly {
             result := mload(add(data, 0x20))
@@ -440,7 +442,7 @@ library OtherOpcodes {
             bytes memory item = _getItem(_ctx, i, _arrNameB32);
 
             // get struct variable value
-            bytes4 _fullName = IContext(_ctx).structParams(bytes4(item), _varName);
+            bytes4 _fullName = IProgramContext(_ctx).structParams(bytes4(item), _varName);
             (item) = OpcodeHelpers.mustCall(
                 IContext(_ctx).appAddr(),
                 abi.encodeWithSignature('getStorageUint256(bytes32)', bytes32(_fullName))
@@ -462,7 +464,7 @@ library OtherOpcodes {
         bytes32 _arrNameB32
     ) internal returns (bytes memory) {
         bytes memory item = OpcodeHelpers.mustCall(
-            IContext(_ctx).appAddr(),
+            IProgramContext(_ctx).appAddr(),
             abi.encodeWithSignature('get(uint256,bytes32)', _index, _arrNameB32)
         );
         return item;
@@ -496,11 +498,11 @@ library OtherOpcodes {
         bytes memory _type;
         // check if the array exists
         (_type) = OpcodeHelpers.mustCall(
-            IContext(_ctx).appAddr(),
+            IProgramContext(_ctx).appAddr(),
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
         require(
-            bytes1(_type) == IContext(_ctx).branchCodes('declareArr', _typeName),
+            bytes1(_type) == IDSLContext(_ctx).branchCodes('declareArr', _typeName),
             ErrorsGeneralOpcodes.OP8
         );
     }
@@ -513,7 +515,7 @@ library OtherOpcodes {
      */
     function _getArrLength(address _ctx, bytes32 _arrNameB32) internal returns (bytes32) {
         bytes memory data = OpcodeHelpers.mustCall(
-            IContext(_ctx).appAddr(),
+            IProgramContext(_ctx).appAddr(),
             abi.encodeWithSignature('getLength(bytes32)', _arrNameB32)
         );
         return bytes32(data);

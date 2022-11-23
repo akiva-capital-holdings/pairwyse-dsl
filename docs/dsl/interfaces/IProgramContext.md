@@ -24,6 +24,12 @@ function program() external view returns (bytes)
 function currentProgram() external view returns (bytes)
 ```
 
+### programAt
+
+```solidity
+function programAt(uint256 _start, uint256 _size) external view returns (bytes)
+```
+
 ### pc
 
 ```solidity
@@ -58,6 +64,18 @@ function msgValue() external view returns (uint256)
 
 ```solidity
 function isStructVar(string _varName) external view returns (bool)
+```
+
+### labelPos
+
+```solidity
+function labelPos(string _name) external view returns (uint256)
+```
+
+### setLabelPos
+
+```solidity
+function setLabelPos(string _name, uint256 _value) external
 ```
 
 ### forLoopIterationsRemaining

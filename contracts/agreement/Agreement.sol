@@ -47,7 +47,8 @@ contract Agreement is LinkedList {
         BOOL
     }
 
-    event Parsed(address indexed preProccessor, string code);
+
+    event Parsed(address indexed preProccessor, address indexed dslCtxAddr, string code);
 
     event RecordArchived(uint256 indexed recordId);
     event RecordUnarchived(uint256 indexed recordId);

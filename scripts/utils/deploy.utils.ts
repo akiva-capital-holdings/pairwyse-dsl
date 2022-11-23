@@ -55,8 +55,13 @@ export const deployContextFactory = async (hre: HardhatRuntimeEnvironment) => {
 
 export const deployParser = async (hre: HardhatRuntimeEnvironment) => {
   // Deploy libraries
-  const stringLib = await (await hre.ethers.getContractFactory('StringUtils')).deploy();
+
   const byteLib = await (await hre.ethers.getContractFactory('ByteUtils')).deploy();
+  const stringLib = await (
+    await hre.ethers.getContractFactory('StringUtils', {
+      libraries: { ByteUtils: byteLib.address },
+    })
+  ).deploy();
 
   const parser = await (
     await hre.ethers.getContractFactory('Parser', {
@@ -67,11 +72,20 @@ export const deployParser = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 export const deployPreprocessor = async (hre: HardhatRuntimeEnvironment) => {
-  const stringLib = await (await hre.ethers.getContractFactory('StringUtils')).deploy();
+  const byteLib = await (await hre.ethers.getContractFactory('ByteUtils')).deploy();
+  const stringLib = await (
+    await hre.ethers.getContractFactory('StringUtils', {
+      libraries: { ByteUtils: byteLib.address },
+    })
+  ).deploy();
   const stringStackLib = await (await hre.ethers.getContractFactory('StringStack')).deploy();
   const preprocessor = await (
     await hre.ethers.getContractFactory('Preprocessor', {
-      libraries: { StringUtils: stringLib.address, StringStack: stringStackLib.address },
+      libraries: {
+        ByteUtils: byteLib.address,
+        StringUtils: stringLib.address,
+        StringStack: stringStackLib.address,
+      },
     })
   ).deploy();
   return preprocessor.address;
