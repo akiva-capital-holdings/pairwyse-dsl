@@ -14,34 +14,34 @@ import { UnstructuredStorageMock } from '../mocks/UnstructuredStorageMock.sol';
 contract App is UnstructuredStorageMock, LinkedList {
     using StringUtils for string;
 
-    address public parser;
-    address public ctx;
-    address public preprocessor;
+    address public parserAddr;
+    address public ctxAddr;
+    address public preprocessorAddr;
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    constructor(
-        address _parser,
-        address _preprocessor,
-        address _ctx
-    ) {
-        parser = _parser;
-        preprocessor = _preprocessor;
-        ctx = _ctx;
+    constructor(address _parserAddr, address _preprocessorAddr, address _ctxAddr) {
+        parserAddr = _parserAddr;
+        preprocessorAddr = _preprocessorAddr;
+        ctxAddr = _ctxAddr;
         _setupContext();
     }
 
     function parse(string memory _program) external {
-        IParser(parser).parse(preprocessor, ctx, _program);
+        IParser(parserAddr).parse(preprocessorAddr, ctxAddr, _program);
+    }
+
+    function parseCode(string[] memory _code) external {
+        IParser(parserAddr).parseCode(ctxAddr, _code);
     }
 
     function execute() external payable {
-        IContext(ctx).setMsgValue(msg.value);
-        Executor.execute(ctx);
+        IContext(ctxAddr).setMsgValue(msg.value);
+        Executor.execute(ctxAddr);
     }
 
     function _setupContext() internal {
-        IContext(ctx).setMsgSender(msg.sender);
+        IContext(ctxAddr).setMsgSender(msg.sender);
     }
 }

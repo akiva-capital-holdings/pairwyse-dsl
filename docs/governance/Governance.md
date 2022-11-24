@@ -388,8 +388,8 @@ receive() external payable
 function _checkSignatories(address[] _signatories) internal view
 ```
 
-_Checks input _signatures that only one  'anyone' address exists in the
-list or that 'anyone' address does not exist in signatures at all_
+_Checks input _signatures that only one 'ANYONE' address exists in the
+list or that 'ANYONE' address does not exist in signatures at all_
 
 #### Parameters
 

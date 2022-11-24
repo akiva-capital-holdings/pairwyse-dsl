@@ -30,7 +30,7 @@ contract Parser is IParser {
 
     // Note: temporary variables block
     bytes internal program; // raw bytecode of the program that preprocessor is generating
-    string[] internal cmds; // DSL code in postfix form (input from Preprocessor)
+    string[] internal cmds; // DSL code in postfix form (output of Preprocessor)
     uint256 internal cmdIdx; // Current parsing index of DSL code
     mapping(string => uint256) public labelPos;
 
@@ -41,13 +41,29 @@ contract Parser is IParser {
      * @param _ctxAddr Context contract interface address
      * @param _codeRaw Input code as a string in infix notation
      */
-    function parse(
-        address _preprAddr,
-        address _ctxAddr,
-        string memory _codeRaw
-    ) external {
+    function parse(address _preprAddr, address _ctxAddr, string memory _codeRaw) external {
         string[] memory _code = IPreprocessor(_preprAddr).transform(_ctxAddr, _codeRaw);
-        _parseCode(_ctxAddr, _code);
+        parseCode(_ctxAddr, _code);
+    }
+
+    /**
+     * @dev Сonverts a list of commands to bytecode
+     */
+    function parseCode(address _ctxAddr, string[] memory _code) public {
+        delete program;
+        cmdIdx = 0;
+        _setCmdsArray(_code);
+
+        IContext(_ctxAddr).setPc(0);
+        IContext(_ctxAddr).stack().clear();
+
+        while (cmdIdx < cmds.length) {
+            _parseOpcodeWithParams(_ctxAddr);
+        }
+
+        // TODO: Parser: IContext(_ctxAddr).delegateCall('setProgram', program) to pass owner's
+        //       address to the Context contract
+        IContext(_ctxAddr).setProgram(program);
     }
 
     /**
@@ -497,26 +513,6 @@ contract Parser is IParser {
     }
 
     /**
-     * @dev Сonverts a list of commands to bytecode
-     */
-    function _parseCode(address _ctxAddr, string[] memory code) internal {
-        delete program;
-        cmdIdx = 0;
-        cmds = code;
-
-        IContext(_ctxAddr).setPc(0);
-        IContext(_ctxAddr).stack().clear();
-
-        while (cmdIdx < cmds.length) {
-            _parseOpcodeWithParams(_ctxAddr);
-        }
-
-        // TODO: Parser: IContext(_ctxAddr).delegateCall('setProgram', program) to pass owner's
-        //       address to the Context contract
-        IContext(_ctxAddr).setProgram(program);
-    }
-
-    /**
      * @dev Updates the bytecode `program` in dependence on
      * commands that were provided in `cmds` list
      */
@@ -531,6 +527,8 @@ contract Parser is IParser {
             bytes memory programBefore = program.slice(0, labelPos[cmd]);
             bytes memory programAfter = program.slice(labelPos[cmd] + 2, program.length);
             program = bytes.concat(programBefore, bytes2(uint16(_branchLocation)), programAfter);
+            // TODO: move isValidVarName() check to Preprocessor
+            //       (it should automatically add `var` before all variable names)
         } else if (cmd.isValidVarName() || isStructVar) {
             opcode = IContext(_ctxAddr).opCodeByName('var');
             program = bytes.concat(program, opcode, _selector);
@@ -577,6 +575,20 @@ contract Parser is IParser {
      * @dev Updates previous `program` with the address command that is a value
      */
     function _parseAddress() internal {
-        program = bytes.concat(program, _nextCmd().fromHex());
+        string memory _addr = _nextCmd();
+        _addr = _addr.substr(2, _addr.length()); // cut `0x` from the beginning of the address
+        program = bytes.concat(program, _addr.fromHex());
+    }
+
+    /**
+     * @dev Deletes empty elements from the _input array and sets the result as a `cmds` storage array
+     */
+    function _setCmdsArray(string[] memory _input) internal {
+        uint256 i;
+        delete cmds;
+
+        while (i < _input.length && !_input[i].equal('')) {
+            cmds.push(_input[i++]);
+        }
     }
 }

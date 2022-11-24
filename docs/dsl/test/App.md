@@ -1,21 +1,21 @@
 ## App
 
-### parser
+### parserAddr
 
 ```solidity
-address parser
+address parserAddr
 ```
 
-### ctx
+### ctxAddr
 
 ```solidity
-address ctx
+address ctxAddr
 ```
 
-### preprocessor
+### preprocessorAddr
 
 ```solidity
-address preprocessor
+address preprocessorAddr
 ```
 
 ### receive
@@ -27,13 +27,19 @@ receive() external payable
 ### constructor
 
 ```solidity
-constructor(address _parser, address _preprocessor, address _ctx) public
+constructor(address _parserAddr, address _preprocessorAddr, address _ctxAddr) public
 ```
 
 ### parse
 
 ```solidity
 function parse(string _program) external
+```
+
+### parseCode
+
+```solidity
+function parseCode(string[] _code) external
 ```
 
 ### execute

@@ -21,7 +21,7 @@ describe('Parser', () => {
 
     [appAddr /* parser address */, , preprocessorAddr] = await deployBaseMock(hre);
     app = await ethers.getContractAt('ParserMock', appAddr);
-    appAddrHex = appAddr.slice(2);
+    appAddrHex = appAddr.substring(2);
 
     // Deploy & setup Context
     ctx = await (await ethers.getContractFactory('Context')).deploy();
@@ -157,7 +157,7 @@ describe('Parser', () => {
       const TWO = new Array(64).join('0') + 2;
       const FOUR = new Array(64).join('0') + 4;
 
-      await app.parseCodeExt(ctxAddr, [
+      await app.parseCode(ctxAddr, [
         'bool',
         'true',
         'if',
@@ -196,7 +196,7 @@ describe('Parser', () => {
       const THREE = new Array(64).join('0') + 3;
       const FOUR = new Array(64).join('0') + 4;
 
-      await app.parseCodeExt(ctxAddr, [
+      await app.parseCode(ctxAddr, [
         'bool',
         'true',
         'ifelse',
@@ -261,7 +261,7 @@ describe('Parser', () => {
         'setUint256',
         'SUM',
       ];
-      await app.parseCodeExt(ctxAddr, code);
+      await app.parseCode(ctxAddr, code);
 
       expect(await ctx.program()).to.equal(
         '0x' +
@@ -286,7 +286,7 @@ describe('Parser', () => {
       const bytes32Number = hex4Bytes('NUMBER');
       await app['setStorageUint256(bytes32,uint256)'](bytes32Number, 1000);
 
-      await app.parseCodeExt(ctxAddr, ['loadRemote', 'uint256', 'NUMBER', appAddrHex]);
+      await app.parseCode(ctxAddr, ['loadRemote', 'uint256', 'NUMBER', appAddr]);
 
       expect(await ctx.program()).to.equal(
         '0x' +
@@ -302,7 +302,7 @@ describe('Parser', () => {
       // Set BOOL_VALUE
       await app['setStorageBool(bytes32,bool)'](bytes32Bool, true);
 
-      await app.parseCodeExt(ctxAddr, ['loadRemote', 'bool', 'BOOL_VALUE', appAddrHex]);
+      await app.parseCode(ctxAddr, ['loadRemote', 'bool', 'BOOL_VALUE', appAddr]);
       expect(await ctx.program()).to.equal(
         '0x' +
           '1c' + // loadRemote
@@ -315,17 +315,11 @@ describe('Parser', () => {
   });
 
   describe('DSL arrays', () => {
-    /* Attention!
-      TODO:
-      All skiped tests are needed to check that functionality works well. Don't
-      forget to check, update or remove tests after each changing in the code of
-      arrays functionality
-    */
     describe('declare array', () => {
       describe('uint256 type', () => {
         describe('declare array', () => {
-          it.skip('simple array', async () => {
-            await app.parseCodeExt(ctxAddr, ['declareArr', 'uint256', 'NUMBERS']);
+          it('simple array', async () => {
+            await app.parseCode(ctxAddr, ['declareArr', 'uint256', 'NUMBERS']);
             expect(await ctx.program()).to.equal(
               '0x' +
                 '31' + // declareArr
@@ -334,9 +328,9 @@ describe('Parser', () => {
             );
           });
 
-          it.skip('only with additional code just before it', async () => {
+          it('only with additional code just before it', async () => {
             const number = new Array(64).join('0') + 6;
-            await app.parseCodeExt(ctxAddr, [
+            await app.parseCode(ctxAddr, [
               'uint256',
               '6',
               'var',
@@ -357,9 +351,9 @@ describe('Parser', () => {
             );
           });
 
-          it.skip('only with additional code just after it', async () => {
+          it('only with additional code just after it', async () => {
             const number = new Array(64).join('0') + 6;
-            await app.parseCodeExt(ctxAddr, [
+            await app.parseCode(ctxAddr, [
               'declareArr',
               'uint256',
               'NUMBERS',
@@ -382,7 +376,7 @@ describe('Parser', () => {
 
           it('with additional code before and after it', async () => {
             const number = new Array(64).join('0') + 6;
-            await app.parseCodeExt(ctxAddr, [
+            await app.parseCode(ctxAddr, [
               'uint256',
               '6',
               'declareArr',
@@ -406,7 +400,7 @@ describe('Parser', () => {
 
         describe('sumOf', () => {
           it('sum several values with additional code', async () => {
-            await app.parseCodeExt(ctxAddr, [
+            await app.parseCode(ctxAddr, [
               'uint256',
               '3',
               'setUint256',
@@ -477,8 +471,8 @@ describe('Parser', () => {
       });
 
       describe('address type', () => {
-        it.skip('declare simple array', async () => {
-          await app.parseCodeExt(ctxAddr, ['declareArr', 'address', 'MARY']);
+        it('declare simple array', async () => {
+          await app.parseCode(ctxAddr, ['declareArr', 'address', 'MARY']);
           expect(await ctx.program()).to.equal(
             '0x' +
               '31' + // declareArr
@@ -487,9 +481,9 @@ describe('Parser', () => {
           );
         });
 
-        it.skip('with additional code just before it', async () => {
+        it('with additional code just before it', async () => {
           const number = new Array(64).join('0') + 6;
-          await app.parseCodeExt(ctxAddr, [
+          await app.parseCode(ctxAddr, [
             'uint256',
             '6',
             'var',
@@ -510,9 +504,9 @@ describe('Parser', () => {
           );
         });
 
-        it.skip('with additional code just after it', async () => {
+        it('with additional code just after it', async () => {
           const number = new Array(64).join('0') + 6;
-          await app.parseCodeExt(ctxAddr, [
+          await app.parseCode(ctxAddr, [
             'declareArr',
             'address',
             'MARY',
@@ -535,7 +529,7 @@ describe('Parser', () => {
 
         it('with additional code before and after it', async () => {
           const number = new Array(64).join('0') + 6;
-          await app.parseCodeExt(ctxAddr, [
+          await app.parseCode(ctxAddr, [
             'uint256',
             '6',
             'declareArr',
@@ -563,7 +557,7 @@ describe('Parser', () => {
       describe('uint256', () => {
         it('push an item to an array', async () => {
           const number = new Array(62).join('0') + 541;
-          await app.parseCodeExt(ctxAddr, [
+          await app.parseCode(ctxAddr, [
             'declareArr',
             'uint256',
             'NUMBERS',
@@ -585,7 +579,7 @@ describe('Parser', () => {
 
       describe('address', () => {
         it('push an item to an array', async () => {
-          await app.parseCodeExt(ctxAddr, [
+          await app.parseCode(ctxAddr, [
             'declareArr',
             'address',
             'PARTNERS',
@@ -608,7 +602,7 @@ describe('Parser', () => {
 
     describe('Get array length', () => {
       it('different types with inserting values', async () => {
-        await app.parseCodeExt(ctxAddr, [
+        await app.parseCode(ctxAddr, [
           'declareArr',
           'uint256',
           'NUMBERS',
@@ -659,7 +653,7 @@ describe('Parser', () => {
 
     describe('Get element by index', () => {
       it('different types with inserting values', async () => {
-        await app.parseCodeExt(ctxAddr, [
+        await app.parseCode(ctxAddr, [
           'declareArr',
           'uint256',
           'NUMBERS',
@@ -730,7 +724,7 @@ describe('Parser', () => {
 
       describe('uint256', () => {
         it('insert number', async () => {
-          await app.parseCodeExt(ctxAddr, ['struct', 'BOB', 'balance', '3', 'endStruct']);
+          await app.parseCode(ctxAddr, ['struct', 'BOB', 'balance', '3', 'endStruct']);
           expect(await ctx.program()).to.equal(
             '0x' +
               '36' + // struct opcode
@@ -753,7 +747,7 @@ describe('Parser', () => {
             '>',
           ];
 
-          await app.parseCodeExt(ctxAddr, code);
+          await app.parseCode(ctxAddr, code);
           expect(await ctx.program()).to.equal(
             '0x' +
               '36' + // struct opcode
@@ -789,7 +783,7 @@ describe('Parser', () => {
             'BOB.lastPayment',
           ];
 
-          await app.parseCodeExt(ctxAddr, code);
+          await app.parseCode(ctxAddr, code);
           expect(await ctx.program()).to.equal(
             '0x' +
               '36' + // struct opcode
@@ -816,7 +810,7 @@ describe('Parser', () => {
 
       describe('address', () => {
         it('insert address', async () => {
-          await app.parseCodeExt(ctxAddr, [
+          await app.parseCode(ctxAddr, [
             'struct',
             'BOB',
             'account',
@@ -827,14 +821,14 @@ describe('Parser', () => {
             '0x' +
               '36' + // struct opcode
               '2215b81f' + // BOB.account
-              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // addres without 0x
+              // addres without 0x
+              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' +
               'cb398fe1' // endStruct
           );
         });
 
         it('use address after getting', async () => {
-          const number = new Array(64).join('0') + 3;
-          await app.parseCodeExt(ctxAddr, [
+          await app.parseCode(ctxAddr, [
             'struct',
             'BOB',
             'account',
@@ -850,9 +844,11 @@ describe('Parser', () => {
             '0x' +
               '36' + // struct opcode
               '2215b81f' + // BOB.account
-              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
+              // the address for account
+              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' +
               'c71243e7' + // BOB.account
-              '57f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
+              // the address for account
+              '57f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' +
               'cb398fe1' + // endStruct
               '1b' + // var
               '2215b81f' + // BOB.account
@@ -864,15 +860,15 @@ describe('Parser', () => {
       });
 
       describe('mixed types', () => {
-        it.skip('error: insert empty value', async () => {
-          await expect(
-            app.parseCodeExt(ctxAddr, ['struct', 'BOB', 'endStruct'])
-          ).to.be.revertedWith('PRS1');
+        it('error: insert empty value', async () => {
+          await expect(app.parseCode(ctxAddr, ['struct', 'BOB', 'endStruct'])).to.be.revertedWith(
+            'PRS1'
+          );
         });
 
         it('insert address and number', async () => {
           const number = new Array(64).join('0') + 9;
-          await app.parseCodeExt(ctxAddr, [
+          await app.parseCode(ctxAddr, [
             'struct',
             'BOB',
             'account',
@@ -885,7 +881,8 @@ describe('Parser', () => {
             '0x' +
               '36' + // struct opcode
               '2215b81f' + // BOB.account
-              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // addres without 0x
+              // addres without 0x
+              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' +
               '9b8dbd6b' + // BOB.tax
               `${number}` + // 9
               'cb398fe1' // endStruct
@@ -915,9 +912,8 @@ describe('Parser', () => {
             'USERS',
           ];
 
-          await app.parseCodeExt(ctxAddr, input);
+          await app.parseCode(ctxAddr, input);
 
-          const three = new Array(64).join('0') + 3;
           const number = `${new Array(63).join('0')}aa`; // 170
           expect(await ctx.program()).to.equal(
             '0x' +
@@ -943,7 +939,7 @@ describe('Parser', () => {
 
         it('use address and number after getting values', async () => {
           const number = new Array(64).join('0') + 3;
-          await app.parseCodeExt(ctxAddr, [
+          await app.parseCode(ctxAddr, [
             'struct',
             'BOB',
             'account',
@@ -965,9 +961,11 @@ describe('Parser', () => {
             '0x' +
               '36' + // struct opcode
               '2215b81f' + // BOB.account
-              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
+              // the address for account
+              '47f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' +
               'c71243e7' + // BOB.account
-              '57f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' + // the address for account
+              // the address for account
+              '57f8a90ede3d84c7c0166bd84a4635e4675accfc000000000000000000000000' +
               '4a871642' + // BOB.lastPayment
               `${number}` + // 3
               'cb398fe1' + // endStruct
@@ -986,7 +984,7 @@ describe('Parser', () => {
 
         describe('sumThroughStructs', () => {
           it('sum through structs values with additional code', async () => {
-            await app.parseCodeExt(ctxAddr, [
+            await app.parseCode(ctxAddr, [
               'struct',
               'BOB',
               'lastPayment',
@@ -1019,7 +1017,6 @@ describe('Parser', () => {
               'lastPayment',
             ]);
 
-            const three = new Array(64).join('0') + 3;
             const number1 = `${new Array(62).join('0')}12c`; // 300
             const number2 = `${new Array(63).join('0')}aa`; // 170
             expect(await ctx.program()).to.equal(
@@ -1070,7 +1067,7 @@ describe('Parser', () => {
 
   describe('activate records', () => {
     it('enable several records for several agreements', async () => {
-      await app.parseCodeExt(ctxAddr, [
+      await app.parseCode(ctxAddr, [
         'enableRecord',
         'RECORD_ID',
         'at',
@@ -1102,7 +1099,7 @@ describe('Parser', () => {
 
   describe('Governannce pre-defined commands', () => {
     it('check record', async () => {
-      await app.parseCodeExt(ctxAddr, [
+      await app.parseCode(ctxAddr, [
         'sumThroughStructs',
         'VOTES',
         'vote',

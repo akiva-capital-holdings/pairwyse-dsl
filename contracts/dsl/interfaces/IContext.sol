@@ -12,7 +12,7 @@ interface IContext {
     }
 
     // Variables
-    function anyone() external view returns (address);
+    function ANYONE() external view returns (address);
 
     function stack() external view returns (Stack);
 
@@ -40,6 +40,10 @@ interface IContext {
 
     function selectorByOpcode(bytes1 _opcode) external view returns (bytes4 _selecotor);
 
+    function numOfArgsByOpcode(string memory _name) external view returns (uint8 _numOfArgs);
+
+    function isCommand(string memory _name) external view returns (bool _isCommand);
+
     function opcodeLibNameByOpcode(bytes1 _opcode) external view returns (OpcodeLibNames _name);
 
     function asmSelectors(string memory _name) external view returns (bytes4 _selecotor);
@@ -48,15 +52,15 @@ interface IContext {
 
     function operators(uint256 _index) external view returns (string memory _operator);
 
-    function branchSelectors(string memory _baseOpName, bytes1 _branchCode)
-        external
-        view
-        returns (bytes4 _selector);
+    function branchSelectors(
+        string memory _baseOpName,
+        bytes1 _branchCode
+    ) external view returns (bytes4 _selector);
 
-    function branchCodes(string memory _baseOpName, string memory _branchName)
-        external
-        view
-        returns (bytes1 _branchCode);
+    function branchCodes(
+        string memory _baseOpName,
+        string memory _branchName
+    ) external view returns (bytes1 _branchCode);
 
     function aliases(string memory _alias) external view returns (string memory _baseCmd);
 
@@ -104,10 +108,10 @@ interface IContext {
         string memory _fullName
     ) external;
 
-    function structParams(bytes4 _structName, bytes4 _varName)
-        external
-        view
-        returns (bytes4 _fullName);
+    function structParams(
+        bytes4 _structName,
+        bytes4 _varName
+    ) external view returns (bytes4 _fullName);
 
     function setForLoopIterationsRemaining(uint256 _forLoopIterationsRemaining) external;
 }

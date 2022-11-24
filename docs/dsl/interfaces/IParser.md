@@ -18,6 +18,12 @@ event NewConditionalTx(address txObj)
 function parse(address _preprAddr, address _ctxAddr, string _codeRaw) external
 ```
 
+### parseCode
+
+```solidity
+function parseCode(address _ctxAddr, string[] _code) external
+```
+
 ### asmSetLocalBool
 
 ```solidity
