@@ -45,11 +45,9 @@ describe('Preprocessor', () => {
         libraries: { StringUtils: stringLib.address, StringStack: strStackLib.address },
       })
     ).deploy();
-    // appAddrHex = app.address.slice(2);
     appAddrHex = app.address;
   });
 
-  // works, ok
   describe('infix to postfix', () => {
     it('simple math', async () => {
       const code = split('uint256 1 + uint256 2');
@@ -116,7 +114,6 @@ describe('Preprocessor', () => {
     });
   });
 
-  // works, ok
   describe('split', () => {
     it('simple case', async () => {
       const input = 'var SENDER == msgSender';
@@ -271,7 +268,6 @@ describe('Preprocessor', () => {
     });
   });
 
-  // works, ok
   describe('Execute high-level DSL', () => {
     it('parenthesis', async () => {
       const cmds = await app.callStatic.transform(ctxAddr, '(((1 or 5) or 7) and 1)');
@@ -457,7 +453,6 @@ describe('Preprocessor', () => {
     });
   });
 
-  // works, ok
   describe('Remove comments', async () => {
     describe('Single line comment in user-input', async () => {
       it('commented one-line command', async () => {
@@ -741,21 +736,18 @@ describe('Preprocessor', () => {
     });
   });
 
-  // works, ok
   describe('Using integers without uint256 opCode', () => {
     it('Bool algebra', async () => {
       const cmds = await app.callStatic.transform(ctxAddr, '1 or 245');
       checkStringStack(cmds, ['uint256', '1', 'uint256', '245', 'or']);
     });
 
-    // doesn't work
     // TODO: check this test with @shadowsupercoder
     it.skip('revert if the text `opCode` used with uint256', async () => {
       await expect(app.callStatic.transform(ctxAddr, '1 and 2-test')).to.be.revertedWith('SUT5');
     });
   });
 
-  // works, ok
   describe('complex opcodes', () => {
     it('should transform correctly if loadRemote is in the code', async () => {
       const cmds = await app.callStatic.transform(
@@ -879,8 +871,6 @@ describe('Preprocessor', () => {
       ]);
     });
   });
-
-  // doesn't work
   describe.skip('DSL functions', () => {
     it.skip('comand list for a SUM_OF_NUMBERS function (without parameters)', async () => {
       const cmds = await app.callStatic.transform(
@@ -981,7 +971,6 @@ describe('Preprocessor', () => {
     });
   });
 
-  // works, ok
   describe('Convertations tests', () => {
     it('0 ETH - ok', async () => {
       const cmds = await app.callStatic.transform(ctxAddr, '0 ETH');
@@ -1040,7 +1029,6 @@ describe('Preprocessor', () => {
     });
   });
 
-  // works, ok
   describe('Simplified writing number in wei', () => {
     describe('setUint256', () => {
       it('should return a simple number with 18 decimals', async () => {
@@ -1569,14 +1557,7 @@ describe('Preprocessor', () => {
     });
   });
 
-  // works, ok
   describe('DSL arrays', () => {
-    /* Attention!
-      Note:
-      All skiped tests are needed to check that functionality works well. Don't
-      forget to check, update or remove tests after each changing in the code of
-      arrays functionality
-    */
     describe('uint256 type', () => {
       describe('sumOf', () => {
         it('uint256: sum several values', async () => {
@@ -1816,7 +1797,6 @@ describe('Preprocessor', () => {
     });
   });
 
-  // works, ok
   describe('Structs', () => {
     describe('uint256 type', () => {
       it('should return a simple struct with one uint256 parameter', async () => {

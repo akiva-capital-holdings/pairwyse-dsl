@@ -16,6 +16,7 @@ library StringStack {
      * @dev As the array has fixed size, we drop the last element when addind a new one to the beginning of the array
      * @param _stack String stack
      * @param _element String to be added to the stack
+     * @return Modified stack
      */
     function pushToStack(
         string[] memory _stack,
@@ -28,6 +29,8 @@ library StringStack {
     /**
      * @dev Removes the top element from the stack
      * @param _stack String stack
+     * @return Modified stack
+     * @return The top element from the stack
      */
     function popFromStack(
         string[] memory _stack

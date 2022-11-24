@@ -13,7 +13,7 @@ user's string code -> Preprocessor -> each command is separated in the commands 
 ### transform
 
 ```solidity
-function transform(address _ctxAddr, string _program) external view returns (string[])
+function transform(address _ctxAddr, string _program) external view returns (string[] code)
 ```
 
 _The main function that transforms the user's DSL code string to the list of commands.
@@ -39,7 +39,7 @@ The end result after executing a `transform()` function is
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | string[] | the list of commands that storing `result` |
+| code | string[] | The list of commands that storing `result` |
 
 ### removeComments
 
@@ -660,17 +660,17 @@ If it is GWEI, then it returns 1000000000_
 ### _getCommentSymbol
 
 ```solidity
-function _getCommentSymbol(uint256 _index, string _program, string _char) internal pure returns (uint256, uint256, bool)
+function _getCommentSymbol(uint256 i, string _program, string _char) internal pure returns (uint256, uint256, bool)
 ```
 
-_Checks if a symbol is a comment, then increases _index to the next
+_Checks if a symbol is a comment, then increases `i` to the next
 no-comment symbol avoiding an additional iteration_
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _index | uint256 | is a current index of a char that might be changed |
+| i | uint256 | is a current index of a char that might be changed |
 | _program | string | is a current program string |
 | _char | string | Current character |
 
@@ -685,7 +685,7 @@ no-comment symbol avoiding an additional iteration_
 ### _getEndCommentSymbol
 
 ```solidity
-function _getEndCommentSymbol(uint256 _ssl, uint256 _i, string _p, string _char) internal pure returns (uint256, bool)
+function _getEndCommentSymbol(uint256 _ssl, uint256 i, string _p, string _char) internal pure returns (uint256, bool)
 ```
 
 _Checks if a symbol is an end symbol of a comment, then increases _index to the next
@@ -696,7 +696,7 @@ no-comment symbol avoiding an additional iteration_
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _ssl | uint256 | is a searched symbol len that might be 0, 1, 2 |
-| _i | uint256 | is a current index of a char that might be changed |
+| i | uint256 | is a current index of a char that might be changed |
 | _p | string | is a current program string |
 | _char | string | Current character |
 

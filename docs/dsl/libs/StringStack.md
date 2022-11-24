@@ -18,6 +18,12 @@ As the array has fixed size, we drop the last element when addind a new one to t
 | _stack | string[] | String stack |
 | _element | string | String to be added to the stack |
 
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string[] | Modified stack |
+
 ### popFromStack
 
 ```solidity
@@ -31,6 +37,13 @@ _Removes the top element from the stack_
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _stack | string[] | String stack |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string[] | Modified stack |
+| [1] | string | The top element from the stack |
 
 ### stackLength
 

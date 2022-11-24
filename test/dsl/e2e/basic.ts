@@ -1249,12 +1249,6 @@ describe('DSL: basic', () => {
   });
 
   describe('arrays', () => {
-    /* Attention!
-      TODO:
-      All skiped tests are needed to check that functionality works well. Don't
-      forget to check, update or remove tests after each changing in the code of
-      arrays functionality
-      */
     const EMPTY_BYTE = '0x00';
     const EMPTY_BYTES = `0x${new Array(65).join('0')}`;
     const DECLARED_BYTES = `0x${new Array(65).join('f')}`;

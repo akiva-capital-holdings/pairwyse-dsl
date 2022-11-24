@@ -41,18 +41,18 @@ library Preprocessor {
      *
      * @param _ctxAddr is a context contract address
      * @param _program is a user's DSL code string
-     * @return the list of commands that storing `result`
+     * @return code The list of commands that storing `result`
      */
     function transform(
         address _ctxAddr,
         string memory _program
-    ) external view returns (string[] memory) {
+    ) external view returns (string[] memory code) {
         // _program = removeComments(_program);
-        string[] memory _code = split(_program, '\n ,:(){}', '(){}');
-        _code = removeSyntacticSugar(_code);
-        _code = simplifyCode(_code, _ctxAddr);
-        _code = infixToPostfix(_ctxAddr, _code);
-        return _code;
+        code = split(_program, '\n ,:(){}', '(){}');
+        code = removeSyntacticSugar(code);
+        code = simplifyCode(code, _ctxAddr);
+        code = infixToPostfix(_ctxAddr, code);
+        return code;
     }
 
     /**
@@ -594,8 +594,7 @@ library Preprocessor {
      * @return True or false based on whether chunk is a currency symbol or not
      */
     function _isCurrencySymbol(string memory _chunk) internal pure returns (bool) {
-        if (_chunk.equal('ETH') || _chunk.equal('GWEI')) return true;
-        return false;
+        return _chunk.equal('ETH') || _chunk.equal('GWEI');
     }
 
     /**
@@ -722,9 +721,9 @@ library Preprocessor {
     }
 
     /**
-     * @dev Checks if a symbol is a comment, then increases _index to the next
+     * @dev Checks if a symbol is a comment, then increases `i` to the next
      * no-comment symbol avoiding an additional iteration
-     * @param _index is a current index of a char that might be changed
+     * @param i is a current index of a char that might be changed
      * @param _program is a current program string
      * @param _char Current character
      * @return Searched symbol length
@@ -732,26 +731,26 @@ library Preprocessor {
      * @return Is code commented or not
      */
     function _getCommentSymbol(
-        uint256 _index,
+        uint256 i,
         string memory _program,
         string memory _char
     ) internal pure returns (uint256, uint256, bool) {
-        if (_canGetSymbol(_index + 1, _program)) {
-            string memory nextChar = _program.char(_index + 1);
+        if (_canGetSymbol(i + 1, _program)) {
+            string memory nextChar = _program.char(i + 1);
             if (_char.equal('/') && nextChar.equal('/')) {
-                return (1, _index + 2, true);
+                return (1, i + 2, true);
             } else if (_char.equal('/') && nextChar.equal('*')) {
-                return (2, _index + 2, true);
+                return (2, i + 2, true);
             }
         }
-        return (0, _index, false);
+        return (0, i, false);
     }
 
     /**
      * @dev Checks if a symbol is an end symbol of a comment, then increases _index to the next
      * no-comment symbol avoiding an additional iteration
      * @param _ssl is a searched symbol len that might be 0, 1, 2
-     * @param _i is a current index of a char that might be changed
+     * @param i is a current index of a char that might be changed
      * @param _p is a current program string
      * @param _char Current character
      * @return A new index of a char
@@ -759,19 +758,19 @@ library Preprocessor {
      */
     function _getEndCommentSymbol(
         uint256 _ssl,
-        uint256 _i,
+        uint256 i,
         string memory _p,
         string memory _char
     ) internal pure returns (uint256, bool) {
         if (_ssl == 1 && _char.equal('\n')) {
-            return (_i + 1, false);
-        } else if (_ssl == 2 && _char.equal('*') && _canGetSymbol(_i + 1, _p)) {
-            string memory nextChar = _p.char(_i + 1);
+            return (i + 1, false);
+        } else if (_ssl == 2 && _char.equal('*') && _canGetSymbol(i + 1, _p)) {
+            string memory nextChar = _p.char(i + 1);
             if (nextChar.equal('/')) {
-                return (_i + 2, false);
+                return (i + 2, false);
             }
         }
-        return (_i, true);
+        return (i, true);
     }
 
     /**
