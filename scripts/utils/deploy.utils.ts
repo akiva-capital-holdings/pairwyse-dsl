@@ -1,7 +1,13 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable no-underscore-dangle */
 import fs from 'fs';
 import path from 'path';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { getChainId, getPrettyDateTime } from '../../utils/utils';
+
+let parserAddress: string;
+let preprocessorAddress: string;
+let contextFactoryAddress: string;
 
 export const deployOpcodeLibs = async (hre: HardhatRuntimeEnvironment) => {
   const opcodeHelpersLib = await (await hre.ethers.getContractFactory('OpcodeHelpers')).deploy();
@@ -48,6 +54,7 @@ export const deployContextFactory = async (hre: HardhatRuntimeEnvironment) => {
   const ContextFactory = await hre.ethers.getContractFactory('ContextFactory');
   const contextFactory = await ContextFactory.deploy();
   await contextFactory.deployed();
+  contextFactoryAddress = contextFactory.address;
   return contextFactory.address;
 };
 
@@ -61,6 +68,7 @@ export const deployParser = async (hre: HardhatRuntimeEnvironment) => {
       libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
     })
   ).deploy();
+  parserAddress = parser.address;
   return parser.address;
 };
 
@@ -71,6 +79,7 @@ export const deployPreprocessor = async (hre: HardhatRuntimeEnvironment) => {
       libraries: { StringUtils: stringLib.address },
     })
   ).deploy();
+  preprocessorAddress = preprocessor.address;
   return preprocessor.address;
 };
 
@@ -126,4 +135,69 @@ export const deployAgreement = async (hre: HardhatRuntimeEnvironment, multisigAd
   );
 
   return agreement.address;
+};
+
+export const deployGovernance = async (
+  hre: HardhatRuntimeEnvironment,
+  agreementAddress: string,
+  aliceAddress: string,
+  tokenAddress: string
+) => {
+  const Context = await hre.ethers.getContractFactory('Context');
+  const ONE_DAY: number = 60 * 60 * 24;
+  const ONE_MONTH: number = ONE_DAY * 30;
+  const LAST_BLOCK_TIMESTAMP: number = (
+    await hre.ethers.provider.getBlock(await hre.ethers.provider.getBlockNumber())
+  ).timestamp;
+  const NEXT_MONTH: number = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
+  const NEXT_TWO_MONTH: number = NEXT_MONTH + ONE_MONTH;
+  const [
+    comparisonOpcodesLibAddr,
+    branchingOpcodesLibAddr,
+    logicalOpcodesLibAddr,
+    otherOpcodesLibAddr,
+  ] = await deployOpcodeLibs(hre);
+
+  const [executorLibAddr] = await deployBase(hre);
+
+  const GovernanceContract = await hre.ethers.getContractFactory('GovernanceMock', {
+    libraries: {
+      ComparisonOpcodes: comparisonOpcodesLibAddr,
+      BranchingOpcodes: branchingOpcodesLibAddr,
+      LogicalOpcodes: logicalOpcodesLibAddr,
+      OtherOpcodes: otherOpcodesLibAddr,
+      Executor: executorLibAddr,
+    },
+  });
+  const _contexts = [
+    await Context.deploy(),
+    await Context.deploy(),
+    await Context.deploy(),
+    await Context.deploy(),
+    await Context.deploy(),
+    await Context.deploy(),
+    await Context.deploy(),
+    await Context.deploy(),
+  ];
+  const contexts = [
+    _contexts[0].address,
+    _contexts[1].address,
+    _contexts[2].address,
+    _contexts[3].address,
+    _contexts[4].address,
+    _contexts[5].address,
+    _contexts[6].address,
+    _contexts[7].address,
+  ];
+  const governance = await GovernanceContract.deploy(
+    parserAddress,
+    aliceAddress,
+    tokenAddress,
+    NEXT_MONTH,
+    contexts
+  );
+  await governance.deployed();
+
+  const agreement = await hre.ethers.getContractAt('Agreement', agreementAddress);
+  return governance.address;
 };
