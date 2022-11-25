@@ -83,35 +83,40 @@ library BranchingOpcodes {
 
     /**
      * @dev Does the real iterating process over the body of the for-loop
-     * @param _ctx Context contract address
+     * @param _ctxDSL DSL Context contract address
+     * @param _ctxProgram ProgramContext contract address
      */
-    function opStartLoop(address _ctx) public {
+    function opStartLoop(address _ctxDSL, address _ctxProgram) public {
         // Decrease by 1 the for-loop iterations couter as PC actually points onto the next block of code already
-        uint256 _currCtr = IProgramContext(_ctx).forLoopIterationsRemaining();
-        uint256 _currPc = IProgramContext(_ctx).pc() - 1;
+        uint256 _currCtr = IProgramContext(_ctxProgram).forLoopIterationsRemaining();
+        uint256 _currPc = IProgramContext(_ctxProgram).pc() - 1;
 
         // Set the next program counter to the beginning of the loop block
         if (_currCtr > 1) {
-            IProgramContext(_ctx).setNextPc(_currPc);
+            IProgramContext(_ctxProgram).setNextPc(_currPc);
         }
 
         // Get element from array by index
-        bytes32 _arrName = OpcodeHelpers.readBytesSlice(_ctx, _currPc - 4, _currPc);
-        uint256 _arrLen = ILinkedList(IProgramContext(_ctx).appAddr()).getLength(_arrName);
-        uint256 _index = _arrLen - IProgramContext(_ctx).forLoopIterationsRemaining();
-        bytes1 _arrType = ILinkedList(IProgramContext(_ctx).appAddr()).getType(_arrName);
-        bytes32 _elem = ILinkedList(IProgramContext(_ctx).appAddr()).get(_index, _arrName);
+        bytes32 _arrName = OpcodeHelpers.readBytesSlice(_ctxProgram, _currPc - 4, _currPc);
+        uint256 _arrLen = ILinkedList(IProgramContext(_ctxProgram).appAddr()).getLength(_arrName);
+        uint256 _index = _arrLen - IProgramContext(_ctxProgram).forLoopIterationsRemaining();
+        bytes1 _arrType = ILinkedList(IProgramContext(_ctxProgram).appAddr()).getType(_arrName);
+        bytes32 _elem = ILinkedList(IProgramContext(_ctxProgram).appAddr()).get(_index, _arrName);
 
         // Set the temporary variable value: TMP_VAR = ARR_NAME[i]
-        bytes32 _tempVarNameB32 = OpcodeHelpers.readBytesSlice(_ctx, _currPc - 8, _currPc - 4);
-        bytes4 setFuncSelector = IDSLContext(_ctx).branchSelectors('declareArr', _arrType);
+        bytes32 _tempVarNameB32 = OpcodeHelpers.readBytesSlice(
+            _ctxProgram,
+            _currPc - 8,
+            _currPc - 4
+        );
+        bytes4 setFuncSelector = IDSLContext(_ctxDSL).branchSelectors('declareArr', _arrType);
         OpcodeHelpers.mustDelegateCall(
-            IProgramContext(_ctx).appAddr(),
+            IProgramContext(_ctxProgram).appAddr(),
             abi.encodeWithSelector(setFuncSelector, _tempVarNameB32, _elem)
         );
 
         // Reduce the number of iterations remaining
-        IProgramContext(_ctx).setForLoopIterationsRemaining(_currCtr - 1);
+        IProgramContext(_ctxProgram).setForLoopIterationsRemaining(_currCtr - 1);
     }
 
     /**

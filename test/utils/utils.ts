@@ -6,7 +6,7 @@ import { BigNumber, Contract, ContractTransaction, utils } from 'ethers';
 import { formatEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 import { Suite, Test } from 'mocha';
-import { Stack__factory, Stack, Context, ERC20, Governance } from '../../typechain-types';
+import { Stack__factory, Stack, ProgramContext, ERC20, Governance } from '../../typechain-types';
 import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
 import { DynamicTestData, OpConditionalTxFunc, TxObject } from '../types';
 import { ONE_DAY, ONE_MONTH, ONE_YEAR } from './constants';
@@ -60,11 +60,11 @@ export const bnToLongHexString = (num: BigNumber | string) => {
  *            from the beginning of the array
  */
 export const pushToStack = async (
-  context: Context,
+  contextProgram: ProgramContext,
   ST: Stack__factory,
   arr: (string | number | BigNumber)[]
 ) => {
-  const contextStackAddress = await context.stack();
+  const contextStackAddress = await contextProgram.stack();
   const stack = ST.attach(contextStackAddress);
 
   for (let i = 0; i < arr.length; ++i) {

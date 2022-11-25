@@ -19,42 +19,46 @@ library OpcodeHelpers {
     using StringUtils for string;
 
     // TODO: get rid of putToStack function
-    function putToStack(address _ctx, uint256 _value) public {
-        IProgramContext(_ctx).stack().push(_value);
+    function putToStack(address _ctxProgram, uint256 _value) public {
+        IProgramContext(_ctxProgram).stack().push(_value);
     }
 
-    function nextBytes(address _ctx, uint256 size) public returns (bytes memory out) {
-        out = IProgramContext(_ctx).programAt(IProgramContext(_ctx).pc(), size);
-        IProgramContext(_ctx).incPc(size);
+    function nextBytes(address _ctxProgram, uint256 size) public returns (bytes memory out) {
+        out = IProgramContext(_ctxProgram).programAt(IProgramContext(_ctxProgram).pc(), size);
+        IProgramContext(_ctxProgram).incPc(size);
     }
 
-    function nextBytes1(address _ctx) public returns (bytes1) {
-        return nextBytes(_ctx, 1)[0];
+    function nextBytes1(address _ctxProgram) public returns (bytes1) {
+        return nextBytes(_ctxProgram, 1)[0];
     }
 
     /**
      * @dev Reads the slice of bytes from the raw program
      * @dev Warning! The maximum slice size can only be 32 bytes!
-     * @param _ctx Context contract address
+     * @param _ctxProgram Context contract address
      * @param _start Start position to read
      * @param _end End position to read
      * @return res Bytes32 slice of the raw program
      */
     function readBytesSlice(
-        address _ctx,
+        address _ctxProgram,
         uint256 _start,
         uint256 _end
     ) public view returns (bytes32 res) {
-        bytes memory slice = IProgramContext(_ctx).programAt(_start, _end - _start);
+        bytes memory slice = IProgramContext(_ctxProgram).programAt(_start, _end - _start);
         // Convert bytes to bytes32
         assembly {
             res := mload(add(slice, 0x20))
         }
     }
 
-    function nextBranchSelector(address _ctx, string memory baseOpName) public returns (bytes4) {
-        bytes1 branchCode = nextBytes1(_ctx);
-        return IDSLContext(_ctx).branchSelectors(baseOpName, branchCode);
+    function nextBranchSelector(
+        address _ctxDSL,
+        address _ctxProgram,
+        string memory baseOpName
+    ) public returns (bytes4) {
+        bytes1 branchCode = nextBytes1(_ctxProgram);
+        return IDSLContext(_ctxDSL).branchSelectors(baseOpName, branchCode);
     }
 
     /**
@@ -81,8 +85,11 @@ library OpcodeHelpers {
         return delegateCallData;
     }
 
-    function getNextBytes(address _ctx, uint256 _bytesNum) public returns (bytes32 varNameB32) {
-        bytes memory varName = nextBytes(_ctx, _bytesNum);
+    function getNextBytes(
+        address _ctxProgram,
+        uint256 _bytesNum
+    ) public returns (bytes32 varNameB32) {
+        bytes memory varName = nextBytes(_ctxProgram, _bytesNum);
 
         // Convert bytes to bytes32
         assembly {

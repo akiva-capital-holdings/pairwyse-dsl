@@ -1,28 +1,41 @@
+import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 /* eslint-disable camelcase */
-import { Stack__factory, Context, Stack, BranchingOpcodesMock } from '../../../../typechain-types';
+import {
+  Stack__factory,
+  ProgramContextMock,
+  Stack,
+  BaseStorage,
+  BranchingOpcodesMock,
+} from '../../../../typechain-types';
 import { getBytesStringLength, pushToStack, uint256StrToHex } from '../../../utils/utils';
+
+const { ethers, network } = hre;
 
 describe.only('Branching opcodes', () => {
   let StackCont: Stack__factory;
   /* eslint-enable camelcase */
   let app: BranchingOpcodesMock;
-  let ctx: Context;
-  let ctxAddr: string;
+  let ctxProgram: ProgramContextMock;
+  let baseStorage: BaseStorage;
+  let ctxProgramAddr: string;
   let stack: Stack;
 
   before(async () => {
     StackCont = await ethers.getContractFactory('Stack');
 
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
-    ctxAddr = ctx.address;
+    ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
+    baseStorage = await (await ethers.getContractFactory('BaseStorage')).deploy();
+    ctxProgramAddr = ctxProgram.address;
 
     // Deploy libraries
-    const opcodeHelpersLib = await (await ethers.getContractFactory('OpcodeHelpers')).deploy();
+    const opcodeHelpersLib = await (await hre.ethers.getContractFactory('OpcodeHelpers')).deploy();
     const branchingOpcodesLib = await (
-      await ethers.getContractFactory('BranchingOpcodes', {
-        libraries: { OpcodeHelpers: opcodeHelpersLib.address },
+      await hre.ethers.getContractFactory('BranchingOpcodes', {
+        libraries: {
+          OpcodeHelpers: opcodeHelpersLib.address,
+        },
       })
     ).deploy();
 
@@ -34,16 +47,15 @@ describe.only('Branching opcodes', () => {
     ).deploy();
 
     // Create Stack instance
-    const stackAddr = await ctx.stack();
+    const stackAddr = await ctxProgram.stack();
     stack = await ethers.getContractAt('Stack', stackAddr);
 
     // Setup
-    await ctx.setAppAddress(ctx.address);
-    await ctx.setOtherOpcodesAddr(branchingOpcodesLib.address);
+    await ctxProgram.setAppAddress(baseStorage.address);
   });
 
   afterEach(async () => {
-    await ctx.setPc(0);
+    await ctxProgram.setPc(0);
     await stack.clear();
   });
 
@@ -51,21 +63,21 @@ describe.only('Branching opcodes', () => {
     const testBranchTrue = '0001';
     const testBranchFalse = '0002';
 
-    await ctx.setProgram(`0x${testBranchTrue}${testBranchFalse}`);
-    await pushToStack(ctx, StackCont, [1]);
+    await ctxProgram.setProgram(`0x${testBranchTrue}${testBranchFalse}`);
+    await pushToStack(ctxProgram, StackCont, [1]);
 
-    await app.opIfelse(ctxAddr);
+    await app.opIfelse(ctxProgramAddr);
 
-    let pc = await ctx.pc();
+    let pc = await ctxProgram.pc();
 
     expect(pc).to.be.equal(testBranchTrue);
 
-    await ctx.setPc(0);
-    await pushToStack(ctx, StackCont, [0]);
+    await ctxProgram.setPc(0);
+    await pushToStack(ctxProgram, StackCont, [0]);
 
-    await app.opIfelse(ctxAddr);
+    await app.opIfelse(ctxProgramAddr);
 
-    pc = await ctx.pc();
+    pc = await ctxProgram.pc();
 
     expect(pc).to.be.equal(testBranchFalse);
   });
@@ -73,13 +85,13 @@ describe.only('Branching opcodes', () => {
   it('opIf', async () => {
     const testBranchTrue = '0001';
 
-    await ctx.setProgram(`0x${testBranchTrue}`);
-    await pushToStack(ctx, StackCont, [1]);
+    await ctxProgram.setProgram(`0x${testBranchTrue}`);
+    await pushToStack(ctxProgram, StackCont, [1]);
 
-    await app.opIf(ctxAddr);
+    await app.opIf(ctxProgramAddr);
 
-    const pc = await ctx.pc();
-    let nextPc = await ctx.nextpc();
+    const pc = await ctxProgram.pc();
+    let nextPc = await ctxProgram.nextpc();
 
     expect(pc).to.be.equal(testBranchTrue);
     // Note: opIf internally calls getUint16 and sets nextpc after check,
@@ -88,25 +100,25 @@ describe.only('Branching opcodes', () => {
     //       by 2 and opIf is only operation called.
     expect(nextPc).to.be.equal(2);
 
-    await ctx.setPc(0);
-    await pushToStack(ctx, StackCont, [0]);
+    await ctxProgram.setPc(0);
+    await pushToStack(ctxProgram, StackCont, [0]);
 
-    await app.opIf(ctxAddr);
+    await app.opIf(ctxProgramAddr);
 
-    nextPc = await ctx.nextpc();
-    const programLength = getBytesStringLength(await ctx.program());
+    nextPc = await ctxProgram.nextpc();
+    const programLength = getBytesStringLength(await ctxProgram.program());
 
     expect(nextPc).to.be.equal(programLength);
   });
 
   it('opEnd', async () => {
-    await ctx.setProgram('0xAAFCCEADFADC');
+    await ctxProgram.setProgram('0xAAFCCEADFADC');
 
-    await app.opEnd(ctxAddr);
+    await app.opEnd(ctxProgramAddr);
 
-    const pc = await ctx.pc();
-    const nextPc = await ctx.nextpc();
-    const programLength = getBytesStringLength(await ctx.program());
+    const pc = await ctxProgram.pc();
+    const nextPc = await ctxProgram.nextpc();
+    const programLength = getBytesStringLength(await ctxProgram.program());
 
     expect(pc).to.be.equal(2);
     expect(nextPc).to.be.equal(programLength);
@@ -116,9 +128,9 @@ describe.only('Branching opcodes', () => {
     const testValueUint256 = 10;
     const testValueHex = uint256StrToHex(10, 2);
 
-    await ctx.setProgram(`0x${testValueHex}`);
+    await ctxProgram.setProgram(`0x${testValueHex}`);
 
-    const result = await app.callStatic.getUint16(ctxAddr);
+    const result = await app.callStatic.getUint16(ctxProgramAddr);
 
     expect(result).to.be.equal(testValueUint256);
   });
@@ -126,13 +138,13 @@ describe.only('Branching opcodes', () => {
   it('opFunc', async () => {
     const testBranchTrue = '0001';
 
-    await ctx.setProgram(`0x${testBranchTrue}`);
-    await pushToStack(ctx, StackCont, [1]);
+    await ctxProgram.setProgram(`0x${testBranchTrue}`);
+    await pushToStack(ctxProgram, StackCont, [1]);
 
-    await app.opFunc(ctxAddr);
+    await app.opFunc(ctxProgramAddr);
 
-    const pc = await ctx.pc();
-    let nextPc = await ctx.nextpc();
+    const pc = await ctxProgram.pc();
+    let nextPc = await ctxProgram.nextpc();
 
     expect(pc).to.be.equal(testBranchTrue);
     // Note: opIf internally calls getUint16 and sets nextpc after check,
@@ -141,13 +153,13 @@ describe.only('Branching opcodes', () => {
     //       by 2 and opIf is only operation called.
     expect(nextPc).to.be.equal(2);
 
-    await ctx.setPc(0);
-    await pushToStack(ctx, StackCont, [0]);
+    await ctxProgram.setPc(0);
+    await pushToStack(ctxProgram, StackCont, [0]);
 
-    await app.opFunc(ctxAddr);
+    await app.opFunc(ctxProgramAddr);
 
-    nextPc = await ctx.nextpc();
-    const programLength = getBytesStringLength(await ctx.program());
+    nextPc = await ctxProgram.nextpc();
+    const programLength = getBytesStringLength(await ctxProgram.program());
 
     expect(nextPc).to.be.equal(programLength);
   });

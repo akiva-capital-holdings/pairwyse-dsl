@@ -9,7 +9,7 @@ receive() external payable
 ### opLoadRemoteAny
 
 ```solidity
-function opLoadRemoteAny(address _ctx) public
+function opLoadRemoteAny(address _ctxDSL, address _ctxProgram) public
 ```
 
 ### opBlockNumber
@@ -183,13 +183,13 @@ function opGet(address _ctx) public
 ### opSumOf
 
 ```solidity
-function opSumOf(address _ctx) public
+function opSumOf(address _ctxDSL, address _ctxProgram) public
 ```
 
 ### opSumThroughStructs
 
 ```solidity
-function opSumThroughStructs(address _ctx) public
+function opSumThroughStructs(address _ctxDSL, address _ctxProgram) public
 ```
 
 ### opStruct

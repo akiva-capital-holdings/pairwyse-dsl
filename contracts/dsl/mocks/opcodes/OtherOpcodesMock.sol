@@ -6,8 +6,8 @@ import { OtherOpcodes } from '../../libs/opcodes/OtherOpcodes.sol';
 contract OtherOpcodesMock {
     receive() external payable {}
 
-    function opLoadRemoteAny(address _ctx) public {
-        OtherOpcodes.opLoadRemoteAny(_ctx);
+    function opLoadRemoteAny(address _ctxDSL, address _ctxProgram) public {
+        OtherOpcodes.opLoadRemoteAny(_ctxDSL, _ctxProgram);
     }
 
     function opBlockNumber(address _ctx) public {
@@ -125,12 +125,12 @@ contract OtherOpcodesMock {
         OtherOpcodes.opGet(_ctx);
     }
 
-    function opSumOf(address _ctx) public {
-        OtherOpcodes.opSumOf(_ctx);
+    function opSumOf(address _ctxDSL, address _ctxProgram) public {
+        OtherOpcodes.opSumOf(_ctxDSL, _ctxProgram);
     }
 
-    function opSumThroughStructs(address _ctx) public {
-        OtherOpcodes.opSumThroughStructs(_ctx);
+    function opSumThroughStructs(address _ctxDSL, address _ctxProgram) public {
+        OtherOpcodes.opSumThroughStructs(_ctxDSL, _ctxProgram);
     }
 
     function opStruct(address _ctx) public {

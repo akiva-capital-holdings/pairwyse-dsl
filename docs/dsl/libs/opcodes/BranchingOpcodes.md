@@ -37,7 +37,7 @@ _For loop setup. Responsible for checking iterating array existence, set the num
 ### opStartLoop
 
 ```solidity
-function opStartLoop(address _ctx) public
+function opStartLoop(address _ctxDSL, address _ctxProgram) public
 ```
 
 _Does the real iterating process over the body of the for-loop_
@@ -46,7 +46,8 @@ _Does the real iterating process over the body of the for-loop_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxDSL | address | DSL Context contract address |
+| _ctxProgram | address | ProgramContext contract address |
 
 ### opEndLoop
 
