@@ -11,9 +11,7 @@ import {
 } from '../../../../typechain-types';
 import { getBytesStringLength, pushToStack, uint256StrToHex } from '../../../utils/utils';
 
-const { ethers, network } = hre;
-
-describe.only('Branching opcodes', () => {
+describe('Branching opcodes', () => {
   let StackCont: Stack__factory;
   /* eslint-enable camelcase */
   let app: BranchingOpcodesMock;
