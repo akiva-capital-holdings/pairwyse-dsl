@@ -6,8 +6,6 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { getChainId, getPrettyDateTime } from '../../utils/utils';
 
 let parserAddress: string;
-let preprocessorAddress: string;
-let contextFactoryAddress: string;
 
 export const deployOpcodeLibs = async (hre: HardhatRuntimeEnvironment) => {
   const opcodeHelpersLib = await (await hre.ethers.getContractFactory('OpcodeHelpers')).deploy();
@@ -54,7 +52,6 @@ export const deployContextFactory = async (hre: HardhatRuntimeEnvironment) => {
   const ContextFactory = await hre.ethers.getContractFactory('ContextFactory');
   const contextFactory = await ContextFactory.deploy();
   await contextFactory.deployed();
-  contextFactoryAddress = contextFactory.address;
   return contextFactory.address;
 };
 
@@ -79,7 +76,6 @@ export const deployPreprocessor = async (hre: HardhatRuntimeEnvironment) => {
       libraries: { StringUtils: stringLib.address },
     })
   ).deploy();
-  preprocessorAddress = preprocessor.address;
   return preprocessor.address;
 };
 
@@ -150,7 +146,6 @@ export const deployGovernance = async (
     await hre.ethers.provider.getBlock(await hre.ethers.provider.getBlockNumber())
   ).timestamp;
   const NEXT_MONTH: number = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
-  const NEXT_TWO_MONTH: number = NEXT_MONTH + ONE_MONTH;
   const [
     comparisonOpcodesLibAddr,
     branchingOpcodesLibAddr,
@@ -159,7 +154,6 @@ export const deployGovernance = async (
   ] = await deployOpcodeLibs(hre);
 
   const [executorLibAddr] = await deployBase(hre);
-
   const GovernanceContract = await hre.ethers.getContractFactory('GovernanceMock', {
     libraries: {
       ComparisonOpcodes: comparisonOpcodesLibAddr,
@@ -198,6 +192,18 @@ export const deployGovernance = async (
   );
   await governance.deployed();
 
-  const agreement = await hre.ethers.getContractAt('Agreement', agreementAddress);
+  const recordContext = await Context.deploy();
+  const conditionContext = await Context.deploy();
+  await recordContext.setAppAddress(agreementAddress);
+  await conditionContext.setAppAddress(agreementAddress);
+  await _contexts[0].setAppAddress(governance.address);
+  await _contexts[1].setAppAddress(governance.address);
+  await _contexts[2].setAppAddress(governance.address);
+  await _contexts[3].setAppAddress(governance.address);
+  await _contexts[4].setAppAddress(governance.address);
+  await _contexts[5].setAppAddress(governance.address);
+  await _contexts[6].setAppAddress(governance.address);
+  await _contexts[7].setAppAddress(governance.address);
+
   return governance.address;
 };
