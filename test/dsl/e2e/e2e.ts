@@ -9,10 +9,10 @@ import {
   Context,
   Preprocessor,
   Stack,
-  Agreement,
   Context__factory,
   Parser,
   Governance,
+  Agreement,
 } from '../../../typechain-types';
 import {
   bnToLongHexString,
@@ -1858,44 +1858,31 @@ describe('End-to-end', () => {
 
     describe('Voting process. Record in agreement is activated', async () => {
       const agreementRecordId = 123;
-      let agreement: Agreement;
-      let agreementAddr: string;
       let ContextContract: Context__factory;
       let parserAddr: string;
-      let parser: Parser;
       let executorLibAddr: string;
       let preprAddr: string;
-      let governance: Governance;
-      let contexts: string[];
+      let parser: Parser;
 
-      before(async () => {
-        ContextContract = await ethers.getContractFactory('Context');
-        [parserAddr, executorLibAddr, preprAddr] = await deployBase(hre);
-        parser = await ethers.getContractAt('Parser', parserAddr);
-      });
-
-      it('full cycle', async () => {
-        /**
-         * Deploy Agreement
-         */
+      async function deployAgreementForGovernance() {
         // 2. Alice creates a new record in Agreement. This record is disabled
         // Create Agreement contract
-        agreementAddr = await deployAgreement(hre, alice.address);
-        agreement = await ethers.getContractAt('Agreement', agreementAddr);
+        const agreementAddr = await deployAgreement(hre, alice.address);
+        return ethers.getContractAt('Agreement', agreementAddr);
+      }
 
-        /**
-         * Create a record in Agreement
-         */
-        // const signatories = [alice.address];
-        const conditions = ['bool true'];
-        const transaction = '(uint256 5) setUint256 AGREEMENT_RESULT';
-
+      async function addRecordToAgreement(
+        recordId: number,
+        conditions: string[],
+        transaction: string,
+        agreement: Agreement
+      ) {
         const [transactionContext, conditionContext] = [
           await ContextContract.deploy(),
           await ContextContract.deploy(),
         ];
-        await transactionContext.setAppAddress(agreementAddr);
-        await conditionContext.setAppAddress(agreementAddr);
+        await transactionContext.setAppAddress(agreement.address);
+        await conditionContext.setAppAddress(agreement.address);
 
         // check that added record can not be executable for now
         await agreement.parse(conditions[0], conditionContext.address, preprAddr);
@@ -1904,7 +1891,7 @@ describe('End-to-end', () => {
         // Note: we create a new record from a non-Agreement-owner account so that the record isn't
         //       active by default
         await agreement.connect(bob).update(
-          agreementRecordId,
+          recordId,
           [], // required records
           [alice.address],
           transaction,
@@ -1912,18 +1899,13 @@ describe('End-to-end', () => {
           transactionContext.address,
           [conditionContext.address]
         );
-        console.log({ agreementRecordId });
-        console.log({ agreement });
-        console.log(await agreement.records(agreementRecordId));
-        // const record = await agreement.getRecord(agreementRecordId);
-        // console.log({ record });
-        // expect(record.isActive).to.be.equal(false);
+        const record = await agreement.records(recordId);
+        expect(record.isActive).to.be.equal(false);
 
-        await expect(agreement.execute(agreementRecordId)).to.be.revertedWith('AGR13');
+        await expect(agreement.execute(recordId)).to.be.revertedWith('AGR13');
+      }
 
-        /**
-         * 1. Governance contract is deployed; it will be the owner of a target Agreement.
-         */
+      async function deployAndSetupGovernance() {
         const [
           comparisonOpcodesLibAddr,
           branchingOpcodesLibAddr,
@@ -1950,7 +1932,7 @@ describe('End-to-end', () => {
           await ContextContract.deploy(),
           await ContextContract.deploy(),
         ];
-        contexts = [
+        const contexts = [
           contextContracts[0].address,
           contextContracts[1].address,
           contextContracts[2].address,
@@ -1960,7 +1942,7 @@ describe('End-to-end', () => {
           contextContracts[6].address,
           contextContracts[7].address,
         ];
-        governance = await GovernanceContract.deploy(
+        const governance = await GovernanceContract.deploy(
           parserAddr,
           alice.address,
           tokenAddr,
@@ -1968,6 +1950,47 @@ describe('End-to-end', () => {
           contexts
         );
         await governance.deployed();
+
+        // Setup
+        await contextContracts[0].setAppAddress(governance.address);
+        await contextContracts[1].setAppAddress(governance.address);
+        await contextContracts[2].setAppAddress(governance.address);
+        await contextContracts[3].setAppAddress(governance.address);
+        await contextContracts[4].setAppAddress(governance.address);
+        await contextContracts[5].setAppAddress(governance.address);
+        await contextContracts[6].setAppAddress(governance.address);
+        await contextContracts[7].setAppAddress(governance.address);
+
+        return { governance, contexts };
+      }
+
+      before(async () => {
+        ContextContract = await ethers.getContractFactory('Context');
+        [parserAddr, executorLibAddr, preprAddr] = await deployBase(hre);
+        parser = await ethers.getContractAt('Parser', parserAddr);
+      });
+
+      it('full cycle', async () => {
+        /**
+         * Deploy Agreement
+         */
+        const agreement = await deployAgreementForGovernance();
+
+        /**
+         * Create a record in Agreement
+         */
+        await addRecordToAgreement(
+          agreementRecordId,
+          ['bool true'],
+          '(uint256 5) setUint256 AGREEMENT_RESULT',
+          agreement
+        );
+
+        /**
+         * 1. Governance contract is deployed; it will be the owner of a target Agreement.
+         */
+        const { governance, contexts } = await deployAndSetupGovernance();
+
         // const governance = await ethers.getContractAt(
         //   'Governance',
         //   '0x59b670e9fA9D0A427751Af201D676719a970857b'
@@ -1991,16 +2014,6 @@ describe('End-to-end', () => {
         // ];
         // const agreementRecordId = 1;
 
-        // Setup
-        await contextContracts[0].setAppAddress(governance.address);
-        await contextContracts[1].setAppAddress(governance.address);
-        await contextContracts[2].setAppAddress(governance.address);
-        await contextContracts[3].setAppAddress(governance.address);
-        await contextContracts[4].setAppAddress(governance.address);
-        await contextContracts[5].setAppAddress(governance.address);
-        await contextContracts[6].setAppAddress(governance.address);
-        await contextContracts[7].setAppAddress(governance.address);
-
         /**
          * Change Agreement ownership
          */
@@ -2010,7 +2023,7 @@ describe('End-to-end', () => {
          * Set variables in Governance contract
          */
         await governance.setStorageUint256(hex4Bytes('RECORD_ID'), agreementRecordId);
-        await governance.setStorageAddress(hex4Bytes('AGREEMENT_ADDR'), agreementAddr);
+        await governance.setStorageAddress(hex4Bytes('AGREEMENT_ADDR'), agreement.address);
         await governance.setStorageUint256(hex4Bytes('GOV_BALANCE'), 55);
 
         /**
