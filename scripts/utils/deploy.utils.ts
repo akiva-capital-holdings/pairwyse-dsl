@@ -132,7 +132,7 @@ export const deployAgreement = async (hre: HardhatRuntimeEnvironment, multisigAd
 
 export const deployGovernance = async (
   hre: HardhatRuntimeEnvironment,
-  agreementAddr: string,
+  targetAgreementAddr: string,
   ownerAddr: string,
   tokenAddr: string
 ) => {
@@ -150,7 +150,7 @@ export const deployGovernance = async (
     otherOpcodesLibAddr,
   ] = await deployOpcodeLibs(hre);
 
-  const [parserAddr, executorLibAddr] = await deployBase(hre);
+  const [parserAddr, executorLibAddr, preprAddr] = await deployBase(hre);
   const GovernanceContract = await hre.ethers.getContractFactory('Governance', {
     libraries: {
       ComparisonOpcodes: comparisonOpcodesLibAddr,
@@ -189,10 +189,10 @@ export const deployGovernance = async (
   );
   await governance.deployed();
 
-  const recordContext = await Context.deploy();
+  const transactionContext = await Context.deploy();
   const conditionContext = await Context.deploy();
-  await recordContext.setAppAddress(agreementAddr);
-  await conditionContext.setAppAddress(agreementAddr);
+  await transactionContext.setAppAddress(targetAgreementAddr);
+  await conditionContext.setAppAddress(targetAgreementAddr);
   await _contexts[0].setAppAddress(governance.address);
   await _contexts[1].setAppAddress(governance.address);
   await _contexts[2].setAppAddress(governance.address);
@@ -202,5 +202,12 @@ export const deployGovernance = async (
   await _contexts[6].setAppAddress(governance.address);
   await _contexts[7].setAppAddress(governance.address);
 
-  return governance.address;
+  return {
+    governanceAddr: governance.address,
+    parserAddr,
+    preprAddr,
+    conditionContextAddr: conditionContext.address,
+    transactionContextAddr: transactionContext.address,
+    contexts,
+  };
 };

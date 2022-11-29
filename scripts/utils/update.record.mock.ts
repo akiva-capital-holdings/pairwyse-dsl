@@ -1,5 +1,4 @@
-import { AgreementMock, ContextMock, Governance } from '../../typechain-types';
-import { ParserMock } from '../../typechain-types/dsl/mocks';
+import { AgreementMock, ContextMock, Governance, Parser } from '../../typechain-types';
 import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
 import { Records } from '../../test/types';
 
@@ -64,7 +63,7 @@ export const setRecords = async (records: Records[], app: AgreementMock) => {
 
 export const parseConditions = async (
   recordId: number,
-  parser: ParserMock,
+  parser: Parser,
   app: AgreementMock | Governance,
   preprAddr: string
 ) => {
@@ -85,7 +84,7 @@ export const setApp = async (ctx: ContextMock, app: AgreementMock, sender: strin
 
 export const parseConditionsList = async (
   recordIds: number[],
-  parser: ParserMock,
+  parser: Parser,
   app: AgreementMock | Governance,
   preprAddr: string
 ) => {
