@@ -15,13 +15,13 @@ event NewConditionalTx(address txObj)
 ### parse
 
 ```solidity
-function parse(address _preprAddr, address _dslCtxAddr, address _programCtxAddr, string _codeRaw) external returns (bytes)
+function parse(address _preprAddr, address _dslCtxAddr, address _programCtxAddr, string _codeRaw) external
 ```
 
 ### parseCode
 
 ```solidity
-function parseCode(address _dslCtxAddr, address _programCtxAddr, string[] _code) external returns (bytes program)
+function parseCode(address _dslCtxAddr, address _programCtxAddr, string[] _code) external
 ```
 
 ### asmSetLocalBool

@@ -24,7 +24,7 @@ uint256 cmdIdx
 ### parse
 
 ```solidity
-function parse(address _preprAddr, address _dslCtxAddr, address _programCtxAddr, string _codeRaw) external returns (bytes)
+function parse(address _preprAddr, address _dslCtxAddr, address _programCtxAddr, string _codeRaw) external
 ```
 
 _Transform DSL code from array in infix notation to raw bytecode_
@@ -41,7 +41,7 @@ _Transform DSL code from array in infix notation to raw bytecode_
 ### parseCode
 
 ```solidity
-function parseCode(address _dslCtxAddr, address _programCtxAddr, string[] _code) public returns (bytes program)
+function parseCode(address _dslCtxAddr, address _programCtxAddr, string[] _code) public
 ```
 
 _Сonverts a list of commands to bytecode_

@@ -17,13 +17,13 @@ interface IParser {
         address _dslCtxAddr,
         address _programCtxAddr,
         string memory _codeRaw
-    ) external returns (bytes memory);
+    ) external;
 
     function parseCode(
         address _dslCtxAddr,
         address _programCtxAddr,
         string[] memory _code
-    ) external returns (bytes memory program);
+    ) external;
 
     function asmSetLocalBool(bytes memory _program) external returns (bytes memory newProgram);
 

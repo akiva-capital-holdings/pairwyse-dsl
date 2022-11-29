@@ -82,7 +82,6 @@ export const deployPreprocessor = async (hre: HardhatRuntimeEnvironment) => {
   const preprocessor = await (
     await hre.ethers.getContractFactory('Preprocessor', {
       libraries: {
-        ByteUtils: byteLib.address,
         StringUtils: stringLib.address,
         StringStack: stringStackLib.address,
       },

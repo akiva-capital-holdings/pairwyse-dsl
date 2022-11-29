@@ -11,7 +11,7 @@ import { ByteUtils } from './libs/ByteUtils.sol';
 import { Preprocessor } from './Preprocessor.sol';
 import { ErrorsParser } from './libs/Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Parser of DSL code. This contract is a singleton and should not
@@ -41,28 +41,28 @@ contract Parser is IParser {
         address _dslCtxAddr,
         address _programCtxAddr,
         string memory _codeRaw
-    ) external returns (bytes memory) {
+    ) external {
         string[] memory _code = IPreprocessor(_preprAddr).transform(_dslCtxAddr, _codeRaw);
-        return parseCode(_dslCtxAddr, _programCtxAddr, _code);
+        parseCode(_dslCtxAddr, _programCtxAddr, _code);
     }
 
     /**
      * @dev Сonverts a list of commands to bytecode
      */
-    function parseCode(
-        address _dslCtxAddr,
-        address _programCtxAddr,
-        string[] memory _code
-    ) public returns (bytes memory program) {
+    function parseCode(address _dslCtxAddr, address _programCtxAddr, string[] memory _code) public {
         cmdIdx = 0;
         _setCmdsArray(_code);
 
         IProgramContext(_programCtxAddr).setPc(0);
         IProgramContext(_programCtxAddr).stack().clear();
-
+        bytes memory program;
         while (cmdIdx < cmds.length) {
+            console.log('-1-1-1');
+            console.logBytes(program);
             program = _parseOpcodeWithParams(_dslCtxAddr, _programCtxAddr, program);
         }
+
+        IProgramContext(_programCtxAddr).setProgram(program);
     }
 
     /**
@@ -104,7 +104,7 @@ contract Parser is IParser {
      */
     function asmSetLocalBool(bytes memory _program) public returns (bytes memory newProgram) {
         newProgram = _parseVariable(_program);
-        newProgram = asmBool(_program);
+        newProgram = asmBool(newProgram);
     }
 
     /**
@@ -132,7 +132,7 @@ contract Parser is IParser {
         address _ctxAddr
     ) public returns (bytes memory newProgram) {
         newProgram = _parseBranchOf(_program, _ctxAddr, 'declareArr'); // program += bytecode for type of array
-        newProgram = _parseVariable(_program); // program += bytecode for `ARR_NAME`
+        newProgram = _parseVariable(newProgram); // program += bytecode for `ARR_NAME`
     }
 
     /**
@@ -187,7 +187,7 @@ contract Parser is IParser {
      * ```
      */
     function asmVar(bytes memory _program) public returns (bytes memory newProgram) {
-        return _parseVariable(_program);
+        newProgram = _parseVariable(_program);
     }
 
     /**
@@ -203,8 +203,8 @@ contract Parser is IParser {
         address _ctxAddr
     ) public returns (bytes memory newProgram) {
         newProgram = _parseBranchOf(_program, _ctxAddr, 'loadRemote'); // program += bytecode for `loadRemote bool`
-        newProgram = _parseVariable(_program); // program += bytecode for `MARY_ADDRESS`
-        newProgram = _parseAddress(_program); // program += bytecode for `9A676e781A523b5...`
+        newProgram = _parseVariable(newProgram); // program += bytecode for `MARY_ADDRESS`
+        newProgram = _parseAddress(newProgram); // program += bytecode for `9A676e781A523b5...`
     }
 
     /**
@@ -420,6 +420,8 @@ contract Parser is IParser {
         address _programCtxAddr,
         bytes memory _program
     ) public returns (bytes memory newProgram) {
+        console.log('---s');
+        console.logBytes(_program);
         _setLabelPos(_programCtxAddr, _nextCmd(), _program.length);
         newProgram = bytes.concat(_program, bytes2(0)); // placeholder for `true` branch offset
     }
@@ -550,11 +552,14 @@ contract Parser is IParser {
         bytes memory _program
     ) internal returns (bytes memory newProgram) {
         string storage cmd = _nextCmd();
+
         bytes1 opcode = IDSLContext(_dslCtxAddr).opCodeByName(cmd);
+
         // TODO: simplify
         bytes4 _selector = bytes4(keccak256(abi.encodePacked(cmd)));
         bool isStructVar = IProgramContext(_programCtxAddr).isStructVar(cmd);
         if (_isLabel(_programCtxAddr, cmd)) {
+            console.log(1);
             bytes2 _branchLocation = bytes2(uint16(_program.length));
             uint256 labelPos = _getLabelPos(_programCtxAddr, cmd);
             newProgram = bytes.concat(
@@ -562,23 +567,30 @@ contract Parser is IParser {
                 _branchLocation,
                 _program.slice(labelPos + 2, _program.length) // programAfter
             );
+
             // TODO: move isValidVarName() check to Preprocessor
             //       (it should automatically add `var` before all variable names)
         } else if (cmd.isValidVarName() || isStructVar) {
+            console.log(2);
             opcode = IDSLContext(_dslCtxAddr).opCodeByName('var');
             newProgram = bytes.concat(_program, opcode, _selector);
         } else if (opcode == 0x0) {
+            console.log(3);
             revert(string(abi.encodePacked('Parser: "', cmd, '" command is unknown')));
         } else {
+            console.log(4);
             newProgram = bytes.concat(_program, opcode);
+
             _selector = IDSLContext(_dslCtxAddr).asmSelectors(cmd);
             if (_selector != 0x0) {
                 (bool success, bytes memory data) = address(this).delegatecall(
                     abi.encodeWithSelector(_selector, newProgram, _dslCtxAddr)
                 );
+                console.log('112230------', cmd);
+                console.logBytes(data);
                 require(success, ErrorsParser.PRS1);
                 // TODO: check data length (there should be no additional zeros in the end)
-                newProgram = data;
+                newProgram = abi.decode(data, (bytes));
             }
             // if no selector then opcode without params
         }
