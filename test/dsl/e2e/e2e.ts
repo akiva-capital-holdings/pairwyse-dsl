@@ -21,6 +21,7 @@ import { deployBaseMock } from '../../../scripts/utils/deploy.utils.mock';
 import { getChainId } from '../../../utils/utils';
 import { ONE_DAY, ONE_MONTH } from '../../utils/constants';
 import { parseConditions, parseConditionsList } from '../../../scripts/utils/update.record.mock';
+
 const { ethers, network } = hre;
 
 describe('End-to-end', () => {
@@ -1834,17 +1835,10 @@ describe('End-to-end', () => {
     });
   });
 
-  describe('Governance', () => {
+  describe.only('Governance', () => {
     let agreement: Agreement;
     let agreementAddr: string;
-    let preprocessorAddr: string;
     let tokenAddr: string;
-    let setRecord: string;
-    let yesRecord: string;
-    let noRecord: string;
-    let checkRecord: string;
-    const oneEthBN = parseEther('1');
-    const tenTokens = parseEther('10');
 
     before(async () => {
       const LAST_BLOCK_TIMESTAMP = (
@@ -1852,8 +1846,6 @@ describe('End-to-end', () => {
       ).timestamp;
       NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
       NEXT_TWO_MONTH = NEXT_MONTH + ONE_MONTH;
-
-      preprocessorAddr = await deployPreprocessor(hre);
 
       // Deploy Token contract
       const token = await (await ethers.getContractFactory('Token'))
@@ -1864,8 +1856,8 @@ describe('End-to-end', () => {
     });
 
     it('Voting process. Record in agreement is activated', async () => {
-      const Context = await ethers.getContractFactory('Context');
-      // 1. Governance contract is deployed; it will be an owner of Agreement.
+      const ContextContract = await ethers.getContractFactory('Context');
+      // 1. Governance contract is deployed; it will be the owner of a target Agreement.
       const [
         comparisonOpcodesLibAddr,
         branchingOpcodesLibAddr,
@@ -1873,7 +1865,7 @@ describe('End-to-end', () => {
         otherOpcodesLibAddr,
       ] = await deployOpcodeLibs(hre);
       const [parserAddr, executorLibAddr, preprAddr] = await deployBaseMock(hre);
-      const MockContract = await hre.ethers.getContractFactory('GovernanceMock', {
+      const MockContract = await hre.ethers.getContractFactory('Governance', {
         libraries: {
           ComparisonOpcodes: comparisonOpcodesLibAddr,
           BranchingOpcodes: branchingOpcodesLibAddr,
@@ -1884,25 +1876,25 @@ describe('End-to-end', () => {
       });
       const parser = await ethers.getContractAt('ParserMock', parserAddr);
 
-      const _contexts = [
-        await Context.deploy(),
-        await Context.deploy(),
-        await Context.deploy(),
-        await Context.deploy(),
-        await Context.deploy(),
-        await Context.deploy(),
-        await Context.deploy(),
-        await Context.deploy(),
+      const contextContracts = [
+        await ContextContract.deploy(),
+        await ContextContract.deploy(),
+        await ContextContract.deploy(),
+        await ContextContract.deploy(),
+        await ContextContract.deploy(),
+        await ContextContract.deploy(),
+        await ContextContract.deploy(),
+        await ContextContract.deploy(),
       ];
       const contexts = [
-        _contexts[0].address,
-        _contexts[1].address,
-        _contexts[2].address,
-        _contexts[3].address,
-        _contexts[4].address,
-        _contexts[5].address,
-        _contexts[6].address,
-        _contexts[7].address,
+        contextContracts[0].address,
+        contextContracts[1].address,
+        contextContracts[2].address,
+        contextContracts[3].address,
+        contextContracts[4].address,
+        contextContracts[5].address,
+        contextContracts[6].address,
+        contextContracts[7].address,
       ];
       const governance = await MockContract.deploy(
         parserAddr,
@@ -1918,7 +1910,7 @@ describe('End-to-end', () => {
       agreementAddr = await deployAgreement(hre, governance.address);
       agreement = await ethers.getContractAt('Agreement', agreementAddr);
       const txId = '133';
-      const signatories = [alice.address];
+      // const signatories = [alice.address];
       const conditions = ['bool true'];
       const transaction = '(uint256 5) setUint256 AGREEMENT_RESULT';
 
@@ -1926,18 +1918,18 @@ describe('End-to-end', () => {
       await governance.setStorageAddress(hex4Bytes('AGREEMENT_ADDR'), agreementAddr);
       await governance.setStorageUint256(hex4Bytes('GOV_BALANCE'), 55);
 
-      const recordContext = await Context.deploy();
-      const conditionContext = await Context.deploy();
+      const recordContext = await ContextContract.deploy();
+      const conditionContext = await ContextContract.deploy();
       await recordContext.setAppAddress(agreementAddr);
       await conditionContext.setAppAddress(agreementAddr);
-      await _contexts[0].setAppAddress(governance.address);
-      await _contexts[1].setAppAddress(governance.address);
-      await _contexts[2].setAppAddress(governance.address);
-      await _contexts[3].setAppAddress(governance.address);
-      await _contexts[4].setAppAddress(governance.address);
-      await _contexts[5].setAppAddress(governance.address);
-      await _contexts[6].setAppAddress(governance.address);
-      await _contexts[7].setAppAddress(governance.address);
+      await contextContracts[0].setAppAddress(governance.address);
+      await contextContracts[1].setAppAddress(governance.address);
+      await contextContracts[2].setAppAddress(governance.address);
+      await contextContracts[3].setAppAddress(governance.address);
+      await contextContracts[4].setAppAddress(governance.address);
+      await contextContracts[5].setAppAddress(governance.address);
+      await contextContracts[6].setAppAddress(governance.address);
+      await contextContracts[7].setAppAddress(governance.address);
 
       // check that added record can not be executable for now
       await agreement.parse(conditions[0], conditionContext.address, preprAddr);
@@ -2056,7 +2048,6 @@ describe('End-to-end', () => {
       expect(recordGov.isActive).to.be.equal(true);
       expect(recordGov.isExecuted).to.be.equal(true);
 
-      // TODO: bellow checks are failed. make them work
       // check that record in agreement was activated
       record = await agreement.records(txId);
       expect(record.isActive).to.be.equal(true);

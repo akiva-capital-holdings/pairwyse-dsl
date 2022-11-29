@@ -56,10 +56,10 @@ contract Preprocessor is IPreprocessor {
      * @param _program is a user's DSL code string
      * @return the list of commands that storing `result`
      */
-    function transform(address _ctxAddr, string memory _program)
-        external
-        returns (string[] memory)
-    {
+    function transform(
+        address _ctxAddr,
+        string memory _program
+    ) external returns (string[] memory) {
         string[] memory code = split(_program);
         return infixToPostfix(_ctxAddr, code, strStack);
     }
@@ -79,11 +79,9 @@ contract Preprocessor is IPreprocessor {
      * @param _program is a current program string
      * @return _cleanedProgram new string program that contains only clean code without comments
      */
-    function cleanString(string memory _program)
-        public
-        pure
-        returns (string memory _cleanedProgram)
-    {
+    function cleanString(
+        string memory _program
+    ) public pure returns (string memory _cleanedProgram) {
         bool isCommented;
 
         // searchedSymbolLen is a flag that uses for searching a correct end symbol
@@ -461,15 +459,9 @@ contract Preprocessor is IPreprocessor {
      * @return arrName if user provided complex name, result is the name of structure
      * @return structVar if user provided complex name, result is the name of structure variable
      */
-    function _getNames(string memory _chunk)
-        internal
-        view
-        returns (
-            bool success,
-            string memory arrName,
-            string memory structVar
-        )
-    {
+    function _getNames(
+        string memory _chunk
+    ) internal view returns (bool success, string memory arrName, string memory structVar) {
         // TODO: decrease amount of iterations
         bytes memory symbols = bytes(_chunk);
         bool isFound; // dot was found
@@ -493,11 +485,10 @@ contract Preprocessor is IPreprocessor {
      * @param _currencyMultiplier provided number of the multiplier
      * @return updated _chunk value in dependence on its type
      */
-    function _parseChunk(string memory _chunk, uint256 _currencyMultiplier)
-        internal
-        pure
-        returns (string memory)
-    {
+    function _parseChunk(
+        string memory _chunk,
+        uint256 _currencyMultiplier
+    ) internal pure returns (string memory) {
         if (_chunk.mayBeAddress()) return _chunk;
         return _parseNumber(_chunk, _currencyMultiplier);
     }
@@ -512,11 +503,10 @@ contract Preprocessor is IPreprocessor {
      * @param _currencyMultiplier provided number of the multiplier
      * @return updatedChunk amount in Wei of provided _chunk value
      */
-    function _parseNumber(string memory _chunk, uint256 _currencyMultiplier)
-        internal
-        pure
-        returns (string memory updatedChunk)
-    {
+    function _parseNumber(
+        string memory _chunk,
+        uint256 _currencyMultiplier
+    ) internal pure returns (string memory updatedChunk) {
         if (_currencyMultiplier > 0) {
             try _chunk.toUint256() {
                 updatedChunk = StringUtils.toString(_chunk.toUint256() * _currencyMultiplier);
@@ -601,15 +591,7 @@ contract Preprocessor is IPreprocessor {
         string memory _currentName,
         bool _isFunc,
         bool _isName
-    )
-        internal
-        pure
-        returns (
-            bool,
-            bool,
-            string memory
-        )
-    {
+    ) internal pure returns (bool, bool, string memory) {
         if (_chunk.equal('endf')) {
             // finish `Functions block` process
             // example: `func NAME <number_of_params> endf`
@@ -778,15 +760,7 @@ contract Preprocessor is IPreprocessor {
         uint256 _index,
         string memory _program,
         string memory char
-    )
-        internal
-        pure
-        returns (
-            uint256,
-            uint256,
-            bool
-        )
-    {
+    ) internal pure returns (uint256, uint256, bool) {
         if (_canGetSymbol(_index + 1, _program)) {
             string memory nextChar = _program.char(_index + 1);
             if (char.equal('/') && nextChar.equal('/')) {

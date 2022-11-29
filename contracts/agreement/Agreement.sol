@@ -188,7 +188,9 @@ contract Agreement {
      * @return _transaction string of transaction
      * @return _isActive true if the record is active
      */
-    function getRecord(uint256 _recordId)
+    function getRecord(
+        uint256 _recordId
+    )
         external
         view
         returns (
@@ -258,11 +260,7 @@ contract Agreement {
      * @param _context Context address
      * @param _preProc Preprocessor address
      */
-    function parse(
-        string memory _code,
-        address _context,
-        address _preProc
-    ) external {
+    function parse(string memory _code, address _context, address _preProc) external {
         parser.parse(_preProc, _context, _code);
 
         emit Parsed(_preProc, _context, _code);

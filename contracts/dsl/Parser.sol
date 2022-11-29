@@ -41,11 +41,7 @@ contract Parser is IParser {
      * @param _ctxAddr Context contract interface address
      * @param _codeRaw Input code as a string in infix notation
      */
-    function parse(
-        address _preprAddr,
-        address _ctxAddr,
-        string memory _codeRaw
-    ) external {
+    function parse(address _preprAddr, address _ctxAddr, string memory _codeRaw) external {
         string[] memory _code = IPreprocessor(_preprAddr).transform(_ctxAddr, _codeRaw);
         _parseCode(_ctxAddr, _code);
     }

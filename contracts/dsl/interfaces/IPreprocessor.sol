@@ -45,10 +45,9 @@ interface IPreprocessor {
 
     function transform(address _ctxAddr, string memory _program) external returns (string[] memory);
 
-    function cleanString(string memory _program)
-        external
-        pure
-        returns (string memory _cleanedProgram);
+    function cleanString(
+        string memory _program
+    ) external pure returns (string memory _cleanedProgram);
 
     function split(string memory _program) external returns (string[] memory);
 

@@ -5,8 +5,6 @@ import path from 'path';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { getChainId, getPrettyDateTime } from '../../utils/utils';
 
-let parserAddress: string;
-
 export const deployOpcodeLibs = async (hre: HardhatRuntimeEnvironment) => {
   const opcodeHelpersLib = await (await hre.ethers.getContractFactory('OpcodeHelpers')).deploy();
   const comparisonOpcodesLib = await (
@@ -65,7 +63,6 @@ export const deployParser = async (hre: HardhatRuntimeEnvironment) => {
       libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
     })
   ).deploy();
-  parserAddress = parser.address;
   return parser.address;
 };
 
@@ -135,9 +132,9 @@ export const deployAgreement = async (hre: HardhatRuntimeEnvironment, multisigAd
 
 export const deployGovernance = async (
   hre: HardhatRuntimeEnvironment,
-  agreementAddress: string,
-  aliceAddress: string,
-  tokenAddress: string
+  agreementAddr: string,
+  ownerAddr: string,
+  tokenAddr: string
 ) => {
   const Context = await hre.ethers.getContractFactory('Context');
   const ONE_DAY: number = 60 * 60 * 24;
@@ -153,8 +150,8 @@ export const deployGovernance = async (
     otherOpcodesLibAddr,
   ] = await deployOpcodeLibs(hre);
 
-  const [executorLibAddr] = await deployBase(hre);
-  const GovernanceContract = await hre.ethers.getContractFactory('GovernanceMock', {
+  const [parserAddr, executorLibAddr] = await deployBase(hre);
+  const GovernanceContract = await hre.ethers.getContractFactory('Governance', {
     libraries: {
       ComparisonOpcodes: comparisonOpcodesLibAddr,
       BranchingOpcodes: branchingOpcodesLibAddr,
@@ -184,9 +181,9 @@ export const deployGovernance = async (
     _contexts[7].address,
   ];
   const governance = await GovernanceContract.deploy(
-    parserAddress,
-    aliceAddress,
-    tokenAddress,
+    parserAddr,
+    ownerAddr,
+    tokenAddr,
     NEXT_MONTH,
     contexts
   );
@@ -194,8 +191,8 @@ export const deployGovernance = async (
 
   const recordContext = await Context.deploy();
   const conditionContext = await Context.deploy();
-  await recordContext.setAppAddress(agreementAddress);
-  await conditionContext.setAppAddress(agreementAddress);
+  await recordContext.setAppAddress(agreementAddr);
+  await conditionContext.setAppAddress(agreementAddr);
   await _contexts[0].setAppAddress(governance.address);
   await _contexts[1].setAppAddress(governance.address);
   await _contexts[2].setAppAddress(governance.address);

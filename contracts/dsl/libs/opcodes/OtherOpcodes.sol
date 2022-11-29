@@ -323,10 +323,10 @@ library OtherOpcodes {
         return uint256(result);
     }
 
-    function opLoadLocalGet(address _ctx, string memory funcSignature)
-        public
-        returns (bytes32 result)
-    {
+    function opLoadLocalGet(
+        address _ctx,
+        string memory funcSignature
+    ) public returns (bytes32 result) {
         bytes32 varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
         // Load local variable by it's hex
         bytes memory data = OpcodeHelpers.mustCall(
@@ -486,11 +486,7 @@ library OtherOpcodes {
      * @param _arrNameB32 Array's name in bytecode
      * @param _typeName Type of the array, ex. `uint256`, `address`, `struct`
      */
-    function _checkArrType(
-        address _ctx,
-        bytes32 _arrNameB32,
-        string memory _typeName
-    ) internal {
+    function _checkArrType(address _ctx, bytes32 _arrNameB32, string memory _typeName) internal {
         bytes memory _type;
         // check if the array exists
         (_type) = OpcodeHelpers.mustCall(
