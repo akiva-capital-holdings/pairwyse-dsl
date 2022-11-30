@@ -2150,6 +2150,116 @@ describe('End-to-end', () => {
         await expect(governance.connect(accounts[12]).execute(1)).to.be.revertedWith('AGR6');
         await expect(governance.connect(accounts[19]).execute(1)).to.be.revertedWith('AGR6');
       });
+
+      it.only('full cycle simplified', async () => {
+        /**
+         * Deploy Agreement
+         */
+        const agreement = await deployAgreementForGovernance();
+
+        /**
+         * Create a record in Agreement
+         */
+        await addRecordToAgreement(
+          agreementRecordId,
+          ['bool true'],
+          '(uint256 5) setUint256 AGREEMENT_RESULT',
+          agreement
+        );
+
+        /**
+         * 1. Governance contract is deployed; it will be the owner of a target Agreement.
+         */
+        const { governance } = await deployAndSetupGovernance();
+
+        // const governance = await ethers.getContractAt(
+        //   'Governance',
+        //   '0x59b670e9fA9D0A427751Af201D676719a970857b'
+        // );
+        // const parser = await ethers.getContractAt(
+        //   'Parser',
+        //   '0x8A791620dd6260079BF849Dc5567aDC3F2FdC318'
+        // );
+        // const preprAddr = '0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0';
+        // const conditionContextAddr = '0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44';
+        // const transactionContextAddr = '0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1';
+        // const contexts = [
+        //   '0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82',
+        //   '0x9A676e781A523b5d0C0e43731313A708CB607508',
+        //   '0x0B306BF915C4d645ff596e518fAf3F9669b97016',
+        //   '0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1',
+        //   '0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE',
+        //   '0x68B1D87F95878fE05B998F19b66F4baba5De1aed',
+        //   '0x3Aa5ebB10DC797CAC828524e59A333d0A371443c',
+        //   '0xc6e7DF5E7b4f2A278906862b61205850344D4e7d',
+        // ];
+        // const agreementRecordId = 1;
+
+        /**
+         * Change Agreement ownership
+         */
+        await agreement.transferOwnership(governance.address);
+
+        /**
+         * Set variables in Governance contract
+         */
+        await governance.setStorageUint256(hex4Bytes('RECORD_ID'), agreementRecordId);
+        await governance.setStorageAddress(hex4Bytes('AGREEMENT_ADDR'), agreement.address);
+        await governance.setStorageUint256(hex4Bytes('GOV_BALANCE'), 55);
+
+        /**
+         * Voting
+         */
+        // 3. Governance voting occurs. If consensus is met -> enable the target record.
+        // -------> check the setRecord data and execution <-------
+        let recordGov = await governance.records(0);
+
+        await parseConditionsList([0, 1, 2, 3], parser, governance, preprAddr);
+        await governance.parse(recordGov.transactionString, recordGov.recordContext, preprAddr);
+        await governance.connect(alice).execute(0); // sets DSL code for the first record
+        recordGov = await governance.records(0);
+
+        // -------> check the yesRecord data and execution <-------
+        recordGov = await governance.records(1);
+        await governance.parse(recordGov.transactionString, recordGov.recordContext, preprAddr);
+
+        // -------> check the noRecord data and execution <-------
+        recordGov = await governance.records(2);
+        await governance.parse(recordGov.transactionString, recordGov.recordContext, preprAddr);
+
+        recordGov = await governance.records(1);
+        await createBulkVotes(governance, accounts.slice(0, 10));
+
+        // check that records for votes are still avaliable for other users
+        recordGov = await governance.records(1);
+        recordGov = await governance.records(2);
+        // add more voters
+        await createBulkVotes(governance, accounts.slice(10, 20));
+
+        // -------> check the checkRecord data and execution <-------
+        recordGov = await governance.records(3);
+
+        // await parseConditions(3, parser, governance, preprAddr);
+        await governance.parse(recordGov.transactionString, recordGov.recordContext, preprAddr);
+
+        // Increase time that is more that deadline and execute the record
+        await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
+
+        // Check that the result of voting is zero
+        expect(await governance.getStorageUint256(hex4Bytes('YES_CTR'))).to.be.equal(0);
+        await governance.connect(alice).execute(3); // execute Voting results after deadline
+
+        // Check that the result of voting is 12 votes
+        expect(await governance.getStorageUint256(hex4Bytes('YES_CTR'))).to.be.equal(12);
+
+        recordGov = await governance.records(3);
+
+        // check that record in agreement can be executed
+        await agreement.execute(agreementRecordId);
+
+        // check that the result in agreement contract of the AGREEMENT_RESULT variable is 5
+        expect(await agreement.getStorageUint256(hex4Bytes('AGREEMENT_RESULT'))).to.be.equal(5);
+      });
     });
   });
 });
