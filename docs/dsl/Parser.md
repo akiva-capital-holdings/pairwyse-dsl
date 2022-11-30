@@ -75,7 +75,7 @@ Example of a command:
 ### asmDeclare
 
 ```solidity
-function asmDeclare(bytes _program, address _ctxAddr) public returns (bytes newProgram)
+function asmDeclare(bytes _program, address _ctxDSLAddr) public returns (bytes newProgram)
 ```
 
 _Updates the program with the name(its position) of the array
@@ -128,7 +128,7 @@ var NUMBER
 ### asmLoadRemote
 
 ```solidity
-function asmLoadRemote(bytes _program, address _ctxAddr) public returns (bytes newProgram)
+function asmLoadRemote(bytes _program, address _ctxDSLAddr) public returns (bytes newProgram)
 ```
 
 _Updates the program with the loadRemote variable
@@ -300,7 +300,7 @@ sumOf USERS.lastPayment
 ### asmIfelse
 
 ```solidity
-function asmIfelse(address _programCtxAddr, bytes _program) public returns (bytes newProgram)
+function asmIfelse(bytes _program, address, address _programCtxAddr) public returns (bytes newProgram)
 ```
 
 _Updates previous `program` for positive and negative branch position
@@ -323,7 +323,7 @@ branch BB {
 ### asmIf
 
 ```solidity
-function asmIf(address _programCtxAddr, bytes _program) public returns (bytes newProgram)
+function asmIf(bytes _program, address, address _programCtxAddr) public returns (bytes newProgram)
 ```
 
 _Updates previous `program` for positive branch position
@@ -342,7 +342,7 @@ POSITIVE_ACTION {
 ### asmFunc
 
 ```solidity
-function asmFunc(address _programCtxAddr, bytes _program) public returns (bytes newProgram)
+function asmFunc(bytes _program, address, address _programCtxAddr) public returns (bytes newProgram)
 ```
 
 _Updates previous `program` for function code
@@ -359,7 +359,7 @@ NAME_OF_FUNCTION {
 ### asmStruct
 
 ```solidity
-function asmStruct(bytes _program, address _ctxAddr) public returns (bytes newProgram)
+function asmStruct(bytes _program, address, address _programCtxAddr) public returns (bytes newProgram)
 ```
 
 _Updates previous `program` for DSL struct.
@@ -447,7 +447,7 @@ _Updates previous `program` with the next provided command_
 ### _parseBranchOf
 
 ```solidity
-function _parseBranchOf(bytes _program, address _ctxAddr, string baseOpName) internal returns (bytes newProgram)
+function _parseBranchOf(bytes _program, address _ctxDSLAddr, string baseOpName) internal returns (bytes newProgram)
 ```
 
 _Updates previous `program` with the branch name, like `loadLocal` or `loadRemote`

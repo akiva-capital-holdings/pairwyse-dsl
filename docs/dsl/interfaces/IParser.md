@@ -45,13 +45,13 @@ function asmVar(bytes _program) external returns (bytes newProgram)
 ### asmLoadRemote
 
 ```solidity
-function asmLoadRemote(bytes _program, address _ctxAddr) external returns (bytes newProgram)
+function asmLoadRemote(bytes _program, address _ctxDSLAddr) external returns (bytes newProgram)
 ```
 
 ### asmDeclare
 
 ```solidity
-function asmDeclare(bytes _program, address _ctxAddr) external returns (bytes newProgram)
+function asmDeclare(bytes _program, address _ctxDSLAddr) external returns (bytes newProgram)
 ```
 
 ### asmBool
@@ -123,19 +123,19 @@ function asmTransferFromVar(bytes _program) external returns (bytes newProgram)
 ### asmIfelse
 
 ```solidity
-function asmIfelse(address _programCtxAddr, bytes _program) external returns (bytes newProgram)
+function asmIfelse(bytes _program, address _ctxDSLAddr, address _programCtxAddr) external returns (bytes newProgram)
 ```
 
 ### asmIf
 
 ```solidity
-function asmIf(address _programCtxAddr, bytes _program) external returns (bytes newProgram)
+function asmIf(bytes _program, address _ctxDSLAddr, address _programCtxAddr) external returns (bytes newProgram)
 ```
 
 ### asmFunc
 
 ```solidity
-function asmFunc(address _programCtxAddr, bytes _program) external returns (bytes newProgram)
+function asmFunc(bytes _program, address _ctxDSLAddr, address _programCtxAddr) external returns (bytes newProgram)
 ```
 
 ### asmGet
@@ -153,7 +153,7 @@ function asmPush(bytes _program) external returns (bytes newProgram)
 ### asmStruct
 
 ```solidity
-function asmStruct(bytes _program, address _ctxAddr) external returns (bytes newProgram)
+function asmStruct(bytes _program, address _ctxDSLAddr, address _programCtxAddr) external returns (bytes newProgram)
 ```
 
 ### asmForLoop

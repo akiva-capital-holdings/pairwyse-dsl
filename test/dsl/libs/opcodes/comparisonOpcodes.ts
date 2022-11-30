@@ -11,7 +11,7 @@ import {
 } from '../../../../typechain-types';
 import { checkStack, pushToStack } from '../../../utils/utils';
 
-describe('Comparison opcodes', () => {
+describe.skip('Comparison opcodes', () => {
   // eslint-disable-next-line camelcase
   let StackCont: Stack__factory;
   let app: ComparisonOpcodesMock;

@@ -33,12 +33,12 @@ interface IParser {
 
     function asmLoadRemote(
         bytes memory _program,
-        address _ctxAddr
+        address _ctxDSLAddr
     ) external returns (bytes memory newProgram);
 
     function asmDeclare(
         bytes memory _program,
-        address _ctxAddr
+        address _ctxDSLAddr
     ) external returns (bytes memory newProgram);
 
     function asmBool(bytes memory _program) external returns (bytes memory newProgram);
@@ -64,18 +64,21 @@ interface IParser {
     function asmTransferFromVar(bytes memory _program) external returns (bytes memory newProgram);
 
     function asmIfelse(
-        address _programCtxAddr,
-        bytes memory _program
+        bytes memory _program,
+        address _ctxDSLAddr,
+        address _programCtxAddr
     ) external returns (bytes memory newProgram);
 
     function asmIf(
-        address _programCtxAddr,
-        bytes memory _program
+        bytes memory _program,
+        address _ctxDSLAddr,
+        address _programCtxAddr
     ) external returns (bytes memory newProgram);
 
     function asmFunc(
-        address _programCtxAddr,
-        bytes memory _program
+        bytes memory _program,
+        address _ctxDSLAddr,
+        address _programCtxAddr
     ) external returns (bytes memory newProgram);
 
     function asmGet(bytes memory _program) external returns (bytes memory newProgram);
@@ -84,7 +87,8 @@ interface IParser {
 
     function asmStruct(
         bytes memory _program,
-        address _ctxAddr
+        address _ctxDSLAddr,
+        address _programCtxAddr
     ) external returns (bytes memory newProgram);
 
     function asmForLoop(bytes memory _program) external returns (bytes memory newProgram);

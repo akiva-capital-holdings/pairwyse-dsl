@@ -1,9 +1,11 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { parseUnits } from 'ethers/lib/utils';
-
+import { deployOpcodeLibs } from '../../scripts/utils/deploy.utils';
 import { Preprocessor } from '../../typechain-types';
-import { checkStringStack, split, deployPreprocessor } from '../utils/utils';
+import { checkStringStack, split } from '../utils/utils';
+
+import * as hre from 'hardhat';
 
 describe.skip('Preprocessor', () => {
   let app: Preprocessor;
@@ -21,7 +23,20 @@ describe.skip('Preprocessor', () => {
     const strStackLib = await (await ethers.getContractFactory('StringStack')).deploy();
 
     // Deploy Context
-    const ctx = await (await ethers.getContractFactory('ContextMock')).deploy();
+    const [
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr,
+    ] = await deployOpcodeLibs(hre);
+    const ctx = await (
+      await ethers.getContractFactory('DSLContextMock')
+    ).deploy(
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr
+    );
     ctxAddr = ctx.address;
 
     // Setup operators & priorities

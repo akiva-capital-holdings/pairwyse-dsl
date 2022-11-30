@@ -46,7 +46,7 @@ contract ProgramContext is IProgramContext {
     }
 
     modifier onlyApp() {
-        require(msg.sender != appAddr, ErrorsContext.CTX6);
+        require(msg.sender == appAddr, ErrorsContext.CTX6);
         _;
     }
 
@@ -56,8 +56,7 @@ contract ProgramContext is IProgramContext {
     }
 
     /**
-     * @dev ATTENTION! Works only during development! Will be removed.
-     * Sets the final version of the program.
+     * @dev Sets the final version of the program.
      * @param _data is the bytecode of the full program
      */
     function setProgram(bytes memory _data) public onlyApp {

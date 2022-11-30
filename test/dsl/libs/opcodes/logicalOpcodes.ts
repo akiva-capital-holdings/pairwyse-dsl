@@ -11,7 +11,7 @@ import {
 } from '../../../../typechain-types';
 import { checkStack, pushToStack } from '../../../utils/utils';
 
-describe('Logical opcodes', () => {
+describe.skip('Logical opcodes', () => {
   let StackCont: Stack__factory;
   let app: LogicalOpcodesMock;
   let ctxProgram: ProgramContextMock;

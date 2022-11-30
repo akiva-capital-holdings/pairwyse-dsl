@@ -2,6 +2,7 @@ import * as hre from 'hardhat';
 import { expect } from 'chai';
 /* eslint-disable camelcase */
 import { BigNumber } from 'ethers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import {
   Stack__factory,
   ProgramContextMock,
@@ -21,12 +22,11 @@ import {
   bnToLongHexString,
 } from '../../../utils/utils';
 import { deployAgreementMock, deployParserMock } from '../../../../scripts/utils/deploy.utils.mock';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { deployOpcodeLibs } from '../../../../scripts/utils/deploy.utils';
 
 const { ethers, network } = hre;
 
-describe('Other opcodes', () => {
+describe.skip('Other opcodes', () => {
   let StackCont: Stack__factory;
   /* eslint-enable camelcase */
   let app: OtherOpcodesMock;

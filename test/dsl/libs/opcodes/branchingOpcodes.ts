@@ -11,7 +11,7 @@ import {
 } from '../../../../typechain-types';
 import { getBytesStringLength, pushToStack, uint256StrToHex } from '../../../utils/utils';
 
-describe('Branching opcodes', () => {
+describe.skip('Branching opcodes', () => {
   let StackCont: Stack__factory;
   /* eslint-enable camelcase */
   let app: BranchingOpcodesMock;

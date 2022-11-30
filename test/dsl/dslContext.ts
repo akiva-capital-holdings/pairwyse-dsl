@@ -1,9 +1,13 @@
+import * as hre from 'hardhat';
 import { expect } from 'chai';
-import { ethers, network } from 'hardhat';
-import { ContextMock } from '../../typechain-types/dsl/mocks';
 
-describe('Context', () => {
-  let app: ContextMock;
+import { DSLContextMock } from '../../typechain-types/dsl/mocks';
+import { deployOpcodeLibs } from '../../scripts/utils/deploy.utils';
+
+const { ethers, network } = hre;
+
+describe.skip('Context', () => {
+  let app: DSLContextMock;
   let snapshotId: number;
 
   enum OpcodeLibNames {
@@ -15,9 +19,20 @@ describe('Context', () => {
 
   before(async () => {
     const [random] = await ethers.getSigners();
-    const ContextCont = await ethers.getContractFactory('ContextMock');
-    app = await ContextCont.deploy();
-    await app.setAppAddress(random.address);
+    const [
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr,
+    ] = await deployOpcodeLibs(hre);
+    app = await (
+      await ethers.getContractFactory('DSLContextMock')
+    ).deploy(
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr
+    );
   });
 
   beforeEach(async () => {
@@ -147,65 +162,6 @@ describe('Context', () => {
       await app.addOpcodeBranchExt(baseOpName, branchName, branchCode, selector);
       expect(await app.branchSelectors(baseOpName, branchCode)).to.equal(selector);
       expect(await app.branchCodes(baseOpName, branchName)).to.equal(branchCode);
-    });
-  });
-
-  describe('program', () => {
-    it('get slice', async () => {
-      await app.setProgram('0x01020304');
-
-      expect(await app.programAt(0, 1), 'Wrong bytes slice').to.equal('0x01');
-      expect(await app.programAt(1, 1), 'Wrong bytes slice').to.equal('0x02');
-      expect(await app.programAt(2, 1), 'Wrong bytes slice').to.equal('0x03');
-      expect(await app.programAt(3, 1), 'Wrong bytes slice').to.equal('0x04');
-    });
-
-    it('overflow', async () => {
-      await app.setProgram('0x01020304');
-      await expect(app.programAt(4, 1)).to.be.revertedWith('CTX4');
-    });
-
-    it('setProgram', async () => {
-      await app.setPc('0x03');
-      expect(await app.pc()).to.equal('0x03');
-      await app.setProgram('0x123456');
-      expect(await app.program()).to.equal('0x123456');
-      expect(await app.pc()).to.equal('0x00');
-    });
-
-    it('setPc', async () => {
-      await app.setPc(1);
-      expect(await app.pc()).to.equal(1);
-      await app.setPc(999);
-      expect(await app.pc()).to.equal(999);
-      await app.setPc(0);
-      expect(await app.pc()).to.equal(0);
-    });
-
-    it('incPc', async () => {
-      await app.setPc(5);
-      await app.incPc(1);
-      expect(await app.pc()).to.equal(6);
-      await app.incPc(3);
-      expect(await app.pc()).to.equal(9);
-      await app.incPc(0);
-      expect(await app.pc()).to.equal(9);
-    });
-  });
-
-  describe('settings', () => {
-    it('setAppAddress', async () => {
-      await expect(app.setAppAddress(ethers.constants.AddressZero)).to.be.revertedWith('CTX1');
-      const [addr] = await ethers.getSigners();
-      await app.setAppAddress(addr.address);
-      expect(await app.appAddr()).to.equal(addr.address);
-    });
-
-    it('setMsgSender', async () => {
-      await expect(app.setMsgSender(ethers.constants.AddressZero)).to.be.revertedWith('CTX1');
-      const [addr] = await ethers.getSigners();
-      await app.setMsgSender(addr.address);
-      expect(await app.msgSender()).to.equal(addr.address);
     });
   });
 });

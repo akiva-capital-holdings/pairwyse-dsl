@@ -101,8 +101,7 @@ constructor() public
 function setProgram(bytes _data) public
 ```
 
-_ATTENTION! Works only during development! Will be removed.
-Sets the final version of the program._
+_Sets the final version of the program._
 
 #### Parameters
 

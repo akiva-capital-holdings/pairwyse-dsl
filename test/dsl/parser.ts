@@ -8,7 +8,7 @@ import { hex4Bytes, bnToLongHexString } from '../utils/utils';
 
 const { ethers, network } = hre;
 
-describe.only('Parser', () => {
+describe('Parser', () => {
   let sender: SignerWithAddress;
   let parser: ParserMock;
   let preprocessorAddr: string;
@@ -47,6 +47,7 @@ describe.only('Parser', () => {
     ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
     ctxDSLAddr = ctxDSL.address;
     ctxProgramAddr = ctxProgram.address;
+    await ctxProgram.setAppAddress(parser.address);
   });
 
   beforeEach(async () => {
@@ -93,7 +94,7 @@ describe.only('Parser', () => {
     });
 
     it('uint256 1122334433', async () => {
-      let result = await parser.parse(
+      const result = await parser.parse(
         preprocessorAddr,
         ctxDSLAddr,
         ctxProgramAddr,
@@ -188,7 +189,7 @@ describe.only('Parser', () => {
       ).to.be.revertedWith('Parser: "?!" command is unknown');
     });
 
-    it.only('if condition', async () => {
+    it('if condition', async () => {
       const ONE = new Array(64).join('0') + 1;
       const TWO = new Array(64).join('0') + 2;
       const FOUR = new Array(64).join('0') + 4;
@@ -209,21 +210,21 @@ describe.only('Parser', () => {
         'end',
       ]);
 
-      // const expected =
-      //   '0x' +
-      //   '18' + // bool
-      //   '01' + // true
-      //   '25' + // if
-      //   '0027' + // position of the `action` branch
-      //   '1a' + // uin256
-      //   `${FOUR}` + // FOUR
-      //   '24' + // end of body
-      //   '1a' + // action: uint256
-      //   `${ONE}` + // action: ONE
-      //   '1a' + // action: uint256
-      //   `${TWO}` + // action: TWO
-      //   '24'; // action: end
-      // expect(await ctxProgram.program()).to.equal(expected);
+      const expected =
+        '0x' +
+        '18' + // bool
+        '01' + // true
+        '25' + // if
+        '0027' + // position of the `action` branch
+        '1a' + // uin256
+        `${FOUR}` + // FOUR
+        '24' + // end of body
+        '1a' + // action: uint256
+        `${ONE}` + // action: ONE
+        '1a' + // action: uint256
+        `${TWO}` + // action: TWO
+        '24'; // action: end
+      expect(await ctxProgram.program()).to.equal(expected);
     });
 
     it('if-else condition', async () => {
@@ -378,7 +379,7 @@ describe.only('Parser', () => {
             );
           });
 
-          it('only with additional code just before it', async () => {
+          it('with additional code just before it', async () => {
             const number = new Array(64).join('0') + 6;
             await parser.parseCode(ctxDSLAddr, ctxProgramAddr, [
               'uint256',
@@ -401,7 +402,7 @@ describe.only('Parser', () => {
             );
           });
 
-          it('only with additional code just after it', async () => {
+          it('with additional code just after it', async () => {
             const number = new Array(64).join('0') + 6;
             await parser.parseCode(ctxDSLAddr, ctxProgramAddr, [
               'declareArr',
