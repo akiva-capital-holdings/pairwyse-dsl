@@ -23,42 +23,6 @@ contract IContext context
 address ownerAddr
 ```
 
-### Parsed
-
-```solidity
-event Parsed(address preProccessor, address context, string code)
-```
-
-### RecordArchived
-
-```solidity
-event RecordArchived(uint256 recordId)
-```
-
-### RecordUnarchived
-
-```solidity
-event RecordUnarchived(uint256 recordId)
-```
-
-### RecordActivated
-
-```solidity
-event RecordActivated(uint256 recordId)
-```
-
-### RecordDeactivated
-
-```solidity
-event RecordDeactivated(uint256 recordId)
-```
-
-### RecordExecuted
-
-```solidity
-event RecordExecuted(address signatory, uint256 recordId, uint256 providedAmount, string transaction)
-```
-
 ### NewRecord
 
 ```solidity
@@ -395,8 +359,8 @@ receive() external payable
 function _checkSignatories(address[] _signatories) internal view
 ```
 
-_Checks input _signatures that only one 'ANYONE' address exists in the
-list or that 'ANYONE' address does not exist in signatures at all_
+_Checks input _signatures that only one  'anyone' address exists in the
+list or that 'anyone' address does not exist in signatures at all_
 
 #### Parameters
 
@@ -495,7 +459,7 @@ function _validateConditions(uint256 _recordId, uint256 _msgValue) internal retu
 ### _fulfill
 
 ```solidity
-function _fulfill(uint256 _recordId, uint256 _msgValue, address _signatory) internal returns (bool result)
+function _fulfill(uint256 _recordId, uint256 _msgValue, address _signatory) internal returns (bool)
 ```
 
 _Fulfill Record_
@@ -512,7 +476,7 @@ _Fulfill Record_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| result | bool | Boolean whether the record was successfully executed or not |
+| [0] | bool | Boolean whether the record was successfully executed or not |
 
 ### _activeRecordsLen
 

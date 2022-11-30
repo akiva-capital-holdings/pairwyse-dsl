@@ -1,6 +1,7 @@
 ## Governance
 
 Financial Agreement written in DSL between two or more users
+
 Agreement contract that is used to implement any custom logic of a
 financial agreement. Ex. lender-borrower agreement
 
@@ -16,6 +17,12 @@ contract IParser parser
 contract IContext context
 ```
 
+### conditionContext
+
+```solidity
+contract IContext conditionContext
+```
+
 ### deadline
 
 ```solidity
@@ -26,24 +33,6 @@ uint256 deadline
 
 ```solidity
 address ownerAddr
-```
-
-### preProc
-
-```solidity
-address preProc
-```
-
-### recordIds
-
-```solidity
-uint256[] recordIds
-```
-
-### contexts
-
-```solidity
-address[] contexts
 ```
 
 ### NewRecord
@@ -124,10 +113,16 @@ mapping(uint256 => uint256[]) requiredRecords
 mapping(uint256 => mapping(address => bool)) isExecutedBySignatory
 ```
 
+### recordIds
+
+```solidity
+uint256[] recordIds
+```
+
 ### constructor
 
 ```solidity
-constructor(address _parser, address _ownerAddr, address _token, uint256 _deadline, address[] _contexts) public
+constructor(address _parser, address _ownerAddr, address _token, uint256 _deadline) public
 ```
 
 Sets parser address, creates new Context instance, and setups Context
@@ -388,8 +383,8 @@ receive() external payable
 function _checkSignatories(address[] _signatories) internal view
 ```
 
-_Checks input _signatures that only one 'ANYONE' address exists in the
-list or that 'ANYONE' address does not exist in signatures at all_
+_Checks input _signatures that only one  'anyone' address exists in the
+list or that 'anyone' address does not exist in signatures at all_
 
 #### Parameters
 
@@ -521,81 +516,30 @@ _return length of active records for getActiveRecords_
 | ---- | ---- | ----------- |
 | [0] | uint256 | count length of active records array |
 
+### _updateRecord
+
+```solidity
+function _updateRecord(uint256 _recordId, string _record) internal
+```
+
+_Uploads pre-defined records to Governance contract directly.
+Uses a simple condition string `bool true`.
+Records that are uploaded using `_updateRecord` still have to be
+parsed using a preprocessor before execution. Such record becomes
+non-upgradable. Check `isUpgradableRecord` modifier_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _recordId | uint256 | Record ID |
+| _record | string | the DSL code string of the record |
+
 ### _setBaseRecords
 
 ```solidity
 function _setBaseRecords() internal
 ```
 
-_Uploads 4 pre-defined records to Governance contract directly_
-
-### _setParameters
-
-```solidity
-function _setParameters(uint256 _recordId, string _record, string _condition, uint256 _requiredRecordsLength, address _context, address _contextCondition) internal
-```
-
-_Uploads 4 pre-defined records to Governance contract directly.
-Uses a simple condition string `bool true`.
-Records still have to be parsed using a preprocessor before execution. Such record becomes
-non-upgradable. Check `isUpgradableRecord` modifier_
-
-### _setBaseRecord
-
-```solidity
-function _setBaseRecord() internal
-```
-
-_Declares VOTERS list that will contain structures.
-In additional to that declares two structures that will be
-used for YES/NO voting_
-
-### _setYesRecord
-
-```solidity
-function _setYesRecord() internal
-```
-
-_Inserts VOTE_YES structure to the VOTERS list,
-this record can be executed only if deadline is not occurred
-TODO: and balance for
-msg.sender of Governance token will be more that 0_
-
-### _setNoRecord
-
-```solidity
-function _setNoRecord() internal
-```
-
-_Inserts VOTE_NO structure to the VOTERS list,
-this record can be executed only if deadline is not occurred
-TODO: and balance for
-msg.sender of Governance token will be more that 0_
-
-### _setCheckVotingRecord
-
-```solidity
-function _setCheckVotingRecord() internal
-```
-
-_Sums up the results of the voting, if results are more than 50%
-the record that is set as RECORD_ID for AGREEMENT_ADDR will be activated
-otherwise, the RECORD_ID record won't be activated.
-This record can be executed only if the deadline has already occurred
-TODO: change RECORD_ID and AGREEMENT_ADDR to the dynamical inside of
-the governance contract_
-
-### _setBaseRecordStatus
-
-```solidity
-function _setBaseRecordStatus(uint256 _recordId) internal
-```
-
-_Sets the record as base record for the Governance contract_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _recordId | uint256 | is the record ID |
+_Sets 4 pre-defined records for Governance contract_
 

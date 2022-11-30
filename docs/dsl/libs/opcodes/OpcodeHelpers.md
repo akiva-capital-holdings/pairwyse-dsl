@@ -54,44 +54,8 @@ function nextBranchSelector(address _ctx, string baseOpName) public returns (byt
 ### mustCall
 
 ```solidity
-function mustCall(address addr, bytes data) public returns (bytes)
+function mustCall(address addr, bytes data) public
 ```
-
-_Check .call() function and returns data_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| addr | address | Context contract address |
-| data | bytes | Abi fubction with params |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes | callData returns data from call |
-
-### mustDelegateCall
-
-```solidity
-function mustDelegateCall(address addr, bytes data) public returns (bytes)
-```
-
-_Check .delegatecall() function and returns data_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| addr | address | Context contract address |
-| data | bytes | Abi fubction with params |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes | delegateCallData returns data from call |
 
 ### getNextBytes
 

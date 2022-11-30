@@ -248,12 +248,6 @@ string PRP2
 string OPH1
 ```
 
-### OPH2
-
-```solidity
-string OPH2
-```
-
 ## ErrorsByteUtils
 
 ### BUT1

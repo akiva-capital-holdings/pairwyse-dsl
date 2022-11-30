@@ -48,10 +48,10 @@ function fromUint256toString(uint256 _s) public pure returns (string)
 function fromHexChar(bytes1 _c) public pure returns (uint8)
 ```
 
-### parseScientificNotation
+### getWei
 
 ```solidity
-function parseScientificNotation(string _s) public pure returns (string)
+function getWei(string _s) public pure returns (string)
 ```
 
 ### mayBeNumber

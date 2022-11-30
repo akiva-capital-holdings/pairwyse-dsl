@@ -4,7 +4,7 @@ import { BigNumber } from 'ethers';
 
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
-import { E2EApp, Context, Preprocessor, Stack, Agreement } from '../../../typechain-types';
+import { BaseApplication, Context, Preprocessor, Stack, Agreement } from '../../../typechain-types';
 import {
   bnToLongHexString,
   checkStackTail,
@@ -33,7 +33,7 @@ describe('End-to-end', () => {
   let preprocessor: Preprocessor;
   let ctx: Context;
   let ctxAddr: string;
-  let app: E2EApp;
+  let app: BaseApplication;
   let NEXT_MONTH: number;
   let PREV_MONTH: number;
   let lastBlockTimestamp: number;
@@ -79,7 +79,9 @@ describe('End-to-end', () => {
 
     // Deploy Application
     app = await (
-      await ethers.getContractFactory('E2EApp', { libraries: { Executor: executorLibAddr } })
+      await ethers.getContractFactory('BaseApplication', {
+        libraries: { Executor: executorLibAddr },
+      })
     ).deploy(parserAddr, preprAddr, ctxAddr);
 
     await ctx.setAppAddress(app.address);

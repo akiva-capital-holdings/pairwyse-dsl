@@ -1,6 +1,6 @@
 import * as hre from 'hardhat';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
-import { App, Context, Stack } from '../../../typechain-types';
+import { BaseApplication, Context, Stack } from '../../../typechain-types';
 import { checkStackTail } from '../../utils/utils';
 
 const { ethers } = hre;
@@ -8,7 +8,7 @@ const { ethers } = hre;
 describe('Boolean Algebra', () => {
   let stack: Stack;
   let ctx: Context;
-  let app: App;
+  let app: BaseApplication;
 
   before(async () => {
     // Deploy libraries
@@ -35,7 +35,9 @@ describe('Boolean Algebra', () => {
 
     // Deploy Application
     app = await (
-      await ethers.getContractFactory('App', { libraries: { Executor: executorLibAddr } })
+      await ethers.getContractFactory('BaseApplication', {
+        libraries: { Executor: executorLibAddr },
+      })
     ).deploy(parserAddr, preprAddr, ctx.address);
   });
 

@@ -1,7 +1,5 @@
 ## ByteUtils
 
-Library to simplify working with bytes
-
 ### slice
 
 ```solidity

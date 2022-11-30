@@ -11,7 +11,7 @@ import { UnstructuredStorageMock } from '../mocks/UnstructuredStorageMock.sol';
 // import 'hardhat/console.sol';
 
 // TODO: do we need this contract actually? Will it be usable after making Roles?
-contract App is UnstructuredStorageMock, LinkedList {
+contract BaseApplication is UnstructuredStorageMock, LinkedList {
     using StringUtils for string;
 
     address public parserAddr;

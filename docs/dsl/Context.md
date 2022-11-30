@@ -7,10 +7,10 @@ It provides additional information about program state and point counter (pc).
 During creating Context contract executes the `initOpcodes` function that provides
 basic working opcodes_
 
-### ANYONE
+### anyone
 
 ```solidity
-address ANYONE
+address anyone
 ```
 
 ### stack
@@ -89,18 +89,6 @@ mapping(string => bytes1) opCodeByName
 
 ```solidity
 mapping(bytes1 => bytes4) selectorByOpcode
-```
-
-### numOfArgsByOpcode
-
-```solidity
-mapping(string => uint8) numOfArgsByOpcode
-```
-
-### isCommand
-
-```solidity
-mapping(string => bool) isCommand
 ```
 
 ### opcodeLibNameByOpcode
@@ -255,10 +243,10 @@ _Sets the new address of the OtherOpcodes library_
 | ---- | ---- | ----------- |
 | _otherOpcodes | address | is the new address of the library |
 
-### _addOpcode
+### addOpcode
 
 ```solidity
-function _addOpcode(string _name, bytes1 _opcode, bytes4 _opSelector, bytes4 _asmSelector, enum IContext.OpcodeLibNames _libName, uint8 _numOfArgs, bool _isCommand) internal
+function addOpcode(string _name, bytes1 _opcode, bytes4 _opSelector, bytes4 _asmSelector, enum IContext.OpcodeLibNames _libName) public
 ```
 
 _Adds the opcode for the DSL command_
@@ -272,8 +260,6 @@ _Adds the opcode for the DSL command_
 | _opSelector | bytes4 | is the selector of the function for this opcode        from onle of library in `contracts/libs/opcodes/*` |
 | _asmSelector | bytes4 | is the selector of the function from the Parser for that opcode |
 | _libName | enum IContext.OpcodeLibNames | is the name of library that is used fot the opcode |
-| _numOfArgs | uint8 | The number of arguments for this opcode |
-| _isCommand | bool |  |
 
 ### setProgram
 
