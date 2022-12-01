@@ -500,7 +500,7 @@ contract Governance is LinkedList {
             _requiredRecords = new uint256[](1);
             _requiredRecords[0] = 0; // required alvays 0 record
         }
-        if (_recordId == 0 || _recordId == 3) {
+        if (_recordId == 0) {
             _signatories[0] = ownerAddr;
         } else {
             _signatories[0] = context.anyone();

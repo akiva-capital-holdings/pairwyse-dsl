@@ -1,4 +1,5 @@
 import { task } from 'hardhat/config';
+import { ONE_MONTH } from '../test/utils/constants';
 
 task('impersonate-dai-holders', 'Impersonate accounts on Mainnet fork that hold DAI tokens')
   .addOptionalParam('daiHolder', 'Additional DAI holder to impersonate')
@@ -47,3 +48,12 @@ task('advance-time', 'Advance time of a local Hardhat node')
     await hre.ethers.provider.send('evm_increaseTime', [parseInt(advanceShift, 10)]);
     console.log('✅ Done ✅');
   });
+
+task('get-next-month-timestamp', 'Shows the next month timestamp').setAction(async (_, hre) => {
+  // nextMonthTimestap;
+  const LAST_BLOCK_TIMESTAMP = (
+    await hre.ethers.provider.getBlock(await hre.ethers.provider.getBlockNumber())
+  ).timestamp;
+  const nextMonthTimestap = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
+  console.log(`\n\tThe next month's timestamp is ${nextMonthTimestap}`);
+});
