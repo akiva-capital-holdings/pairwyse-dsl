@@ -16,12 +16,6 @@ contract IParser parser
 contract IContext context
 ```
 
-### deadline
-
-```solidity
-uint256 deadline
-```
-
 ### ownerAddr
 
 ```solidity
@@ -127,7 +121,7 @@ mapping(uint256 => mapping(address => bool)) isExecutedBySignatory
 ### constructor
 
 ```solidity
-constructor(address _parser, address _ownerAddr, address _token, uint256 _deadline, address[] _contexts) public
+constructor(address _parser, address _ownerAddr, address[] _contexts) public
 ```
 
 Sets parser address, creates new Context instance, and setups Context

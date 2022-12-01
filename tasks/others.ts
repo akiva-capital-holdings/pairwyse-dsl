@@ -40,3 +40,10 @@ task('impersonate-dai-holders', 'Impersonate accounts on Mainnet fork that hold 
 
     console.log('✅ Done ✅');
   });
+
+task('advance-time', 'Advance time of a local Hardhat node')
+  .addParam('by', 'By how many seconds to advance time')
+  .setAction(async ({ by: advanceShift }, hre) => {
+    await hre.ethers.provider.send('evm_increaseTime', [parseInt(advanceShift, 10)]);
+    console.log('✅ Done ✅');
+  });

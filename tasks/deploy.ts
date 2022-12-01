@@ -58,11 +58,11 @@ task('deploy-and-mint:erc20', 'To deploy erc20 mock')
     console.log(`\x1b[42m Token address \x1b[0m\x1b[32m ${token.address}\x1b[0m`);
   });
 
-task('deploy-n-setup:governance', 'Deploy Governance, required libraries and set it up')
+task('deploy:governance', 'Deploy Governance, required libraries and set it up')
   .addParam('agreement', 'Address of the target agreement contract')
   .addParam('owner', 'Governance contract owner address')
-  .addParam('token', 'ERC20 token address that will be used for voting process')
-  .setAction(async ({ agreement: agreementAddr, owner: ownerAddr, token: tokenAddr }, hre) => {
+  // .addParam('token', 'ERC20 token address that will be used for voting process')
+  .setAction(async ({ agreement: agreementAddr, owner: ownerAddr /*, token: tokenAddr*/ }, hre) => {
     console.log(`Deploying from address ${(await hre.ethers.getSigners())[0].address}`);
     const {
       governanceAddr,
@@ -71,7 +71,7 @@ task('deploy-n-setup:governance', 'Deploy Governance, required libraries and set
       conditionContextAddr,
       transactionContextAddr,
       contexts,
-    } = await deployGovernance(hre, agreementAddr, ownerAddr, tokenAddr);
+    } = await deployGovernance(hre, agreementAddr, ownerAddr);
     console.log(`\x1b[42m Preprocessor address \x1b[0m\x1b[32m ${governanceAddr}\x1b[0m`);
     console.log({
       governanceAddr,

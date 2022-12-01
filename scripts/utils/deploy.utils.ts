@@ -133,16 +133,9 @@ export const deployAgreement = async (hre: HardhatRuntimeEnvironment, multisigAd
 export const deployGovernance = async (
   hre: HardhatRuntimeEnvironment,
   targetAgreementAddr: string,
-  ownerAddr: string,
-  tokenAddr: string
+  ownerAddr: string
 ) => {
   const Context = await hre.ethers.getContractFactory('Context');
-  const ONE_DAY: number = 60 * 60 * 24;
-  const ONE_MONTH: number = ONE_DAY * 30;
-  const LAST_BLOCK_TIMESTAMP: number = (
-    await hre.ethers.provider.getBlock(await hre.ethers.provider.getBlockNumber())
-  ).timestamp;
-  const NEXT_MONTH: number = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
   const [
     comparisonOpcodesLibAddr,
     branchingOpcodesLibAddr,
@@ -180,13 +173,7 @@ export const deployGovernance = async (
     _contexts[6].address,
     _contexts[7].address,
   ];
-  const governance = await GovernanceContract.deploy(
-    parserAddr,
-    ownerAddr,
-    tokenAddr,
-    NEXT_MONTH,
-    contexts
-  );
+  const governance = await GovernanceContract.deploy(parserAddr, ownerAddr, contexts);
   await governance.deployed();
 
   const transactionContext = await Context.deploy();
