@@ -4,6 +4,7 @@ import * as hre from 'hardhat';
 import { deployBaseMock } from '../../scripts/utils/deploy.utils.mock';
 import { Context, ParserMock } from '../../typechain-types';
 import { hex4Bytes, bnToLongHexString } from '../utils/utils';
+
 const { ethers, network } = hre;
 
 describe('Parser', () => {

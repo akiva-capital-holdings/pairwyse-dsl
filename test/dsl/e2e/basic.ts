@@ -2,7 +2,7 @@ import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { parseEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
-import { App, Context, Stack } from '../../../typechain-types';
+import { BaseApplication, Context, Stack } from '../../../typechain-types';
 import { checkStackTail, hex4Bytes } from '../../utils/utils';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 
@@ -11,7 +11,7 @@ const { ethers, network } = hre;
 describe('DSL: basic', () => {
   let stack: Stack;
   let ctx: Context;
-  let app: App;
+  let app: BaseApplication;
   let appAddr: string;
   let NEXT_MONTH: number;
   let PREV_MONTH: number;
@@ -53,7 +53,9 @@ describe('DSL: basic', () => {
 
     // Deploy Application
     app = await (
-      await ethers.getContractFactory('App', { libraries: { Executor: executorLibAddr } })
+      await ethers.getContractFactory('BaseApplication', {
+        libraries: { Executor: executorLibAddr },
+      })
     ).deploy(parserAddr, preprAddr, ctx.address);
     appAddr = app.address;
 

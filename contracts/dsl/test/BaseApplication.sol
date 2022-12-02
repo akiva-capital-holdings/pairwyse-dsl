@@ -5,13 +5,12 @@ import { IParser } from '../interfaces/IParser.sol';
 import { IContext } from '../interfaces/IContext.sol';
 import { Executor } from '../libs/Executor.sol';
 import { StringUtils } from '../libs/StringUtils.sol';
-import { LinkedList } from '../helpers/LinkedList.sol';
-import { UnstructuredStorageMock } from '../mocks/UnstructuredStorageMock.sol';
+import { BaseStorage } from './BaseStorage.sol';
 
 // import 'hardhat/console.sol';
 
 // TODO: do we need this contract actually? Will it be usable after making Roles?
-contract App is UnstructuredStorageMock, LinkedList {
+contract BaseApplication is BaseStorage {
     using StringUtils for string;
 
     address public parserAddr;

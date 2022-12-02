@@ -1,6 +1,6 @@
 import * as hre from 'hardhat';
 import { expect } from 'chai';
-import { App } from '../../../typechain-types';
+import { BaseApplication } from '../../../typechain-types';
 import { hex4Bytes } from '../../utils/utils';
 import { deployBaseMock } from '../../../scripts/utils/deploy.utils.mock';
 import { ContextMock } from '../../../typechain-types/dsl/mocks';
@@ -10,7 +10,7 @@ const { ethers, network } = hre;
 
 describe('DSL: math', () => {
   let ctx: ContextMock;
-  let app: App;
+  let app: BaseApplication;
   let snapshotId: number;
 
   before(async () => {
@@ -31,9 +31,11 @@ describe('DSL: math', () => {
     await ctx.setLogicalOpcodesAddr(logicalOpcodesLibAddr);
     await ctx.setOtherOpcodesAddr(otherOpcodesLibAddr);
 
-    // Deploy Application
+    // Deploy BaseApplication
     app = await (
-      await ethers.getContractFactory('App', { libraries: { Executor: executorLibAddr } })
+      await ethers.getContractFactory('BaseApplication', {
+        libraries: { Executor: executorLibAddr },
+      })
     ).deploy(parserAddr, preprAddr, ctx.address);
 
     await ctx.setAppAddress(app.address);
