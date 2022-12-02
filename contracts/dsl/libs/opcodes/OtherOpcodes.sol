@@ -15,33 +15,32 @@ library OtherOpcodes {
     using UnstructuredStorage for bytes32;
     using StringUtils for string;
 
-
-    function opLoadRemoteAny(address _ctxDSL, address _ctxProgram) public {
+    function opLoadRemoteAny(address _ctxProgram, address _ctxDSL) public {
         address libAddr = IDSLContext(_ctxDSL).otherOpcodes();
         bytes4 selector = OpcodeHelpers.nextBranchSelector(_ctxDSL, _ctxProgram, 'loadRemote');
         OpcodeHelpers.mustDelegateCall(libAddr, abi.encodeWithSelector(selector, _ctxDSL));
     }
 
-    function opBlockNumber(address _ctxProgram) public {
+    function opBlockNumber(address _ctxProgram, address) public {
         OpcodeHelpers.putToStack(_ctxProgram, block.number);
     }
 
-    function opBlockTimestamp(address _ctxProgram) public {
+    function opBlockTimestamp(address _ctxProgram, address) public {
         OpcodeHelpers.putToStack(_ctxProgram, block.timestamp);
     }
 
-    function opBlockChainId(address _ctxProgram) public {
+    function opBlockChainId(address _ctxProgram, address) public {
         OpcodeHelpers.putToStack(_ctxProgram, block.chainid);
     }
 
-    function opMsgSender(address _ctxProgram) public {
+    function opMsgSender(address _ctxProgram, address) public {
         OpcodeHelpers.putToStack(
             _ctxProgram,
             uint256(uint160(IProgramContext(_ctxProgram).msgSender()))
         );
     }
 
-    function opMsgValue(address _ctxProgram) public {
+    function opMsgValue(address _ctxProgram, address) public {
         OpcodeHelpers.putToStack(
             _ctxProgram,
             uint256(uint160(IProgramContext(_ctxProgram).msgValue()))
@@ -53,7 +52,7 @@ library OtherOpcodes {
      * The value of bool variable is taken from DSL code itself
      * @param _ctxProgram ProgramContext contract address
      */
-    function opSetLocalBool(address _ctxProgram) public {
+    function opSetLocalBool(address _ctxProgram, address) public {
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
 
         bytes memory data = OpcodeHelpers.nextBytes(_ctxProgram, 1);
@@ -71,7 +70,7 @@ library OtherOpcodes {
      * @dev Sets uint256 variable in the application contract. The value of the variable is taken from stack
      * @param _ctxProgram ProgramContext contract address
      */
-    function opSetUint256(address _ctxProgram) public {
+    function opSetUint256(address _ctxProgram, address) public {
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
         uint256 _val = IProgramContext(_ctxProgram).stack().pop();
 
@@ -87,8 +86,8 @@ library OtherOpcodes {
      * @dev Gets an element by its index in the array
      * @param _ctxProgram ProgramContext contract address
      */
-    function opGet(address _ctxProgram) public {
-        uint256 _index = opUint256Get(_ctxProgram);
+    function opGet(address _ctxProgram, address) public {
+        uint256 _index = opUint256Get(_ctxProgram, address(0));
         bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
 
         // check if the array exists
@@ -113,7 +112,7 @@ library OtherOpcodes {
      * @param _ctxDSL DSLContext contract instance address
      * @param _ctxProgram ProgramContext contract address
      */
-    function opSumOf(address _ctxDSL, address _ctxProgram) public {
+    function opSumOf(address _ctxProgram, address _ctxDSL) public {
         bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
 
         _checkArrType(_ctxDSL, _ctxProgram, _arrNameB32, 'uint256');
@@ -128,7 +127,7 @@ library OtherOpcodes {
      * @param _ctxDSL DSLContext contract instance address
      * @param _ctxProgram ProgramContext contract address
      */
-    function opSumThroughStructs(address _ctxDSL, address _ctxProgram) public {
+    function opSumThroughStructs(address _ctxProgram, address _ctxDSL) public {
         bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
 
@@ -147,7 +146,7 @@ library OtherOpcodes {
      * the structs parameters
      * @param _ctxProgram ProgramContext contract address
      */
-    function opStruct(address _ctxProgram) public {
+    function opStruct(address _ctxProgram, address) public {
         // get the first variable name
         bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
 
@@ -172,7 +171,7 @@ library OtherOpcodes {
      * @dev Inserts an item to array
      * @param _ctxProgram ProgramContext contract address
      */
-    function opPush(address _ctxProgram) public {
+    function opPush(address _ctxProgram, address) public {
         bytes32 _varValue = OpcodeHelpers.getNextBytes(_ctxProgram, 32);
         bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
 
@@ -196,7 +195,7 @@ library OtherOpcodes {
      * @dev Declares an empty array
      * @param _ctxProgram ProgramContext contract address
      */
-    function opDeclare(address _ctxProgram) public {
+    function opDeclare(address _ctxProgram, address) public {
         bytes32 _arrType = OpcodeHelpers.getNextBytes(_ctxProgram, 1);
         bytes32 _arrName = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
 
@@ -210,61 +209,61 @@ library OtherOpcodes {
         );
     }
 
-    function opLoadLocalUint256(address _ctxProgram) public {
+    function opLoadLocalUint256(address _ctxProgram, address) public {
         opLoadLocal(_ctxProgram, 'getStorageUint256(bytes32)');
     }
 
-    function opLoadLocalAddress(address _ctxProgram) public {
+    function opLoadLocalAddress(address _ctxProgram, address) public {
         opLoadLocal(_ctxProgram, 'getStorageAddress(bytes32)');
     }
 
-    function opLoadRemoteUint256(address _ctxProgram) public {
+    function opLoadRemoteUint256(address _ctxProgram, address) public {
         opLoadRemote(_ctxProgram, 'getStorageUint256(bytes32)');
     }
 
-    function opLoadRemoteBytes32(address _ctxProgram) public {
+    function opLoadRemoteBytes32(address _ctxProgram, address) public {
         opLoadRemote(_ctxProgram, 'getStorageBytes32(bytes32)');
     }
 
-    function opLoadRemoteBool(address _ctxProgram) public {
+    function opLoadRemoteBool(address _ctxProgram, address) public {
         opLoadRemote(_ctxProgram, 'getStorageBool(bytes32)');
     }
 
-    function opLoadRemoteAddress(address _ctxProgram) public {
+    function opLoadRemoteAddress(address _ctxProgram, address) public {
         opLoadRemote(_ctxProgram, 'getStorageAddress(bytes32)');
     }
 
-    function opBool(address _ctxProgram) public {
+    function opBool(address _ctxProgram, address) public {
         bytes memory data = OpcodeHelpers.nextBytes(_ctxProgram, 1);
         OpcodeHelpers.putToStack(_ctxProgram, uint256(uint8(data[0])));
     }
 
-    function opUint256(address _ctxProgram) public {
-        OpcodeHelpers.putToStack(_ctxProgram, opUint256Get(_ctxProgram));
+    function opUint256(address _ctxProgram, address) public {
+        OpcodeHelpers.putToStack(_ctxProgram, opUint256Get(_ctxProgram, address(0)));
     }
 
-    function opSendEth(address _ctxProgram) public {
+    function opSendEth(address _ctxProgram, address) public {
         address payable recipient = payable(
             address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
         );
-        uint256 amount = opUint256Get(_ctxProgram);
+        uint256 amount = opUint256Get(_ctxProgram, address(0));
         recipient.transfer(amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
-    function opTransfer(address _ctxProgram) public {
+    function opTransfer(address _ctxProgram, address) public {
         address payable token = payable(
             address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
         );
         address payable recipient = payable(
             address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
         );
-        uint256 amount = opUint256Get(_ctxProgram);
+        uint256 amount = opUint256Get(_ctxProgram, address(0));
         IERC20(token).transfer(recipient, amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
-    function opTransferVar(address _ctxProgram) public {
+    function opTransferVar(address _ctxProgram, address) public {
         address payable token = payable(
             address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
         );
@@ -276,7 +275,7 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
-    function opTransferFrom(address _ctxProgram) public {
+    function opTransferFrom(address _ctxProgram, address) public {
         address payable token = payable(
             address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
         );
@@ -286,12 +285,12 @@ library OtherOpcodes {
         address payable to = payable(
             address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
         );
-        uint256 amount = opUint256Get(_ctxProgram);
+        uint256 amount = opUint256Get(_ctxProgram, address(0));
         IERC20(token).transferFrom(from, to, amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
-    function opBalanceOf(address _ctxProgram) public {
+    function opBalanceOf(address _ctxProgram, address) public {
         address payable token = payable(
             address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
         );
@@ -302,12 +301,12 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctxProgram, balance);
     }
 
-    function opLengthOf(address _ctxProgram) public {
+    function opLengthOf(address _ctxProgram, address) public {
         uint256 _length = uint256(opLoadLocalGet(_ctxProgram, 'getLength(bytes32)'));
         OpcodeHelpers.putToStack(_ctxProgram, _length);
     }
 
-    function opTransferFromVar(address _ctxProgram) public {
+    function opTransferFromVar(address _ctxProgram, address) public {
         address payable token = payable(
             address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
         );
@@ -323,7 +322,7 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
-    function opUint256Get(address _ctxProgram) public returns (uint256) {
+    function opUint256Get(address _ctxProgram, address) public returns (uint256) {
         bytes memory data = OpcodeHelpers.nextBytes(_ctxProgram, 32);
 
         // Convert bytes to bytes32
@@ -358,7 +357,7 @@ library OtherOpcodes {
         }
     }
 
-    function opAddressGet(address _ctxProgram) public returns (address) {
+    function opAddressGet(address _ctxProgram, address) public returns (address) {
         bytes memory contractAddrBytes = OpcodeHelpers.nextBytes(_ctxProgram, 20);
 
         // Convert bytes to bytes32
@@ -419,7 +418,7 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctxProgram, uint256(result));
     }
 
-    function opEnableRecord(address _ctxProgram) public {
+    function opEnableRecord(address _ctxProgram, address) public {
         bytes32 result = opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)');
 
         uint256 recordId = uint256(result);

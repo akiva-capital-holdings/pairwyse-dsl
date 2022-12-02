@@ -5,7 +5,7 @@ import { Executor } from '../libs/Executor.sol';
 import { UnstructuredStorageMock } from './UnstructuredStorageMock.sol';
 
 contract ExecutorMock is UnstructuredStorageMock {
-    function execute(address _dslContext, address _programContext, address _app) public {
-        Executor.execute(_dslContext, _programContext, _app);
+    function execute(address _dslContext, address _programContext) public {
+        Executor.execute(_dslContext, _programContext);
     }
 }

@@ -44,7 +44,7 @@ contract BaseApplication is BaseStorage {
 
     function execute() external payable {
         IProgramContext(programContext).setMsgValue(msg.value);
-        Executor.execute(dslContext, programContext, address(this));
+        Executor.execute(dslContext, programContext);
     }
 
     function _setupContext() internal {

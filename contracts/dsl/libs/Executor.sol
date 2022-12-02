@@ -8,7 +8,7 @@ import { ErrorsExecutor, ErrorsContext } from './Errors.sol';
 // import 'hardhat/console.sol';
 
 library Executor {
-    function execute(address _dslContext, address _programContext, address _app) public {
+    function execute(address _dslContext, address _programContext) public {
         bytes memory program = IProgramContext(_programContext).program();
         require(program.length > 0, ErrorsExecutor.EXC1);
         bytes memory opcodeBytes;
@@ -21,14 +21,15 @@ library Executor {
         while (IProgramContext(_programContext).pc() < program.length) {
             opcodeBytes = IProgramContext(_programContext).currentProgram();
             opcodeByte = bytes1(uint8(opcodeBytes[0]));
+            // console.logBytes(opcodeBytes);
             _selector = IDSLContext(_dslContext).selectorByOpcode(opcodeByte);
             require(_selector != 0x0, ErrorsExecutor.EXC2);
 
             IDSLContext.OpcodeLibNames _libName = IDSLContext(_dslContext).opcodeLibNameByOpcode(
                 opcodeByte
             );
-            (success, ) = _programContext.delegatecall(abi.encodeWithSignature('incPc(uin256)', 1));
-            require(success, ErrorsExecutor.EXC4);
+
+            IProgramContext(_programContext).incPc(1);
 
             if (_libName == IDSLContext.OpcodeLibNames.ComparisonOpcodes) {
                 _lib = IDSLContext(_dslContext).comparisonOpcodes();
@@ -39,11 +40,11 @@ library Executor {
             } else {
                 _lib = IDSLContext(_dslContext).otherOpcodes();
             }
-
-            (success, ) = _lib.delegatecall(abi.encodeWithSelector(_selector, _dslContext, _app));
+            (success, ) = _lib.delegatecall(
+                abi.encodeWithSelector(_selector, _programContext, _dslContext)
+            );
             require(success, ErrorsExecutor.EXC3);
         }
-        (success, ) = _programContext.delegatecall(abi.encodeWithSignature('setPc(uin256)', 0));
-        require(success, ErrorsExecutor.EXC4);
+        IProgramContext(_programContext).setPc(0);
     }
 }

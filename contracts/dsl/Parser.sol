@@ -51,15 +51,19 @@ contract Parser is IParser {
      */
     function parseCode(address _dslCtxAddr, address _programCtxAddr, string[] memory _code) public {
         cmdIdx = 0;
+        // console.log('\n');
+        // console.log(_code.length);
         _setCmdsArray(_code);
-
+        // console.logBytes(cmds);
+        // console.log(cmds.length);
+        // console.log('\n');
         IProgramContext(_programCtxAddr).setPc(0);
         IProgramContext(_programCtxAddr).stack().clear();
         bytes memory program;
         while (cmdIdx < cmds.length) {
             program = _parseOpcodeWithParams(_dslCtxAddr, _programCtxAddr, program);
         }
-
+        // console.logBytes(_code.length);
         IProgramContext(_programCtxAddr).setProgram(program);
     }
 
@@ -100,9 +104,13 @@ contract Parser is IParser {
      * bool true
      * ```
      */
-    function asmSetLocalBool(bytes memory _program) public returns (bytes memory newProgram) {
+    function asmSetLocalBool(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
         newProgram = _parseVariable(_program);
-        newProgram = asmBool(newProgram);
+        newProgram = asmBool(newProgram, address(0), address(0));
     }
 
     /**
@@ -113,7 +121,11 @@ contract Parser is IParser {
      * (uint256 5 + uint256 7) setUint256 VARNAME
      * ```
      */
-    function asmSetUint256(bytes memory _program) public returns (bytes memory newProgram) {
+    function asmSetUint256(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
         return _parseVariable(_program);
     }
 
@@ -127,7 +139,8 @@ contract Parser is IParser {
      */
     function asmDeclare(
         bytes memory _program,
-        address _ctxDSLAddr
+        address _ctxDSLAddr,
+        address
     ) public returns (bytes memory newProgram) {
         newProgram = _parseBranchOf(_program, _ctxDSLAddr, 'declareArr'); // program += bytecode for type of array
         newProgram = _parseVariable(newProgram); // program += bytecode for `ARR_NAME`
@@ -141,7 +154,11 @@ contract Parser is IParser {
      * get 3 USERS
      * ```
      */
-    function asmGet(bytes memory _program) public returns (bytes memory newProgram) {
+    function asmGet(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
         string memory _value = _nextCmd();
         bytes4 _arrName = bytes4(keccak256(abi.encodePacked(_nextCmd())));
         newProgram = bytes.concat(_program, bytes32(_value.toUint256()), _arrName);
@@ -156,7 +173,11 @@ contract Parser is IParser {
      * push ITEM ARR_NAME
      * ```
      */
-    function asmPush(bytes memory _program) public returns (bytes memory newProgram) {
+    function asmPush(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
         string memory _value = _nextCmd();
         bytes4 _arrName = bytes4(keccak256(abi.encodePacked(_nextCmd())));
 
@@ -184,7 +205,11 @@ contract Parser is IParser {
      * var NUMBER
      * ```
      */
-    function asmVar(bytes memory _program) public returns (bytes memory newProgram) {
+    function asmVar(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
         newProgram = _parseVariable(_program);
     }
 
@@ -198,7 +223,8 @@ contract Parser is IParser {
      */
     function asmLoadRemote(
         bytes memory _program,
-        address _ctxDSLAddr
+        address _ctxDSLAddr,
+        address
     ) public returns (bytes memory newProgram) {
         newProgram = _parseBranchOf(_program, _ctxDSLAddr, 'loadRemote'); // program += bytecode for `loadRemote bool`
         newProgram = _parseVariable(newProgram); // program += bytecode for `MARY_ADDRESS`
@@ -209,7 +235,11 @@ contract Parser is IParser {
      * @dev Concatenates and updates previous `program` with the `0x01`
      * bytecode of `true` value otherwise `0x00` for `false`
      */
-    function asmBool(bytes memory _program) public returns (bytes memory newProgram) {
+    function asmBool(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
         bytes1 value = bytes1(_nextCmd().equal('true') ? 0x01 : 0x00);
         newProgram = bytes.concat(_program, value);
     }
@@ -218,7 +248,7 @@ contract Parser is IParser {
      * @dev Concatenates and updates previous `program` with the
      * bytecode of uint256 value
      */
-    function asmUint256(bytes memory _program) public returns (bytes memory) {
+    function asmUint256(bytes memory _program, address, address) public returns (bytes memory) {
         uint256 value = _nextCmd().toUint256();
         return bytes.concat(_program, bytes32(value));
     }
@@ -231,9 +261,13 @@ contract Parser is IParser {
      * sendEth RECEIVER 1234
      * ```
      */
-    function asmSend(bytes memory _program) public returns (bytes memory newProgram) {
+    function asmSend(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
         newProgram = _parseVariable(_program); // program += bytecode for `sendEth RECEIVER`
-        newProgram = asmUint256(newProgram); // program += bytecode for `1234`
+        newProgram = asmUint256(newProgram, address(0), address(0)); // program += bytecode for `1234`
     }
 
     /**
@@ -246,10 +280,14 @@ contract Parser is IParser {
      * transfer TOKEN RECEIVER 1234
      * ```
      */
-    function asmTransfer(bytes memory _program) public returns (bytes memory newProgram) {
+    function asmTransfer(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
         newProgram = _parseVariable(_program); // token address
         newProgram = _parseVariable(newProgram); // receiver address
-        newProgram = asmUint256(newProgram); // amount
+        newProgram = asmUint256(newProgram, address(0), address(0)); // amount
     }
 
     /**
@@ -262,7 +300,11 @@ contract Parser is IParser {
      * transferVar TOKEN RECEIVER AMOUNT
      * ```
      */
-    function asmTransferVar(bytes memory _program) public returns (bytes memory newProgram) {
+    function asmTransferVar(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
         newProgram = _parseVariable(_program); // token address
         newProgram = _parseVariable(newProgram); // receiver
         newProgram = _parseVariable(newProgram); // amount
@@ -278,11 +320,15 @@ contract Parser is IParser {
      * transferFrom TOKEN FROM TO 1234
      * ```
      */
-    function asmTransferFrom(bytes memory _program) public returns (bytes memory newProgram) {
+    function asmTransferFrom(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
         newProgram = _parseVariable(_program); // token address
         newProgram = _parseVariable(newProgram); // from
         newProgram = _parseVariable(newProgram); // to
-        newProgram = asmUint256(newProgram); // amount
+        newProgram = asmUint256(newProgram, address(0), address(0)); // amount
     }
 
     /**
@@ -295,7 +341,11 @@ contract Parser is IParser {
      * transferFromVar TOKEN FROM TO AMOUNT
      * ```
      */
-    function asmTransferFromVar(bytes memory _program) public returns (bytes memory newProgram) {
+    function asmTransferFromVar(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
         newProgram = _parseVariable(_program); // token address
         newProgram = _parseVariable(newProgram); // from
         newProgram = _parseVariable(newProgram); // to
@@ -311,7 +361,11 @@ contract Parser is IParser {
      * balanceOf TOKEN USER
      * ```
      */
-    function asmBalanceOf(bytes memory _program) public returns (bytes memory newProgram) {
+    function asmBalanceOf(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
         newProgram = _parseVariable(_program); // token address
         newProgram = _parseVariable(newProgram); // user address
     }
@@ -326,7 +380,7 @@ contract Parser is IParser {
      * lengthOf ARR_NAME
      * ```
      */
-    function asmLengthOf(bytes memory _program) public returns (bytes memory) {
+    function asmLengthOf(bytes memory _program, address, address) public returns (bytes memory) {
         return _parseVariable(_program); // array name
     }
 
@@ -339,7 +393,7 @@ contract Parser is IParser {
      * sumOf ARR_NAME
      * ```
      */
-    function asmSumOf(bytes memory _program) public returns (bytes memory) {
+    function asmSumOf(bytes memory _program, address, address) public returns (bytes memory) {
         return _parseVariable(_program); // array name
     }
 
@@ -363,7 +417,11 @@ contract Parser is IParser {
      * sumOf USERS.lastPayment
      * ```
      */
-    function asmSumThroughStructs(bytes memory _program) public returns (bytes memory newProgram) {
+    function asmSumThroughStructs(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
         newProgram = _parseVariable(_program); // array name
         newProgram = _parseVariable(newProgram); // variable name
     }
@@ -388,7 +446,7 @@ contract Parser is IParser {
      */
     function asmIfelse(
         bytes memory _program,
-        address, // _ctxDSLAddr will not use here
+        address,
         address _programCtxAddr
     ) public returns (bytes memory newProgram) {
         string memory _true = _nextCmd(); // "positive" branch name
@@ -417,7 +475,7 @@ contract Parser is IParser {
      */
     function asmIf(
         bytes memory _program,
-        address, // _ctxDSLAddr will not use here
+        address,
         address _programCtxAddr
     ) public returns (bytes memory newProgram) {
         _setLabelPos(_programCtxAddr, _nextCmd(), _program.length);
@@ -438,7 +496,7 @@ contract Parser is IParser {
      */
     function asmFunc(
         bytes memory _program,
-        address, // _ctxDSLAddr will not use here
+        address,
         address _programCtxAddr
     ) public returns (bytes memory newProgram) {
         // set `name of function` position
@@ -466,7 +524,7 @@ contract Parser is IParser {
      */
     function asmStruct(
         bytes memory _program,
-        address, // _ctxDSLAddr will not use here
+        address,
         address _programCtxAddr
     ) public returns (bytes memory newProgram) {
         // parse the name of structure - `BOB`
@@ -506,7 +564,11 @@ contract Parser is IParser {
      * @dev Parses variable names in for-loop & skip the unnecessary `in` parameter
      * Ex. ['for', 'LP_INITIAL', 'in', 'LPS_INITIAL']
      */
-    function asmForLoop(bytes memory _program) public returns (bytes memory newProgram) {
+    function asmForLoop(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
         // parse temporary variable name
         newProgram = _parseVariable(_program);
         _nextCmd(); // skip `in` keyword
@@ -517,7 +579,11 @@ contract Parser is IParser {
      * @dev Parses the `record id` and the `agreement address` parameters
      * Ex. ['enableRecord', 'RECORD_ID', 'at', 'AGREEMENT_ADDRESS']
      */
-    function asmEnableRecord(bytes memory _program) public returns (bytes memory newProgram) {
+    function asmEnableRecord(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
         newProgram = _parseVariable(_program);
         _nextCmd(); // skip `at` keyword
         newProgram = _parseVariable(newProgram);
@@ -579,6 +645,7 @@ contract Parser is IParser {
 
             _selector = IDSLContext(_dslCtxAddr).asmSelectors(cmd);
             if (_selector != 0x0) {
+                // TODO: address, address
                 (bool success, bytes memory data) = address(this).delegatecall(
                     abi.encodeWithSelector(_selector, newProgram, _dslCtxAddr, _programCtxAddr)
                 );

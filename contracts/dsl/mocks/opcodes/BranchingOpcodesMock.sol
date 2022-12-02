@@ -4,23 +4,23 @@ pragma solidity ^0.8.0;
 import { BranchingOpcodes } from '../../libs/opcodes/BranchingOpcodes.sol';
 
 contract BranchingOpcodesMock {
-    function opIfelse(address _ctx) public {
-        BranchingOpcodes.opIfelse(_ctx);
+    function opIfelse(address _ctxProgram, address) public {
+        BranchingOpcodes.opIfelse(_ctxProgram, address(0));
     }
 
-    function opIf(address _ctx) public {
-        BranchingOpcodes.opIf(_ctx);
+    function opIf(address _ctxProgram, address) public {
+        BranchingOpcodes.opIf(_ctxProgram, address(0));
     }
 
-    function opEnd(address _ctx) public {
-        BranchingOpcodes.opEnd(_ctx);
+    function opEnd(address _ctxProgram, address) public {
+        BranchingOpcodes.opEnd(_ctxProgram, address(0));
     }
 
-    function getUint16(address _ctx) public returns (uint16) {
-        return BranchingOpcodes.getUint16(_ctx);
+    function getUint16(address _ctxProgram) public returns (uint16) {
+        return BranchingOpcodes.getUint16(_ctxProgram);
     }
 
-    function opFunc(address _ctx) public {
-        BranchingOpcodes.opFunc(_ctx);
+    function opFunc(address _ctxProgram, address) public {
+        BranchingOpcodes.opFunc(_ctxProgram, address(0));
     }
 }

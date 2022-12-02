@@ -4,16 +4,18 @@ import { BigNumber } from 'ethers';
 
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
+
 import {
-  Agreement,
   BaseApplication,
-  Context,
-  Context__factory,
-  Governance,
-  Parser,
+  DSLContextMock,
+  ProgramContextMock,
   Preprocessor,
   Stack,
+  Agreement,
+  Governance,
+  Parser
 } from '../../../typechain-types';
+
 import { bnToLongHexString, checkStackTail, hex4Bytes, hex4BytesShort } from '../../utils/utils';
 import { deployAgreement, deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 import { deployBaseMock } from '../../../scripts/utils/deploy.utils.mock';
@@ -23,14 +25,15 @@ import { parseConditionsList } from '../../../scripts/utils/update.record.mock';
 
 const { ethers, network } = hre;
 
-describe('End-to-end', () => {
+describe.skip('End-to-end', () => {
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
   let carl: SignerWithAddress;
   let david: SignerWithAddress;
   let stack: Stack;
   let preprocessor: Preprocessor;
-  let ctx: Context;
+  let ctx: DSLContextMock;
+  let ctxProgram: ProgramContextMock;
   let ctxAddr: string;
   let app: BaseApplication;
   let NEXT_MONTH: number;
@@ -64,16 +67,20 @@ describe('End-to-end', () => {
     preprocessor = await ethers.getContractAt('Preprocessor', preprAddr);
 
     // Deploy Context & setup
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
+    ctx = await (
+      await ethers.getContractFactory('DSLContextMock')
+    ).deploy(
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr
+    );
+    ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
     ctxAddr = ctx.address;
-    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLibAddr);
-    await ctx.setBranchingOpcodesAddr(branchingOpcodesLibAddr);
-    await ctx.setLogicalOpcodesAddr(logicalOpcodesLibAddr);
-    await ctx.setOtherOpcodesAddr(otherOpcodesLibAddr);
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
-    const contextStackAddress = await ctx.stack();
+    const contextStackAddress = await ctxProgram.stack();
     stack = StackCont.attach(contextStackAddress);
 
     // Deploy Application
@@ -81,9 +88,9 @@ describe('End-to-end', () => {
       await ethers.getContractFactory('BaseApplication', {
         libraries: { Executor: executorLibAddr },
       })
-    ).deploy(parserAddr, preprAddr, ctxAddr);
+    ).deploy(parserAddr, preprAddr, ctxAddr, ctxProgram.address);
 
-    await ctx.setAppAddress(app.address);
+    await ctxProgram.setAppAddress(app.address);
   });
 
   beforeEach(async () => {
@@ -107,7 +114,7 @@ describe('End-to-end', () => {
       await app['setStorageUint256(bytes32,uint256)'](varHashPadded, varValue);
       await app.parse(code);
 
-      const resultBytecode = await ctx.program();
+      const resultBytecode = await ctxProgram.program();
       expect(resultBytecode).to.be.equal(`0x${bytecode.join('')}`);
 
       // Execute program
@@ -180,7 +187,7 @@ describe('End-to-end', () => {
     it('bytecode', async () => {
       await app.parse(code);
 
-      const resultBytecode = await ctx.program();
+      const resultBytecode = await ctxProgram.program();
       expect(resultBytecode).to.be.equal(`0x${bytecode.join('')}`);
     });
 
@@ -270,7 +277,7 @@ describe('End-to-end', () => {
       '1a' + // bad: uint256
       `${THREE}` + // bad: THREE
       '24'; // bad: end
-    expect(await ctx.program()).to.equal(expectedProgram);
+    expect(await ctxProgram.program()).to.equal(expectedProgram);
   });
 
   // TODO: fix functions in DSL & fix these tests
@@ -337,7 +344,7 @@ describe('End-to-end', () => {
         '2e' + // setUint256
         '2df384fb' + // SUM
         '24'; // end
-      expect(await ctx.program()).to.equal(expectedProgram);
+      expect(await ctxProgram.program()).to.equal(expectedProgram);
     });
 
     it('func SUM_OF_NUMBERS without parameters', async () => {
@@ -385,7 +392,7 @@ describe('End-to-end', () => {
         '2e' + // setUint256
         '2df384fb' + // SUM
         '24'; // end
-      expect(await ctx.program()).to.equal(expectedProgram);
+      expect(await ctxProgram.program()).to.equal(expectedProgram);
     });
   });
 
@@ -422,7 +429,7 @@ describe('End-to-end', () => {
             '1fff709e' + // NUMBERS
             '18' + // bool
             '01'; // true
-          expect(await ctx.program()).to.equal(expectedProgram);
+          expect(await ctxProgram.program()).to.equal(expectedProgram);
 
           // Execute and check
           await app.execute();
@@ -495,7 +502,7 @@ describe('End-to-end', () => {
             '33' + // push
             `${three}` + // 3
             '1fff709e'; // NUMBERS
-          expect(await ctx.program()).to.equal(expectedProgram);
+          expect(await ctxProgram.program()).to.equal(expectedProgram);
 
           // Execute and check
           await app.execute();
@@ -568,7 +575,7 @@ describe('End-to-end', () => {
             `${ZERO}` + // 0 index
             '1fff709e' + // NUMBERS
             '04'; // >
-          expect(await ctx.program()).to.equal(expectedProgram);
+          expect(await ctxProgram.program()).to.equal(expectedProgram);
 
           // Execute and check
           await app.execute();
@@ -602,7 +609,7 @@ describe('End-to-end', () => {
             '1fff709e' + // NUMBERS
             '40' + // sumOf
             '1fff709e'; // NUMBERS
-          expect(await ctx.program()).to.equal(expectedProgram);
+          expect(await ctxProgram.program()).to.equal(expectedProgram);
 
           // Execute and check
           await app.execute();
@@ -631,7 +638,7 @@ describe('End-to-end', () => {
             '3c8423ff' + // PARTNERS
             '40' + // sumOf
             '3c8423ff'; // PARTNERS
-          expect(await ctx.program()).to.equal(expectedProgram);
+          expect(await ctxProgram.program()).to.equal(expectedProgram);
 
           // Execute and check
           expect(app.execute()).revertedWith('EXC3');
@@ -743,7 +750,7 @@ describe('End-to-end', () => {
             '40' + // sumOf
             '1fff709e' + // NUMBERS
             '04'; // >
-          expect(await ctx.program()).to.equal(expectedProgram);
+          expect(await ctxProgram.program()).to.equal(expectedProgram);
 
           // Execute and check
           await app.execute();
@@ -817,7 +824,7 @@ describe('End-to-end', () => {
           '35' + // get
           `${ZERO}` + // 0 index
           '257b3678'; // bytecode for INDEXES
-        expect(await ctx.program()).to.equal(expectedProgram);
+        expect(await ctxProgram.program()).to.equal(expectedProgram);
 
         // Execute and check
         await checkStackTail(stack, []);
@@ -914,7 +921,7 @@ describe('End-to-end', () => {
           '35' + // get
           `${ONE}` + // 1 index
           '257b3678'; // bytecode for INDEXES
-        expect(await ctx.program()).to.equal(expectedProgram);
+        expect(await ctxProgram.program()).to.equal(expectedProgram);
 
         // Execute and check
         await checkStackTail(stack, []);
@@ -987,7 +994,7 @@ describe('End-to-end', () => {
         '26' + // +
         '2e' + // setUint256
         '2df384fb'; // SUM
-      expect(await ctx.program()).to.equal(expectedProgram);
+      expect(await ctxProgram.program()).to.equal(expectedProgram);
     });
 
     it('updates A variable', async () => {
@@ -1028,7 +1035,7 @@ describe('End-to-end', () => {
         '26' + // +
         '2e' + // setUint256
         '03783fac'; // SUM
-      expect(await ctx.program()).to.equal(expectedProgram);
+      expect(await ctxProgram.program()).to.equal(expectedProgram);
     });
 
     it('reverts if try to set bool value instead of a number', async () => {
@@ -1077,7 +1084,7 @@ describe('End-to-end', () => {
       // to Parser
       await app.parseCode(code);
       const expectedProgram = '0x1800';
-      expect(await ctx.program()).to.equal(expectedProgram);
+      expect(await ctxProgram.program()).to.equal(expectedProgram);
 
       // Execute and check
       await app.execute();
@@ -1101,7 +1108,7 @@ describe('End-to-end', () => {
 
         // to Parser
         await app.parseCode(code);
-        expect(await ctx.program()).to.equal(
+        expect(await ctxProgram.program()).to.equal(
           '0x' +
             '36' + // struct opcode
             '4a871642' + // BOB.lastPayment
@@ -1153,7 +1160,7 @@ describe('End-to-end', () => {
 
         // to Parser
         await app.parseCode(code);
-        expect(await ctx.program()).to.equal(
+        expect(await ctxProgram.program()).to.equal(
           '0x' +
             '36' + // struct opcode
             '4a871642' + // BOB.lastPayment
@@ -1203,7 +1210,7 @@ describe('End-to-end', () => {
 
         // to Parser
         await app.parseCode(code);
-        expect(await ctx.program()).to.equal(
+        expect(await ctxProgram.program()).to.equal(
           '0x' +
             '36' + // struct opcode
             '2215b81f' + // BOB.account
@@ -1269,7 +1276,7 @@ describe('End-to-end', () => {
 
         // to Parser
         await app.parseCode(code);
-        expect(await ctx.program()).to.equal(
+        expect(await ctxProgram.program()).to.equal(
           '0x' +
             '36' + // struct opcode
             '2215b81f' + // BOB.account
@@ -1339,7 +1346,7 @@ describe('End-to-end', () => {
 
         // to Parser
         await app.parseCode(code);
-        expect(await ctx.program()).to.equal(
+        expect(await ctxProgram.program()).to.equal(
           '0x' +
             '36' + // struct opcode
             '2215b81f' + // BOB.account
@@ -1419,7 +1426,7 @@ describe('End-to-end', () => {
         const three = new Array(64).join('0') + 3;
         const number = `${new Array(63).join('0')}aa`; // 170
 
-        expect(await ctx.program()).to.equal(
+        expect(await ctxProgram.program()).to.equal(
           '0x' +
             '36' + // struct
             '4a871642' + // BOB.lastPayment
@@ -1476,7 +1483,7 @@ describe('End-to-end', () => {
         const number1 = `${new Array(62).join('0')}12c`; // 300
         const number2 = `${new Array(63).join('0')}aa`; // 170
 
-        expect(await ctx.program()).to.equal(
+        expect(await ctxProgram.program()).to.equal(
           '0x' +
             '36' + // struct
             '4a871642' + // BOB.lastPayment
@@ -1624,7 +1631,7 @@ describe('End-to-end', () => {
       // Parsing
       await app.parseCode(code);
 
-      expect(await ctx.program()).to.equal(
+      expect(await ctxProgram.program()).to.equal(
         '0x' +
           '37' + // for 1
           '1854c655' + // hex4Bytes('ME') 5
@@ -1694,7 +1701,7 @@ describe('End-to-end', () => {
 
       // Parsing
       await app.parseCode(code);
-      expect(await ctx.program()).to.equal(
+      expect(await ctxProgram.program()).to.equal(
         '0x' +
           '37' + // for
           '87a7811f' + // hex4Bytes('DEPOSIT')
@@ -1776,7 +1783,7 @@ describe('End-to-end', () => {
 
       // Parsing
       await app.parseCode(code);
-      expect(await ctx.program()).to.equal(
+      expect(await ctxProgram.program()).to.equal(
         '0x' +
           '1a' + // uint256
           `${bnToLongHexString('1')}` + // 1
@@ -1839,235 +1846,5 @@ describe('End-to-end', () => {
     });
   });
 
-  describe('Governance', () => {
-    const agreementRecordId = 123;
-    const setRecordID = 0;
-    const yesRecordID = 1;
-    const noRecordID = 2;
-    const calcResRecordID = 3;
 
-    let votingDeadline: number;
-    let ContextContract: Context__factory;
-    let parserAddr: string;
-    let executorLibAddr: string;
-    let preprAddr: string;
-    let parser: Parser;
-
-    // async function deployToken() {
-    //   // Deploy Token contract
-    //   const token = await (await ethers.getContractFactory('Token'))
-    //     .connect(alice)
-    //     .deploy(ethers.utils.parseEther('1000'));
-    //   await token.deployed();
-    //   return token;
-    // }
-
-    async function deployAgreementForGovernance() {
-      // 2. Alice creates a new record in Agreement. This record is disabled
-      // Create Agreement contract
-      const agreementAddr = await deployAgreement(hre, alice.address);
-      return ethers.getContractAt('Agreement', agreementAddr);
-    }
-
-    async function addRecordToAgreement(
-      recordId: number,
-      conditions: string[],
-      transaction: string,
-      agreement: Agreement
-    ) {
-      const [transactionContext, conditionContext] = [
-        await ContextContract.deploy(),
-        await ContextContract.deploy(),
-      ];
-      await transactionContext.setAppAddress(agreement.address);
-      await conditionContext.setAppAddress(agreement.address);
-
-      // check that added record can not be executable for now
-      await agreement.parse(conditions[0], conditionContext.address, preprAddr);
-      await agreement.parse(transaction, transactionContext.address, preprAddr);
-
-      // Note: we create a new record from a non-Agreement-owner account so that the record isn't
-      //       active by default
-      await agreement.connect(bob).update(
-        recordId,
-        [], // required records
-        [alice.address],
-        transaction,
-        conditions,
-        transactionContext.address,
-        [conditionContext.address]
-      );
-      const record = await agreement.records(recordId);
-      expect(record.isActive).to.be.equal(false);
-
-      await expect(agreement.execute(recordId)).to.be.revertedWith('AGR13');
-    }
-
-    async function deployGovernance() {
-      const [
-        comparisonOpcodesLibAddr,
-        branchingOpcodesLibAddr,
-        logicalOpcodesLibAddr,
-        otherOpcodesLibAddr,
-      ] = await deployOpcodeLibs(hre);
-      const GovernanceContract = await hre.ethers.getContractFactory('Governance', {
-        libraries: {
-          ComparisonOpcodes: comparisonOpcodesLibAddr,
-          BranchingOpcodes: branchingOpcodesLibAddr,
-          LogicalOpcodes: logicalOpcodesLibAddr,
-          OtherOpcodes: otherOpcodesLibAddr,
-          Executor: executorLibAddr,
-        },
-      });
-
-      const contextContracts = [
-        await ContextContract.deploy(),
-        await ContextContract.deploy(),
-        await ContextContract.deploy(),
-        await ContextContract.deploy(),
-        await ContextContract.deploy(),
-        await ContextContract.deploy(),
-        await ContextContract.deploy(),
-        await ContextContract.deploy(),
-      ];
-      const contexts = [
-        contextContracts[0].address,
-        contextContracts[1].address,
-        contextContracts[2].address,
-        contextContracts[3].address,
-        contextContracts[4].address,
-        contextContracts[5].address,
-        contextContracts[6].address,
-        contextContracts[7].address,
-      ];
-      const governance = await GovernanceContract.deploy(parserAddr, alice.address, contexts);
-      await governance.deployed();
-
-      // Setup
-      await contextContracts[0].setAppAddress(governance.address);
-      await contextContracts[1].setAppAddress(governance.address);
-      await contextContracts[2].setAppAddress(governance.address);
-      await contextContracts[3].setAppAddress(governance.address);
-      await contextContracts[4].setAppAddress(governance.address);
-      await contextContracts[5].setAppAddress(governance.address);
-      await contextContracts[6].setAppAddress(governance.address);
-      await contextContracts[7].setAppAddress(governance.address);
-
-      return { governance, contexts };
-    }
-
-    async function setupGovernance(governance: Governance) {
-      const setRecord = await governance.records(setRecordID);
-      const yesRecord = await governance.records(yesRecordID);
-      const noRecord = await governance.records(noRecordID);
-      const calcResRecord = await governance.records(calcResRecordID);
-
-      // parse conditions list
-      await parseConditionsList(
-        [setRecordID, yesRecordID, noRecordID, calcResRecordID],
-        parser,
-        governance,
-        preprAddr
-      );
-
-      // parse transaction
-      await governance.parse(setRecord.transactionString, setRecord.recordContext, preprAddr);
-      await governance.parse(yesRecord.transactionString, yesRecord.recordContext, preprAddr);
-      await governance.parse(noRecord.transactionString, noRecord.recordContext, preprAddr);
-      await governance.parse(
-        calcResRecord.transactionString,
-        calcResRecord.recordContext,
-        preprAddr
-      );
-
-      // sets DSL code for the first record
-      await governance.connect(alice).execute(setRecordID);
-    }
-
-    before(async () => {
-      ContextContract = await ethers.getContractFactory('Context');
-      [parserAddr, executorLibAddr, preprAddr] = await deployBase(hre);
-      parser = await ethers.getContractAt('Parser', parserAddr);
-
-      const LAST_BLOCK_TIMESTAMP = (
-        await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
-      ).timestamp;
-      NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
-      votingDeadline = NEXT_MONTH;
-    });
-
-    it('full cycle simplified', async () => {
-      // /**
-      //  * 0. Deploy governance token
-      //  */
-      // const govToken = await deployToken();
-
-      /**
-       * 1. Deploy Agreement
-       */
-      const agreement = await deployAgreementForGovernance();
-
-      /**
-       * Top up Agreement
-       */
-      await alice.sendTransaction({ to: agreement.address, value: parseEther('1') });
-
-      /**
-       * Set variables in Agreement
-       */
-      await agreement.setStorageAddress(hex4Bytes('BOB'), bob.address);
-
-      /**
-       * 2. Create a record in Agreement
-       */
-      await addRecordToAgreement(agreementRecordId, ['bool true'], 'sendEth BOB 1e18', agreement);
-
-      /**
-       * 3. Deploy Governance
-       */
-      const { governance } = await deployGovernance();
-
-      /**
-       * 6. Setup governance
-       */
-      await setupGovernance(governance);
-
-      /**
-       * 4. Change Agreement ownership
-       */
-      await agreement.transferOwnership(governance.address);
-
-      /**
-       * 5. Set variables in Governance
-       */
-      await governance.setStorageUint256(hex4Bytes('RECORD_ID'), agreementRecordId);
-      await governance.setStorageAddress(hex4Bytes('AGREEMENT_ADDR'), agreement.address);
-      // await governance.setStorageAddress(hex4Bytes('GOV_TOKEN'), govToken.address);
-      await governance.setStorageUint256(hex4Bytes('DEADLINE'), votingDeadline);
-
-      /**
-       * 7. Voting
-       */
-      // const oneToken = parseUnits('1', 18);
-      // await govToken.transfer(bob.address, oneToken);
-      // await govToken.transfer(carl.address, oneToken);
-      await governance.connect(alice).execute(noRecordID);
-      await governance.connect(bob).execute(yesRecordID);
-      await governance.connect(carl).execute(yesRecordID);
-
-      /**
-       * 8. Increase time and calculate the voting results
-       */
-      await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-      await governance.connect(alice).execute(calcResRecordID);
-
-      /**
-       * 9. Execute target Agreement record
-       */
-      await expect(await agreement.connect(alice).execute(agreementRecordId)).to.changeEtherBalance(
-        bob,
-        parseEther('1')
-      );
-    });
-  });
 });

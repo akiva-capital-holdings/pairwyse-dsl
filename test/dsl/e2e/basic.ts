@@ -2,22 +2,17 @@ import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { parseEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
-import {
-  BaseApplication,
-  Context,
-  Stack,
-  ERC20Mintable,
-  ExecutorMock,
-} from '../../../typechain-types';
+
+import { BaseApplication, DSLContext, ProgramContextMock, Stack, ExecutorMock } from '../../../typechain-types';
 import { checkStackTail, hex4Bytes, checkStack } from '../../utils/utils';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 
 const { ethers, network } = hre;
 
-describe('DSL: basic', () => {
+describe.skip('DSL: basic', () => {
   let stack: Stack;
-  let ctx: Context;
-  let ctxAddr: string;
+  let ctx: DSLContext;
+  let ctxProgram: ProgramContextMock;
   let app: BaseApplication;
   let appAddr: string;
   let executor: ExecutorMock;
@@ -54,16 +49,19 @@ describe('DSL: basic', () => {
     ).deploy();
 
     // Deploy Context & setup
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
-    ctxAddr = ctx.address;
-    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLibAddr);
-    await ctx.setBranchingOpcodesAddr(branchingOpcodesLibAddr);
-    await ctx.setLogicalOpcodesAddr(logicalOpcodesLibAddr);
-    await ctx.setOtherOpcodesAddr(otherOpcodesLibAddr);
-
+    ctx = await (
+      await ethers.getContractFactory('DSLContext')
+    ).deploy(
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr
+    );
+    ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
+  
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
-    const contextStackAddress = await ctx.stack();
+    const contextStackAddress = await ctxProgram.stack();
     stack = StackCont.attach(contextStackAddress);
 
     // Deploy Application
@@ -74,7 +72,7 @@ describe('DSL: basic', () => {
     ).deploy(parserAddr, preprAddr, ctx.address);
     appAddr = app.address;
 
-    await ctx.setAppAddress(app.address);
+    await ctxProgram.setAppAddress(app.address);
   });
 
   beforeEach(async () => {
@@ -516,7 +514,7 @@ describe('DSL: basic', () => {
       await checkStackTail(stack, [0]);
     });
 
-    describe('opLoadLocalBytes32', () => {
+    describe.only('opLoadLocalBytes32', () => {
       it('bytes32 are equal', async () => {
         await app.setStorageBytes32(
           hex4Bytes('BYTES'),
@@ -564,7 +562,7 @@ describe('DSL: basic', () => {
     });
   });
 
-  describe('loadRemote', () => {
+  describe.only('loadRemote', () => {
     it('loadRemote uint256 NUMBER', async () => {
       await app['setStorageUint256(bytes32,uint256)'](hex4Bytes('NUMBER'), 777);
 
@@ -623,7 +621,7 @@ describe('DSL: basic', () => {
       await checkStackTail(stack, [1]);
     });
 
-    describe('opLoadRemoteAddress', () => {
+    describe.only('opLoadRemoteAddress', () => {
       it('addresses are equal', async () => {
         await app['setStorageAddress(bytes32,address)'](
           hex4Bytes('ADDR'),
@@ -659,7 +657,7 @@ describe('DSL: basic', () => {
       });
     });
 
-    describe('opLoadRemoteBytes32', () => {
+    describe.only('opLoadRemoteBytes32', () => {
       it('bytes32 are equal', async () => {
         await app.setStorageBytes32(
           hex4Bytes('BYTES'),
@@ -677,7 +675,7 @@ describe('DSL: basic', () => {
         await checkStackTail(stack, [1]);
       });
 
-      it('bytes32 are not equal', async () => {
+      it.only('bytes32 are not equal', async () => {
         await app.setStorageBytes32(
           hex4Bytes('BYTES'),
           '0x1234500000000000000000000000000000000000000000000000000000000001'
@@ -694,7 +692,7 @@ describe('DSL: basic', () => {
         await checkStackTail(stack, [0]);
       });
 
-      it('bytes32 calculates 3 - 1 in bytes32 ', async () => {
+      it.only('bytes32 calculates 3 - 1 in bytes32 ', async () => {
         await app.setStorageBytes32(
           hex4Bytes('BYTES'),
           '0x0000000000000000000000000000000000000000000000000000000000000003'

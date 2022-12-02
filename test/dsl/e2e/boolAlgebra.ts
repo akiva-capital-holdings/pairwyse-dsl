@@ -1,13 +1,15 @@
 import * as hre from 'hardhat';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
-import { BaseApplication, Context, Stack } from '../../../typechain-types';
+
+import { BaseApplication, DSLContextMock, ProgramContextMock, Stack } from '../../../typechain-types';
 import { checkStackTail } from '../../utils/utils';
 
 const { ethers } = hre;
 
 describe('Boolean Algebra', () => {
   let stack: Stack;
-  let ctx: Context;
+  let ctx: DSLContextMock;
+  let ctxProgram: ProgramContextMock;
   let app: BaseApplication;
 
   before(async () => {
@@ -22,15 +24,19 @@ describe('Boolean Algebra', () => {
     const [parserAddr, executorLibAddr, preprAddr] = await deployBase(hre);
 
     // Deploy Context
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
-    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLibAddr);
-    await ctx.setBranchingOpcodesAddr(branchingOpcodesLibAddr);
-    await ctx.setLogicalOpcodesAddr(logicalOpcodesLibAddr);
-    await ctx.setOtherOpcodesAddr(otherOpcodesLibAddr);
+    ctx = await (
+      await ethers.getContractFactory('DSLContextMock')
+    ).deploy(
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr
+    );
+    ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
-    const contextStackAddress = await ctx.stack();
+    const contextStackAddress = await ctxProgram.stack();
     stack = StackCont.attach(contextStackAddress);
 
     // Deploy Application

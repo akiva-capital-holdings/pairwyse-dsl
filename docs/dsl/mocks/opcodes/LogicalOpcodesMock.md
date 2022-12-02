@@ -3,7 +3,7 @@
 ### opAnd
 
 ```solidity
-function opAnd(address _ctx) public
+function opAnd(address _ctxProgram, address) public
 ```
 
 _Compares two values in the stack. Put 1 if both of them are 1, put
@@ -12,7 +12,7 @@ _Compares two values in the stack. Put 1 if both of them are 1, put
 ### opOr
 
 ```solidity
-function opOr(address _ctx) public
+function opOr(address _ctxProgram, address) public
 ```
 
 _Compares two values in the stack. Put 1 if either one of them is 1,
@@ -21,30 +21,30 @@ _Compares two values in the stack. Put 1 if either one of them is 1,
 ### opXor
 
 ```solidity
-function opXor(address _ctx) public
+function opXor(address _ctxProgram, address) public
 ```
 
 ### opAdd
 
 ```solidity
-function opAdd(address _ctx) public
+function opAdd(address _ctxProgram, address) public
 ```
 
 ### opSub
 
 ```solidity
-function opSub(address _ctx) public
+function opSub(address _ctxProgram, address) public
 ```
 
 ### opMul
 
 ```solidity
-function opMul(address _ctx) public
+function opMul(address _ctxProgram, address) public
 ```
 
 ### opDiv
 
 ```solidity
-function opDiv(address _ctx) public
+function opDiv(address _ctxProgram, address) public
 ```
 

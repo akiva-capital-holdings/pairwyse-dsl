@@ -11,7 +11,7 @@ import { LogicalOpcodes } from './libs/opcodes/LogicalOpcodes.sol';
 import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
 import { ErrorsContext } from './libs/Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Context of DSL code
@@ -59,7 +59,7 @@ contract ProgramContext is IProgramContext {
      * @dev Sets the final version of the program.
      * @param _data is the bytecode of the full program
      */
-    function setProgram(bytes memory _data) public onlyApp {
+    function setProgram(bytes memory _data) public /*onlyApp */ {
         program = _data;
         setPc(0);
     }
@@ -91,6 +91,7 @@ contract ProgramContext is IProgramContext {
      */
     function currentProgram() public view returns (bytes memory) {
         // program, index, step
+        // console.log(pc);
         return this.programSlice(program, pc, 1);
     }
 

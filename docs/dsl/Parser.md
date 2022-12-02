@@ -49,7 +49,7 @@ _Сonverts a list of commands to bytecode_
 ### asmSetLocalBool
 
 ```solidity
-function asmSetLocalBool(bytes _program) public returns (bytes newProgram)
+function asmSetLocalBool(bytes _program, address, address) public returns (bytes newProgram)
 ```
 
 _Updates the program with the bool value
@@ -62,7 +62,7 @@ bool true
 ### asmSetUint256
 
 ```solidity
-function asmSetUint256(bytes _program) public returns (bytes newProgram)
+function asmSetUint256(bytes _program, address, address) public returns (bytes newProgram)
 ```
 
 _Updates the program with the local variable value
@@ -75,7 +75,7 @@ Example of a command:
 ### asmDeclare
 
 ```solidity
-function asmDeclare(bytes _program, address _ctxDSLAddr) public returns (bytes newProgram)
+function asmDeclare(bytes _program, address _ctxDSLAddr, address) public returns (bytes newProgram)
 ```
 
 _Updates the program with the name(its position) of the array
@@ -88,7 +88,7 @@ declare ARR_NAME
 ### asmGet
 
 ```solidity
-function asmGet(bytes _program) public returns (bytes newProgram)
+function asmGet(bytes _program, address, address) public returns (bytes newProgram)
 ```
 
 _Updates the program with the element by index from the provived array's name
@@ -101,7 +101,7 @@ get 3 USERS
 ### asmPush
 
 ```solidity
-function asmPush(bytes _program) public returns (bytes newProgram)
+function asmPush(bytes _program, address, address) public returns (bytes newProgram)
 ```
 
 _Updates the program with the new item for the array, can be `uint256`,
@@ -115,7 +115,7 @@ push ITEM ARR_NAME
 ### asmVar
 
 ```solidity
-function asmVar(bytes _program) public returns (bytes newProgram)
+function asmVar(bytes _program, address, address) public returns (bytes newProgram)
 ```
 
 _Updates the program with the loadLocal variable
@@ -128,7 +128,7 @@ var NUMBER
 ### asmLoadRemote
 
 ```solidity
-function asmLoadRemote(bytes _program, address _ctxDSLAddr) public returns (bytes newProgram)
+function asmLoadRemote(bytes _program, address _ctxDSLAddr, address) public returns (bytes newProgram)
 ```
 
 _Updates the program with the loadRemote variable
@@ -141,7 +141,7 @@ loadRemote bool MARY_ADDRESS 9A676e781A523b5d0C0e43731313A708CB607508
 ### asmBool
 
 ```solidity
-function asmBool(bytes _program) public returns (bytes newProgram)
+function asmBool(bytes _program, address, address) public returns (bytes newProgram)
 ```
 
 _Concatenates and updates previous `program` with the `0x01`
@@ -150,7 +150,7 @@ bytecode of `true` value otherwise `0x00` for `false`_
 ### asmUint256
 
 ```solidity
-function asmUint256(bytes _program) public returns (bytes)
+function asmUint256(bytes _program, address, address) public returns (bytes)
 ```
 
 _Concatenates and updates previous `program` with the
@@ -159,7 +159,7 @@ bytecode of uint256 value_
 ### asmSend
 
 ```solidity
-function asmSend(bytes _program) public returns (bytes newProgram)
+function asmSend(bytes _program, address, address) public returns (bytes newProgram)
 ```
 
 _Updates previous `program` with the amount that will be send (in wei)
@@ -172,7 +172,7 @@ sendEth RECEIVER 1234
 ### asmTransfer
 
 ```solidity
-function asmTransfer(bytes _program) public returns (bytes newProgram)
+function asmTransfer(bytes _program, address, address) public returns (bytes newProgram)
 ```
 
 _Updates previous `program` with the amount of tokens
@@ -187,7 +187,7 @@ transfer TOKEN RECEIVER 1234
 ### asmTransferVar
 
 ```solidity
-function asmTransferVar(bytes _program) public returns (bytes newProgram)
+function asmTransferVar(bytes _program, address, address) public returns (bytes newProgram)
 ```
 
 _Updates previous `program` with the amount of tokens
@@ -202,7 +202,7 @@ transferVar TOKEN RECEIVER AMOUNT
 ### asmTransferFrom
 
 ```solidity
-function asmTransferFrom(bytes _program) public returns (bytes newProgram)
+function asmTransferFrom(bytes _program, address, address) public returns (bytes newProgram)
 ```
 
 _Updates previous `program` with the amount of tokens
@@ -217,7 +217,7 @@ transferFrom TOKEN FROM TO 1234
 ### asmTransferFromVar
 
 ```solidity
-function asmTransferFromVar(bytes _program) public returns (bytes newProgram)
+function asmTransferFromVar(bytes _program, address, address) public returns (bytes newProgram)
 ```
 
 _Updates previous `program` with the amount of tokens
@@ -232,7 +232,7 @@ transferFromVar TOKEN FROM TO AMOUNT
 ### asmBalanceOf
 
 ```solidity
-function asmBalanceOf(bytes _program) public returns (bytes newProgram)
+function asmBalanceOf(bytes _program, address, address) public returns (bytes newProgram)
 ```
 
 _Updates previous `program` with getting the amount of tokens
@@ -246,7 +246,7 @@ balanceOf TOKEN USER
 ### asmLengthOf
 
 ```solidity
-function asmLengthOf(bytes _program) public returns (bytes)
+function asmLengthOf(bytes _program, address, address) public returns (bytes)
 ```
 
 _Updates previous `program` with getting the length of the dsl array by its name
@@ -261,7 +261,7 @@ lengthOf ARR_NAME
 ### asmSumOf
 
 ```solidity
-function asmSumOf(bytes _program) public returns (bytes)
+function asmSumOf(bytes _program, address, address) public returns (bytes)
 ```
 
 _Updates previous `program` with the name of the dsl array that will
@@ -275,7 +275,7 @@ sumOf ARR_NAME
 ### asmSumThroughStructs
 
 ```solidity
-function asmSumThroughStructs(bytes _program) public returns (bytes newProgram)
+function asmSumThroughStructs(bytes _program, address, address) public returns (bytes newProgram)
 ```
 
 _Updates previous `program` with the name of the dsl array and
@@ -382,7 +382,7 @@ Example of commands that uses for this functions:
 ### asmForLoop
 
 ```solidity
-function asmForLoop(bytes _program) public returns (bytes newProgram)
+function asmForLoop(bytes _program, address, address) public returns (bytes newProgram)
 ```
 
 _Parses variable names in for-loop & skip the unnecessary `in` parameter
@@ -391,7 +391,7 @@ Ex. ['for', 'LP_INITIAL', 'in', 'LPS_INITIAL']_
 ### asmEnableRecord
 
 ```solidity
-function asmEnableRecord(bytes _program) public returns (bytes newProgram)
+function asmEnableRecord(bytes _program, address, address) public returns (bytes newProgram)
 ```
 
 _Parses the `record id` and the `agreement address` parameters

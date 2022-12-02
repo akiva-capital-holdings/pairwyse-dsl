@@ -520,6 +520,13 @@ contract Agreement is LinkedList {
         require(!records[_recordId].isExecutedBySignatory[_signatory], ErrorsAgreement.AGR7);
         _execute(_msgValue, records[_recordId].transactionProgram);
         records[_recordId].isExecutedBySignatory[_signatory] = true;
+
+        IProgramContext(address(context)).setMsgValue(_msgValue);
+        bytes memory program; // TODO: concat all required transactions and conditions before executing
+        IProgramContext(address(context)).setProgram(program);
+        Executor.execute(contextDSL, address(context));
+        isExecutedBySignatory[_recordId][_signatory] = true;
+
         // Check if record was executed by all signatories
         uint256 executionProgress;
         address[] memory signatoriesOfRecord = records[_recordId].signatories;

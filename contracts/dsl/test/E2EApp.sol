@@ -42,7 +42,7 @@ contract E2EApp is UnstructuredStorageMock, LinkedList {
 
     function execute() external payable {
         IProgramContext(programContext).setMsgValue(msg.value);
-        Executor.execute(dslContext, programContext, address(this));
+        Executor.execute(dslContext, programContext);
     }
 
     function setupContext() internal {
