@@ -69,6 +69,19 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await expect(agreement.connect(bob).execute(txId)).to.be.revertedWith('AGR1');
   });
 
+  it('system name by setStorage will revert error', async () => {
+    // transaction fro example 'sendEth MSG_SENDER ETH' or GWEI
+    await expect(
+      agreement.setStorageAddress(hex4Bytes('MSG_SENDER'), bob.address)
+    ).to.be.revertedWith('AGR8');
+    await expect(agreement.setStorageUint256(hex4Bytes('ETH'), tenTokens)).to.be.revertedWith(
+      'AGR8'
+    );
+    await expect(agreement.setStorageUint256(hex4Bytes('GWEI'), tenTokens)).to.be.revertedWith(
+      'AGR8'
+    );
+  });
+
   it('update test', async () => {
     const updateAgreementAddr = await deployAgreement(hre, alice.address);
     const updateAgreement = await ethers.getContractAt('Agreement', updateAgreementAddr);

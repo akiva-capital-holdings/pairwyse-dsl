@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import * as hre from 'hardhat';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
-import { Context, Stack, ExecutorMock } from '../../../typechain-types';
+import { Context, Stack, ExecutorMock, ERC20Mintable } from '../../../typechain-types';
 import { checkStack, checkStackTail, hex4Bytes } from '../../utils/utils';
 
 const { ethers } = hre;
@@ -136,6 +136,44 @@ describe('Executor', () => {
         await checkStackTail(stack, []);
         await app.execute(ctxAddr);
         await checkStackTail(stack, [4]);
+      });
+    });
+
+    describe('balanceOf MSG SENDER', () => {
+      it('MSG_SENDER testing', async () => {
+        let alice: SignerWithAddress;
+        let bob: SignerWithAddress;
+        let carl: SignerWithAddress;
+
+        // eslint-disable-next-line prefer-const
+        [, alice, bob, carl] = await ethers.getSigners();
+        // Deploy test ERC20 and mint some to ctx
+        const testERC20: ERC20Mintable = await (
+          await ethers.getContractFactory('ERC20Mintable')
+        ).deploy('Test', 'TST');
+        // mint tokens to users
+        await testERC20.mint(alice.address, '100');
+        await testERC20.mint(bob.address, '200');
+        await testERC20.mint(carl.address, '300');
+
+        const bytes32TokenAddr = hex4Bytes('DAI');
+        const bytes32msgSenderAddress = hex4Bytes('MSG_SENDER');
+
+        await app['setStorageAddress(bytes32,address)'](bytes32TokenAddr, testERC20.address);
+
+        const tokenAddress = bytes32TokenAddr.substring(2, 10);
+        const msgSenderAddress = bytes32msgSenderAddress.substring(2, 10);
+
+        // program 'balanceOf DAI MSG_SENDER'
+        await ctx.setProgram(`0x2b${tokenAddress}${msgSenderAddress}`);
+
+        // every execute seted new connected address as MSG_SENDER
+        await app.connect(alice).execute(ctxAddr);
+        await checkStack(stack, 1, '100');
+        await app.connect(bob).execute(ctxAddr);
+        await checkStack(stack, 2, '200');
+        await app.connect(carl).execute(ctxAddr);
+        await checkStack(stack, 3, '300');
       });
     });
 
