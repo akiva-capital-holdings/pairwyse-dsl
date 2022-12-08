@@ -7,8 +7,8 @@ import { DSLContextMock, ProgramContextMock } from '../../../typechain-types/dsl
 import { deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 
 const { ethers, network } = hre;
-
-describe.only('DSL: math', () => {
+// works
+describe.skip('DSL: math', () => {
   let ctx: DSLContextMock;
   let ctxProgram: ProgramContextMock;
   let app: App;

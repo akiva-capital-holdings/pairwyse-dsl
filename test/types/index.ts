@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { Contract, ContractTransaction } from 'ethers';
-import { Agreement, ContextMock, Token } from '../../typechain-types';
+import { Agreement, Token } from '../../typechain-types';
 
 export type OpConditionalTxFunc = (
   opcodes: Contract
@@ -48,6 +48,4 @@ export type Records = {
   signatories: string[];
   transactionStr: string;
   conditionStrings: string[];
-  transactionCtx: ContextMock;
-  conditionContexts: ContextMock[];
 };

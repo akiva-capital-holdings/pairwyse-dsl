@@ -6,7 +6,7 @@ import { checkStackTail } from '../../utils/utils';
 
 const { ethers } = hre;
 
-describe('Boolean Algebra', () => {
+describe.skip('Boolean Algebra', () => {
   let stack: Stack;
   let ctx: DSLContextMock;
   let ctxProgram: ProgramContextMock;

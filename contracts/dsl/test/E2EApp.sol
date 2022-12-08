@@ -26,18 +26,18 @@ contract E2EApp is UnstructuredStorageMock, LinkedList {
         preprocessorAddr = _preprocessorAddr;
         dslContext = _dslContext;
         programContext = _programContext;
-        setupContext();
+        _setupContext();
     }
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
     function parse(string memory _program) external {
-        IParser(parserAddr).parse(preprocessorAddr, dslContext, _program);
+        IParser(parserAddr).parse(preprocessorAddr, dslContext, programContext, _program);
     }
 
     function parseCode(string[] memory _code) external {
-        IParser(parser).parseCode(dslContext, programContext, _code);
+        IParser(parserAddr).parseCode(dslContext, programContext, _code);
     }
 
     function execute() external payable {
@@ -45,7 +45,7 @@ contract E2EApp is UnstructuredStorageMock, LinkedList {
         Executor.execute(dslContext, programContext);
     }
 
-    function setupContext() internal {
+    function _setupContext() internal {
         IProgramContext(programContext).setMsgSender(msg.sender);
     }
 }

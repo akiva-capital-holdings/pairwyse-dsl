@@ -111,18 +111,20 @@ export const deployAgreement = async (hre: HardhatRuntimeEnvironment, multisigAd
     otherOpcodesLibAddr,
   ] = await deployOpcodeLibs(hre);
 
+  const contextDSL = await (
+    await hre.ethers.getContractFactory('DSLContextMock')
+  ).deploy(
+    comparisonOpcodesLibAddr,
+    branchingOpcodesLibAddr,
+    logicalOpcodesLibAddr,
+    otherOpcodesLibAddr
+  );
   const [parserAddr, executorLibAddr] = await deployBase(hre);
 
   const AgreementContract = await hre.ethers.getContractFactory('Agreement', {
-    libraries: {
-      ComparisonOpcodes: comparisonOpcodesLibAddr,
-      BranchingOpcodes: branchingOpcodesLibAddr,
-      LogicalOpcodes: logicalOpcodesLibAddr,
-      OtherOpcodes: otherOpcodesLibAddr,
-      Executor: executorLibAddr,
-    },
+    libraries: { Executor: executorLibAddr },
   });
-  const agreement = await AgreementContract.deploy(parserAddr, multisigAddr);
+  const agreement = await AgreementContract.deploy(parserAddr, multisigAddr, contextDSL.address);
   await agreement.deployed();
 
   // Save Agreement bytecode into a file

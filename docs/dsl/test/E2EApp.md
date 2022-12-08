@@ -12,12 +12,6 @@ address parserAddr
 address preprocessorAddr
 ```
 
-### parser
-
-```solidity
-address parser
-```
-
 ### dslContext
 
 ```solidity
@@ -60,9 +54,9 @@ function parseCode(string[] _code) external
 function execute() external payable
 ```
 
-### setupContext
+### _setupContext
 
 ```solidity
-function setupContext() internal
+function _setupContext() internal
 ```
 

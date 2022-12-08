@@ -51,8 +51,8 @@ contract Parser is IParser {
      */
     function parseCode(address _dslCtxAddr, address _programCtxAddr, string[] memory _code) public {
         cmdIdx = 0;
-        // console.log('\n');
-        // console.log(_code.length);
+        bytes memory b;
+        IProgramContext(_programCtxAddr).setProgram(b);
         _setCmdsArray(_code);
         // console.logBytes(cmds);
         // console.log(cmds.length);

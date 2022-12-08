@@ -1,4 +1,8 @@
-import { AgreementMock, ContextMock, Governance, Parser } from '../../typechain-types';
+import { expect } from 'chai';
+import * as hre from 'hardhat';
+
+import { AgreementMock, ProgramContextMock, GovernanceMock } from '../../typechain-types';
+import { ParserMock } from '../../typechain-types/dsl/mocks';
 import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
 import { Records } from '../../test/types';
 
@@ -39,20 +43,12 @@ export const unarchiveRecord = async (
 };
 
 export const setRecord = async (data: any, app: AgreementMock) => {
-  const {
-    recordId,
-    requiredRecords,
-    signatories,
-    conditionContexts,
-    conditionStrings,
-    transactionCtx,
-    transactionStr,
-  } = data;
+  const { recordId, requiredRecords, signatories, conditionStrings, transactionStr } = data;
   await app.addRecordBlueprint(recordId, requiredRecords, signatories);
-  for (let j = 0; j < conditionContexts.length; j++) {
-    await app.addRecordCondition(recordId, conditionStrings[j], conditionContexts[j].address);
+  for (let j = 0; j < conditionStrings.length; j++) {
+    await app.addRecordCondition(recordId, conditionStrings[j]);
   }
-  await app.addRecordTransaction(recordId, transactionStr, transactionCtx.address);
+  await app.addRecordTransaction(recordId, transactionStr);
 };
 
 export const setRecords = async (records: Records[], app: AgreementMock) => {
@@ -63,32 +59,25 @@ export const setRecords = async (records: Records[], app: AgreementMock) => {
 
 export const parseConditions = async (
   recordId: number,
-  parser: Parser,
-  app: AgreementMock | Governance,
+  app: AgreementMock | GovernanceMock,
   preprAddr: string
 ) => {
-  const condCtxLen = (await app.conditionContextsLen(recordId)).toNumber();
-  for (let j = 0; j < condCtxLen; j++) {
-    await parser.parse(
-      preprAddr,
-      await app.conditionContexts(recordId, j),
-      await app.conditionStrings(recordId, j)
-    );
+  const condStrLen = (await app.conditionStringsLen(recordId)).toNumber();
+  for (let j = 0; j < condStrLen; j++) {
+    await app.parse(await app.conditionStrings(recordId, j), preprAddr);
   }
 };
 
-export const setApp = async (ctx: ContextMock, app: AgreementMock, sender: string) => {
-  await ctx.setAppAddress(app.address);
+export const setApp = async (ctx: ProgramContextMock, app: AgreementMock, sender: string) => {
   await ctx.setMsgSender(sender);
 };
 
 export const parseConditionsList = async (
   recordIds: number[],
-  parser: Parser,
-  app: AgreementMock | Governance,
+  app: AgreementMock | GovernanceMock,
   preprAddr: string
 ) => {
   for (let j = 0; j < recordIds.length; j++) {
-    await parseConditions(recordIds[j], parser, app, preprAddr);
+    await parseConditions(recordIds[j], app, preprAddr);
   }
 };

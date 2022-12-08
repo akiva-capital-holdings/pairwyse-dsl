@@ -11,7 +11,7 @@ import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { LinkedList } from '../dsl/helpers/LinkedList.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 // TODO: automatically make sure that no contract exceeds the maximum contract size
 
@@ -123,6 +123,7 @@ contract Agreement is LinkedList {
     mapping(uint256 => mapping(string => bool)) public isRecordSet;
     mapping(uint256 => mapping(string => bool)) public isCondition;
     mapping(uint256 => mapping(string => bool)) public isRecord;
+
     uint256[] public recordIds; // array of recordId
 
     /**
@@ -345,11 +346,6 @@ contract Agreement is LinkedList {
             records[_recordId].transactionProgram = _p;
             isRecordSet[_recordId][_code] = true;
         }
-        // TODO:
-        // else {
-        //     revert("DSL string is not present in Agreement or already set");
-        // }
-
         emit Parsed(_preProc, _code);
     }
 
@@ -500,6 +496,7 @@ contract Agreement is LinkedList {
     function _validateConditions(uint256 _recordId, uint256 _msgValue) internal returns (bool) {
         for (uint256 i = 0; i < records[_recordId].conditions.length; i++) {
             _execute(_msgValue, records[_recordId].conditions[i]);
+
             if (IProgramContext(address(contextProgram)).stack().seeLast() == 0) return false;
         }
         return true;
@@ -520,12 +517,6 @@ contract Agreement is LinkedList {
         require(!records[_recordId].isExecutedBySignatory[_signatory], ErrorsAgreement.AGR7);
         _execute(_msgValue, records[_recordId].transactionProgram);
         records[_recordId].isExecutedBySignatory[_signatory] = true;
-
-        IProgramContext(address(context)).setMsgValue(_msgValue);
-        bytes memory program; // TODO: concat all required transactions and conditions before executing
-        IProgramContext(address(context)).setProgram(program);
-        Executor.execute(contextDSL, address(context));
-        isExecutedBySignatory[_recordId][_signatory] = true;
 
         // Check if record was executed by all signatories
         uint256 executionProgress;

@@ -16,7 +16,7 @@ import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock
 
 const { ethers, network } = hre;
 
-describe('Agreement: Alice, Bob, Carl', () => {
+describe.only('Agreement: Alice, Bob, Carl', () => {
   let agreement: Agreement;
   let agreementAddr: string;
   let preprocessorAddr: string;
@@ -106,8 +106,6 @@ describe('Agreement: Alice, Bob, Carl', () => {
   it('update test', async () => {
     const updateAgreementAddr = await deployAgreement(hre, alice.address);
     const updateAgreement = await ethers.getContractAt('Agreement', updateAgreementAddr);
-    const recordContext = await (await ethers.getContractFactory('Context')).deploy();
-    await recordContext.setAppAddress(alice.address);
     const firstTxId = '1';
     const secondTxId = '2';
     const signatories = [alice.address];
@@ -116,16 +114,10 @@ describe('Agreement: Alice, Bob, Carl', () => {
     // record by agreement owner
     await updateAgreement
       .connect(alice)
-      .update(firstTxId, [], signatories, transaction, conditions, recordContext.address, [
-        recordContext.address,
-      ]);
+      .update(firstTxId, [], signatories, transaction, conditions);
 
     // record by other address
-    await updateAgreement
-      .connect(bob)
-      .update(secondTxId, [], signatories, transaction, conditions, recordContext.address, [
-        recordContext.address,
-      ]);
+    await updateAgreement.connect(bob).update(secondTxId, [], signatories, transaction, conditions);
 
     // owner set isActive = true
     const trueResult = await updateAgreement.records(firstTxId);
@@ -363,37 +355,26 @@ describe('Agreement: Alice, Bob, Carl', () => {
   it('checks events', async () => {
     const updateAgreementAddr = await deployAgreement(hre, alice.address);
     const updateAgreement = await ethers.getContractAt('AgreementMock', updateAgreementAddr);
-    const recordContext = await (await ethers.getContractFactory('Context')).deploy();
-    const conditionContext = await (await ethers.getContractFactory('Context')).deploy();
-    await recordContext.setAppAddress(updateAgreement.address);
-    await conditionContext.setAppAddress(updateAgreement.address);
     const txId = 1;
     const signatories = [alice.address];
     const conditions = ['1 > 0'];
     const transaction = 'uint256 10';
-    // ----> check Parsed event <----
-    let result = await updateAgreement.parse(
-      conditions[0],
-      conditionContext.address,
-      preprocessorAddr
-    );
-    await expect(result)
-      .to.emit(updateAgreement, 'Parsed')
-      .withArgs(preprocessorAddr, conditionContext.address, conditions[0]);
-    result = await updateAgreement.parse(transaction, recordContext.address, preprocessorAddr);
-    await expect(result)
-      .to.emit(updateAgreement, 'Parsed')
-      .withArgs(preprocessorAddr, recordContext.address, transaction);
 
     // ----> check NewRecord event <----
-    result = await updateAgreement
+    let result = await updateAgreement
       .connect(alice)
-      .update(txId, [], signatories, transaction, conditions, recordContext.address, [
-        conditionContext.address,
-      ]);
+      .update(txId, [], signatories, transaction, conditions);
     await expect(result)
       .to.emit(updateAgreement, 'NewRecord')
       .withArgs(txId, [], signatories, transaction, conditions);
+
+    // ----> check Parsed event <----
+    result = await updateAgreement.parse(conditions[0], preprocessorAddr);
+    await expect(result)
+      .to.emit(updateAgreement, 'Parsed')
+      .withArgs(preprocessorAddr, conditions[0]);
+    result = await updateAgreement.parse(transaction, preprocessorAddr);
+    await expect(result).to.emit(updateAgreement, 'Parsed').withArgs(preprocessorAddr, transaction);
 
     // ----> check RecordDeactivated event <----
     result = await updateAgreement.connect(alice).deactivateRecord(txId);
