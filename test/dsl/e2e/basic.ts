@@ -14,7 +14,7 @@ import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.util
 
 const { ethers, network } = hre;
 
-describe.only('DSL: basic', () => {
+describe('DSL: basic', () => {
   let stack: Stack;
   let ctx: Context;
   let ctxAddr: string;
@@ -871,7 +871,7 @@ describe.only('DSL: basic', () => {
     expect(await dai.balanceOf(user.address)).to.equal(parseEther('1000'));
     await checkStackTail(stack, [parseEther('1000')]);
   });
-  it.only('balance of MSG_SENDER', async () => {
+  it('balance of MSG_SENDER', async () => {
     const [, alice, bob, carl] = await ethers.getSigners();
     // Deploy test ERC20 and mint some to ctx
     const testERC20: ERC20Mintable = await (
@@ -890,7 +890,7 @@ describe.only('DSL: basic', () => {
     // program 'balanceOf DAI MSG_SENDER'
     await ctx.setProgram(`0x2b${tokenAddress}${msgSenderAddress}`);
 
-    // every execute seted new connected address as MSG_SENDER
+    // every "execute" call sets a connected address as MSG_SENDER
     await executor.connect(alice).execute(ctxAddr);
     await checkStack(stack, 1, '100');
     await executor.connect(bob).execute(ctxAddr);
