@@ -69,8 +69,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await expect(agreement.connect(bob).execute(txId)).to.be.revertedWith('AGR1');
   });
 
-  it('system name by setStorage will revert error', async () => {
-    // transaction fro example 'sendEth MSG_SENDER ETH' or GWEI
+  it('If we try to set a system variable it will return an error', async () => {
     await expect(
       agreement.setStorageAddress(hex4Bytes('MSG_SENDER'), bob.address)
     ).to.be.revertedWith('AGR8');

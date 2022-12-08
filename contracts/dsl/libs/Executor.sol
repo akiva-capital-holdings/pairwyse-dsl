@@ -9,8 +9,7 @@ import { ErrorsExecutor } from './Errors.sol';
 library Executor {
     function execute(address _ctx) public {
         require(IContext(_ctx).program().length > 0, ErrorsExecutor.EXC1);
-        address ownerAddress = msg.sender;
-        IContext(_ctx).setMsgSender(ownerAddress);
+        IContext(_ctx).setMsgSender(msg.sender);
 
         while (IContext(_ctx).pc() < IContext(_ctx).program().length) {
             bytes memory opcodeBytes = IContext(_ctx).programAt(IContext(_ctx).pc(), 1);
