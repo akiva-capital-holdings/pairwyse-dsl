@@ -2,8 +2,14 @@ import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { parseEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
-import { BaseApplication, Context, Stack } from '../../../typechain-types';
-import { checkStackTail, hex4Bytes } from '../../utils/utils';
+import {
+  BaseApplication,
+  Context,
+  Stack,
+  ERC20Mintable,
+  ExecutorMock,
+} from '../../../typechain-types';
+import { checkStackTail, hex4Bytes, checkStack } from '../../utils/utils';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 
 const { ethers, network } = hre;
@@ -11,8 +17,10 @@ const { ethers, network } = hre;
 describe('DSL: basic', () => {
   let stack: Stack;
   let ctx: Context;
+  let ctxAddr: string;
   let app: BaseApplication;
   let appAddr: string;
+  let executor: ExecutorMock;
   let NEXT_MONTH: number;
   let PREV_MONTH: number;
   let lastBlockTimestamp: number;
@@ -38,9 +46,16 @@ describe('DSL: basic', () => {
     ] = await deployOpcodeLibs(hre);
 
     const [parserAddr, executorLibAddr, preprAddr] = await deployBase(hre);
+    // Deploy ExecutorMock
+    executor = await (
+      await ethers.getContractFactory('ExecutorMock', {
+        libraries: { Executor: executorLibAddr },
+      })
+    ).deploy();
 
     // Deploy Context & setup
     ctx = await (await ethers.getContractFactory('Context')).deploy();
+    ctxAddr = ctx.address;
     await ctx.setComparisonOpcodesAddr(comparisonOpcodesLibAddr);
     await ctx.setBranchingOpcodesAddr(branchingOpcodesLibAddr);
     await ctx.setLogicalOpcodesAddr(logicalOpcodesLibAddr);
@@ -855,6 +870,33 @@ describe('DSL: basic', () => {
     await app.execute();
     expect(await dai.balanceOf(user.address)).to.equal(parseEther('1000'));
     await checkStackTail(stack, [parseEther('1000')]);
+  });
+  it('balance of MSG_SENDER', async () => {
+    const [, alice, bob, carl] = await ethers.getSigners();
+    // Deploy test ERC20 and mint some to ctx
+    const testERC20: ERC20Mintable = await (
+      await ethers.getContractFactory('ERC20Mintable')
+    ).deploy('Test', 'TST');
+    // mint tokens to users
+    await testERC20.mint(alice.address, '100');
+    await testERC20.mint(bob.address, '200');
+    await testERC20.mint(carl.address, '300');
+    const bytes32TokenAddr = hex4Bytes('DAI');
+    const bytes32msgSenderAddress = hex4Bytes('MSG_SENDER');
+    await app['setStorageAddress(bytes32,address)'](bytes32TokenAddr, testERC20.address);
+    const tokenAddress = bytes32TokenAddr.substring(2, 10);
+    const msgSenderAddress = bytes32msgSenderAddress.substring(2, 10);
+
+    // program 'balanceOf DAI MSG_SENDER'
+    await ctx.setProgram(`0x2b${tokenAddress}${msgSenderAddress}`);
+
+    // every "execute" call sets a connected address as MSG_SENDER
+    await executor.connect(alice).execute(ctxAddr);
+    await checkStack(stack, 1, '100');
+    await executor.connect(bob).execute(ctxAddr);
+    await checkStack(stack, 2, '200');
+    await executor.connect(carl).execute(ctxAddr);
+    await checkStack(stack, 3, '300');
   });
 
   describe('if-else statement', () => {
