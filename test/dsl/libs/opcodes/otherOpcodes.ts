@@ -26,7 +26,7 @@ import { deployOpcodeLibs } from '../../../../scripts/utils/deploy.utils';
 
 const { ethers, network } = hre;
 
-describe.only('Other opcodes', () => {
+describe('Other opcodes', () => {
   let StackCont: Stack__factory;
   /* eslint-enable camelcase */
   let app: OtherOpcodesMock;
@@ -100,18 +100,18 @@ describe.only('Other opcodes', () => {
 
   it('opLoadLocalGet', async () => {
     await ctxProgram.setProgram('0x1a000000');
-    await expect(app.opLoadLocalGet(ctxProgramAddr, 'hey()')).to.be.revertedWith('OP5');
+    await expect(app.opLoadLocalGet(ctxProgramAddr, 'hey()')).to.be.revertedWith('OPH1');
   });
 
   it('opLoadRemote', async () => {
     const ctxAddrCut = ctxProgramAddr.substring(2);
     await ctxProgram.setProgram(`0x1a000000${ctxAddrCut}`);
-    await expect(app.opLoadRemote(ctxProgramAddr, 'hey()')).to.be.revertedWith('OP3');
+    await expect(app.opLoadRemote(ctxProgramAddr, 'hey()')).to.be.revertedWith('OPH1');
   });
 
   it('opLoadRemoteAny', async () => {
     await ctxProgram.setProgram('0x1a');
-    await expect(app.opLoadRemoteAny(ctxProgramAddr, ctxDSLAddr)).to.be.revertedWith('OPH1');
+    await expect(app.opLoadRemoteAny(ctxProgramAddr, ctxDSLAddr)).to.be.revertedWith('OPH2');
   });
 
   describe('block', () => {
@@ -235,7 +235,7 @@ describe.only('Other opcodes', () => {
       await ctxProgram.setAppAddress(badContract.address);
       await expect(
         app.opSetLocalBool(ctxProgramAddr, ethers.constants.AddressZero)
-      ).to.be.revertedWith('OP1');
+      ).to.be.revertedWith('OPH1');
       await ctxProgram.setAppAddress(clientApp.address);
     });
 
@@ -263,7 +263,7 @@ describe.only('Other opcodes', () => {
       await ctxProgram.setAppAddress(badContract.address);
       await expect(
         app.opSetUint256(ctxProgramAddr, ethers.constants.AddressZero)
-      ).to.be.revertedWith('OP1');
+      ).to.be.revertedWith('OPH1');
       await ctxProgram.setAppAddress(clientApp.address);
     });
 
