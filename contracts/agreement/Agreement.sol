@@ -11,7 +11,7 @@ import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { LinkedList } from '../dsl/helpers/LinkedList.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 // TODO: automatically make sure that no contract exceeds the maximum contract size
 
