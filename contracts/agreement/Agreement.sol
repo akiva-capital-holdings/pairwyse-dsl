@@ -29,6 +29,12 @@ contract Agreement {
     IParser public parser; // TODO: We can get rid of this dependency
     IContext public context;
     address public ownerAddr;
+    enum ValueTypes {
+        ADDRESS,
+        UINT256,
+        BYTES32,
+        BOOL
+    }
 
     event Parsed(address indexed preProccessor, address indexed context, string code);
 
@@ -53,13 +59,34 @@ contract Agreement {
         string[] conditionStrings
     );
 
-    modifier isReserved(bytes32 position) {
+    modifier isReserved(string memory valName) {
+        bytes32 position = bytes4(keccak256(abi.encodePacked(valName)));
         bytes32 MSG_SENDER_4_BYTES_HEX = 0x9ddd6a8100000000000000000000000000000000000000000000000000000000;
         bytes32 ETH_4_BYTES_HEX = 0xaaaebeba00000000000000000000000000000000000000000000000000000000;
         bytes32 GWEI_4_BYTES_HEX = 0x0c93a5d800000000000000000000000000000000000000000000000000000000;
         require(position != MSG_SENDER_4_BYTES_HEX, ErrorsAgreement.AGR8); // check that variable name is not 'MSG_SENDER'
         require(position != ETH_4_BYTES_HEX, ErrorsAgreement.AGR8); // check that variable name is not 'ETH'
         require(position != GWEI_4_BYTES_HEX, ErrorsAgreement.AGR8); // check that variable name is not 'GWEI'
+        _;
+    }
+
+    modifier isValueExist(string memory valName) {
+        bool errorValue = false;
+        uint256 count = 0;
+        for (uint256 i = 0; i <= cardIds.length; i++) {
+            // check that value already exist
+            if (
+                keccak256(abi.encodePacked(valName)) ==
+                keccak256(abi.encodePacked(cards[i].cardName))
+            ) {
+                // check that value owner is msg.sender
+                if (msg.sender == cards[i].cardCreator) {
+                    break;
+                }
+                errorValue = true;
+            }
+        }
+        require(!errorValue, ErrorsAgreement.AGR8); // check that msg.sender can rewrite variable
         _;
     }
 
@@ -76,7 +103,16 @@ contract Agreement {
         string transactionString;
     }
 
+    struct StorageCard {
+        string cardName;
+        ValueTypes valueType;
+        bytes32 cardHex;
+        uint256 cardId;
+        address cardCreator;
+    }
+
     mapping(uint256 => Record) public records; // recordId => Record struct
+    mapping(uint256 => StorageCard) public cards; // cardId => StorageCard struct
     mapping(uint256 => address[]) public conditionContexts; // recordId => condition Context
     mapping(uint256 => string[]) public conditionStrings; // recordId => DSL condition as string
     mapping(uint256 => address[]) public signatories; // recordId => signatories
@@ -84,6 +120,7 @@ contract Agreement {
     // recordId => (signatory => was tx executed by signatory)
     mapping(uint256 => mapping(address => bool)) public isExecutedBySignatory;
     uint256[] public recordIds; // array of recordId
+    uint256[] public cardIds; // array of cardId
 
     /**
      * Sets parser address, creates new Context instance, and setups Context
@@ -108,19 +145,35 @@ contract Agreement {
         return position.getStorageUint256();
     }
 
-    function setStorageBool(bytes32 position, bool data) external isReserved(position) {
+    function setStorageBool(
+        string memory valName,
+        bool data
+    ) external isReserved(valName) isValueExist(valName) {
+        bytes32 position = _addNewCard(valName, ValueTypes.BOOL);
         position.setStorageBool(data);
     }
 
-    function setStorageAddress(bytes32 position, address data) external isReserved(position) {
+    function setStorageAddress(
+        string memory valName,
+        address data
+    ) external isReserved(valName) isValueExist(valName) {
+        bytes32 position = _addNewCard(valName, ValueTypes.ADDRESS);
         position.setStorageAddress(data);
     }
 
-    function setStorageBytes32(bytes32 position, bytes32 data) external isReserved(position) {
+    function setStorageBytes32(
+        string memory valName,
+        bytes32 data
+    ) external isReserved(valName) isValueExist(valName) {
+        bytes32 position = _addNewCard(valName, ValueTypes.BYTES32);
         position.setStorageBytes32(data);
     }
 
-    function setStorageUint256(bytes32 position, uint256 data) external isReserved(position) {
+    function setStorageUint256(
+        string memory valName,
+        uint256 data
+    ) external isReserved(valName) isValueExist(valName) {
+        bytes32 position = _addNewCard(valName, ValueTypes.UINT256);
         position.setStorageUint256(data);
     }
 
@@ -221,40 +274,42 @@ contract Agreement {
         emit RecordArchived(_recordId);
     }
 
-    /**
-     * @dev unarchive any of the existing records by recordId
-     * @param _recordId Record ID
-     */
-    function unarchiveRecord(uint256 _recordId) external onlyOwner {
-        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
-        require(records[_recordId].isArchived != false, ErrorsAgreement.AGR10);
-        records[_recordId].isArchived = false;
+    // TODO: commented out the code due to the gas limit, we need to refactor the code
 
-        emit RecordUnarchived(_recordId);
-    }
+    // /**
+    //  * @dev unarchive any of the existing records by recordId
+    //  * @param _recordId Record ID
+    //  */
+    // function unarchiveRecord(uint256 _recordId) external onlyOwner {
+    //     require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+    //     require(records[_recordId].isArchived != false, ErrorsAgreement.AGR10);
+    //     records[_recordId].isArchived = false;
 
-    /**
-     * @dev activates the existing records by recordId, only awailable for ownerAddr
-     * @param _recordId Record ID
-     */
-    function activateRecord(uint256 _recordId) external onlyOwner {
-        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
-        records[_recordId].isActive = true;
+    //     emit RecordUnarchived(_recordId);
+    // }
 
-        emit RecordActivated(_recordId);
-    }
+    // /**
+    //  * @dev activates the existing records by recordId, only awailable for ownerAddr
+    //  * @param _recordId Record ID
+    //  */
+    // function activateRecord(uint256 _recordId) external onlyOwner {
+    //     require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+    //     records[_recordId].isActive = true;
 
-    /**
-     * @dev deactivates the existing records by recordId, only awailable for ownerAddr
-     * @param _recordId Record ID
-     */
-    function deactivateRecord(uint256 _recordId) external onlyOwner {
-        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
-        require(records[_recordId].isActive != false, ErrorsAgreement.AGR10);
-        records[_recordId].isActive = false;
+    //     emit RecordActivated(_recordId);
+    // }
 
-        emit RecordDeactivated(_recordId);
-    }
+    // /**
+    //  * @dev deactivates the existing records by recordId, only awailable for ownerAddr
+    //  * @param _recordId Record ID
+    //  */
+    // function deactivateRecord(uint256 _recordId) external onlyOwner {
+    //     require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+    //     require(records[_recordId].isActive != false, ErrorsAgreement.AGR10);
+    //     records[_recordId].isActive = false;
+
+    //     emit RecordDeactivated(_recordId);
+    // }
 
     /**
      * @dev Parse DSL code from the user and set the program bytecode in Context contract
@@ -328,7 +383,25 @@ contract Agreement {
     }
 
     /**
-     * Verify that the user who wants to execute the record is amoung the signatories for this Record
+     * @dev Created and save new StorageCard of seted Value
+     * @param _valName seted value name in type of string
+     * @param _valueType seted value type number
+     * @return position return _valName in type of bytes32
+     */
+    function _addNewCard(string memory _valName, ValueTypes _valueType) internal returns (bytes32) {
+        bytes32 position = bytes4(keccak256(abi.encodePacked(_valName)));
+        uint256 count = 0;
+        for (uint256 i = 0; i <= cardIds.length; i++) {
+            count = i;
+        }
+        cardIds.push(count);
+        StorageCard memory card = StorageCard(_valName, _valueType, position, count, msg.sender);
+        cards[count] = card;
+        return position;
+    }
+
+    /**
+     * @dev Verify that the user who wants to execute the record is amoung the signatories for this Record
      * @param _recordId ID of the record
      * @return true if the user is allowed to execute the record, false - otherwise
      */
@@ -344,7 +417,7 @@ contract Agreement {
     }
 
     /**
-     * Check that all records required by this records were executed
+     * @dev Check that all records required by this records were executed
      * @param _recordId ID of the record
      * @return true all the required records were executed, false - otherwise
      */
