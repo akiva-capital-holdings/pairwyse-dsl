@@ -17,8 +17,8 @@ library OtherOpcodes {
 
     function opLoadRemoteAny(address _ctxProgram, address _ctxDSL) public {
         address libAddr = IDSLContext(_ctxDSL).otherOpcodes();
-        bytes4 selector = OpcodeHelpers.nextBranchSelector(_ctxDSL, _ctxProgram, 'loadRemote');
-        OpcodeHelpers.mustDelegateCall(libAddr, abi.encodeWithSelector(selector, _ctxDSL));
+        bytes4 _selector = OpcodeHelpers.nextBranchSelector(_ctxDSL, _ctxProgram, 'loadRemote');
+        OpcodeHelpers.mustDelegateCall(libAddr, abi.encodeWithSelector(_selector, _ctxDSL));
     }
 
     function opBlockNumber(address _ctxProgram, address) public {
