@@ -219,10 +219,10 @@ library Preprocessor {
             _chunk = _code[i++];
 
             if (IDSLContext(_ctxAddr).isCommand(_chunk)) {
-                (_result, _resultCtr, i) = _processCommand(_result, _code, _resultCtr, _ctxAddr, i);
+                (_result, _resultCtr, i) = _processCommand(_result, _resultCtr, _code, i, _ctxAddr);
             } else if (_isCurlyBracket(_chunk)) {
                 (_result, _resultCtr) = _processCurlyBracket(_result, _resultCtr, _chunk);
-            } else if (_isAlias(_chunk, _ctxAddr)) {
+            } else if (_isAlias(_ctxAddr, _chunk)) {
                 (_result, _resultCtr) = _processAlias(_result, _resultCtr, _ctxAddr, _chunk);
             } else if (_chunk.equal('insert')) {
                 (_result, _resultCtr, i) = _processArrayInsert(_result, _resultCtr, _code, i);
@@ -254,7 +254,7 @@ library Preprocessor {
         while (i < _nonEmptyArrLen(_code)) {
             _chunk = _code[i++];
 
-            if (_isOperator(_chunk, _ctxAddr)) {
+            if (_isOperator(_ctxAddr, _chunk)) {
                 (_result, _resultCtr, _stack) = _processOperator(
                     _stack,
                     _result,
@@ -599,7 +599,6 @@ library Preprocessor {
 
     /**
      * @dev Checks if chunk is an operator
-     * @param _chunk Current piece of code that we're processing
      * @param _ctxAddr Context contract address
      * @return True or false based on whether chunk is an operator or not
      */
@@ -612,17 +611,11 @@ library Preprocessor {
 
     /**
      * @dev Checks if a string is an alias to a command from DSL
-     * @param _chunk Current piece of code that we're processing
      * @param _ctxAddr Context contract address
      * @return True or false based on whether chunk is an alias or not
      */
-<<<<<<< HEAD
-    function _isAlias(string memory _chunk, address _ctxAddr) internal view returns (bool) {
-        return !IContext(_ctxAddr).aliases(_chunk).equal('');
-=======
     function _isAlias(address _ctxAddr, string memory _cmd) internal view returns (bool) {
         return !IDSLContext(_ctxAddr).aliases(_cmd).equal('');
->>>>>>> 975e969 (fixed opcodes, basic tests with string lib, fixed contexts depencies)
     }
 
     /**

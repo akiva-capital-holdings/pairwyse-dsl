@@ -11,7 +11,7 @@ const { ethers, network } = hre;
 describe('DSL: math', () => {
   let ctx: DSLContextMock;
   let ctxProgram: ProgramContextMock;
-  let app: App;
+  let app: BaseApplication;
   let snapshotId: number;
 
   before(async () => {
@@ -40,7 +40,7 @@ describe('DSL: math', () => {
       await ethers.getContractFactory('BaseApplication', {
         libraries: { Executor: executorLibAddr },
       })
-    ).deploy(parserAddr, preprAddr, ctx.address);
+    ).deploy(parserAddr, preprAddr, ctx.address, ctxProgram.address);
 
     await ctxProgram.setAppAddress(app.address);
   });

@@ -1,7 +1,12 @@
 import * as hre from 'hardhat';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 
-import { BaseApplication, DSLContextMock, ProgramContextMock, Stack } from '../../../typechain-types';
+import {
+  BaseApplication,
+  DSLContextMock,
+  ProgramContextMock,
+  Stack,
+} from '../../../typechain-types';
 import { checkStackTail } from '../../utils/utils';
 
 const { ethers } = hre;

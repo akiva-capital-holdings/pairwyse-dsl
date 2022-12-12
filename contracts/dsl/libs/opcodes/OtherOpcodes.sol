@@ -154,7 +154,7 @@ library OtherOpcodes {
         // till found the `endStruct` opcode
         while (bytes4(_varNameB32) != 0xcb398fe1) {
             // get a variable value for current _varNameB32
-            bytes32 _value = OpcodeHelpers.getNextBytes(_ctx, 32);
+            bytes32 _value = OpcodeHelpers.getNextBytes(_ctxProgram, 32);
             OpcodeHelpers.mustCall(
                 IProgramContext(_ctxProgram).appAddr(),
                 abi.encodeWithSignature(
@@ -341,7 +341,7 @@ library OtherOpcodes {
     ) public returns (bytes32 result) {
         bytes32 MSG_SENDER = 0x9ddd6a8100000000000000000000000000000000000000000000000000000000;
         bytes memory data;
-        bytes32 varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
+        bytes32 varNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
         if (varNameB32 == MSG_SENDER) {
             data = abi.encode(IProgramContext(_ctxProgram).msgSender());
         } else {
@@ -455,7 +455,7 @@ library OtherOpcodes {
             // get struct variable value
             bytes4 _fullName = IProgramContext(_ctxProgram).structParams(bytes4(item), _varName);
             (item) = OpcodeHelpers.mustCall(
-                IContext(_ctxProgram).appAddr(),
+                IProgramContext(_ctxProgram).appAddr(),
                 abi.encodeWithSignature('getStorageUint256(bytes32)', bytes32(_fullName))
             );
             total += uint256(bytes32(item));
@@ -474,7 +474,7 @@ library OtherOpcodes {
         uint256 _index,
         bytes32 _arrNameB32
     ) internal returns (bytes memory item) {
-        bytes memory item = OpcodeHelpers.mustCall(
+        item = OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),
             abi.encodeWithSignature('get(uint256,bytes32)', _index, _arrNameB32)
         );
@@ -505,10 +505,12 @@ library OtherOpcodes {
      * @param _arrNameB32 Array's name in bytecode
      * @param _typeName Type of the array, ex. `uint256`, `address`, `struct`
      */
-    function _checkArrType(address _ctxDSL,
+    function _checkArrType(
+        address _ctxDSL,
         address _ctxProgram,
         bytes32 _arrNameB32,
-        string memory _typeName) internal {
+        string memory _typeName
+    ) internal {
         bytes memory _type;
         // check if the array exists
         (_type) = OpcodeHelpers.mustCall(

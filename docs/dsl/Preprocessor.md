@@ -467,7 +467,7 @@ _Checks if chunk is a currency symbol_
 ### _isOperator
 
 ```solidity
-function _isOperator(string _chunk, address _ctxAddr) internal view returns (bool)
+function _isOperator(address _ctxAddr, string op) internal view returns (bool)
 ```
 
 _Checks if chunk is an operator_
@@ -476,8 +476,8 @@ _Checks if chunk is an operator_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _chunk | string | Current piece of code that we're processing |
 | _ctxAddr | address | Context contract address |
+| op | string |  |
 
 #### Return Values
 
@@ -488,7 +488,7 @@ _Checks if chunk is an operator_
 ### _isAlias
 
 ```solidity
-function _isAlias(string _chunk, address _ctxAddr) internal view returns (bool)
+function _isAlias(address _ctxAddr, string _cmd) internal view returns (bool)
 ```
 
 _Checks if a string is an alias to a command from DSL_
@@ -497,8 +497,8 @@ _Checks if a string is an alias to a command from DSL_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _chunk | string | Current piece of code that we're processing |
 | _ctxAddr | address | Context contract address |
+| _cmd | string |  |
 
 #### Return Values
 

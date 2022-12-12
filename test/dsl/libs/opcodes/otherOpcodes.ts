@@ -26,7 +26,7 @@ import { deployOpcodeLibs } from '../../../../scripts/utils/deploy.utils';
 
 const { ethers, network } = hre;
 
-describe('Other opcodes', () => {
+describe.only('Other opcodes', () => {
   let StackCont: Stack__factory;
   /* eslint-enable camelcase */
   let app: OtherOpcodesMock;

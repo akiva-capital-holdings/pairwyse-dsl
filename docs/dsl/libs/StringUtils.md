@@ -134,42 +134,8 @@ Ex. `8`.in('123456') => false_
 ### fromHex
 
 ```solidity
-function fromHex(string _s) public pure returns (bytes)
+function fromHex(string s) public pure returns (bytes)
 ```
-
-_Converts a hex string (without "0x" prefix) to raw bytes_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _s | string | Hex string |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes | Bytes resulter from hex sting |
-
-### fromHexBytes
-
-```solidity
-function fromHexBytes(bytes _b) public pure returns (bytes)
-```
-
-_Converts a hexadecimal string in hex format (without "0x" prefix) to raw bytes_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _b | bytes | Input bytes |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes | Raw bytes |
 
 ### toString
 
@@ -273,27 +239,6 @@ _If the string starts with `0x` symbols, so we assume that it's an address._
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | bool | isAddress that is true if the string starts with `0x` symbols, otherwise is false |
-
-### fromHexChar
-
-```solidity
-function fromHexChar(bytes1 _c) public pure returns (uint8)
-```
-
-_Converts a hexadecimal character from bytes to number_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _c | bytes1 | Hexadecimal character |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint8 | The number from hex character |
-
 
 ### isValidVarName
 

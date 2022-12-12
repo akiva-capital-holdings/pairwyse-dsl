@@ -3,7 +3,13 @@ import { expect } from 'chai';
 import { parseEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
 
-import { BaseApplication, DSLContext, ProgramContextMock, Stack, ExecutorMock } from '../../../typechain-types';
+import {
+  BaseApplication,
+  DSLContext,
+  ProgramContextMock,
+  Stack,
+  ExecutorMock,
+} from '../../../typechain-types';
 import { checkStackTail, hex4Bytes, checkStack } from '../../utils/utils';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 
@@ -58,7 +64,7 @@ describe('DSL: basic', () => {
       otherOpcodesLibAddr
     );
     ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
-  
+
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
     const contextStackAddress = await ctxProgram.stack();
@@ -69,7 +75,7 @@ describe('DSL: basic', () => {
       await ethers.getContractFactory('BaseApplication', {
         libraries: { Executor: executorLibAddr },
       })
-    ).deploy(parserAddr, preprAddr, ctx.address);
+    ).deploy(parserAddr, preprAddr, ctx.address, ctxProgram.address);
     appAddr = app.address;
 
     await ctxProgram.setAppAddress(app.address);
