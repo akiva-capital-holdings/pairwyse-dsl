@@ -24,7 +24,7 @@ import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock
 
 const { ethers, network } = hre;
 
-describe.only('Simple Records in Agreement', () => {
+describe('Simple Records in Agreement', () => {
   let app: AgreementMock;
   let multisig: MultisigMock;
   let appAddr: string;

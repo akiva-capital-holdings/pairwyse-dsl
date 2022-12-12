@@ -22,6 +22,7 @@ library ErrorsAgreement {
     string constant AGR13 = 'AGR13'; // Agreement: the record is not activated
     string constant AGR14 = 'AGR14'; // Agreement: the record is pre-define. can not be changed
     string constant AGR15 = 'AGR15'; // Agreement: time can not be in the past
+    string constant AGR16 = 'AGR16'; // Agreement: out of range
 }
 
 /**

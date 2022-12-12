@@ -11,7 +11,7 @@ import {
 } from '../../../../typechain-types';
 import { getBytesStringLength, pushToStack, uint256StrToHex } from '../../../utils/utils';
 
-describe.skip('Branching opcodes', () => {
+describe('Branching opcodes', () => {
   let StackCont: Stack__factory;
   /* eslint-enable camelcase */
   let app: BranchingOpcodesMock;
@@ -64,7 +64,7 @@ describe.skip('Branching opcodes', () => {
     await ctxProgram.setProgram(`0x${testBranchTrue}${testBranchFalse}`);
     await pushToStack(ctxProgram, StackCont, [1]);
 
-    await app.opIfelse(ctxProgramAddr);
+    await app.opIfelse(ctxProgramAddr, ethers.constants.AddressZero);
 
     let pc = await ctxProgram.pc();
 
@@ -73,7 +73,7 @@ describe.skip('Branching opcodes', () => {
     await ctxProgram.setPc(0);
     await pushToStack(ctxProgram, StackCont, [0]);
 
-    await app.opIfelse(ctxProgramAddr);
+    await app.opIfelse(ctxProgramAddr, ethers.constants.AddressZero);
 
     pc = await ctxProgram.pc();
 
@@ -86,7 +86,7 @@ describe.skip('Branching opcodes', () => {
     await ctxProgram.setProgram(`0x${testBranchTrue}`);
     await pushToStack(ctxProgram, StackCont, [1]);
 
-    await app.opIf(ctxProgramAddr);
+    await app.opIf(ctxProgramAddr, ethers.constants.AddressZero);
 
     const pc = await ctxProgram.pc();
     let nextPc = await ctxProgram.nextpc();
@@ -101,7 +101,7 @@ describe.skip('Branching opcodes', () => {
     await ctxProgram.setPc(0);
     await pushToStack(ctxProgram, StackCont, [0]);
 
-    await app.opIf(ctxProgramAddr);
+    await app.opIf(ctxProgramAddr, ethers.constants.AddressZero);
 
     nextPc = await ctxProgram.nextpc();
     const programLength = getBytesStringLength(await ctxProgram.program());
@@ -112,7 +112,7 @@ describe.skip('Branching opcodes', () => {
   it('opEnd', async () => {
     await ctxProgram.setProgram('0xAAFCCEADFADC');
 
-    await app.opEnd(ctxProgramAddr);
+    await app.opEnd(ctxProgramAddr, ethers.constants.AddressZero);
 
     const pc = await ctxProgram.pc();
     const nextPc = await ctxProgram.nextpc();
@@ -139,7 +139,7 @@ describe.skip('Branching opcodes', () => {
     await ctxProgram.setProgram(`0x${testBranchTrue}`);
     await pushToStack(ctxProgram, StackCont, [1]);
 
-    await app.opFunc(ctxProgramAddr);
+    await app.opFunc(ctxProgramAddr, ethers.constants.AddressZero);
 
     const pc = await ctxProgram.pc();
     let nextPc = await ctxProgram.nextpc();
@@ -154,7 +154,7 @@ describe.skip('Branching opcodes', () => {
     await ctxProgram.setPc(0);
     await pushToStack(ctxProgram, StackCont, [0]);
 
-    await app.opFunc(ctxProgramAddr);
+    await app.opFunc(ctxProgramAddr, ethers.constants.AddressZero);
 
     nextPc = await ctxProgram.nextpc();
     const programLength = getBytesStringLength(await ctxProgram.program());

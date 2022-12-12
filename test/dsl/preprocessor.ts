@@ -7,7 +7,7 @@ import { checkStringStack, split } from '../utils/utils';
 
 import * as hre from 'hardhat';
 
-describe.skip('Preprocessor', () => {
+describe('Preprocessor', () => {
   let app: Preprocessor;
   let ctxAddr: string;
   let appAddrHex: string;

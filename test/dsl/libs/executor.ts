@@ -2,14 +2,16 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import * as hre from 'hardhat';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
-import { Context, Stack, ExecutorMock } from '../../../typechain-types';
+import { DSLContextMock, ProgramContextMock, Stack, ExecutorMock } from '../../../typechain-types';
 import { checkStack, checkStackTail, hex4Bytes } from '../../utils/utils';
 
 const { ethers } = hre;
 
 describe('Executor', () => {
-  let ctx: Context;
-  let ctxAddr: string;
+  let ctxDSL: DSLContextMock;
+  let ctxProgram: ProgramContextMock;
+  let ctxDSLAddr: string;
+  let ctxProgramAddr: string;
   let stack: Stack;
   let app: ExecutorMock;
   let sender: SignerWithAddress;
@@ -34,39 +36,43 @@ describe('Executor', () => {
     ).deploy();
 
     // Deploy & setup Context
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
-    ctxAddr = ctx.address;
-    await ctx.setAppAddress(app.address);
-    await ctx.setMsgSender(sender.address);
-    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLibAddr);
-    await ctx.setBranchingOpcodesAddr(branchingOpcodesLibAddr);
-    await ctx.setLogicalOpcodesAddr(logicalOpcodesLibAddr);
-    await ctx.setOtherOpcodesAddr(otherOpcodesLibAddr);
+    ctxDSL = await (
+      await ethers.getContractFactory('DSLContextMock')
+    ).deploy(
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr
+    );
+    ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
+    ctxDSLAddr = ctxDSL.address;
+    ctxProgramAddr = ctxProgram.address;
+    await ctxProgram.setAppAddress(app.address);
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
-    const contextStackAddress = await ctx.stack();
+    const contextStackAddress = await ctxProgram.stack();
     stack = StackCont.attach(contextStackAddress);
   });
 
   afterEach(async () => {
     stack.clear();
-    ctx.setPc(0);
+    ctxProgram.setPc(0);
   });
 
   describe('execute()', async () => {
     it('error: empty program', async () => {
-      await expect(app.execute(ctxAddr)).to.be.revertedWith('EXC1');
+      await expect(app.execute(ctxDSLAddr, ctxProgramAddr)).to.be.revertedWith('EXC1');
     });
 
     it('error: did not find selector for opcode', async () => {
-      await ctx.setProgram('0x99');
-      await expect(app.execute(ctxAddr)).to.be.revertedWith('EXC2');
+      await ctxProgram.setProgram('0x99');
+      await expect(app.execute(ctxDSLAddr, ctxProgramAddr)).to.be.revertedWith('EXC2');
     });
 
     it('error: call not success', async () => {
-      await ctx.setProgram('0x05');
-      await expect(app.execute(ctxAddr)).to.be.revertedWith('EXC3');
+      await ctxProgram.setProgram('0x05');
+      await expect(app.execute(ctxDSLAddr, ctxProgramAddr)).to.be.revertedWith('EXC3');
     });
 
     describe('if', () => {
@@ -75,7 +81,7 @@ describe('Executor', () => {
       const FOUR = new Array(64).join('0') + 4;
 
       it('nothing in the stack', async () => {
-        await ctx.setProgram(
+        await ctxProgram.setProgram(
           '0x' +
             '25' + // if
             '0027' + // position of the `action` branch
@@ -87,12 +93,12 @@ describe('Executor', () => {
             '24' // action: end
         );
         await checkStackTail(stack, []);
-        await app.execute(ctxAddr);
+        await app.execute(ctxDSLAddr, ctxProgramAddr);
         await checkStackTail(stack, []);
       });
 
       it('if condition is true', async () => {
-        await ctx.setProgram(
+        await ctxProgram.setProgram(
           '0x' +
             '18' + // bool
             '01' + // true
@@ -107,7 +113,7 @@ describe('Executor', () => {
             `${TWO}` + // action: TWO
             '24' // action: end
         );
-        await app.execute(ctxAddr);
+        await app.execute(ctxDSLAddr, ctxProgramAddr);
         /*
          1 - action: ONE,
          2 - action: TWO,
@@ -117,7 +123,7 @@ describe('Executor', () => {
       });
 
       it('if condition is false returns only value after that condition', async () => {
-        await ctx.setProgram(
+        await ctxProgram.setProgram(
           '0x' +
             '18' + // bool
             '00' + // false
@@ -134,7 +140,7 @@ describe('Executor', () => {
         );
 
         await checkStackTail(stack, []);
-        await app.execute(ctxAddr);
+        await app.execute(ctxDSLAddr, ctxProgramAddr);
         await checkStackTail(stack, [4]);
       });
     });
@@ -152,8 +158,8 @@ describe('Executor', () => {
           .filter((x) => !!x)
           .join('');
 
-        await ctx.setProgram(programTrue);
-        await app.execute(ctxAddr);
+        await ctxProgram.setProgram(programTrue);
+        await app.execute(ctxDSLAddr, ctxProgramAddr);
         await checkStackTail(stack, [2, 3]);
       });
 
@@ -174,8 +180,8 @@ describe('Executor', () => {
           .filter((x) => !!x)
           .join('');
 
-        await ctx.setProgram(programTrue);
-        await app.execute(ctxAddr);
+        await ctxProgram.setProgram(programTrue);
+        await app.execute(ctxDSLAddr, ctxProgramAddr);
         await checkStackTail(stack, [1, 3]);
       });
 
@@ -200,8 +206,8 @@ describe('Executor', () => {
           `${THREE}` + // bad: THREE
           '24'; // bad: end
 
-        await ctx.setProgram(programTrue);
-        await app.execute(ctxAddr);
+        await ctxProgram.setProgram(programTrue);
+        await app.execute(ctxDSLAddr, ctxProgramAddr);
         await checkStackTail(stack, [1, 2, 4]);
       });
 
@@ -212,8 +218,8 @@ describe('Executor', () => {
           .filter((x) => !!x)
           .join('');
 
-        await ctx.setProgram(programFalse);
-        await app.execute(ctxAddr);
+        await ctxProgram.setProgram(programFalse);
+        await app.execute(ctxDSLAddr, ctxProgramAddr);
         await checkStackTail(stack, [2, 3]);
       });
 
@@ -237,8 +243,8 @@ describe('Executor', () => {
           `${THREE}` + // bad: THREE
           '24'; // bad: end
 
-        await ctx.setProgram(programTrue);
-        await app.execute(ctxAddr);
+        await ctxProgram.setProgram(programTrue);
+        await app.execute(ctxDSLAddr, ctxProgramAddr);
         // TODO: it should be [1, 2, 4]
         await checkStackTail(stack, [3, 4]);
       });
@@ -251,8 +257,8 @@ describe('Executor', () => {
        *  blockNumber
        * `
        */
-      await ctx.setProgram('0x15');
-      const evalTx = await app.execute(ctxAddr);
+      await ctxProgram.setProgram('0x15');
+      const evalTx = await app.execute(ctxDSLAddr, ctxProgramAddr);
       await checkStack(stack, 1, evalTx.blockNumber || 0);
     });
 
@@ -265,8 +271,8 @@ describe('Executor', () => {
        *  <
        * `
        */
-      await ctx.setProgram('0x151603');
-      await app.execute(ctxAddr);
+      await ctxProgram.setProgram('0x151603');
+      await app.execute(ctxDSLAddr, ctxProgramAddr);
       await checkStack(stack, 1, 1);
     });
 
@@ -280,8 +286,8 @@ describe('Executor', () => {
        *  <
        * `
        */
-      await ctx.setProgram('0x151603');
-      await app.execute(ctxAddr);
+      await ctxProgram.setProgram('0x151603');
+      await app.execute(ctxDSLAddr, ctxProgramAddr);
       await checkStack(stack, 1, 1);
     });
 
@@ -306,8 +312,8 @@ describe('Executor', () => {
            */
           const number = bytes32Number.substring(2, 10);
           const number2 = bytes32Number2.substring(2, 10);
-          await ctx.setProgram(`0x1b${number}1b${number2}04`);
-          await app.execute(ctxAddr);
+          await ctxProgram.setProgram(`0x1b${number}1b${number2}04`);
+          await app.execute(ctxDSLAddr, ctxProgramAddr);
           await checkStack(stack, 1, 1);
         });
 
@@ -330,8 +336,8 @@ describe('Executor', () => {
            */
           const number = bytes32Number.substring(2, 10);
           const number2 = bytes32Number2.substring(2, 10);
-          await ctx.setProgram(`0x1b${number}1b${number2}06`);
-          await app.execute(ctxAddr);
+          await ctxProgram.setProgram(`0x1b${number}1b${number2}06`);
+          await app.execute(ctxDSLAddr, ctxProgramAddr);
           await checkStack(stack, 1, 0);
         });
 
@@ -354,8 +360,8 @@ describe('Executor', () => {
            */
           const number = bytes32Number.substring(2, 10);
           const number2 = bytes32Number2.substring(2, 10);
-          await ctx.setProgram(`0x1b${number}1b${number2}01`);
-          await app.execute(ctxAddr);
+          await ctxProgram.setProgram(`0x1b${number}1b${number2}01`);
+          await app.execute(ctxDSLAddr, ctxProgramAddr);
           await checkStack(stack, 1, 1);
         });
       });
@@ -388,8 +394,8 @@ describe('Executor', () => {
            */
           const number = bytes32Number.substring(2, 10);
           const number2 = bytes32Number2.substring(2, 10);
-          await ctx.setProgram(`0x1c01${number}${appAddr}1c01${number2}${appAddr}04`);
-          await app.execute(ctxAddr);
+          await ctxProgram.setProgram(`0x1c01${number}${appAddr}1c01${number2}${appAddr}04`);
+          await app.execute(ctxDSLAddr, ctxProgramAddr);
           await checkStack(stack, 1, 1);
         });
 
@@ -412,8 +418,8 @@ describe('Executor', () => {
            */
           const number = bytes32Number.substring(2, 10);
           const number2 = bytes32Number2.substring(2, 10);
-          await ctx.setProgram(`0x1c01${number}${appAddr}1c01${number2}${appAddr}06`);
-          await app.execute(ctxAddr);
+          await ctxProgram.setProgram(`0x1c01${number}${appAddr}1c01${number2}${appAddr}06`);
+          await app.execute(ctxDSLAddr, ctxProgramAddr);
           await checkStack(stack, 1, 0);
         });
 
@@ -436,8 +442,8 @@ describe('Executor', () => {
            */
           const number = bytes32Number.substring(2, 10);
           const number2 = bytes32Number2.substring(2, 10);
-          await ctx.setProgram(`0x1c01${number}${appAddr}1c01${number2}${appAddr}01`);
-          await app.execute(ctxAddr);
+          await ctxProgram.setProgram(`0x1c01${number}${appAddr}1c01${number2}${appAddr}01`);
+          await app.execute(ctxDSLAddr, ctxProgramAddr);
           await checkStack(stack, 1, 1);
         });
       });
@@ -468,8 +474,8 @@ describe('Executor', () => {
            */
           const addr = addrBytes.substring(2, 10);
           const addr2 = addrBytes2.substring(2, 10);
-          await ctx.setProgram(`0x1c03${addr}${appAddr}1c03${addr2}${appAddr}01`);
-          await app.execute(ctxAddr);
+          await ctxProgram.setProgram(`0x1c03${addr}${appAddr}1c03${addr2}${appAddr}01`);
+          await app.execute(ctxDSLAddr, ctxProgramAddr);
           await checkStack(stack, 1, 1);
         });
 
@@ -498,8 +504,8 @@ describe('Executor', () => {
            */
           const addr = addrBytes.substring(2, 10);
           const addr2 = addrBytes2.substring(2, 10);
-          await ctx.setProgram(`0x1c03${addr}${appAddr}1c03${addr2}${appAddr}01`);
-          await app.execute(ctxAddr);
+          await ctxProgram.setProgram(`0x1c03${addr}${appAddr}1c03${addr2}${appAddr}01`);
+          await app.execute(ctxDSLAddr, ctxProgramAddr);
           await checkStack(stack, 1, 0);
         });
       });
@@ -530,8 +536,8 @@ describe('Executor', () => {
            */
           const bytes = bytes32Bytes.substring(2, 10);
           const bytes2 = bytes32Bytes2.substring(2, 10);
-          await ctx.setProgram(`0x1c04${bytes}${appAddr}1c04${bytes2}${appAddr}01`);
-          await app.execute(ctxAddr);
+          await ctxProgram.setProgram(`0x1c04${bytes}${appAddr}1c04${bytes2}${appAddr}01`);
+          await app.execute(ctxDSLAddr, ctxProgramAddr);
           await checkStack(stack, 1, 1);
         });
 
@@ -560,8 +566,8 @@ describe('Executor', () => {
            */
           const bytes = bytes32Bytes.substring(2, 10);
           const bytes2 = bytes32Bytes2.substring(2, 10);
-          await ctx.setProgram(`0x1c04${bytes}${appAddr}1c04${bytes2}${appAddr}01`);
-          await app.execute(ctxAddr);
+          await ctxProgram.setProgram(`0x1c04${bytes}${appAddr}1c04${bytes2}${appAddr}01`);
+          await app.execute(ctxDSLAddr, ctxProgramAddr);
           await checkStack(stack, 1, 0);
         });
       });
@@ -586,8 +592,8 @@ describe('Executor', () => {
            */
           const bool = boolBytes.substring(2, 10);
           const bool2 = boolBytes2.substring(2, 10);
-          await ctx.setProgram(`0x1c02${bool}${appAddr}1c02${bool2}${appAddr}01`);
-          await app.execute(ctxAddr);
+          await ctxProgram.setProgram(`0x1c02${bool}${appAddr}1c02${bool2}${appAddr}01`);
+          await app.execute(ctxDSLAddr, ctxProgramAddr);
           await checkStack(stack, 1, 1);
         });
 
@@ -610,8 +616,8 @@ describe('Executor', () => {
            */
           const bool = boolBytes.substring(2, 10);
           const bool2 = boolBytes2.substring(2, 10);
-          await ctx.setProgram(`0x1c02${bool}${appAddr}1c02${bool2}${appAddr}14`);
-          await app.execute(ctxAddr);
+          await ctxProgram.setProgram(`0x1c02${bool}${appAddr}1c02${bool2}${appAddr}14`);
+          await app.execute(ctxDSLAddr, ctxProgramAddr);
           await checkStack(stack, 1, 0);
         });
       });

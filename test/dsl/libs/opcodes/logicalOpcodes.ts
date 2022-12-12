@@ -11,7 +11,7 @@ import {
 } from '../../../../typechain-types';
 import { checkStack, pushToStack } from '../../../utils/utils';
 
-describe.skip('Logical opcodes', () => {
+describe('Logical opcodes', () => {
   let StackCont: Stack__factory;
   let app: LogicalOpcodesMock;
   let ctxProgram: ProgramContextMock;
@@ -57,35 +57,35 @@ describe.skip('Logical opcodes', () => {
   describe('opAnd', () => {
     it('success', async () => {
       await pushToStack(ctxProgram, StackCont, [1, 1]);
-      await app.opAnd(ctxProgramAddr);
+      await app.opAnd(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [3, 2222]);
-      await app.opAnd(ctxProgramAddr);
+      await app.opAnd(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [2, 0]);
-      await app.opAnd(ctxProgramAddr);
+      await app.opAnd(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [0, 0]);
-      await app.opAnd(ctxProgramAddr);
+      await app.opAnd(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [0, 1]);
-      await app.opAnd(ctxProgramAddr);
+      await app.opAnd(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
     });
   });
@@ -93,35 +93,35 @@ describe.skip('Logical opcodes', () => {
   describe('opOr', () => {
     it('success', async () => {
       await pushToStack(ctxProgram, StackCont, [1, 1]);
-      await app.opOr(ctxProgramAddr);
+      await app.opOr(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [3, 2222]);
-      await app.opOr(ctxProgramAddr);
+      await app.opOr(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [2, 0]);
-      await app.opOr(ctxProgramAddr);
+      await app.opOr(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [0, 0]);
-      await app.opOr(ctxProgramAddr);
+      await app.opOr(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [0, 2]);
-      await app.opOr(ctxProgramAddr);
+      await app.opOr(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
     });
   });
@@ -129,42 +129,42 @@ describe.skip('Logical opcodes', () => {
   describe('opXor', () => {
     it('success', async () => {
       await pushToStack(ctxProgram, StackCont, [1, 1]);
-      await app.opXor(ctxProgramAddr);
+      await app.opXor(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [3, 2222]);
-      await app.opXor(ctxProgramAddr);
+      await app.opXor(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [2222, 3]);
-      await app.opXor(ctxProgramAddr);
+      await app.opXor(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [2, 0]);
-      await app.opXor(ctxProgramAddr);
+      await app.opXor(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [0, 0]);
-      await app.opXor(ctxProgramAddr);
+      await app.opXor(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [0, 2]);
-      await app.opXor(ctxProgramAddr);
+      await app.opXor(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
     });
   });
@@ -172,35 +172,35 @@ describe.skip('Logical opcodes', () => {
   describe('opAdd', () => {
     it('success', async () => {
       await pushToStack(ctxProgram, StackCont, [1, 1]);
-      await app.opAdd(ctxProgramAddr);
+      await app.opAdd(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 2);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [3, 2222]);
-      await app.opAdd(ctxProgramAddr);
+      await app.opAdd(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 2225);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [2, 0]);
-      await app.opAdd(ctxProgramAddr);
+      await app.opAdd(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 2);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [0, 0]);
-      await app.opAdd(ctxProgramAddr);
+      await app.opAdd(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [0, 2]);
-      await app.opAdd(ctxProgramAddr);
+      await app.opAdd(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 2);
     });
   });
@@ -208,28 +208,28 @@ describe.skip('Logical opcodes', () => {
   describe('opSub', () => {
     it('success', async () => {
       await pushToStack(ctxProgram, StackCont, [1, 1]);
-      await app.opSub(ctxProgramAddr);
+      await app.opSub(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [2222, 3]);
-      await app.opSub(ctxProgramAddr);
+      await app.opSub(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 2219);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [2, 0]);
-      await app.opSub(ctxProgramAddr);
+      await app.opSub(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 2);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [0, 0]);
-      await app.opSub(ctxProgramAddr);
+      await app.opSub(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
     });
   });
@@ -237,28 +237,28 @@ describe.skip('Logical opcodes', () => {
   describe('opMul', () => {
     it('success', async () => {
       await pushToStack(ctxProgram, StackCont, [1, 1]);
-      await app.opMul(ctxProgramAddr);
+      await app.opMul(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [2222, 3]);
-      await app.opMul(ctxProgramAddr);
+      await app.opMul(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 6666);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [2, 0]);
-      await app.opMul(ctxProgramAddr);
+      await app.opMul(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [0, 0]);
-      await app.opMul(ctxProgramAddr);
+      await app.opMul(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
     });
   });
@@ -266,21 +266,21 @@ describe.skip('Logical opcodes', () => {
   describe('opDiv', () => {
     it('success', async () => {
       await pushToStack(ctxProgram, StackCont, [1, 1]);
-      await app.opDiv(ctxProgramAddr);
+      await app.opDiv(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [3333, 3]);
-      await app.opDiv(ctxProgramAddr);
+      await app.opDiv(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1111);
 
       await stack.clear();
       await ctxProgram.setPc(0);
 
       await pushToStack(ctxProgram, StackCont, [5, 2]);
-      await app.opDiv(ctxProgramAddr);
+      await app.opDiv(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 2);
     });
   });

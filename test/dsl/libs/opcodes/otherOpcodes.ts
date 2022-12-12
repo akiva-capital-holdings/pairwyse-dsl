@@ -26,7 +26,7 @@ import { deployOpcodeLibs } from '../../../../scripts/utils/deploy.utils';
 
 const { ethers, network } = hre;
 
-describe.skip('Other opcodes', () => {
+describe('Other opcodes', () => {
   let StackCont: Stack__factory;
   /* eslint-enable camelcase */
   let app: OtherOpcodesMock;
@@ -111,7 +111,7 @@ describe.skip('Other opcodes', () => {
 
   it('opLoadRemoteAny', async () => {
     await ctxProgram.setProgram('0x1a');
-    await expect(app.opLoadRemoteAny(ctxDSLAddr, ctxProgramAddr)).to.be.revertedWith('OPH1');
+    await expect(app.opLoadRemoteAny(ctxProgramAddr, ctxDSLAddr)).to.be.revertedWith('OPH1');
   });
 
   describe('block', () => {
@@ -122,7 +122,7 @@ describe.skip('Other opcodes', () => {
       // 0x05 is NUMBER
       await ctxProgram.setProgram('0x15');
 
-      const opBlockResult = await app.opBlockNumber(ctxProgramAddr);
+      const opBlockResult = await app.opBlockNumber(ctxProgramAddr, ethers.constants.AddressZero);
 
       // stack size is 1
       expect(await stack.length()).to.equal(1);
@@ -138,7 +138,7 @@ describe.skip('Other opcodes', () => {
       // 0x16 is Timestamp
       await ctxProgram.setProgram('0x16');
 
-      await app.opBlockTimestamp(ctxProgramAddr);
+      await app.opBlockTimestamp(ctxProgramAddr, ethers.constants.AddressZero);
 
       // stack size is 1
       expect(await stack.length()).to.equal(1);
@@ -162,7 +162,7 @@ describe.skip('Other opcodes', () => {
       // 0x30 is time
       await ctxProgram.setProgram('0x30');
 
-      await app.opBlockTimestamp(ctxProgramAddr);
+      await app.opBlockTimestamp(ctxProgramAddr, ethers.constants.AddressZero);
 
       // stack size is 1
       expect(await stack.length()).to.equal(1);
@@ -184,7 +184,7 @@ describe.skip('Other opcodes', () => {
       // 0x17 is ChainID
       await ctxProgram.setProgram('0x17');
 
-      const opBlockResult = await app.opBlockChainId(ctxProgramAddr);
+      const opBlockResult = await app.opBlockChainId(ctxProgramAddr, ethers.constants.AddressZero);
 
       // stack size is 1
       expect(await stack.length()).to.equal(1);
@@ -196,32 +196,32 @@ describe.skip('Other opcodes', () => {
   it('opMsgSender', async () => {
     const [first, second] = await ethers.getSigners();
 
-    await app.opMsgSender(ctxProgramAddr);
+    await app.opMsgSender(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStack(stack, 1, 0);
     await stack.clear();
 
     await ctxProgram.setMsgSender(first.address);
-    await app.opMsgSender(ctxProgramAddr);
+    await app.opMsgSender(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStack(stack, 1, first.address);
     await stack.clear();
 
     await ctxProgram.setMsgSender(second.address);
-    await app.opMsgSender(ctxProgramAddr);
+    await app.opMsgSender(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStack(stack, 1, second.address);
   });
 
   it('opMsgValue', async () => {
-    await app.opMsgValue(ctxProgramAddr);
+    await app.opMsgValue(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStack(stack, 1, 0);
     await stack.clear();
 
     await ctxProgram.setMsgValue(10);
-    await app.opMsgValue(ctxProgramAddr);
+    await app.opMsgValue(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStack(stack, 1, 10);
     await stack.clear();
 
     await ctxProgram.setMsgValue(25);
-    await app.opMsgValue(ctxProgramAddr);
+    await app.opMsgValue(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStack(stack, 1, 25);
   });
 
@@ -233,17 +233,19 @@ describe.skip('Other opcodes', () => {
       await ctxProgram.setProgram(`0x${bytesVarName}01`);
       const badContract = await (await ethers.getContractFactory('StorageWithRevert')).deploy();
       await ctxProgram.setAppAddress(badContract.address);
-      await expect(app.opSetLocalBool(ctxProgramAddr)).to.be.revertedWith('OP1');
+      await expect(
+        app.opSetLocalBool(ctxProgramAddr, ethers.constants.AddressZero)
+      ).to.be.revertedWith('OP1');
       await ctxProgram.setAppAddress(clientApp.address);
     });
 
     it('success', async () => {
       await ctxProgram.setProgram(`0x${bytesVarName}01`);
-      await app.opSetLocalBool(ctxProgramAddr);
+      await app.opSetLocalBool(ctxProgramAddr, ethers.constants.AddressZero);
       expect(await clientApp.getStorageBool(bytes32VarName)).to.equal(true);
 
       await ctxProgram.setProgram(`0x${bytesVarName}00`);
-      await app.opSetLocalBool(ctxProgramAddr);
+      await app.opSetLocalBool(ctxProgramAddr, ethers.constants.AddressZero);
       expect(await clientApp.getStorageBool(bytes32VarName)).to.equal(false);
     });
   });
@@ -259,21 +261,23 @@ describe.skip('Other opcodes', () => {
       const badContract = await (await ethers.getContractFactory('StorageWithRevert')).deploy();
 
       await ctxProgram.setAppAddress(badContract.address);
-      await expect(app.opSetUint256(ctxProgramAddr)).to.be.revertedWith('OP1');
+      await expect(
+        app.opSetUint256(ctxProgramAddr, ethers.constants.AddressZero)
+      ).to.be.revertedWith('OP1');
       await ctxProgram.setAppAddress(clientApp.address);
     });
 
     it('success: regular number', async () => {
       await pushToStack(ctxProgram, StackCont, [15]);
       await ctxProgram.setProgram(`0x${bytesVarName}`);
-      await app.opSetUint256(ctxProgramAddr);
+      await app.opSetUint256(ctxProgramAddr, ethers.constants.AddressZero);
       expect(await clientApp.getStorageUint256(bytes32VarName)).to.equal(15);
     });
 
     it('success: big number', async () => {
       await pushToStack(ctxProgram, StackCont, [ethers.utils.parseEther('100')]);
       await ctxProgram.setProgram(`0x${bytesVarName}`);
-      await app.opSetUint256(ctxProgramAddr);
+      await app.opSetUint256(ctxProgramAddr, ethers.constants.AddressZero);
       expect(await clientApp.getStorageUint256(bytes32VarName)).to.equal(
         ethers.utils.parseEther('100')
       );
@@ -290,7 +294,7 @@ describe.skip('Other opcodes', () => {
     await ctxProgram.setProgram(`0x${number}`);
 
     await checkStackTail(stack, []);
-    await app.opLoadLocalUint256(ctxProgramAddr);
+    await app.opLoadLocalUint256(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStackTail(stack, [testValue]);
   });
 
@@ -304,7 +308,7 @@ describe.skip('Other opcodes', () => {
 
     await ctxProgram.setProgram(`0x${number}${clientApp.address.substring(2)}`);
     await checkStackTail(stack, []);
-    await app.opLoadRemoteUint256(ctxProgramAddr);
+    await app.opLoadRemoteUint256(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStackTail(stack, [testValue]);
   });
 
@@ -317,7 +321,7 @@ describe.skip('Other opcodes', () => {
     const bytes = bytes32TestValueName.substring(2, 10);
     await ctxProgram.setProgram(`0x${bytes}${clientApp.address.substring(2)}`);
     await checkStackTail(stack, []);
-    await app.opLoadRemoteBytes32(ctxProgramAddr);
+    await app.opLoadRemoteBytes32(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStackTail(stack, [testValue]);
   });
 
@@ -330,7 +334,7 @@ describe.skip('Other opcodes', () => {
     const bool = bytes32TestValueName.substring(2, 10);
     await ctxProgram.setProgram(`0x${bool}${clientApp.address.substring(2)}`);
     await checkStackTail(stack, []);
-    await app.opLoadRemoteBool(ctxProgramAddr);
+    await app.opLoadRemoteBool(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStackTail(stack, [+testValue]);
   });
 
@@ -344,13 +348,13 @@ describe.skip('Other opcodes', () => {
     const addr = bytes32TestValueName.substring(2, 10);
     await ctxProgram.setProgram(`0x${addr}${clientApp.address.substring(2)}`);
     await checkStackTail(stack, []);
-    await app.opLoadRemoteAddress(ctxProgramAddr);
+    await app.opLoadRemoteAddress(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStackTail(stack, [testValue]);
   });
 
   it('opBool', async () => {
     await ctxProgram.setProgram('0x01');
-    await app.opBool(ctxProgramAddr);
+    await app.opBool(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStackTail(stack, ['0x01']);
   });
 
@@ -359,7 +363,7 @@ describe.skip('Other opcodes', () => {
       '0x0000000000000000000000000000000000000000000000000000000000000001'
     );
     await checkStackTail(stack, []);
-    await app.opUint256(ctxProgramAddr);
+    await app.opUint256(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStackTail(stack, ['1']);
   });
 
@@ -386,10 +390,9 @@ describe.skip('Other opcodes', () => {
     const address = bytes32TestAddressName.substring(2, 10);
     await ctxProgram.setProgram(`0x${address}${fundAmountHex}`);
     await checkStackTail(stack, []);
-    await expect(() => app.opSendEth(ctxProgramAddr)).to.changeEtherBalance(
-      receiver,
-      fundAmountUint
-    );
+    await expect(() =>
+      app.opSendEth(ctxProgramAddr, ethers.constants.AddressZero)
+    ).to.changeEtherBalance(receiver, fundAmountUint);
     await checkStackTail(stack, ['1']);
   });
 
@@ -411,7 +414,7 @@ describe.skip('Other opcodes', () => {
     );
 
     await checkStackTail(stack, []);
-    await app.opTransfer(ctxProgramAddr);
+    await app.opTransfer(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStackTail(stack, ['1']);
 
     const balanceOfReceiver = await testERC20.balanceOf(receiver.address);
@@ -437,7 +440,7 @@ describe.skip('Other opcodes', () => {
     await ctxProgram.setProgram(`0x${tokenAddress}${receiverAddress}${amountVar}`);
 
     await checkStackTail(stack, []);
-    await app.opTransferVar(ctxProgramAddr);
+    await app.opTransferVar(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStackTail(stack, ['1']);
 
     const balanceOfReceiver = await testERC20.balanceOf(receiver.address);
@@ -467,7 +470,7 @@ describe.skip('Other opcodes', () => {
     );
 
     await checkStackTail(stack, []);
-    await app.opTransferFrom(ctxProgramAddr);
+    await app.opTransferFrom(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStackTail(stack, ['1']);
 
     const balanceOfReceiver = await testERC20.balanceOf(receiver.address);
@@ -500,7 +503,7 @@ describe.skip('Other opcodes', () => {
     expect(balanceOfReceiver).to.be.equal(0);
 
     await checkStackTail(stack, []);
-    await app.opTransferFromVar(ctxProgramAddr);
+    await app.opTransferFromVar(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStackTail(stack, ['1']);
 
     balanceOfReceiver = await testERC20.balanceOf(receiver.address);
@@ -524,14 +527,14 @@ describe.skip('Other opcodes', () => {
     await ctxProgram.setProgram(`0x${tokenAddress}${receiverAddress}`);
 
     await checkStackTail(stack, []);
-    await app.opBalanceOf(ctxProgramAddr);
+    await app.opBalanceOf(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStackTail(stack, [testAmount]);
   });
 
   it('opUint256Get', async () => {
     await ctxProgram.setProgram(`0x${uint256StrToHex(testAmount)}`);
 
-    const result = await app.callStatic.opUint256Get(ctxProgramAddr);
+    const result = await app.callStatic.opUint256Get(ctxProgramAddr, ethers.constants.AddressZero);
 
     expect(result).to.be.equal(testAmount);
   });
@@ -557,7 +560,7 @@ describe.skip('Other opcodes', () => {
 
     await ctxProgram.setProgram(`0x${testAddress.substring(2)}`);
 
-    const result = await app.callStatic.opAddressGet(ctxProgramAddr);
+    const result = await app.callStatic.opAddressGet(ctxProgramAddr, ethers.constants.AddressZero);
 
     expect(result).to.be.equal(testAddress);
   });
@@ -609,7 +612,7 @@ describe.skip('Other opcodes', () => {
 
     expect(await clientApp.getStorageUint256(LAST_PAYMENT)).equal(0);
     expect(await clientApp.getStorageUint256(ACCOUNT)).equal(BigNumber.from(zero32bytes));
-    await app.opStruct(ctxProgramAddr);
+    await app.opStruct(ctxProgramAddr, ethers.constants.AddressZero);
     expect(await clientApp.getStorageUint256(LAST_PAYMENT)).equal(3);
     expect(await clientApp.getStorageUint256(ACCOUNT)).equal(BigNumber.from(`0x${ADDRESS}`));
   });
@@ -637,7 +640,7 @@ describe.skip('Other opcodes', () => {
             '1fff709e' // bytecode for NUMBERS
         );
 
-        await app.opDeclare(ctxProgramAddr);
+        await app.opDeclare(ctxProgramAddr, ctxDSLAddr);
         expect(await clientApp.getType(NUMBERS)).to.be.equal('0x01');
       });
 
@@ -648,7 +651,7 @@ describe.skip('Other opcodes', () => {
             '3c8423ff' // bytecode for PARTNERS
         );
         expect(await clientApp.getType(PARTNERS)).to.be.equal('0x00');
-        await app.opDeclare(ctxProgramAddr);
+        await app.opDeclare(ctxProgramAddr, ethers.constants.AddressZero);
         expect(await clientApp.getType(PARTNERS)).to.be.equal('0x02');
       });
 
@@ -659,7 +662,7 @@ describe.skip('Other opcodes', () => {
             '257b3678' // bytecode for INDEXES
         );
         expect(await clientApp.getType(INDEXES)).to.be.equal('0x00');
-        await app.opDeclare(ctxProgramAddr);
+        await app.opDeclare(ctxProgramAddr, ethers.constants.AddressZero);
         expect(await clientApp.getType(INDEXES)).to.be.equal('0x03');
       });
     });
@@ -674,7 +677,7 @@ describe.skip('Other opcodes', () => {
             '1fff709e' // bytecode for NUMBERS
         );
 
-        await app.opPush(ctxProgramAddr);
+        await app.opPush(ctxProgramAddr, ethers.constants.AddressZero);
 
         expect(await clientApp.getLength(NUMBERS)).to.be.equal(1);
         expect(await clientApp.get(0, NUMBERS)).to.be.equal(`0x${THREE}`);
@@ -688,7 +691,7 @@ describe.skip('Other opcodes', () => {
           `${BOB}` + // bytecode for BOB
             '257b3678' // bytecode for INDEXES
         );
-        await app.opPush(ctxProgramAddr);
+        await app.opPush(ctxProgramAddr, ethers.constants.AddressZero);
 
         expect(await clientApp.getLength(INDEXES)).to.be.equal(1);
         expect(await clientApp.get(0, INDEXES)).to.be.equal(`${BOB}`);
@@ -702,7 +705,7 @@ describe.skip('Other opcodes', () => {
             `${ADDRESS_MARY}` + // an address
             '3c8423ff' // bytecode for PARTNERS
         );
-        await app.opPush(ctxProgramAddr);
+        await app.opPush(ctxProgramAddr, ethers.constants.AddressZero);
 
         expect(await clientApp.getLength(PARTNERS)).to.be.equal(1);
         expect(await clientApp.get(0, PARTNERS)).to.be.equal(`0x${ADDRESS_MARY}`);
@@ -719,7 +722,7 @@ describe.skip('Other opcodes', () => {
             '1fff709e' // bytecode for NUMBERS
         );
 
-        await app.opGet(ctxProgramAddr);
+        await app.opGet(ctxProgramAddr, ethers.constants.AddressZero);
         // returned 3 as a value stored in NUMBERS with 0 index
         await checkStack(stack, 1, 3);
       });
@@ -732,7 +735,7 @@ describe.skip('Other opcodes', () => {
           `${zero32bytes}` + // 0x + 0 index
             '257b3678' // bytecode for INDEXES
         );
-        await app.opGet(ctxProgramAddr);
+        await app.opGet(ctxProgramAddr, ethers.constants.AddressZero);
         // returns bytecode for MAX struct name
         await checkStack(stack, 1, MAX);
       });
@@ -747,7 +750,7 @@ describe.skip('Other opcodes', () => {
         );
 
         await checkStackTail(stack, []);
-        await app.opGet(ctxProgramAddr);
+        await app.opGet(ctxProgramAddr, ethers.constants.AddressZero);
         await checkStack(
           stack,
           1,
@@ -767,7 +770,7 @@ describe.skip('Other opcodes', () => {
         );
 
         await checkStackTail(stack, []);
-        await app.opSumOf(ctxDSLAddr, ctxProgramAddr);
+        await app.opSumOf(ctxProgramAddr, ctxDSLAddr);
         // returned 8 as a result of sum for two values (3 and 5) that stored in NUMBERS
         await checkStack(stack, 1, 8);
       });
@@ -787,7 +790,7 @@ describe.skip('Other opcodes', () => {
         );
 
         await checkStackTail(stack, []);
-        await app.opSumThroughStructs(ctxDSLAddr, ctxProgramAddr);
+        await app.opSumThroughStructs(ctxProgramAddr, ctxDSLAddr);
         // returned 8 as a result of sum for two values (3 and 5)
         // that stored in 'BOB.balance' & 'MAX.balance'
         await checkStack(stack, 1, 88);
@@ -805,7 +808,7 @@ describe.skip('Other opcodes', () => {
         );
 
         await checkStackTail(stack, []);
-        await app.opLengthOf(ctxProgramAddr);
+        await app.opLengthOf(ctxProgramAddr, ethers.constants.AddressZero);
         // returned 3 as a length of items that stored in NUMBERS
         await checkStack(stack, 1, 3);
       });
@@ -819,7 +822,7 @@ describe.skip('Other opcodes', () => {
         );
 
         await checkStackTail(stack, []);
-        await app.opLengthOf(ctxProgramAddr);
+        await app.opLengthOf(ctxProgramAddr, ethers.constants.AddressZero);
         // returned 2 as a length of items that stored in INDEXES
         await checkStack(stack, 1, 2);
       });
@@ -833,7 +836,7 @@ describe.skip('Other opcodes', () => {
         );
 
         await checkStackTail(stack, []);
-        await app.opLengthOf(ctxProgramAddr);
+        await app.opLengthOf(ctxProgramAddr, ethers.constants.AddressZero);
         // returned 2 as a length of items that stored in PARTNERS
         await checkStack(stack, 1, 2);
       });

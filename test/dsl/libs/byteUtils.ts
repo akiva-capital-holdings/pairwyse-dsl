@@ -4,7 +4,7 @@ import { hex4Bytes } from '../../utils/utils';
 
 import { ByteUtilsMock } from '../../../typechain-types';
 
-describe.skip('Byte Utils', () => {
+describe('Byte Utils', () => {
   let app: ByteUtilsMock;
   const data = hex4Bytes('0x000000000111');
 

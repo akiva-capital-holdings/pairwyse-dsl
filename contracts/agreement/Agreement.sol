@@ -496,7 +496,6 @@ contract Agreement is LinkedList {
     function _validateConditions(uint256 _recordId, uint256 _msgValue) internal returns (bool) {
         for (uint256 i = 0; i < records[_recordId].conditions.length; i++) {
             _execute(_msgValue, records[_recordId].conditions[i]);
-
             if (IProgramContext(address(contextProgram)).stack().seeLast() == 0) return false;
         }
         return true;

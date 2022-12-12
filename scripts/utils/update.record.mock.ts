@@ -64,7 +64,7 @@ export const parseConditions = async (
 ) => {
   const condStrLen = (await app.conditionStringsLen(recordId)).toNumber();
   for (let j = 0; j < condStrLen; j++) {
-    await app.parse(await app.conditionStrings(recordId, j), preprAddr);
+    await app.parse(await app.conditionString(recordId, j), preprAddr);
   }
 };
 

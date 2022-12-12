@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { Stack } from '../../../typechain-types';
 
-describe.skip('Stack', () => {
+describe('Stack', () => {
   let stack: Stack;
   // let first: SignerWithAddress;
 

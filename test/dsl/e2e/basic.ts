@@ -9,7 +9,7 @@ import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.util
 
 const { ethers, network } = hre;
 
-describe.skip('DSL: basic', () => {
+describe('DSL: basic', () => {
   let stack: Stack;
   let ctx: DSLContext;
   let ctxProgram: ProgramContextMock;

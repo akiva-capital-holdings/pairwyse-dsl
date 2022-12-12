@@ -11,7 +11,7 @@ import {
 } from '../../../../typechain-types';
 import { checkStack, pushToStack } from '../../../utils/utils';
 
-describe.skip('Comparison opcodes', () => {
+describe('Comparison opcodes', () => {
   // eslint-disable-next-line camelcase
   let StackCont: Stack__factory;
   let app: ComparisonOpcodesMock;
@@ -57,14 +57,14 @@ describe.skip('Comparison opcodes', () => {
   describe('opEq', () => {
     it('success', async () => {
       await pushToStack(programContext, StackCont, [1, 1]);
-      await app.opEq(ctxProgramAddr);
+      await app.opEq(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [1, 2]);
-      await app.opEq(ctxProgramAddr);
+      await app.opEq(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
     });
   });
@@ -72,14 +72,14 @@ describe.skip('Comparison opcodes', () => {
   describe('opNotEq', () => {
     it('success', async () => {
       await pushToStack(programContext, StackCont, [1, 1]);
-      await app.opNotEq(ctxProgramAddr);
+      await app.opNotEq(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [1, 2]);
-      await app.opNotEq(ctxProgramAddr);
+      await app.opNotEq(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
     });
   });
@@ -87,21 +87,21 @@ describe.skip('Comparison opcodes', () => {
   describe('opLt', () => {
     it('success', async () => {
       await pushToStack(programContext, StackCont, [1, 1]);
-      await app.opLt(ctxProgramAddr);
+      await app.opLt(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [1, 2]);
-      await app.opLt(ctxProgramAddr);
+      await app.opLt(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [2, 1]);
-      await app.opLt(ctxProgramAddr);
+      await app.opLt(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
     });
   });
@@ -109,28 +109,28 @@ describe.skip('Comparison opcodes', () => {
   describe('opNot', () => {
     it('success', async () => {
       await pushToStack(programContext, StackCont, [1, 1]);
-      await app.opNot(ctxProgramAddr);
+      await app.opNot(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 2, 0);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [0, 1]);
-      await app.opNot(ctxProgramAddr);
+      await app.opNot(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 2, 0);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [0, 0]);
-      await app.opNot(ctxProgramAddr);
+      await app.opNot(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 2, 1);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [1]);
-      await app.opNot(ctxProgramAddr);
+      await app.opNot(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
     });
   });
@@ -138,21 +138,21 @@ describe.skip('Comparison opcodes', () => {
   describe('opSwap', () => {
     it('success', async () => {
       await pushToStack(programContext, StackCont, [1, 1]);
-      await app.opSwap(ctxProgramAddr);
+      await app.opSwap(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 2, 1);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [0]);
-      await app.opNot(ctxProgramAddr);
+      await app.opNot(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [0, 1]);
-      await app.opNot(ctxProgramAddr);
+      await app.opNot(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 2, 0);
     });
   });
@@ -160,21 +160,21 @@ describe.skip('Comparison opcodes', () => {
   describe('opGt', () => {
     it('success', async () => {
       await pushToStack(programContext, StackCont, [2, 1]);
-      await app.opGt(ctxProgramAddr);
+      await app.opGt(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [1, 2]);
-      await app.opGt(ctxProgramAddr);
+      await app.opGt(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [1, 1]);
-      await app.opGt(ctxProgramAddr);
+      await app.opGt(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
     });
   });
@@ -182,35 +182,35 @@ describe.skip('Comparison opcodes', () => {
   describe('opLe', () => {
     it('success', async () => {
       await pushToStack(programContext, StackCont, [2, 1]);
-      await app.opLe(ctxProgramAddr);
+      await app.opLe(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [1, 2]);
-      await app.opLe(ctxProgramAddr);
+      await app.opLe(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [1, 1]);
-      await app.opLe(ctxProgramAddr);
+      await app.opLe(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [1, 0]);
-      await app.opLe(ctxProgramAddr);
+      await app.opLe(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [0, 1]);
-      await app.opLe(ctxProgramAddr);
+      await app.opLe(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
     });
   });
@@ -218,35 +218,35 @@ describe.skip('Comparison opcodes', () => {
   describe('opGe', () => {
     it('success', async () => {
       await pushToStack(programContext, StackCont, [2, 1]);
-      await app.opGe(ctxProgramAddr);
+      await app.opGe(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [1, 2]);
-      await app.opGe(ctxProgramAddr);
+      await app.opGe(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [1, 1]);
-      await app.opGe(ctxProgramAddr);
+      await app.opGe(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [1, 0]);
-      await app.opGe(ctxProgramAddr);
+      await app.opGe(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 1);
 
       await stack.clear();
       await programContext.setPc(0);
 
       await pushToStack(programContext, StackCont, [0, 1]);
-      await app.opGe(ctxProgramAddr);
+      await app.opGe(ctxProgramAddr, ethers.constants.AddressZero);
       await checkStack(stack, 1, 0);
     });
   });

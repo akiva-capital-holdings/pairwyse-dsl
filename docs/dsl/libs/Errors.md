@@ -90,6 +90,12 @@ string AGR14
 string AGR15
 ```
 
+### AGR16
+
+```solidity
+string AGR16
+```
+
 ## ErrorsContext
 
 ### CTX1
