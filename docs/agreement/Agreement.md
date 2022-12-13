@@ -79,13 +79,13 @@ event NewRecord(uint256 recordId, uint256[] requiredRecords, address[] signatori
 ### isReserved
 
 ```solidity
-modifier isReserved(string valName)
+modifier isReserved(string varName)
 ```
 
-### isValueExist
+### doesVariableExist
 
 ```solidity
-modifier isValueExist(string valName)
+modifier doesVariableExist(string varName, enum Agreement.ValueTypes valueType)
 ```
 
 ### onlyOwner
@@ -201,25 +201,25 @@ function getStorageUint256(bytes32 position) external view returns (uint256 data
 ### setStorageBool
 
 ```solidity
-function setStorageBool(string valName, bool data) external
+function setStorageBool(string varName, bool data) external
 ```
 
 ### setStorageAddress
 
 ```solidity
-function setStorageAddress(string valName, address data) external
+function setStorageAddress(string varName, address data) external
 ```
 
 ### setStorageBytes32
 
 ```solidity
-function setStorageBytes32(string valName, bytes32 data) external
+function setStorageBytes32(string varName, bytes32 data) external
 ```
 
 ### setStorageUint256
 
 ```solidity
-function setStorageUint256(string valName, uint256 data) external
+function setStorageUint256(string varName, uint256 data) external
 ```
 
 ### conditionContextsLen
@@ -406,7 +406,7 @@ list or that 'ANYONE' address does not exist in signatures at all_
 ### _addNewCard
 
 ```solidity
-function _addNewCard(string _valName, enum Agreement.ValueTypes _valueType) internal returns (bytes32)
+function _addNewCard(string _varName, enum Agreement.ValueTypes _valueType) internal returns (bytes32)
 ```
 
 _Created and save new StorageCard of seted Value_
@@ -415,14 +415,14 @@ _Created and save new StorageCard of seted Value_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _valName | string | seted value name in type of string |
+| _varName | string | seted value name in type of string |
 | _valueType | enum Agreement.ValueTypes | seted value type number |
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bytes32 | position return _valName in type of bytes32 |
+| [0] | bytes32 | position return _varName in type of bytes32 |
 
 ### _verify
 

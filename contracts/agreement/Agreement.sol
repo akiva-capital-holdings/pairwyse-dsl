@@ -59,8 +59,8 @@ contract Agreement {
         string[] conditionStrings
     );
 
-    modifier isReserved(string memory valName) {
-        bytes32 position = bytes4(keccak256(abi.encodePacked(valName)));
+    modifier isReserved(string memory varName) {
+        bytes32 position = bytes4(keccak256(abi.encodePacked(varName)));
         bytes32 MSG_SENDER_4_BYTES_HEX = 0x9ddd6a8100000000000000000000000000000000000000000000000000000000;
         bytes32 ETH_4_BYTES_HEX = 0xaaaebeba00000000000000000000000000000000000000000000000000000000;
         bytes32 GWEI_4_BYTES_HEX = 0x0c93a5d800000000000000000000000000000000000000000000000000000000;
@@ -70,23 +70,17 @@ contract Agreement {
         _;
     }
 
-    modifier isValueExist(string memory valName) {
-        bool errorValue = false;
-        uint256 count = 0;
+    modifier doesVariableExist(string memory varName, ValueTypes valueType) {
         for (uint256 i = 0; i <= cardIds.length; i++) {
             // check that value already exist
-            if (
-                keccak256(abi.encodePacked(valName)) ==
-                keccak256(abi.encodePacked(cards[i].cardName))
-            ) {
-                // check that value owner is msg.sender
-                if (msg.sender == cards[i].cardCreator) {
-                    break;
-                }
-                errorValue = true;
+            if (StringUtils.equal(varName, cards[i].cardName)) {
+                // check that msg.sender can rewrite variable
+                require(
+                    msg.sender == cards[i].cardCreator && valueType == cards[i].valueType,
+                    ErrorsAgreement.AGR8
+                );
             }
         }
-        require(!errorValue, ErrorsAgreement.AGR8); // check that msg.sender can rewrite variable
         _;
     }
 
@@ -104,11 +98,11 @@ contract Agreement {
     }
 
     struct StorageCard {
-        string cardName;
-        ValueTypes valueType;
-        bytes32 cardHex;
-        uint256 cardId;
-        address cardCreator;
+        string cardName; // Name of variable
+        ValueTypes valueType; // Type of variable
+        bytes32 cardHex; // Name of variable in type of bytes32
+        uint256 cardId; // Id of variable
+        address cardCreator; // address of owner
     }
 
     mapping(uint256 => Record) public records; // recordId => Record struct
@@ -146,34 +140,34 @@ contract Agreement {
     }
 
     function setStorageBool(
-        string memory valName,
+        string memory varName,
         bool data
-    ) external isReserved(valName) isValueExist(valName) {
-        bytes32 position = _addNewCard(valName, ValueTypes.BOOL);
+    ) external isReserved(varName) doesVariableExist(varName, ValueTypes.BOOL) {
+        bytes32 position = _addNewCard(varName, ValueTypes.BOOL);
         position.setStorageBool(data);
     }
 
     function setStorageAddress(
-        string memory valName,
+        string memory varName,
         address data
-    ) external isReserved(valName) isValueExist(valName) {
-        bytes32 position = _addNewCard(valName, ValueTypes.ADDRESS);
+    ) external isReserved(varName) doesVariableExist(varName, ValueTypes.ADDRESS) {
+        bytes32 position = _addNewCard(varName, ValueTypes.ADDRESS);
         position.setStorageAddress(data);
     }
 
     function setStorageBytes32(
-        string memory valName,
+        string memory varName,
         bytes32 data
-    ) external isReserved(valName) isValueExist(valName) {
-        bytes32 position = _addNewCard(valName, ValueTypes.BYTES32);
+    ) external isReserved(varName) doesVariableExist(varName, ValueTypes.BYTES32) {
+        bytes32 position = _addNewCard(varName, ValueTypes.BYTES32);
         position.setStorageBytes32(data);
     }
 
     function setStorageUint256(
-        string memory valName,
+        string memory varName,
         uint256 data
-    ) external isReserved(valName) isValueExist(valName) {
-        bytes32 position = _addNewCard(valName, ValueTypes.UINT256);
+    ) external isReserved(varName) doesVariableExist(varName, ValueTypes.UINT256) {
+        bytes32 position = _addNewCard(varName, ValueTypes.UINT256);
         position.setStorageUint256(data);
     }
 
@@ -384,18 +378,18 @@ contract Agreement {
 
     /**
      * @dev Created and save new StorageCard of seted Value
-     * @param _valName seted value name in type of string
+     * @param _varName seted value name in type of string
      * @param _valueType seted value type number
-     * @return position return _valName in type of bytes32
+     * @return position return _varName in type of bytes32
      */
-    function _addNewCard(string memory _valName, ValueTypes _valueType) internal returns (bytes32) {
-        bytes32 position = bytes4(keccak256(abi.encodePacked(_valName)));
+    function _addNewCard(string memory _varName, ValueTypes _valueType) internal returns (bytes32) {
+        bytes32 position = bytes4(keccak256(abi.encodePacked(_varName)));
         uint256 count = 0;
         for (uint256 i = 0; i <= cardIds.length; i++) {
             count = i;
         }
         cardIds.push(count);
-        StorageCard memory card = StorageCard(_valName, _valueType, position, count, msg.sender);
+        StorageCard memory card = StorageCard(_varName, _valueType, position, count, msg.sender);
         cards[count] = card;
         return position;
     }
