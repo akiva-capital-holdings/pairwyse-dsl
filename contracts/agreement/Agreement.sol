@@ -128,6 +128,11 @@ contract Agreement {
         context.setAppAddress(address(this));
     }
 
+    function transferOwnership(address _newOwner) public onlyOwner {
+        require(_newOwner != address(0), 'Zero address');
+        ownerAddr = _newOwner;
+    }
+
     function getStorageBool(bytes32 position) external view returns (bool data) {
         return position.getStorageBool();
     }

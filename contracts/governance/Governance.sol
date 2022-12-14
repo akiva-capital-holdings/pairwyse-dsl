@@ -28,7 +28,6 @@ contract Governance is LinkedList {
 
     IParser public parser; // TODO: We can get rid of this dependency
     IContext public context;
-    uint256 public deadline;
     address public ownerAddr;
     address public preProc;
 
@@ -84,19 +83,10 @@ contract Governance is LinkedList {
     /**
      * Sets parser address, creates new Context instance, and setups Context
      */
-    constructor(
-        address _parser,
-        address _ownerAddr,
-        address _token,
-        uint256 _deadline,
-        address[] memory _contexts
-    ) {
-        require(_deadline > block.timestamp, ErrorsAgreement.AGR15);
-        require(_token != address(0), ErrorsAgreement.AGR12);
+    constructor(address _parser, address _ownerAddr, address[] memory _contexts) {
         ownerAddr = _ownerAddr;
         context = new Context(); // ~7.000.000 gas
         context.setAppAddress(address(this));
-        deadline = _deadline;
         parser = IParser(_parser);
         contexts = _contexts;
         // all records use the same context
@@ -512,7 +502,7 @@ contract Governance is LinkedList {
             _requiredRecords = new uint256[](1);
             _requiredRecords[0] = 0; // required alvays 0 record
         }
-        if (_recordId == 0 || _recordId == 3) {
+        if (_recordId == 0) {
             _signatories[0] = ownerAddr;
         } else {
             _signatories[0] = context.ANYONE();
@@ -554,13 +544,7 @@ contract Governance is LinkedList {
         uint256 recordId = 1;
         string memory record = 'insert 1 into VOTERS '
         'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
-        string memory _condition = string(
-            abi.encodePacked(
-                '(GOV_BALANCE > 0) and (blockTimestamp < ',
-                StringUtils.toString(deadline),
-                ' )'
-            )
-        );
+        string memory _condition = 'blockTimestamp < DEADLINE';
         _setParameters(recordId, record, _condition, 1, contexts[2], contexts[3]);
     }
 
@@ -572,16 +556,10 @@ contract Governance is LinkedList {
      */
     function _setNoRecord() internal {
         uint256 recordId = 2;
-        string memory record = 'insert 0 into VOTERS '
+        string memory transaction = 'insert 0 into VOTERS '
         'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
-        string memory _condition = string(
-            abi.encodePacked(
-                '(GOV_BALANCE > 0) and (blockTimestamp < ',
-                StringUtils.toString(deadline),
-                ' )'
-            )
-        );
-        _setParameters(recordId, record, _condition, 1, contexts[4], contexts[5]);
+        string memory _condition = 'blockTimestamp < DEADLINE';
+        _setParameters(recordId, transaction, _condition, 1, contexts[4], contexts[5]);
     }
 
     /**
@@ -600,9 +578,7 @@ contract Governance is LinkedList {
         'ENABLE_RECORD { enableRecord RECORD_ID at AGREEMENT_ADDR } '
         'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
 
-        string memory _condition = string(
-            abi.encodePacked('blockTimestamp >= ', StringUtils.toString(deadline))
-        );
+        string memory _condition = 'blockTimestamp >= DEADLINE';
         _setParameters(recordId, record, _condition, 1, contexts[6], contexts[7]);
     }
 

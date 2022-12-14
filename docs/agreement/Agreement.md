@@ -180,6 +180,12 @@ constructor(address _parser, address _ownerAddr) public
 
 Sets parser address, creates new Context instance, and setups Context
 
+### transferOwnership
+
+```solidity
+function transferOwnership(address _newOwner) public
+```
+
 ### getStorageBool
 
 ```solidity
