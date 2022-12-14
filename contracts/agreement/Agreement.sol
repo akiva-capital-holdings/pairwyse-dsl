@@ -25,10 +25,17 @@ import { StringUtils } from '../dsl/libs/StringUtils.sol';
  */
 contract Agreement {
     using UnstructuredStorage for bytes32;
+    using StringUtils for string;
 
     IParser public parser; // TODO: We can get rid of this dependency
     IContext public context;
     address public ownerAddr;
+    enum ValueTypes {
+        ADDRESS,
+        UINT256,
+        BYTES32,
+        BOOL
+    }
 
     event Parsed(address indexed preProccessor, address indexed context, string code);
 
@@ -53,13 +60,28 @@ contract Agreement {
         string[] conditionStrings
     );
 
-    modifier isReserved(bytes32 position) {
+    modifier isReserved(string memory varName) {
+        bytes32 position = bytes4(keccak256(abi.encodePacked(varName)));
         bytes32 MSG_SENDER_4_BYTES_HEX = 0x9ddd6a8100000000000000000000000000000000000000000000000000000000;
         bytes32 ETH_4_BYTES_HEX = 0xaaaebeba00000000000000000000000000000000000000000000000000000000;
         bytes32 GWEI_4_BYTES_HEX = 0x0c93a5d800000000000000000000000000000000000000000000000000000000;
-        require(position != MSG_SENDER_4_BYTES_HEX, ErrorsAgreement.AGR8); // check that variable name is not 'MSG_SENDER'
+        require(position != MSG_SENDER_4_BYTES_HEX, ErrorsAgreement.AGR8); // check that variable is not 'MSG_SENDER'
         require(position != ETH_4_BYTES_HEX, ErrorsAgreement.AGR8); // check that variable name is not 'ETH'
         require(position != GWEI_4_BYTES_HEX, ErrorsAgreement.AGR8); // check that variable name is not 'GWEI'
+        _;
+    }
+
+    modifier doesVariableExist(string memory varName, ValueTypes valueType) {
+        for (uint256 i = 0; i <= varIds.length; i++) {
+            // check that value already exist
+            if (varName.equal(variables[i].varName)) {
+                // check that msg.sender can rewrite variable
+                require(
+                    msg.sender == variables[i].varCreator && valueType == variables[i].valueType,
+                    ErrorsAgreement.AGR8
+                );
+            }
+        }
         _;
     }
 
@@ -76,7 +98,16 @@ contract Agreement {
         string transactionString;
     }
 
+    struct Variable {
+        string varName; // Name of variable
+        ValueTypes valueType; // Type of variable
+        bytes32 varHex; // Name of variable in type of bytes32
+        uint256 varId; // Id of variable
+        address varCreator; // address of owner
+    }
+
     mapping(uint256 => Record) public records; // recordId => Record struct
+    mapping(uint256 => Variable) public variables; // varId => Variable struct
     mapping(uint256 => address[]) public conditionContexts; // recordId => condition Context
     mapping(uint256 => string[]) public conditionStrings; // recordId => DSL condition as string
     mapping(uint256 => address[]) public signatories; // recordId => signatories
@@ -84,6 +115,7 @@ contract Agreement {
     // recordId => (signatory => was tx executed by signatory)
     mapping(uint256 => mapping(address => bool)) public isExecutedBySignatory;
     uint256[] public recordIds; // array of recordId
+    uint256[] public varIds; // array of variable Ids
 
     /**
      * Sets parser address, creates new Context instance, and setups Context
@@ -108,19 +140,35 @@ contract Agreement {
         return position.getStorageUint256();
     }
 
-    function setStorageBool(bytes32 position, bool data) external isReserved(position) {
+    function setStorageBool(
+        string memory varName,
+        bool data
+    ) external isReserved(varName) doesVariableExist(varName, ValueTypes.BOOL) {
+        bytes32 position = _addNewVariable(varName, ValueTypes.BOOL);
         position.setStorageBool(data);
     }
 
-    function setStorageAddress(bytes32 position, address data) external isReserved(position) {
+    function setStorageAddress(
+        string memory varName,
+        address data
+    ) external isReserved(varName) doesVariableExist(varName, ValueTypes.ADDRESS) {
+        bytes32 position = _addNewVariable(varName, ValueTypes.ADDRESS);
         position.setStorageAddress(data);
     }
 
-    function setStorageBytes32(bytes32 position, bytes32 data) external isReserved(position) {
+    function setStorageBytes32(
+        string memory varName,
+        bytes32 data
+    ) external isReserved(varName) doesVariableExist(varName, ValueTypes.BYTES32) {
+        bytes32 position = _addNewVariable(varName, ValueTypes.BYTES32);
         position.setStorageBytes32(data);
     }
 
-    function setStorageUint256(bytes32 position, uint256 data) external isReserved(position) {
+    function setStorageUint256(
+        string memory varName,
+        uint256 data
+    ) external isReserved(varName) doesVariableExist(varName, ValueTypes.UINT256) {
+        bytes32 position = _addNewVariable(varName, ValueTypes.UINT256);
         position.setStorageUint256(data);
     }
 
@@ -221,40 +269,42 @@ contract Agreement {
         emit RecordArchived(_recordId);
     }
 
-    /**
-     * @dev unarchive any of the existing records by recordId
-     * @param _recordId Record ID
-     */
-    function unarchiveRecord(uint256 _recordId) external onlyOwner {
-        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
-        require(records[_recordId].isArchived != false, ErrorsAgreement.AGR10);
-        records[_recordId].isArchived = false;
+    // TODO: commented out the code due to the gas limit, we need to refactor the code
 
-        emit RecordUnarchived(_recordId);
-    }
+    // /**
+    //  * @dev unarchive any of the existing records by recordId
+    //  * @param _recordId Record ID
+    //  */
+    // function unarchiveRecord(uint256 _recordId) external onlyOwner {
+    //     require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+    //     require(records[_recordId].isArchived != false, ErrorsAgreement.AGR10);
+    //     records[_recordId].isArchived = false;
 
-    /**
-     * @dev activates the existing records by recordId, only awailable for ownerAddr
-     * @param _recordId Record ID
-     */
-    function activateRecord(uint256 _recordId) external onlyOwner {
-        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
-        records[_recordId].isActive = true;
+    //     emit RecordUnarchived(_recordId);
+    // }
 
-        emit RecordActivated(_recordId);
-    }
+    // /**
+    //  * @dev activates the existing records by recordId, only awailable for ownerAddr
+    //  * @param _recordId Record ID
+    //  */
+    // function activateRecord(uint256 _recordId) external onlyOwner {
+    //     require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+    //     records[_recordId].isActive = true;
 
-    /**
-     * @dev deactivates the existing records by recordId, only awailable for ownerAddr
-     * @param _recordId Record ID
-     */
-    function deactivateRecord(uint256 _recordId) external onlyOwner {
-        require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
-        require(records[_recordId].isActive != false, ErrorsAgreement.AGR10);
-        records[_recordId].isActive = false;
+    //     emit RecordActivated(_recordId);
+    // }
 
-        emit RecordDeactivated(_recordId);
-    }
+    // /**
+    //  * @dev deactivates the existing records by recordId, only awailable for ownerAddr
+    //  * @param _recordId Record ID
+    //  */
+    // function deactivateRecord(uint256 _recordId) external onlyOwner {
+    //     require(records[_recordId].recordContext != address(0), ErrorsAgreement.AGR9);
+    //     require(records[_recordId].isActive != false, ErrorsAgreement.AGR10);
+    //     records[_recordId].isActive = false;
+
+    //     emit RecordDeactivated(_recordId);
+    // }
 
     /**
      * @dev Parse DSL code from the user and set the program bytecode in Context contract
@@ -328,7 +378,24 @@ contract Agreement {
     }
 
     /**
-     * Verify that the user who wants to execute the record is amoung the signatories for this Record
+     * @dev Created and save new Variable of seted Value
+     * @param _varName seted value name in type of string
+     * @param _valueType seted value type number
+     * @return position return _varName in type of bytes32
+     */
+    function _addNewVariable(
+        string memory _varName,
+        ValueTypes _valueType
+    ) internal returns (bytes32 position) {
+        position = bytes4(keccak256(abi.encodePacked(_varName)));
+        uint256 arrPos = varIds.length;
+        varIds.push(arrPos);
+        Variable memory variable = Variable(_varName, _valueType, position, arrPos, msg.sender);
+        variables[arrPos] = variable;
+    }
+
+    /**
+     * @dev Verify that the user who wants to execute the record is amoung the signatories for this Record
      * @param _recordId ID of the record
      * @return true if the user is allowed to execute the record, false - otherwise
      */
@@ -344,7 +411,7 @@ contract Agreement {
     }
 
     /**
-     * Check that all records required by this records were executed
+     * @dev Check that all records required by this records were executed
      * @param _recordId ID of the record
      * @return true all the required records were executed, false - otherwise
      */
@@ -390,7 +457,7 @@ contract Agreement {
         string memory _conditionStr,
         address _conditionCtx
     ) internal {
-        require(!StringUtils.equal(_conditionStr, ''), ErrorsAgreement.AGR5);
+        require(!_conditionStr.equal(''), ErrorsAgreement.AGR5);
         IContext(_conditionCtx).setComparisonOpcodesAddr(address(ComparisonOpcodes));
         IContext(_conditionCtx).setBranchingOpcodesAddr(address(BranchingOpcodes));
         IContext(_conditionCtx).setLogicalOpcodesAddr(address(LogicalOpcodes));

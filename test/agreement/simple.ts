@@ -69,16 +69,38 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await expect(agreement.connect(bob).execute(txId)).to.be.revertedWith('AGR1');
   });
 
-  it('If we try to set a system variable it will return an error', async () => {
-    await expect(
-      agreement.setStorageAddress(hex4Bytes('MSG_SENDER'), bob.address)
-    ).to.be.revertedWith('AGR8');
-    await expect(agreement.setStorageUint256(hex4Bytes('ETH'), tenTokens)).to.be.revertedWith(
-      'AGR8'
-    );
-    await expect(agreement.setStorageUint256(hex4Bytes('GWEI'), tenTokens)).to.be.revertedWith(
-      'AGR8'
-    );
+  describe('Agreement: check value name', () => {
+    it('fails if a user tries to set a system variable', async () => {
+      await expect(agreement.setStorageAddress('MSG_SENDER', bob.address)).to.be.revertedWith(
+        'AGR8'
+      );
+      await expect(agreement.setStorageUint256('ETH', tenTokens)).to.be.revertedWith('AGR8');
+      await expect(agreement.setStorageUint256('GWEI', tenTokens)).to.be.revertedWith('AGR8');
+    });
+
+    it('fails if a non-creator of a variable tries to set the variable', async () => {
+      // Alice set new value
+      await agreement.connect(alice).setStorageUint256('BALANCE', tenTokens);
+      // Check that bob can't rewrite 'BALANCE' value
+      await expect(
+        agreement.connect(bob).setStorageUint256('BALANCE', oneEthBN)
+      ).to.be.revertedWith('AGR8');
+      // Owner can rewrite his value
+      await agreement.connect(alice).setStorageUint256('BALANCE', oneEthBN);
+      // check that BOB can set any other variable
+      await agreement.connect(bob).setStorageUint256('ALCATRAZ', tenTokens);
+    });
+
+    it('fails if a creator tries to update variable with a different type value', async () => {
+      // Alice set new value
+      await agreement.connect(alice).setStorageAddress('BOB', bob.address);
+      // Check that Alice can't rewrite 'BOB' to other type
+      await expect(agreement.connect(alice).setStorageUint256('BOB', oneEthBN)).to.be.revertedWith(
+        'AGR8'
+      );
+      // But Alice can rewrite to other address
+      await agreement.connect(alice).setStorageAddress('BOB', carl.address);
+    });
   });
 
   it('update test', async () => {
