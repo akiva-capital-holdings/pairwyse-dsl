@@ -44,8 +44,10 @@ contract Governance is LinkedList {
     );
 
     modifier isReserved(bytes32 position) {
+        bytes32 MSG_SENDER_4_BYTES_HEX = 0x9ddd6a8100000000000000000000000000000000000000000000000000000000;
         bytes32 ETH_4_BYTES_HEX = 0xaaaebeba00000000000000000000000000000000000000000000000000000000;
         bytes32 GWEI_4_BYTES_HEX = 0x0c93a5d800000000000000000000000000000000000000000000000000000000;
+        require(position != MSG_SENDER_4_BYTES_HEX, ErrorsAgreement.AGR8); // check that variable name is not 'MSG_SENDER'
         require(position != ETH_4_BYTES_HEX, ErrorsAgreement.AGR8); // check that variable name is not 'ETH'
         require(position != GWEI_4_BYTES_HEX, ErrorsAgreement.AGR8); // check that variable name is not 'GWEI'
         _;
@@ -295,8 +297,8 @@ contract Governance is LinkedList {
      *********************/
 
     /**
-     * @dev Checks input _signatures that only one  'anyone' address exists in the
-     * list or that 'anyone' address does not exist in signatures at all
+     * @dev Checks input _signatures that only one 'ANYONE' address exists in the
+     * list or that 'ANYONE' address does not exist in signatures at all
      * @param _signatories the list of addresses
      */
     function _checkSignatories(address[] memory _signatories) internal view {
@@ -305,7 +307,7 @@ contract Governance is LinkedList {
         if (_signatories.length > 1) {
             for (uint256 i = 0; i < _signatories.length; i++) {
                 require(_signatories[i] != address(0), ErrorsAgreement.AGR4);
-                require(_signatories[i] != context.anyone(), ErrorsAgreement.AGR4);
+                require(_signatories[i] != context.ANYONE(), ErrorsAgreement.AGR4);
             }
         }
     }
@@ -317,7 +319,7 @@ contract Governance is LinkedList {
      */
     function _verify(uint256 _recordId) internal view returns (bool) {
         address[] memory signatoriesOfRecord = signatories[_recordId];
-        if (signatoriesOfRecord.length == 1 && signatoriesOfRecord[0] == context.anyone()) {
+        if (signatoriesOfRecord.length == 1 && signatoriesOfRecord[0] == context.ANYONE()) {
             return true;
         }
 
@@ -503,7 +505,7 @@ contract Governance is LinkedList {
         if (_recordId == 0) {
             _signatories[0] = ownerAddr;
         } else {
-            _signatories[0] = context.anyone();
+            _signatories[0] = context.ANYONE();
         }
         _conditionStrings[0] = _condition;
         _conditionContexts[0] = _contextCondition;

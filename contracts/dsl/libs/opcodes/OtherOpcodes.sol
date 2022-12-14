@@ -327,12 +327,18 @@ library OtherOpcodes {
         address _ctx,
         string memory funcSignature
     ) public returns (bytes32 result) {
+        bytes32 MSG_SENDER = 0x9ddd6a8100000000000000000000000000000000000000000000000000000000;
+        bytes memory data;
         bytes32 varNameB32 = OpcodeHelpers.getNextBytes(_ctx, 4);
-        // Load local variable by it's hex
-        bytes memory data = OpcodeHelpers.mustCall(
-            IContext(_ctx).appAddr(),
-            abi.encodeWithSignature(funcSignature, varNameB32)
-        );
+        if (varNameB32 == MSG_SENDER) {
+            data = abi.encode(IContext(_ctx).msgSender());
+        } else {
+            // Load local variable by it's hex
+            data = OpcodeHelpers.mustCall(
+                IContext(_ctx).appAddr(),
+                abi.encodeWithSignature(funcSignature, varNameB32)
+            );
+        }
         // Convert bytes to bytes32
         assembly {
             result := mload(add(data, 0x20))

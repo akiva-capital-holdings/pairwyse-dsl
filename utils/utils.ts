@@ -16,3 +16,10 @@ export const getPrettyDateTime = () =>
  */
 export const getChainId = async (hre: HardhatRuntimeEnvironment) =>
   hre.ethers.provider.getNetwork().then((network) => network.chainId);
+
+/**
+ * Remove empty string values from input array
+ * @param arr Input array
+ * @returns Cleaned array
+ */
+export const removeEmptyValues = (arr: string[]) => arr.filter((x) => !!x);

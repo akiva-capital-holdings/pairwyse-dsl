@@ -34,9 +34,9 @@ describe('Simple Records in Agreement', () => {
   let bob: SignerWithAddress;
   let anybody: SignerWithAddress;
   let NEXT_MONTH: number;
-  let snapshotId: number;
   let preprAddr: string;
   let ContextCont: ContextMock__factory;
+  let snapshotId: number;
 
   const oneEth = ethers.utils.parseEther('1');
   const tenTokens = ethers.utils.parseEther('10');
@@ -261,7 +261,7 @@ describe('Simple Records in Agreement', () => {
       const aggr2 = await ethers.getContractAt('AgreementMock', aggr2Addr);
       await aggr1.setStorageUint256(hex4Bytes('RECORD_ID'), 23);
       await aggr1.setStorageAddress(hex4Bytes('AGREEMENT_ADDR'), aggr2Addr);
-      const input = `enableRecord RECORD_ID at AGREEMENT_ADDR`;
+      const input = 'enableRecord RECORD_ID at AGREEMENT_ADDR';
 
       // uses for the Agreement2 (test will check that stack has
       // value `6` after execution)

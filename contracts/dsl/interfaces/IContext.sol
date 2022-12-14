@@ -12,7 +12,7 @@ interface IContext {
     }
 
     // Variables
-    function anyone() external view returns (address);
+    function ANYONE() external view returns (address);
 
     function stack() external view returns (Stack);
 
@@ -39,6 +39,10 @@ interface IContext {
     function opCodeByName(string memory _name) external view returns (bytes1 _opcode);
 
     function selectorByOpcode(bytes1 _opcode) external view returns (bytes4 _selecotor);
+
+    function numOfArgsByOpcode(string memory _name) external view returns (uint8 _numOfArgs);
+
+    function isCommand(string memory _name) external view returns (bool _isCommand);
 
     function opcodeLibNameByOpcode(bytes1 _opcode) external view returns (OpcodeLibNames _name);
 

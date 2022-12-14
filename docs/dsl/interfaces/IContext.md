@@ -11,10 +11,10 @@ enum OpcodeLibNames {
 }
 ```
 
-### anyone
+### ANYONE
 
 ```solidity
-function anyone() external view returns (address)
+function ANYONE() external view returns (address)
 ```
 
 ### stack
@@ -93,6 +93,18 @@ function opCodeByName(string _name) external view returns (bytes1 _opcode)
 
 ```solidity
 function selectorByOpcode(bytes1 _opcode) external view returns (bytes4 _selecotor)
+```
+
+### numOfArgsByOpcode
+
+```solidity
+function numOfArgsByOpcode(string _name) external view returns (uint8 _numOfArgs)
+```
+
+### isCommand
+
+```solidity
+function isCommand(string _name) external view returns (bool _isCommand)
 ```
 
 ### opcodeLibNameByOpcode

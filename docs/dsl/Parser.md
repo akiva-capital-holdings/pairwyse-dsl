@@ -49,6 +49,14 @@ _Transform DSL code from array in infix notation to raw bytecode_
 | _ctxAddr | address | Context contract interface address |
 | _codeRaw | string | Input code as a string in infix notation |
 
+### parseCode
+
+```solidity
+function parseCode(address _ctxAddr, string[] _code) public
+```
+
+_Сonverts a list of commands to bytecode_
+
 ### asmSetLocalBool
 
 ```solidity
@@ -409,14 +417,6 @@ function _isLabel(string _name) internal view returns (bool)
 _returns `true` if the name of `if/ifelse branch` or `function` exists in the labelPos list
 otherwise returns `false`_
 
-### _parseCode
-
-```solidity
-function _parseCode(address _ctxAddr, string[] code) internal
-```
-
-_Сonverts a list of commands to bytecode_
-
 ### _parseOpcodeWithParams
 
 ```solidity
@@ -465,4 +465,12 @@ function _parseAddress() internal
 ```
 
 _Updates previous `program` with the address command that is a value_
+
+### _setCmdsArray
+
+```solidity
+function _setCmdsArray(string[] _input) internal
+```
+
+_Deletes empty elements from the _input array and sets the result as a `cmds` storage array_
 

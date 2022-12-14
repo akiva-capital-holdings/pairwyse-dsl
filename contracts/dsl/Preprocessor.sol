@@ -3,17 +3,14 @@ pragma solidity ^0.8.0;
 
 import { IContext } from './interfaces/IContext.sol';
 import { IPreprocessor } from './interfaces/IPreprocessor.sol';
-import { StringStack } from './helpers/StringStack.sol';
+import { StringStack } from './libs/StringStack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
 import { ErrorsPreprocessor } from './libs/Errors.sol';
-
-// import 'hardhat/console.sol';
 
 /**
  * @dev Preprocessor of DSL code
  * @dev This contract is a singleton and should not be deployed more than once
  *
- * TODO: add description about Preprocessor as a single contract of the project
  * It can remove comments that were created by user in the DSL code string. It
  * transforms the users DSL code string to the list of commands that can be used
  * in a Parser contract.
@@ -21,23 +18,13 @@ import { ErrorsPreprocessor } from './libs/Errors.sol';
  * DSL code in postfix notation as
  * user's string code -> Preprocessor -> each command is separated in the commands list
  */
-contract Preprocessor is IPreprocessor {
+library Preprocessor {
     using StringUtils for string;
+    using StringStack for string[];
 
-    // Note: temporary variable
-    // param positional number -> parameter itself
-    mapping(uint256 => FuncParameter) internal parameters;
-    // Note: temporary variable
-    string[] internal result; // stores the list of commands after infixToPostfix transformation
-
-    // Stack with elements of type string that is used to temporarily store data of `infixToPostfix` function
-    StringStack internal strStack;
-
-    bytes1 private DOT_SYMBOL = 0x2e;
-
-    constructor() {
-        strStack = new StringStack();
-    }
+    /************************
+     * == MAIN FUNCTIONS == *
+     ***********************/
 
     /**
      * @dev The main function that transforms the user's DSL code string to the list of commands.
@@ -54,14 +41,18 @@ contract Preprocessor is IPreprocessor {
      *
      * @param _ctxAddr is a context contract address
      * @param _program is a user's DSL code string
-     * @return the list of commands that storing `result`
+     * @return code The list of commands that storing `result`
      */
     function transform(
         address _ctxAddr,
         string memory _program
-    ) external returns (string[] memory) {
-        string[] memory code = split(_program);
-        return infixToPostfix(_ctxAddr, code, strStack);
+    ) external view returns (string[] memory code) {
+        // _program = removeComments(_program);
+        code = split(_program, '\n ,:(){}', '(){}');
+        code = removeSyntacticSugar(code);
+        code = simplifyCode(code, _ctxAddr);
+        code = infixToPostfix(_ctxAddr, code);
+        return code;
     }
 
     /**
@@ -72,14 +63,14 @@ contract Preprocessor is IPreprocessor {
      *  bool true
      *  // uint256 2 * uint256 5
      * ```
-     * The end result after executing a `cleanString()` function is
+     * The end result after executing a `removeComments()` function is
      * ```
      * bool true
      * ```
      * @param _program is a current program string
      * @return _cleanedProgram new string program that contains only clean code without comments
      */
-    function cleanString(
+    function removeComments(
         string memory _program
     ) public pure returns (string memory _cleanedProgram) {
         bool isCommented;
@@ -137,360 +128,526 @@ contract Preprocessor is IPreprocessor {
      * ```
      *
      * @param _program is a user's DSL code string
-     * @return the list of commands that storing in `result`
+     * @param _separators Separators that will be used to split the string
+     * @param _separatorsToKeep we're using symbols from this string as separators but not removing
+     *                          them from the resulting array
+     * @return The list of commands that storing in `result`
      */
-    function split(string memory _program) public returns (string[] memory) {
-        delete result;
-        string memory buffer;
-        bool isStructStart;
-        bool isLoopStart;
+    function split(
+        string memory _program,
+        string memory _separators,
+        string memory _separatorsToKeep
+    ) public pure returns (string[] memory) {
+        string[] memory _result = new string[](50);
+        uint256 resultCtr;
+        string memory buffer; // here we collect DSL commands, var names, etc. symbol by symbol
+        string memory char;
 
         for (uint256 i = 0; i < _program.length(); i++) {
-            string memory char = _program.char(i);
+            char = _program.char(i);
 
-            // if-else conditions parsing
-            if (isLoopStart && char.equal('{')) {
-                result.push('startLoop');
-                continue;
-            } else if (char.equal('{')) continue;
-
-            // ---> start block for DSL struct without types
-            if ((char.equal(':') || char.equal(',')) && isStructStart) {
-                result.push(buffer);
-                buffer = '';
-                continue;
-            } else if (char.equal('{')) continue;
-
-            if (isStructStart && char.equal('}')) {
-                if (!(buffer.equal('') || buffer.equal(' '))) result.push(buffer);
-                // `endStruct` word is used as an indicator for the ending
-                // loop for the structs parameters
-                result.push('endStruct');
-                buffer = '';
-                isStructStart = false;
-                continue;
-            } else if (isLoopStart && char.equal('}')) {
-                // `endLoop` keyword is an indicator of the loop block end
-                result.push('endLoop');
-                isLoopStart = false;
-                continue;
-            } else if (char.equal('}')) {
-                result.push('end');
-                continue;
-            }
-            // <--- end block for DSL struct without types
-
-            if (
-                char.equal(' ') ||
-                char.equal('\n') ||
-                char.equal('(') ||
-                char.equal(')') ||
-                char.equal('[') ||
-                char.equal(']') ||
-                char.equal(',')
-            ) {
+            if (char.isIn(_separators)) {
                 if (buffer.length() > 0) {
-                    result.push(buffer);
+                    _result[resultCtr++] = buffer;
                     buffer = '';
                 }
             } else {
                 buffer = buffer.concat(char);
             }
 
-            if (char.equal('(') || char.equal(')') || char.equal('[') || char.equal(']')) {
-                result.push(char);
-            }
-
-            // struct start
-            if (result.length > 0 && !isStructStart && result[result.length - 1].equal('struct')) {
-                isStructStart = true;
-            }
-            // loop start
-            if (result.length > 0 && !isStructStart && result[result.length - 1].equal('for')) {
-                isLoopStart = true;
+            if (char.isIn(_separatorsToKeep)) {
+                _result[resultCtr++] = char;
             }
         }
 
         if (buffer.length() > 0) {
-            result.push(buffer);
+            _result[resultCtr++] = buffer;
             buffer = '';
         }
 
-        return result;
+        return _result;
     }
 
     /**
-     * @dev Rebuild and transforms the user's DSL commands (can be prepared by
-     * the `split()` function) to the list of commands.
-     *
-     * Example:
-     * The user's DSL command contains
-     * ```
-     * ['1', '+', '2']
-     * ```
-     * The result after executing a `infixToPostfix()` function is
-     * ```
-     * ['uint256', '1', 'uint256', '2', '+']
-     * ```
-     *
-     * @param _ctxAddr is a context contract address
-     * @param _code is a DSL command list
-     * @return _stack uses for getting and storing temporary string data
-     * rebuild the list of commands
+     * @dev Removes scientific notation from numbers and removes currency symbols
+     * Example
+     * 1e3 = 1,000
+     * 1 GWEI = 1,000,000,000
+     * 1 ETH = 1,000,000,000,000,000,000
+     * @param _code Array of DSL commands
+     * @return Code without syntactic sugar
+     */
+    function removeSyntacticSugar(string[] memory _code) public pure returns (string[] memory) {
+        string[] memory _result = new string[](50);
+        uint256 _resultCtr;
+        string memory _chunk;
+        string memory _prevChunk;
+        uint256 i;
+
+        while (i < _nonEmptyArrLen(_code)) {
+            _prevChunk = i == 0 ? '' : _code[i - 1];
+            _chunk = _code[i++];
+
+            _chunk = _checkScientificNotation(_chunk);
+            if (_isCurrencySymbol(_chunk)) {
+                (_resultCtr, _chunk) = _processCurrencySymbol(_resultCtr, _chunk, _prevChunk);
+            }
+
+            _result[_resultCtr++] = _chunk;
+        }
+        return _result;
+    }
+
+    /**
+     * @dev Depending on the type of the command it gets simplified
+     * @param _code Array of DSL commands
+     * @param _ctxAddr Context contract address
+     * @return Simplified code
+     */
+    function simplifyCode(
+        string[] memory _code,
+        address _ctxAddr
+    ) public view returns (string[] memory) {
+        string[] memory _result = new string[](50);
+        uint256 _resultCtr;
+        string memory _chunk;
+        string memory _prevChunk;
+        uint256 i;
+
+        while (i < _nonEmptyArrLen(_code)) {
+            _prevChunk = i == 0 ? '' : _code[i - 1];
+            _chunk = _code[i++];
+
+            if (IContext(_ctxAddr).isCommand(_chunk)) {
+                (_result, _resultCtr, i) = _processCommand(_result, _resultCtr, _code, i, _ctxAddr);
+            } else if (_isCurlyBracket(_chunk)) {
+                (_result, _resultCtr) = _processCurlyBracket(_result, _resultCtr, _chunk);
+            } else if (_isAlias(_chunk, _ctxAddr)) {
+                (_result, _resultCtr) = _processAlias(_result, _resultCtr, _ctxAddr, _chunk);
+            } else if (_chunk.equal('insert')) {
+                (_result, _resultCtr, i) = _processArrayInsert(_result, _resultCtr, _code, i);
+            } else {
+                (_result, _resultCtr) = _checkIsNumberOrAddress(_result, _resultCtr, _chunk);
+                _result[_resultCtr++] = _chunk;
+            }
+        }
+        return _result;
+    }
+
+    // TODO: switch _ctxAddr & _code params order
+    /**
+     * @dev Transforms code in infix format to the postfix format
+     * @param _code Array of DSL commands
+     * @param _ctxAddr Context contract address
+     * @return Code in the postfix format
      */
     function infixToPostfix(
         address _ctxAddr,
-        string[] memory _code,
-        StringStack _stack
-    ) public returns (string[] memory) {
-        PreprocessorInfo memory s;
-        // helps to separate a struct variable name and array's name for arrays with type `struct`
-        bool checkStructName;
-        string memory chunk;
+        string[] memory _code
+    ) public view returns (string[] memory) {
+        string[] memory _result = new string[](50);
+        string[] memory _stack = new string[](50);
+        uint256 _resultCtr;
+        string memory _chunk;
+        uint256 i;
 
-        // Cleanup
-        delete result;
-        _stack.clear();
+        while (i < _nonEmptyArrLen(_code)) {
+            _chunk = _code[i++];
 
-        // Infix to postfix
-        for (uint256 i = 0; i < _code.length; i++) {
-            chunk = _code[i];
-
-            if (
-                result.length > 0 &&
-                result[result.length - 1].equal('enableRecord') &&
-                chunk.mayBeNumber()
-            ) {
-                result.push(chunk); // push the record ID to results
-                continue;
-            }
-
-            if (s.isStructStart && chunk.equal('YES')) {
-                result.push('1');
-                continue;
-            } else if (s.isStructStart && chunk.equal('NO')) {
-                result.push('0');
-                continue;
-            }
-
-            // ---> starts sumOf block for array of structures
-            if (chunk.equal('sumOf')) {
-                checkStructName = true;
-                continue;
-            }
-
-            if (checkStructName) {
-                // returns success=true if user provides complex name, ex. `USERS.balance`
-                // where arrName = USERS, structVar = balance
-                (bool success, string memory arrName, string memory structVar) = _getNames(chunk);
-                if (success) {
-                    // use another internal command to sum variables - `sumThroughStructs`
-                    result.push('sumThroughStructs');
-                    result.push(arrName);
-                    result.push(structVar);
-                } else {
-                    // use simple sum command `sumOf`
-                    result.push('sumOf');
-                    result.push(chunk);
-                }
-                checkStructName = false;
-                continue;
-            }
-            // <--- ends sumOf block for array of structures
-
-            // struct
-            if (chunk.equal('struct')) {
-                s.isStructStart = true;
-                result.push(chunk);
-                continue;
-            }
-            if (chunk.equal('endStruct')) {
-                s.isStructStart = false;
-                result.push(chunk);
-                continue;
-            }
-
-            // returns true if the chunk can use uint256 directly
-            s.directUseUint256 = _isDirectUseUint256(s.directUseUint256, s.isStructStart, chunk);
-            // checks and updates if the chunk can use uint256 or it's loadRemote opcode
-            (s.loadRemoteFlag, s.loadRemoteVarCount) = _updateRemoteParams(
-                s.loadRemoteFlag,
-                s.loadRemoteVarCount,
-                chunk
-            );
-
-            // ---> start block for DSL arrays without types
-            // TODO: code for array tasks will be added below
-            if (chunk.equal('[') && !s.isArrayStart) {
-                s.isArrayStart = true;
-                continue;
-            } else if (s.isArrayStart && chunk.equal(']')) {
-                continue;
-            } else if (s.isArrayStart && !chunk.equal(']')) {
-                if (result.length > 0) {
-                    string memory _type = result[result.length - 1];
-                    result.pop();
-                    // TODO: move that to Parser or reorganise it to simple array structure?
-                    // EX. NUMBERS [1,2,3,4...]
-                    result.push('declareArr');
-                    result.push(_type);
-                    result.push(chunk);
-                }
-
-                s.isArrayStart = false;
-                continue;
-            }
-
-            if (chunk.equal('insert') && s.insertStep != 1) {
-                s.insertStep = 1;
-                result.push('push');
-                continue;
-            } else if (s.insertStep == 1 && !chunk.equal('into')) {
-                s.insertStep = 2;
-                result.push(chunk);
-                continue;
-            } else if (s.insertStep == 2) {
-                if (!chunk.equal('into')) {
-                    result.push(chunk);
-                    s.insertStep = 0;
-                }
-                continue;
-            }
-            // <--- end block for DSL arrays
-
-            // Replace alises with base commands
-            if (_isAlias(_ctxAddr, chunk)) {
-                chunk = IContext(_ctxAddr).aliases(chunk);
-            }
-
-            if (_isOperator(_ctxAddr, chunk)) {
-                while (
-                    _stack.length() > 0 &&
-                    IContext(_ctxAddr).opsPriors(chunk) <=
-                    IContext(_ctxAddr).opsPriors(_stack.seeLast())
-                ) {
-                    result.push(_stack.pop());
-                }
-                _stack.push(chunk);
-            } else if (chunk.equal('(')) {
-                _stack.push(chunk);
-            } else if (chunk.equal(')')) {
-                while (!_stack.seeLast().equal('(')) {
-                    result.push(_stack.pop());
-                }
-                _stack.pop(); // remove '(' that is left
-            } else if (
-                !s.loadRemoteFlag && chunk.mayBeNumber() && !s.isFunc && !s.directUseUint256
-            ) {
-                _updateUINT256param();
-                if (i + 1 <= _code.length - 1) {
-                    result.push(_parseChunk(chunk, _getMultiplier(_code[i + 1])));
-                } else {
-                    result.push(_parseChunk(chunk, 0));
-                }
-            } else if (
-                !chunk.mayBeAddress() && chunk.mayBeNumber() && !s.isFunc && s.directUseUint256
-            ) {
-                s.directUseUint256 = false;
-                if (i + 1 <= _code.length - 1) {
-                    result.push(_parseChunk(chunk, _getMultiplier(_code[i + 1])));
-                } else {
-                    result.push(_parseChunk(chunk, 0));
-                }
-            } else if (chunk.equal('func')) {
-                // if the chunk is 'func' then `Functions block` will occur
-                s.isFunc = true;
-            } else if (s.isFunc && !s.isName) {
-                // `Functions block` started
-                // if was not set the name for a function
-                (s.isFunc, s.isName, s.name) = _parseFuncMainData(
-                    chunk,
-                    s.name,
-                    s.isFunc,
-                    s.isName
+            if (_isOperator(_chunk, _ctxAddr)) {
+                (_result, _resultCtr, _stack) = _processOperator(
+                    _stack,
+                    _result,
+                    _resultCtr,
+                    _ctxAddr,
+                    _chunk
                 );
-            } else if (s.isFunc && s.isName) {
-                // `Functions block` finished
-                // if it was already set the name for a function
-                s.isName = false;
-                s.isFunc = _parseFuncParams(chunk, s.name, s.isFunc);
-            } else if (_isCurrencySymbol(chunk)) {
-                // we've already transformed the number before the keyword
-                // so we can safely skip the chunk
-                continue;
+            } else if (_isParenthesis(_chunk)) {
+                (_result, _resultCtr, _stack) = _processParenthesis(
+                    _stack,
+                    _result,
+                    _resultCtr,
+                    _chunk
+                );
             } else {
-                result.push(chunk);
-                if (s.loadRemoteVarCount == 4) {
-                    s.loadRemoteFlag = false;
-                    s.loadRemoteVarCount = 0;
-                }
+                _result[_resultCtr++] = _chunk;
             }
         }
 
-        while (_stack.length() > 0) {
-            result.push(_stack.pop());
+        // Note: now we have a stack with DSL commands and we will pop from it and save to the resulting array to move
+        //       from postfix to infix notation
+        while (_stack.stackLength() > 0) {
+            (_stack, _result[_resultCtr++]) = _stack.popFromStack();
         }
-        return result;
+        return _result;
+    }
+
+    /***************************
+     * == PROCESS FUNCTIONS == *
+     **************************/
+
+    /**
+     * @dev Process insert into array command
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _code Current DSL code that we're processing
+     * @param i Current pointer to the element in _code array that we're processing
+     * @return Modified _result array, mofified _resultCtr, and modified `i`
+     */
+    function _processArrayInsert(
+        string[] memory _result,
+        uint256 _resultCtr,
+        string[] memory _code,
+        uint256 i
+    ) internal pure returns (string[] memory, uint256, uint256) {
+        // Get the necessary params of `insert` command
+        // Notice: `insert 1234 into NUMBERS` -> `push 1234 NUMBERS`
+        string memory _insertVal = _code[i];
+        string memory _arrName = _code[i + 2];
+
+        _result[_resultCtr++] = 'push';
+        _result[_resultCtr++] = _insertVal;
+        _result[_resultCtr++] = _arrName;
+
+        return (_result, _resultCtr, i + 3);
     }
 
     /**
-     * @dev checks the value, and returns the corresponding multiplier.
-     * If it is Ether, then it returns 1000000000000000000,
-     * If it is GWEI, then it returns 1000000000
-     * @param _chunk is a command from DSL command list
-     * @return returns the corresponding multiplier.
+     * @dev Process summing over array comand
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _code Current DSL code that we're processing
+     * @param i Current pointer to the element in _code array that we're processing
+     * @return Modified _result array, mofified _resultCtr, and modified `i`
      */
-    function _getMultiplier(string memory _chunk) internal pure returns (uint256) {
-        if (_chunk.equal('ETH')) {
-            return 1000000000000000000;
-        } else if (_chunk.equal('GWEI')) {
-            return 1000000000;
-        } else return 0;
-    }
+    function _processSumOfCmd(
+        string[] memory _result,
+        uint256 _resultCtr,
+        string[] memory _code,
+        uint256 i
+    ) internal pure returns (string[] memory, uint256, uint256) {
+        // Ex. (sumOf) `USERS.balance` -> ['USERS', 'balance']
+        // Ex. (sumOf) `USERS` ->['USERS']
+        string[] memory _sumOfArgs = split(_code[i], '.', '');
 
-    /**
-     * @dev Searching for a `.` (dot) symbol  and returns names status for complex string name.
-     * Ex. `USERS.balance`:
-     * Where `success` = true`,
-     * `arrName` = `USERS`,
-     * `structVar` = `balance`; otherwise it returns `success` = false` with empty string results
-     * @param _chunk is a command from DSL command list
-     * @return success if user provides complex name,  result is true
-     * @return arrName if user provided complex name, result is the name of structure
-     * @return structVar if user provided complex name, result is the name of structure variable
-     */
-    function _getNames(
-        string memory _chunk
-    ) internal view returns (bool success, string memory arrName, string memory structVar) {
-        // TODO: decrease amount of iterations
-        bytes memory symbols = bytes(_chunk);
-        bool isFound; // dot was found
-        for (uint256 i = 0; i < symbols.length; i++) {
-            if (!isFound) {
-                if (symbols[i] == DOT_SYMBOL) {
-                    isFound = true;
-                    continue;
-                }
-                arrName = arrName.concat(string(abi.encodePacked(symbols[i])));
-            } else {
-                structVar = structVar.concat(string(abi.encodePacked(symbols[i])));
-            }
+        // Ex. `sumOf USERS.balance` -> sum over array of structs
+        // Ex. `sumOf USERS` -> sum over a regular array
+        if (_nonEmptyArrLen(_sumOfArgs) == 2) {
+            // process `sumOf` over array of structs
+            _result[_resultCtr++] = 'sumThroughStructs';
+            _result[_resultCtr++] = _sumOfArgs[0];
+            _result[_resultCtr++] = _sumOfArgs[1];
+        } else {
+            // process `sumOf` over a regular array
+            _result[_resultCtr++] = 'sumOf';
+            _result[_resultCtr++] = _sumOfArgs[0];
         }
-        if (isFound) return (true, arrName, structVar);
+
+        return (_result, _resultCtr, i + 1);
     }
 
     /**
-     * @dev returned parsed chunk, values can be address with 0x parameter or be uint256 type
-     * @param _chunk provided string
-     * @param _currencyMultiplier provided number of the multiplier
-     * @return updated _chunk value in dependence on its type
+     * @dev Process for-loop
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _code Current DSL code that we're processing
+     * @param i Current pointer to the element in _code array that we're processing
+     * @return Modified _result array, mofified _resultCtr, and modified `i`
      */
-    function _parseChunk(
+    function _processForCmd(
+        string[] memory _result,
+        uint256 _resultCtr,
+        string[] memory _code,
+        uint256 i
+    ) internal pure returns (string[] memory, uint256, uint256) {
+        // TODO
+    }
+
+    /**
+     * @dev Process `struct` comand
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _code Current DSL code that we're processing
+     * @param i Current pointer to the element in _code array that we're processing
+     * @return Modified _result array, mofified _resultCtr, and modified `i`
+     */
+    function _processStruct(
+        string[] memory _result,
+        uint256 _resultCtr,
+        string[] memory _code,
+        uint256 i
+    ) internal pure returns (string[] memory, uint256, uint256) {
+        // 'struct', 'BOB', '{', 'balance', '456', '}'
+        _result[_resultCtr++] = 'struct';
+        _result[_resultCtr++] = _code[i]; // struct name
+        // skip `{` (index is i + 1)
+
+        uint256 j = i + 1;
+        while (!_code[j + 1].equal('}')) {
+            _result[_resultCtr++] = _code[j + 1]; // struct key
+            _result[_resultCtr++] = _code[j + 2]; // struct value
+
+            j = j + 2;
+        }
+        _result[_resultCtr++] = 'endStruct';
+
+        return (_result, _resultCtr, j + 2);
+    }
+
+    /**
+     * @dev Process `ETH`, `WEI` symbols in the code
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _chunk The current piece of code that we're processing (should be the currency symbol)
+     * @param _prevChunk The previous piece of code
+     * @return Mofified _resultCtr, and modified `_prevChunk`
+     */
+    function _processCurrencySymbol(
+        uint256 _resultCtr,
         string memory _chunk,
-        uint256 _currencyMultiplier
-    ) internal pure returns (string memory) {
-        if (_chunk.mayBeAddress()) return _chunk;
-        return _parseNumber(_chunk, _currencyMultiplier);
+        string memory _prevChunk
+    ) internal pure returns (uint256, string memory) {
+        uint256 _currencyMultiplier = _getCurrencyMultiplier(_chunk);
+
+        try _prevChunk.toUint256() {
+            _prevChunk = StringUtils.toString(_prevChunk.toUint256() * _currencyMultiplier);
+        } catch {
+            _prevChunk = StringUtils.toString(
+                _prevChunk.parseScientificNotation().toUint256() * _currencyMultiplier
+            );
+        }
+
+        // this is to rewrite old number (ex. 100) with an extended number (ex. 100 GWEI = 100000000000)
+        if (_resultCtr > 0) {
+            --_resultCtr;
+        }
+
+        return (_resultCtr, _prevChunk);
+    }
+
+    /**
+     * @dev Process DSL alias
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _ctxAddr Context contract address
+     * @param _chunk The current piece of code that we're processing
+     * @return Modified _result array, mofified _resultCtr, and modified `i`
+     */
+    function _processAlias(
+        string[] memory _result,
+        uint256 _resultCtr,
+        address _ctxAddr,
+        string memory _chunk
+    ) internal view returns (string[] memory, uint256) {
+        uint256 i;
+
+        // Replace alises with base commands
+        _chunk = IContext(_ctxAddr).aliases(_chunk);
+
+        // Process multi-command aliases
+        // Ex. `uint256[]` -> `declareArr uint256`
+        string[] memory _chunks = split(_chunk, ' ', '');
+
+        // while we've not finished processing all the program - keep going
+        while (i < _nonEmptyArrLen(_chunks)) {
+            _result[_resultCtr++] = _chunks[i++];
+        }
+
+        return (_result, _resultCtr);
+    }
+
+    /**
+     * @dev Process any DSL command
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _code Current DSL code that we're processing
+     * @param i Current pointer to the element in _code array that we're processing
+     * @param _ctxAddr Context contract address
+     * @return Modified _result array, mofified _resultCtr, and modified `i`
+     */
+    function _processCommand(
+        string[] memory _result,
+        uint256 _resultCtr,
+        string[] memory _code,
+        uint256 i,
+        address _ctxAddr
+    ) internal view returns (string[] memory, uint256, uint256) {
+        string memory _chunk = _code[i - 1];
+        if (_chunk.equal('struct')) {
+            (_result, _resultCtr, i) = _processStruct(_result, _resultCtr, _code, i);
+        } else if (_chunk.equal('sumOf')) {
+            (_result, _resultCtr, i) = _processSumOfCmd(_result, _resultCtr, _code, i);
+        } else if (_chunk.equal('for')) {
+            (_result, _resultCtr, i) = _processForCmd(_result, _resultCtr, _code, i);
+        } else {
+            uint256 _skipCtr = IContext(_ctxAddr).numOfArgsByOpcode(_chunk) + 1;
+
+            i--; // this is to include the command name in the loop below
+            // add command arguments
+            while (_skipCtr > 0) {
+                _result[_resultCtr++] = _code[i++];
+                _skipCtr--;
+            }
+        }
+
+        return (_result, _resultCtr, i);
+    }
+
+    /**
+     * @dev Process open and closed parenthesis
+     * @param _stack Stack that is used to process parenthesis
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _chunk The current piece of code that we're processing
+     * @return Modified _result array, mofified _resultCtr, and modified _stack
+     */
+    function _processParenthesis(
+        string[] memory _stack,
+        string[] memory _result,
+        uint256 _resultCtr,
+        string memory _chunk
+    ) internal pure returns (string[] memory, uint256, string[] memory) {
+        if (_chunk.equal('(')) {
+            // opening bracket
+            _stack = _stack.pushToStack(_chunk);
+        } else if (_chunk.equal(')')) {
+            // closing bracket
+            (_result, _resultCtr, _stack) = _processClosingParenthesis(_stack, _result, _resultCtr);
+        }
+
+        return (_result, _resultCtr, _stack);
+    }
+
+    /**
+     * @dev Process closing parenthesis
+     * @param _stack Stack that is used to process parenthesis
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @return Modified _result array, mofified _resultCtr, and modified _stack
+     */
+    function _processClosingParenthesis(
+        string[] memory _stack,
+        string[] memory _result,
+        uint256 _resultCtr
+    ) public pure returns (string[] memory, uint256, string[] memory) {
+        while (!_stack.seeLastInStack().equal('(')) {
+            (_stack, _result[_resultCtr++]) = _stack.popFromStack();
+        }
+        (_stack, ) = _stack.popFromStack(); // remove '(' that is left
+        return (_result, _resultCtr, _stack);
+    }
+
+    /**
+     * @dev Process curly brackets
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _chunk The current piece of code that we're processing
+     * @return Modified _result array, mofified _resultCtr
+     */
+    function _processCurlyBracket(
+        string[] memory _result,
+        uint256 _resultCtr,
+        string memory _chunk
+    ) internal pure returns (string[] memory, uint256) {
+        // if `_chunk` equal `{` - do nothing
+        if (_chunk.equal('}')) {
+            _result[_resultCtr++] = 'end';
+        }
+
+        return (_result, _resultCtr);
+    }
+
+    /**
+     * @dev Process any operator in DSL
+     * @param _stack Stack that is used to process parenthesis
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _ctxAddr Context contract address
+     * @param _chunk The current piece of code that we're processing
+     * @return Modified _result array, mofified _resultCtr, and modified _stack
+     */
+    function _processOperator(
+        string[] memory _stack,
+        string[] memory _result,
+        uint256 _resultCtr,
+        address _ctxAddr,
+        string memory _chunk
+    ) internal view returns (string[] memory, uint256, string[] memory) {
+        while (
+            _stack.stackLength() > 0 &&
+            IContext(_ctxAddr).opsPriors(_chunk) <=
+            IContext(_ctxAddr).opsPriors(_stack.seeLastInStack())
+        ) {
+            (_stack, _result[_resultCtr++]) = _stack.popFromStack();
+        }
+        _stack = _stack.pushToStack(_chunk);
+
+        return (_result, _resultCtr, _stack);
+    }
+
+    /**************************
+     * == HELPER FUNCTIONS == *
+     *************************/
+
+    /**
+     * @dev Checks if chunk is a currency symbol
+     * @param _chunk is a current chunk from the DSL string code
+     * @return True or false based on whether chunk is a currency symbol or not
+     */
+    function _isCurrencySymbol(string memory _chunk) internal pure returns (bool) {
+        return _chunk.equal('ETH') || _chunk.equal('GWEI');
+    }
+
+    /**
+     * @dev Checks if chunk is an operator
+     * @param _chunk Current piece of code that we're processing
+     * @param _ctxAddr Context contract address
+     * @return True or false based on whether chunk is an operator or not
+     */
+    function _isOperator(string memory _chunk, address _ctxAddr) internal view returns (bool) {
+        for (uint256 i = 0; i < IContext(_ctxAddr).operatorsLen(); i++) {
+            if (_chunk.equal(IContext(_ctxAddr).operators(i))) return true;
+        }
+        return false;
+    }
+
+    /**
+     * @dev Checks if a string is an alias to a command from DSL
+     * @param _chunk Current piece of code that we're processing
+     * @param _ctxAddr Context contract address
+     * @return True or false based on whether chunk is an alias or not
+     */
+    function _isAlias(string memory _chunk, address _ctxAddr) internal view returns (bool) {
+        return !IContext(_ctxAddr).aliases(_chunk).equal('');
+    }
+
+    /**
+     * @dev Checks if chunk is a parenthesis
+     * @param _chunk Current piece of code that we're processing
+     * @return True or false based on whether chunk is a parenthesis or not
+     */
+    function _isParenthesis(string memory _chunk) internal pure returns (bool) {
+        return _chunk.equal('(') || _chunk.equal(')');
+    }
+
+    /**
+     * @dev Checks if chunk is a curly bracket
+     * @param _chunk Current piece of code that we're processing
+     * @return True or false based on whether chunk is a curly bracket or not
+     */
+    function _isCurlyBracket(string memory _chunk) internal pure returns (bool) {
+        return _chunk.equal('{') || _chunk.equal('}');
+    }
+
+    /**
+     * @dev Parses scientific notation in the chunk if there is any
+     * @param _chunk Current piece of code that we're processing
+     * @return Chunk without a scientific notation
+     */
+    function _checkScientificNotation(string memory _chunk) internal pure returns (string memory) {
+        if (_chunk.mayBeNumber() && !_chunk.mayBeAddress()) {
+            return _parseScientificNotation(_chunk);
+        }
+        return _chunk;
     }
 
     /**
@@ -500,309 +657,127 @@ contract Preprocessor is IPreprocessor {
      * `uint256 1000000` - simple
      * `uint256 1e6 - complex`
      * @param _chunk provided number
-     * @param _currencyMultiplier provided number of the multiplier
      * @return updatedChunk amount in Wei of provided _chunk value
      */
-    function _parseNumber(
-        string memory _chunk,
-        uint256 _currencyMultiplier
+    function _parseScientificNotation(
+        string memory _chunk
     ) internal pure returns (string memory updatedChunk) {
-        if (_currencyMultiplier > 0) {
-            try _chunk.toUint256() {
-                updatedChunk = StringUtils.toString(_chunk.toUint256() * _currencyMultiplier);
-            } catch {
-                updatedChunk = StringUtils.toString(
-                    _chunk.getWei().toUint256() * _currencyMultiplier
-                );
-            }
-        } else {
-            try _chunk.toUint256() {
-                updatedChunk = _chunk;
-            } catch {
-                updatedChunk = _chunk.getWei();
-            }
+        try _chunk.toUint256() {
+            updatedChunk = _chunk;
+        } catch {
+            updatedChunk = _chunk.parseScientificNotation();
         }
     }
 
     /**
-     * @dev Check is chunk is a currency symbol
-     * @param _chunk is a current chunk from the DSL string code
-     * @return true or false based on whether chunk is a currency symbol or not
+     * @dev Checks if chunk is a number or address and processes it if so
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @param _chunk Current piece of code that we're processing
+     * @return Modified _result array, mofified _resultCtr
      */
-    function _isCurrencySymbol(string memory _chunk) internal pure returns (bool) {
-        if (_chunk.equal('ETH') || _chunk.equal('GWEI')) return true;
-        return false;
-    }
-
-    /**
-     * @dev Pushes additional 'uint256' string to results in case, if there are no
-     * types provided for uint256 values or
-     * loadRemote command, is not in the processing or
-     * the last chunk that was added to results is not 'uint256'
-     */
-    function _updateUINT256param() internal {
-        if (result.length == 0 || (!(result[result.length - 1].equal('uint256')))) {
-            result.push('uint256');
-        }
-    }
-
-    /**
-     * @dev Checks parameters and updates DSL code depending on what
-     * kind of function was provided.
-     * This internal function expects 'func' that can be with and without parameters.
-     * @param _chunk is a current chunk from the DSL string code
-     * @param _currentName is a current name of function
-     * @param _isFunc describes if the func opcode was occured
-     */
-    function _parseFuncParams(
-        string memory _chunk,
-        string memory _currentName,
-        bool _isFunc
-    ) internal returns (bool) {
-        if (_chunk.equal('endf')) {
-            // if the function without parameters
-            _pushFuncName(_currentName);
-            return false;
-        } else {
-            // if the function with parameters
-            _rebuildParameters(_chunk.toUint256(), _currentName);
-            return _isFunc;
-        }
-    }
-
-    /**
-     * @dev Returns updated parameters for the `func` opcode processing
-     * Pushes the command that saves parameter in the smart contract instead
-     * of the parameters that were provided for parsing.
-     * The function will store the command like `uint256 7 setUint256 NUMBER_VAR` and
-     * remove the parameter like `uint256 7`.
-     * The DSL command will be stored before the function body.
-     * For the moment it works only with uint256 type.
-     * @param _chunk is a current chunk from the DSL string code
-     * @param _currentName is a current name of function
-     * @param _isFunc describes if the func opcode was occured
-     * @param _isName describes if the name for the function was already set
-     * @return isFunc the new state of _isFunc for function processing
-     * @return isName the new state of _isName for function processing
-     * @return name the new name of the function
-     */
-    function _parseFuncMainData(
-        string memory _chunk,
-        string memory _currentName,
-        bool _isFunc,
-        bool _isName
-    ) internal pure returns (bool, bool, string memory) {
-        if (_chunk.equal('endf')) {
-            // finish `Functions block` process
-            // example: `func NAME <number_of_params> endf`
-            // updates only for: isFunc => false - end of func opcode
-            return (false, _isName, _currentName);
-        } else {
-            // updates only for:
-            // isName => true - setting the name of function has occurred
-            // name => current cunk
-            return (_isFunc, true, _chunk);
-        }
-    }
-
-    /**
-     * @dev Rebuilds parameters to DSL commands in result's list.
-     * Pushes the command that saves parameter in the smart contract instead
-     * of the parameters that were provided for parsing.
-     * The function will store the command like `uint256 7 setUint256 NUMBER_VAR` and
-     * remove the parameter like `uint256 7`.
-     * The DSL command will be stored before the function body.
-     * For the moment it works only with uint256 type.
-     * @param _paramsCount is an amount of parameters that provided after
-     * the name of function
-     * @param _nameOfFunc is a name of function that is used to generate
-     * the name of variables
-     */
-    function _rebuildParameters(uint256 _paramsCount, string memory _nameOfFunc) internal {
-        /* 
-        `chunks` list needs to store parameters temporarly and rewrite dsl string code
-
-        `_paramsCount * 2` includes type and value for the parameter
-
-        `indexFirst` is an index where the first parameter was pushed to results
-
-        For example:
-        if the function has 6 input parameters then the indexFirst will be set in
-        the index that shows, where it was the first parameter was stored before
-        the 'func', was occurred.
-        */
-
-        uint256 _totalParams = _paramsCount * 2;
-        require(_paramsCount > 0, ErrorsPreprocessor.PRP1);
-        string[] memory chunks = new string[](_totalParams);
-
-        require(result.length >= _totalParams, ErrorsPreprocessor.PRP2);
-        uint256 indexFirst = result.length - _totalParams;
-
-        // store paramerets that were already pushed to results
-        for (uint256 j = 0; j < _totalParams; j++) {
-            chunks[j] = result[indexFirst + j];
+    function _checkIsNumberOrAddress(
+        string[] memory _result,
+        uint256 _resultCtr,
+        string memory _chunk
+    ) internal pure returns (string[] memory, uint256) {
+        if (_chunk.mayBeAddress()) return (_result, _resultCtr);
+        if (_chunk.mayBeNumber()) {
+            (_result, _resultCtr) = _addUint256(_result, _resultCtr);
         }
 
-        _cleanCode(_totalParams);
+        return (_result, _resultCtr);
+    }
 
-        for (uint256 j = 0; j < chunks.length; j += 2) {
-            _saveParameter(j, chunks[j], chunks[j + 1], _nameOfFunc);
+    /**
+     * @dev Adds `uint256` to a number
+     * @param _result Output array that the function is modifying
+     * @param _resultCtr Current pointer to the empty element in the _result param
+     * @return Modified _result array, mofified _resultCtr
+     */
+    function _addUint256(
+        string[] memory _result,
+        uint256 _resultCtr
+    ) internal pure returns (string[] memory, uint256) {
+        if (_resultCtr == 0 || (!(_result[_resultCtr - 1].equal('uint256')))) {
+            _result[_resultCtr++] = 'uint256';
         }
-
-        _pushParameters(_paramsCount);
-        _pushFuncName(_nameOfFunc);
+        return (_result, _resultCtr);
     }
 
     /**
-     * @dev Pushes parameters to result's list depend on their type for each value
-     * @param _count is an amount of parameters provided next to the name of func
+     * @dev checks the value, and returns the corresponding multiplier.
+     * If it is Ether, then it returns 1000000000000000000,
+     * If it is GWEI, then it returns 1000000000
+     * @param _chunk is a command from DSL command list
+     * @return returns the corresponding multiplier.
      */
-    function _pushParameters(uint256 _count) internal {
-        for (uint256 j = 0; j < _count; j++) {
-            FuncParameter memory fp = parameters[j + 1];
-            _rebuildParameter(fp._type, fp.value, fp.nameOfVariable);
-            // clear mapping data to prevent collisions with values
-            parameters[j + 1] = FuncParameter('', '0', '');
-        }
+    function _getCurrencyMultiplier(string memory _chunk) internal pure returns (uint256) {
+        if (_chunk.equal('ETH')) {
+            return 1000000000000000000;
+        } else if (_chunk.equal('GWEI')) {
+            return 1000000000;
+        } else return 0;
     }
 
     /**
-     * @dev Saves parameters in mapping checking/using valid type for each value
-     * @param _index is a current chunk index from temporary chunks
-     * @param _type is a type of the parameter
-     * @param _value is a value of the parameter
-     * @param _nameOfFunc is a name of function that is used to generate
-     * the name of the current variable
-     */
-    function _saveParameter(
-        uint256 _index,
-        string memory _type,
-        string memory _value,
-        string memory _nameOfFunc
-    ) internal {
-        FuncParameter storage fp = parameters[_index / 2 + 1];
-        fp._type = _type;
-        fp.value = _value;
-        fp.nameOfVariable = string(
-            abi.encodePacked(_nameOfFunc, '_', StringUtils.toString(_index / 2 + 1))
-        );
-    }
-
-    /**
-     * @dev Clears useless variables from the DSL code string as
-     * all needed parameters are already stored in chunks list
-     * @param _count is an amount of parameters provided next
-     * to the name of func. As parameters are stored with their types,
-     * the _count variable was already multiplied to 2
-     */
-    function _cleanCode(uint256 _count) internal {
-        for (uint256 j = 0; j < _count; j++) {
-            result.pop();
-        }
-    }
-
-    /**
-     * @dev Preparing and pushes the DSL command to results.
-     * The comand will save this parameter and its name in the smart contract.
-     * For example: `uint256 7 setUint256 NUMBER_VAR`
-     * For the moment it works only with uint256 types.
-     * @param _type is a type of the parameter
-     * @param _value is a value of the parameter
-     * @param _variableName is a name of variable that was generated before
-     */
-    function _rebuildParameter(
-        string memory _type,
-        string memory _value,
-        string memory _variableName
-    ) internal {
-        // TODO: '_type' - should be used in the future for other types
-        result.push(_type);
-        result.push(_value);
-        // TODO: setUint256 - update for other types in dependence on '_type'
-        result.push('setUint256');
-        result.push(_variableName);
-    }
-
-    /**
-     * @dev Pushes the func opcode and the name of the function
-     * @param _name is a current name of the function
-     */
-    function _pushFuncName(string memory _name) internal {
-        result.push('func');
-        result.push(_name);
-    }
-
-    function _isOperator(address _ctxAddr, string memory op) internal view returns (bool) {
-        for (uint256 i = 0; i < IContext(_ctxAddr).operatorsLen(); i++) {
-            if (op.equal(IContext(_ctxAddr).operators(i))) return true;
-        }
-        return false;
-    }
-
-    /**
-     * @dev Checks if a string is an alias to a command from DSL
-     */
-    function _isAlias(address _ctxAddr, string memory _cmd) internal view returns (bool) {
-        return !IContext(_ctxAddr).aliases(_cmd).equal('');
-    }
-
-    /**
-     * @dev Checks if a symbol is a comment, then increases _index to the next
+     * @dev Checks if a symbol is a comment, then increases `i` to the next
      * no-comment symbol avoiding an additional iteration
-     * @param _index is a current index of a char that might be changed
+     * @param i is a current index of a char that might be changed
      * @param _program is a current program string
-     * @return new index
-     * @return searchedSymbolLen
-     * @return isCommeted
+     * @param _char Current character
+     * @return Searched symbol length
+     * @return New index
+     * @return Is code commented or not
      */
     function _getCommentSymbol(
-        uint256 _index,
+        uint256 i,
         string memory _program,
-        string memory char
+        string memory _char
     ) internal pure returns (uint256, uint256, bool) {
-        if (_canGetSymbol(_index + 1, _program)) {
-            string memory nextChar = _program.char(_index + 1);
-            if (char.equal('/') && nextChar.equal('/')) {
-                return (1, _index + 2, true);
-            } else if (char.equal('/') && nextChar.equal('*')) {
-                return (2, _index + 2, true);
+        if (_canGetSymbol(i + 1, _program)) {
+            string memory nextChar = _program.char(i + 1);
+            if (_char.equal('/') && nextChar.equal('/')) {
+                return (1, i + 2, true);
+            } else if (_char.equal('/') && nextChar.equal('*')) {
+                return (2, i + 2, true);
             }
         }
-        return (0, _index, false);
+        return (0, i, false);
     }
 
     /**
      * @dev Checks if a symbol is an end symbol of a comment, then increases _index to the next
      * no-comment symbol avoiding an additional iteration
-     * @param _i is a current index of a char that might be changed
      * @param _ssl is a searched symbol len that might be 0, 1, 2
+     * @param i is a current index of a char that might be changed
      * @param _p is a current program string
-     * @return index is a new index of a char
-     * @return isCommeted
+     * @param _char Current character
+     * @return A new index of a char
+     * @return Is code commented or not
      */
     function _getEndCommentSymbol(
         uint256 _ssl,
-        uint256 _i,
+        uint256 i,
         string memory _p,
-        string memory char
+        string memory _char
     ) internal pure returns (uint256, bool) {
-        if (_ssl == 1 && char.equal('\n')) {
-            return (_i + 1, false);
-        } else if (_ssl == 2 && char.equal('*') && _canGetSymbol(_i + 1, _p)) {
-            string memory nextChar = _p.char(_i + 1);
+        if (_ssl == 1 && _char.equal('\n')) {
+            return (i + 1, false);
+        } else if (_ssl == 2 && _char.equal('*') && _canGetSymbol(i + 1, _p)) {
+            string memory nextChar = _p.char(i + 1);
             if (nextChar.equal('/')) {
-                return (_i + 2, false);
+                return (i + 2, false);
             }
         }
-        return (_i, true);
+        return (i, true);
     }
 
     /**
      * @dev Checks if it is possible to get next char from a _program
      * @param _index is a current index of a char
      * @param _program is a current program string
-     * @return true if program has the next symbol, otherwise is false
+     * @return True if program has the next symbol, otherwise is false
      */
     function _canGetSymbol(uint256 _index, string memory _program) internal pure returns (bool) {
         try _program.char(_index) {
@@ -813,58 +788,14 @@ contract Preprocessor is IPreprocessor {
     }
 
     /**
-     * @dev This function is used to check if 'transferFrom',
-     * 'sendEth' and 'transfer' functions(opcodes) won't use 'uint256' opcode during code
-     * execution directly. So it needs to be sure that executed code won't mess up
-     * parameters for the simple number and a number that be used for these functions.
-     * @param _directUseUint256 set by default from the outer function. Allows to keep current state of a contract
-     * @param _chunk is a current chunk from the outer function
-     * @return _isDirect is true if a chunk is matched one from the opcode list, otherwise is false
+     * @dev Returns the length of a string array excluding empty elements
+     * Ex. nonEmptyArrLen['h', 'e', 'l', 'l', 'o', '', '', '']) == 5 (not 8)
+     * @param _arr Input string array
+     * @return i The legth of the array excluding empty elements
      */
-    function _isDirectUseUint256(
-        bool _directUseUint256,
-        bool _isStruct,
-        string memory _chunk
-    ) internal pure returns (bool _isDirect) {
-        _isDirect = _directUseUint256;
-        if (
-            _chunk.equal('transferFrom') ||
-            _chunk.equal('sendEth') ||
-            _chunk.equal('transfer') ||
-            _chunk.equal('get') ||
-            _chunk.equal('enableRecord') ||
-            _isStruct
-        ) {
-            _isDirect = true;
+    function _nonEmptyArrLen(string[] memory _arr) internal pure returns (uint256 i) {
+        while (i < _arr.length && !_arr[i].equal('')) {
+            i++;
         }
-    }
-
-    /**
-     * @dev As a 'loadRemote' opcode has 4 parameters in total and two of them are
-     * numbers, so it is important to be sure that executed code under 'loadRemote'
-     * won't mess parameters with the simple uint256 numbers.
-     * @param _loadRemoteFlag is used to check if it was started the set of parameters for 'loadRemote' opcode
-     * @param _loadRemoteVarCount is used to check if it was finished the set of parameters for 'loadRemote' opcode
-     * @param _chunk is a current chunk from the outer function
-     * @return _flag is an updated or current value of _loadRemoteFlag
-     * @return _count is an updated or current value of _loadRemoteVarCount
-     */
-    function _updateRemoteParams(
-        bool _loadRemoteFlag,
-        uint256 _loadRemoteVarCount,
-        string memory _chunk
-    ) internal pure returns (bool _flag, uint256 _count) {
-        _count = _loadRemoteVarCount;
-        _flag = _loadRemoteFlag;
-
-        if (_chunk.equal('loadRemote')) {
-            _flag = true;
-        }
-
-        if (_flag && _loadRemoteVarCount < 4) {
-            _count = _loadRemoteVarCount + 1;
-        }
-
-        return (_flag, _count);
     }
 }

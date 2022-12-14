@@ -12,6 +12,17 @@ import { DynamicTestData, OpConditionalTxFunc, TxObject } from '../types';
 import { ONE_DAY, ONE_MONTH, ONE_YEAR } from './constants';
 import { activateRecord } from '../../scripts/utils/update.record';
 
+export const split = (expr: string) =>
+  expr
+    .replaceAll('(', '@(@')
+    .replaceAll(')', '@)@')
+    .split(/[@ \n]/g)
+    .filter((x: string) => !!x);
+
+export const checkStringStack = (stack: string[], expectedStack: string[]) => {
+  expect(stack.filter((x) => !!x)).to.eql(expectedStack);
+};
+
 /**
  * Apply keccak256 to `str`, cut the result to the first 4 bytes, append
  * 28 bytes (32b - 4b) of zeros
