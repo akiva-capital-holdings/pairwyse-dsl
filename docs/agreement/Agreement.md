@@ -106,15 +106,15 @@ struct Record {
 }
 ```
 
-### StorageCard
+### Variable
 
 ```solidity
-struct StorageCard {
-  string cardName;
+struct Variable {
+  string varName;
   enum Agreement.ValueTypes valueType;
-  bytes32 cardHex;
-  uint256 cardId;
-  address cardCreator;
+  bytes32 varHex;
+  uint256 varId;
+  address varCreator;
 }
 ```
 
@@ -124,10 +124,10 @@ struct StorageCard {
 mapping(uint256 => struct Agreement.Record) records
 ```
 
-### cards
+### variables
 
 ```solidity
-mapping(uint256 => struct Agreement.StorageCard) cards
+mapping(uint256 => struct Agreement.Variable) variables
 ```
 
 ### conditionContexts
@@ -166,10 +166,10 @@ mapping(uint256 => mapping(address => bool)) isExecutedBySignatory
 uint256[] recordIds
 ```
 
-### cardIds
+### varIds
 
 ```solidity
-uint256[] cardIds
+uint256[] varIds
 ```
 
 ### constructor
@@ -403,13 +403,13 @@ list or that 'ANYONE' address does not exist in signatures at all_
 | ---- | ---- | ----------- |
 | _signatories | address[] | the list of addresses |
 
-### _addNewCard
+### _addNewVariable
 
 ```solidity
-function _addNewCard(string _varName, enum Agreement.ValueTypes _valueType) internal returns (bytes32)
+function _addNewVariable(string _varName, enum Agreement.ValueTypes _valueType) internal returns (bytes32 position)
 ```
 
-_Created and save new StorageCard of seted Value_
+_Created and save new Variable of seted Value_
 
 #### Parameters
 
@@ -422,7 +422,7 @@ _Created and save new StorageCard of seted Value_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bytes32 | position return _varName in type of bytes32 |
+| position | bytes32 | return _varName in type of bytes32 |
 
 ### _verify
 
