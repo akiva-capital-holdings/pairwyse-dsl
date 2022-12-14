@@ -1532,8 +1532,7 @@ describe('End-to-end', () => {
         expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(3);
       });
 
-      // TODO: fix; fails
-      it.skip('sum through structs values with voting markers YES/NO', async () => {
+      it('sum through structs values with voting markers YES/NO', async () => {
         const input = `
           struct YES_VOTE {
             vote: YES
@@ -1542,7 +1541,7 @@ describe('End-to-end', () => {
           struct NO_VOTE {
             vote: NO
           }
-
+          
           struct[] RESULTS
           insert YES_VOTE into RESULTS
           insert NO_VOTE into RESULTS
@@ -1550,6 +1549,7 @@ describe('End-to-end', () => {
           sumOf RESULTS.vote
           insert NO_VOTE into RESULTS
           insert YES_VOTE into RESULTS
+          sumOf RESULTS.vote
           (sumOf RESULTS.vote) setUint256 YES_CTR
         `;
 
@@ -1561,9 +1561,47 @@ describe('End-to-end', () => {
         const StackCont = await ethers.getContractFactory('Stack');
         const contextStackAddress = await ctxProgram.stack();
         stack = StackCont.attach(contextStackAddress);
-        await checkStackTail(stack, [2, 1]);
+        await checkStackTail(stack, [2, 3, 1]);
 
         expect(await app.getStorageUint256(hex4Bytes('YES_CTR'))).equal(3);
+      });
+
+      // TODO: related to the ticket - https://consideritdone.atlassian.net/browse/AK-635
+      it.skip('voting markers YES/NO (using number without uint256)', async () => {
+        // it worked till `(sumOf RESULTS.vote) setUint256 YES_CTR` line
+        const input = `
+          struct YES_VOTE {
+            vote: YES
+          }
+
+          struct NO_VOTE {
+            vote: NO
+          }
+          
+          struct[] RESULTS
+          insert YES_VOTE into RESULTS
+          insert NO_VOTE into RESULTS
+          insert YES_VOTE into RESULTS
+          sumOf RESULTS.vote
+          insert NO_VOTE into RESULTS
+          insert YES_VOTE into RESULTS
+          sumOf RESULTS.vote
+          (sumOf RESULTS.vote) setUint256 YES_CTR
+
+          (lengthOf RESULTS)
+        `;
+        // (((lengthOf RESULTS * 1000 ) / ( 1000 * YES_CTR )) < 2)
+        const code = await preprocessor.callStatic.transform(ctxAddr, input);
+        await app.parseCode(code);
+        console.log(code);
+        await app.execute();
+
+        // const StackCont = await ethers.getContractFactory('Stack');
+        // const contextStackAddress = await ctxProgram.stack();
+        // stack = StackCont.attach(contextStackAddress);
+        // await checkStackTail(stack, [2, 3, 1]);
+
+        // expect(await app.getStorageUint256(hex4Bytes('YES_CTR'))).equal(3);
       });
     });
   });
@@ -1891,7 +1929,7 @@ describe('End-to-end', () => {
         logicalOpcodesLibAddr,
         otherOpcodesLibAddr
       );
-
+      await DSLctx.deployed();
       const governance = await GovernanceMock.deploy(
         parserAddr,
         alice.address,

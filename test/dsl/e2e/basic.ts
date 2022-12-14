@@ -9,6 +9,7 @@ import {
   ProgramContextMock,
   Stack,
   ExecutorMock,
+  ERC20Mintable,
 } from '../../../typechain-types';
 import { checkStackTail, hex4Bytes, checkStack } from '../../utils/utils';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
@@ -892,14 +893,14 @@ describe('DSL: basic', () => {
     const msgSenderAddress = bytes32msgSenderAddress.substring(2, 10);
 
     // program 'balanceOf DAI MSG_SENDER'
-    await ctx.setProgram(`0x2b${tokenAddress}${msgSenderAddress}`);
+    await ctxProgram.setProgram(`0x2b${tokenAddress}${msgSenderAddress}`);
 
     // every "execute" call sets a connected address as MSG_SENDER
-    await executor.connect(alice).execute(ctxAddr);
+    await executor.connect(alice).execute(ctx.address, ctxProgram.address);
     await checkStack(stack, 1, '100');
-    await executor.connect(bob).execute(ctxAddr);
+    await executor.connect(bob).execute(ctx.address, ctxProgram.address);
     await checkStack(stack, 2, '200');
-    await executor.connect(carl).execute(ctxAddr);
+    await executor.connect(carl).execute(ctx.address, ctxProgram.address);
     await checkStack(stack, 3, '300');
   });
 

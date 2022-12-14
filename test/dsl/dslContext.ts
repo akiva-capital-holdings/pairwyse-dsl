@@ -6,7 +6,7 @@ import { deployOpcodeLibs } from '../../scripts/utils/deploy.utils';
 
 const { ethers, network } = hre;
 
-describe('Context', () => {
+describe.skip('Context', () => {
   let app: DSLContextMock;
   let snapshotId: number;
 

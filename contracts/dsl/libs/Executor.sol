@@ -16,18 +16,17 @@ library Executor {
         bytes4 _selector;
         address _lib;
         bool success;
+        IDSLContext.OpcodeLibNames _libName;
+
         IProgramContext(_programContext).setMsgSender(msg.sender);
 
         while (IProgramContext(_programContext).pc() < program.length) {
             opcodeBytes = IProgramContext(_programContext).currentProgram();
             opcodeByte = bytes1(uint8(opcodeBytes[0]));
-            // console.logBytes(opcodeBytes);
             _selector = IDSLContext(_dslContext).selectorByOpcode(opcodeByte);
             require(_selector != 0x0, ErrorsExecutor.EXC2);
 
-            IDSLContext.OpcodeLibNames _libName = IDSLContext(_dslContext).opcodeLibNameByOpcode(
-                opcodeByte
-            );
+            _libName = IDSLContext(_dslContext).opcodeLibNameByOpcode(opcodeByte);
 
             IProgramContext(_programContext).incPc(1);
 

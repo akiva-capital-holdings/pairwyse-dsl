@@ -4,9 +4,7 @@ _Context of DSL code
 
 One of the core contracts of the project. It contains opcodes and aliases for commands.
 During creating Context contract executes the `initOpcodes` function that provides
-basic working opcodes
-TODO: if there will be only one context for each version of DSL,
-should we allow to add new commands here?_
+basic working opcodes_
 
 ### comparisonOpcodes
 
@@ -133,62 +131,6 @@ function operatorsLen() external view returns (uint256)
 ```
 
 _Returns the amount of stored operators_
-
-### setComparisonOpcodesAddr
-
-```solidity
-function setComparisonOpcodesAddr(address _comparisonOpcodes) public
-```
-
-_Sets the new address of the ComparisonOpcodes library_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _comparisonOpcodes | address | is the new address of the library |
-
-### setBranchingOpcodesAddr
-
-```solidity
-function setBranchingOpcodesAddr(address _branchingOpcodes) public
-```
-
-_Sets the new address of the BranchingOpcodes library_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _branchingOpcodes | address | is the new address of the library |
-
-### setLogicalOpcodesAddr
-
-```solidity
-function setLogicalOpcodesAddr(address _logicalOpcodes) public
-```
-
-_Sets the new address of the LogicalOpcodes library_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _logicalOpcodes | address | is the new address of the library |
-
-### setOtherOpcodesAddr
-
-```solidity
-function setOtherOpcodesAddr(address _otherOpcodes) public
-```
-
-_Sets the new address of the OtherOpcodes library_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _otherOpcodes | address | is the new address of the library |
 
 ### _addOpcode
 

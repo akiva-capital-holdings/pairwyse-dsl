@@ -107,27 +107,3 @@ function aliases(string _alias) external view returns (string _baseCmd)
 function operatorsLen() external view returns (uint256)
 ```
 
-### setComparisonOpcodesAddr
-
-```solidity
-function setComparisonOpcodesAddr(address _opcodes) external
-```
-
-### setBranchingOpcodesAddr
-
-```solidity
-function setBranchingOpcodesAddr(address _opcodes) external
-```
-
-### setLogicalOpcodesAddr
-
-```solidity
-function setLogicalOpcodesAddr(address _opcodes) external
-```
-
-### setOtherOpcodesAddr
-
-```solidity
-function setOtherOpcodesAddr(address _opcodes) external
-```
-

@@ -18,8 +18,6 @@ import { ErrorsContext } from './libs/Errors.sol';
  * One of the core contracts of the project. It contains opcodes and aliases for commands.
  * During creating Context contract executes the `initOpcodes` function that provides
  * basic working opcodes
- * TODO: if there will be only one context for each version of DSL,
- * should we allow to add new commands here?
  */
 contract DSLContext is IDSLContext {
     address public comparisonOpcodes; // an address for ComparisonOpcodes library, can be changed
@@ -728,38 +726,6 @@ contract DSLContext is IDSLContext {
      */
     function operatorsLen() external view returns (uint256) {
         return operators.length;
-    }
-
-    /**
-     * @dev Sets the new address of the ComparisonOpcodes library
-     * @param _comparisonOpcodes is the new address of the library
-     */
-    function setComparisonOpcodesAddr(address _comparisonOpcodes) public {
-        comparisonOpcodes = _comparisonOpcodes;
-    }
-
-    /**
-     * @dev Sets the new address of the BranchingOpcodes library
-     * @param _branchingOpcodes is the new address of the library
-     */
-    function setBranchingOpcodesAddr(address _branchingOpcodes) public {
-        branchingOpcodes = _branchingOpcodes;
-    }
-
-    /**
-     * @dev Sets the new address of the LogicalOpcodes library
-     * @param _logicalOpcodes is the new address of the library
-     */
-    function setLogicalOpcodesAddr(address _logicalOpcodes) public {
-        logicalOpcodes = _logicalOpcodes;
-    }
-
-    /**
-     * @dev Sets the new address of the OtherOpcodes library
-     * @param _otherOpcodes is the new address of the library
-     */
-    function setOtherOpcodesAddr(address _otherOpcodes) public {
-        otherOpcodes = _otherOpcodes;
     }
 
     /**

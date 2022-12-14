@@ -1,5 +1,11 @@
 ## LinkedList
 
+TODO:
+add the possibility to work with arrays on the DSL level
+variable ARR_NAME -> [type: array,elementType: uint256, linkToNextEl: 0x123]
+(next element): [data: 0x0001, linkToNextEl: 0x124]
+(last element): [data: 0x0005, linkToNextEl: 0x000]
+
 ### EMPTY
 
 ```solidity

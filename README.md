@@ -26,8 +26,7 @@ Run: `yarn hardhat run scripts/deploy.agreement.ts --network localhost` to run a
 ### Deploy the contracts and verify on tenderly
 
 Use `--network tenderly` flag
-// TODO: Script scripts/deploy.agreement.ts doesn't exist.
-Ex.: `yarn hardhat run scripts/deploy.agreement.ts --network tenderly`
+Ex.: `yarn hardhat run scripts/deploy.<contract_name>.ts --network tenderly`
 
 ### Update AGREEMENT_ADDR in the .env file
 

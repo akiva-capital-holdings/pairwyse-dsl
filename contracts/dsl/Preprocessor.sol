@@ -222,7 +222,7 @@ library Preprocessor {
                 (_result, _resultCtr, i) = _processCommand(_result, _resultCtr, _code, i, _ctxAddr);
             } else if (_isCurlyBracket(_chunk)) {
                 (_result, _resultCtr) = _processCurlyBracket(_result, _resultCtr, _chunk);
-            } else if (_isAlias(_ctxAddr, _chunk)) {
+            } else if (_isAlias(_chunk, _ctxAddr)) {
                 (_result, _resultCtr) = _processAlias(_result, _resultCtr, _ctxAddr, _chunk);
             } else if (_chunk.equal('insert')) {
                 (_result, _resultCtr, i) = _processArrayInsert(_result, _resultCtr, _code, i);
@@ -234,7 +234,6 @@ library Preprocessor {
         return _result;
     }
 
-    // TODO: switch _ctxAddr & _code params order
     /**
      * @dev Transforms code in infix format to the postfix format
      * @param _code Array of DSL commands
@@ -254,7 +253,7 @@ library Preprocessor {
         while (i < _nonEmptyArrLen(_code)) {
             _chunk = _code[i++];
 
-            if (_isOperator(_ctxAddr, _chunk)) {
+            if (_isOperator(_chunk, _ctxAddr)) {
                 (_result, _resultCtr, _stack) = _processOperator(
                     _stack,
                     _result,
@@ -602,9 +601,9 @@ library Preprocessor {
      * @param _ctxAddr Context contract address
      * @return True or false based on whether chunk is an operator or not
      */
-    function _isOperator(address _ctxAddr, string memory op) internal view returns (bool) {
+    function _isOperator(string memory _chunk, address _ctxAddr) internal view returns (bool) {
         for (uint256 i = 0; i < IDSLContext(_ctxAddr).operatorsLen(); i++) {
-            if (op.equal(IDSLContext(_ctxAddr).operators(i))) return true;
+            if (_chunk.equal(IDSLContext(_ctxAddr).operators(i))) return true;
         }
         return false;
     }
@@ -614,8 +613,8 @@ library Preprocessor {
      * @param _ctxAddr Context contract address
      * @return True or false based on whether chunk is an alias or not
      */
-    function _isAlias(address _ctxAddr, string memory _cmd) internal view returns (bool) {
-        return !IDSLContext(_ctxAddr).aliases(_cmd).equal('');
+    function _isAlias(string memory _chunk, address _ctxAddr) internal view returns (bool) {
+        return !IDSLContext(_ctxAddr).aliases(_chunk).equal('');
     }
 
     /**

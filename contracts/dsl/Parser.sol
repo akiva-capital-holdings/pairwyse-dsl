@@ -11,7 +11,7 @@ import { ByteUtils } from './libs/ByteUtils.sol';
 import { Preprocessor } from './Preprocessor.sol';
 import { ErrorsParser } from './libs/Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Parser of DSL code. This contract is a singleton and should not
@@ -52,18 +52,16 @@ contract Parser is IParser {
     function parseCode(address _dslCtxAddr, address _programCtxAddr, string[] memory _code) public {
         cmdIdx = 0;
         bytes memory b;
-        IProgramContext(_programCtxAddr).setProgram(b);
-        _setCmdsArray(_code);
-        // console.logBytes(cmds);
-        // console.log(cmds.length);
-        // console.log('\n');
+        bytes memory program;
+
+        IProgramContext(_programCtxAddr).setProgram(b); // TODO: set to 0 that program in the program context
+        _setCmdsArray(_code); // remove empty strings
         IProgramContext(_programCtxAddr).setPc(0);
         IProgramContext(_programCtxAddr).stack().clear();
-        bytes memory program;
+
         while (cmdIdx < cmds.length) {
             program = _parseOpcodeWithParams(_dslCtxAddr, _programCtxAddr, program);
         }
-        // console.logBytes(_code.length);
         IProgramContext(_programCtxAddr).setProgram(program);
     }
 
@@ -542,15 +540,19 @@ contract Parser is IParser {
             newProgram = bytes.concat(newProgram, bytes4(keccak256(abi.encodePacked(_name))));
             // parse the value of `balance` variable - `456`, `0x345...`
             string memory _value = _nextCmd();
-
             if (_value.mayBeAddress()) {
                 // remove first `0x` symbols
                 bytes memory _sliced = bytes(_value).slice(2, 42);
                 newProgram = bytes.concat(newProgram, bytes32(_sliced.fromHexBytes()));
             } else if (_value.mayBeNumber()) {
                 newProgram = bytes.concat(newProgram, bytes32(_value.toUint256()));
+            } else if (_variable.equal('vote') && _value.equal('YES')) {
+                // voting process, change stored value in the array 1
+                newProgram = bytes.concat(newProgram, bytes32(uint256(1)));
+            } else if (_variable.equal('vote') && _value.equal('NO')) {
+                // voting process, change stored value in the array to 0
+                newProgram = bytes.concat(newProgram, bytes32(0));
             }
-            // TODO:
             // else {
             //     // if the name of the variable
             //     program = bytes.concat(program, bytes32(keccak256(abi.encodePacked(_value))));

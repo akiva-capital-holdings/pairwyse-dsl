@@ -48,14 +48,5 @@ interface IDSLContext {
     function aliases(string memory _alias) external view returns (string memory _baseCmd);
 
     // Functions
-
     function operatorsLen() external view returns (uint256);
-
-    function setComparisonOpcodesAddr(address _opcodes) external;
-
-    function setBranchingOpcodesAddr(address _opcodes) external;
-
-    function setLogicalOpcodesAddr(address _opcodes) external;
-
-    function setOtherOpcodesAddr(address _opcodes) external;
 }

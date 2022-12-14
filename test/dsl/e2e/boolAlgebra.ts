@@ -49,7 +49,7 @@ describe('Boolean Algebra', () => {
       await ethers.getContractFactory('BaseApplication', {
         libraries: { Executor: executorLibAddr },
       })
-    ).deploy(parserAddr, preprAddr, ctx.address);
+    ).deploy(parserAddr, preprAddr, ctx.address, ctxProgram.address);
   });
 
   describe('Commutative law', async () => {

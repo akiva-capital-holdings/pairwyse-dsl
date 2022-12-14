@@ -9,7 +9,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
@@ -18,7 +18,10 @@ library OtherOpcodes {
     function opLoadRemoteAny(address _ctxProgram, address _ctxDSL) public {
         address libAddr = IDSLContext(_ctxDSL).otherOpcodes();
         bytes4 _selector = OpcodeHelpers.nextBranchSelector(_ctxDSL, _ctxProgram, 'loadRemote');
-        OpcodeHelpers.mustDelegateCall(libAddr, abi.encodeWithSelector(_selector, _ctxDSL));
+        OpcodeHelpers.mustDelegateCall(
+            libAddr,
+            abi.encodeWithSelector(_selector, _ctxProgram, _ctxDSL)
+        );
     }
 
     function opBlockNumber(address _ctxProgram, address) public {
@@ -26,7 +29,6 @@ library OtherOpcodes {
     }
 
     function opBlockTimestamp(address _ctxProgram, address) public {
-        // console.log(123);
         OpcodeHelpers.putToStack(_ctxProgram, block.timestamp);
     }
 
@@ -136,7 +138,6 @@ library OtherOpcodes {
         bytes32 _length = _getArrLength(_ctxProgram, _arrNameB32);
         // sum items and store into the stack
         uint256 total = _sumOfStructVars(_ctxProgram, _arrNameB32, bytes4(_varNameB32), _length);
-
         OpcodeHelpers.putToStack(_ctxProgram, total);
     }
 
@@ -175,7 +176,6 @@ library OtherOpcodes {
     function opPush(address _ctxProgram, address) public {
         bytes32 _varValue = OpcodeHelpers.getNextBytes(_ctxProgram, 32);
         bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
-
         // check if the array exists
         bytes memory data = OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),

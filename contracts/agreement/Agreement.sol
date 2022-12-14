@@ -346,6 +346,11 @@ contract Agreement is LinkedList {
             records[_recordId].transactionProgram = _p;
             isRecordSet[_recordId][_code] = true;
         }
+        // TODO:
+        // else {
+        //     revert("DSL string is not present in Agreement or already set");
+        // }
+
         emit Parsed(_preProc, _code);
     }
 
