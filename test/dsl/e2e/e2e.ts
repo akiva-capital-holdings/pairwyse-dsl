@@ -13,7 +13,7 @@ import {
   Stack,
   Agreement,
   Governance,
-  Parser
+  Parser,
 } from '../../../typechain-types';
 
 import { bnToLongHexString, checkStackTail, hex4Bytes, hex4BytesShort } from '../../utils/utils';

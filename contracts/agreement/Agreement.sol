@@ -47,8 +47,7 @@ contract Agreement is LinkedList {
         BOOL
     }
 
-
-    event Parsed(address indexed preProccessor, address indexed dslCtxAddr, string code);
+    event Parsed(address indexed preProccessor, string code);
 
     event RecordArchived(uint256 indexed recordId);
     event RecordUnarchived(uint256 indexed recordId);
@@ -125,6 +124,7 @@ contract Agreement is LinkedList {
     mapping(uint256 => mapping(string => bool)) public isRecord;
 
     uint256[] public recordIds; // array of recordId
+    uint256[] public varIds; // array of variable Ids
 
     /**
      * Sets parser address, creates new contextProgram instance, and setups contextProgram
@@ -167,7 +167,7 @@ contract Agreement is LinkedList {
         address data
     ) external isReserved(varName) doesVariableExist(varName, ValueTypes.ADDRESS) {
         bytes32 position = _addNewVariable(varName, ValueTypes.ADDRESS);
-        return position.getStorageAddress();
+        position.setStorageAddress(data);
     }
 
     function setStorageBytes32(
