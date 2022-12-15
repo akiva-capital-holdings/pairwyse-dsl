@@ -15,7 +15,7 @@ import { MultisigMock } from '../../../typechain-types/agreement/mocks/MultisigM
 const { ethers, network } = hre;
 dotenv.config();
 
-describe('Agreement: Investment Fund tests math', () => {
+describe.only('Agreement: Investment Fund tests math', () => {
   let agreement: Agreement;
   let agreementAddr: string;
   let preprocessorAddr: string;

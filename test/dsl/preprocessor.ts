@@ -1,11 +1,10 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { parseUnits } from 'ethers/lib/utils';
+import * as hre from 'hardhat';
 import { deployOpcodeLibs } from '../../scripts/utils/deploy.utils';
 import { Preprocessor } from '../../typechain-types';
 import { checkStringStack, split } from '../utils/utils';
-
-import * as hre from 'hardhat';
 
 describe('Preprocessor', () => {
   let app: Preprocessor;

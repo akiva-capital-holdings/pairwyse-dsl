@@ -446,10 +446,10 @@ describe('Simple Records in Agreement', () => {
   });
 
   describe('Check statuses. Single record', () => {
-    let recordId: number = 95;
-    let signatories: string[] = [];
+    const recordId: number = 95;
+    const signatories: string[] = [];
     let conditionString: string;
-    let transactionStr: string = 'sendEth RECEIVER 1000000000000000000';
+    const transactionStr: string = 'sendEth RECEIVER 1000000000000000000';
     let recordContextAddr: string;
 
     before(async () => {
@@ -458,11 +458,11 @@ describe('Simple Records in Agreement', () => {
       await app.setStorageUint256(hex4Bytes('LOCK_TIME'), LBT + ONE_MONTH);
 
       records.push({
-        recordId: recordId,
+        recordId,
         requiredRecords: [],
         signatories: [alice.address],
         conditionStrings: ['blockTimestamp > var LOCK_TIME'],
-        transactionStr: transactionStr,
+        transactionStr,
       });
 
       await setRecord(records[0], app);

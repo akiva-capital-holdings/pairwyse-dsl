@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
-import { ProgramContextMock } from '../../typechain-types/dsl/mocks';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { ProgramContextMock } from '../../typechain-types/dsl/mocks';
 
 describe.skip('ProgramContext', () => {
   let app: ProgramContextMock;

@@ -5,22 +5,16 @@ Financial Agreement written in DSL between two or more users
 Agreement contract that is used to implement any custom logic of a
 financial agreement. Ex. lender-borrower agreement
 
-### recordIds
-
-```solidity
-uint256[] recordIds
-```
-
 ### parser
 
 ```solidity
-address parser
+contract IParser parser
 ```
 
-### contextProgram
+### context
 
 ```solidity
-address contextProgram
+contract IProgramContext context
 ```
 
 ### contextDSL
@@ -35,10 +29,69 @@ address contextDSL
 address ownerAddr
 ```
 
-### records
+### ValueTypes
 
 ```solidity
-mapping(uint256 => struct IAgreement.Record) records
+enum ValueTypes {
+  ADDRESS,
+  UINT256,
+  BYTES32,
+  BOOL
+}
+```
+
+### Parsed
+
+```solidity
+event Parsed(address preProccessor, string code)
+```
+
+### RecordArchived
+
+```solidity
+event RecordArchived(uint256 recordId)
+```
+
+### RecordUnarchived
+
+```solidity
+event RecordUnarchived(uint256 recordId)
+```
+
+### RecordActivated
+
+```solidity
+event RecordActivated(uint256 recordId)
+```
+
+### RecordDeactivated
+
+```solidity
+event RecordDeactivated(uint256 recordId)
+```
+
+### RecordExecuted
+
+```solidity
+event RecordExecuted(address signatory, uint256 recordId, uint256 providedAmount, string transaction)
+```
+
+### NewRecord
+
+```solidity
+event NewRecord(uint256 recordId, uint256[] requiredRecords, address[] signatories, string transaction, string[] conditionStrings)
+```
+
+### isReserved
+
+```solidity
+modifier isReserved(string varName)
+```
+
+### doesVariableExist
+
+```solidity
+modifier doesVariableExist(string varName, enum Agreement.ValueTypes valueType)
 ```
 
 ### onlyOwner
@@ -47,106 +100,147 @@ mapping(uint256 => struct IAgreement.Record) records
 modifier onlyOwner()
 ```
 
+### Record
+
+```solidity
+struct Record {
+  bool isExecuted;
+  bool isArchived;
+  bool isActive;
+  string transactionString;
+}
+```
+
+### Variable
+
+```solidity
+struct Variable {
+  string varName;
+  enum Agreement.ValueTypes valueType;
+  bytes32 varHex;
+  uint256 varId;
+  address varCreator;
+}
+```
+
+### records
+
+```solidity
+mapping(uint256 => struct Agreement.Record) records
+```
+
+<<<<<<< HEAD
+### variables
+
+```solidity
+mapping(uint256 => struct Agreement.Variable) variables
+```
+
+### conditionContexts
+
+```solidity
+mapping(uint256 => address[]) conditionContexts
+```
+
+=======
+>>>>>>> 989c6dc (Separate context, simplify governance, upgrade agreement)
+### conditionStrings
+
+```solidity
+mapping(uint256 => string[]) conditionStrings
+```
+
+### signatories
+
+```solidity
+mapping(uint256 => address[]) signatories
+```
+
+### requiredRecords
+
+```solidity
+mapping(uint256 => uint256[]) requiredRecords
+```
+
+### isExecutedBySignatory
+
+```solidity
+mapping(uint256 => mapping(address => bool)) isExecutedBySignatory
+```
+
+### recordIds
+
+```solidity
+uint256[] recordIds
+```
+
+### varIds
+
+```solidity
+uint256[] varIds
+```
+
 ### constructor
 
 ```solidity
 constructor(address _parser, address _ownerAddr, address _dslContext) public
 ```
 
-Sets parser address, creates new contextProgram instance, and setups contextProgram
+Sets parser address, creates new Context instance, and setups Context
 
+<<<<<<< HEAD
+### transferOwnership
+
+```solidity
+function transferOwnership(address _newOwner) public
+=======
 ### receive
 
 ```solidity
 receive() external payable
+>>>>>>> 989c6dc (Separate context, simplify governance, upgrade agreement)
 ```
 
-### archiveRecord
+### getStorageBool
 
 ```solidity
-function archiveRecord(uint256 _recordId) external
+function getStorageBool(bytes32 position) external view returns (bool data)
 ```
 
-_archived any of the existing records by recordId._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _recordId | uint256 | Record ID |
-
-### unarchiveRecord
+### getStorageAddress
 
 ```solidity
-function unarchiveRecord(uint256 _recordId) external
+function getStorageAddress(bytes32 position) external view returns (address data)
 ```
 
-_unarchive any of the existing records by recordId_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _recordId | uint256 | Record ID |
-
-### activateRecord
+### getStorageUint256
 
 ```solidity
-function activateRecord(uint256 _recordId) external
+function getStorageUint256(bytes32 position) external view returns (uint256 data)
 ```
 
-_activates the existing records by recordId, only awailable for ownerAddr_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _recordId | uint256 | Record ID |
-
-### deactivateRecord
+### setStorageBool
 
 ```solidity
-function deactivateRecord(uint256 _recordId) external
+function setStorageBool(string varName, bool data) external
 ```
 
-_deactivates the existing records by recordId, only awailable for ownerAddr_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _recordId | uint256 | Record ID |
-
-### parseFinished
+### setStorageAddress
 
 ```solidity
-function parseFinished(address _preProc) external view returns (bool _result)
+function setStorageAddress(string varName, address data) external
 ```
 
-### parse
+### setStorageBytes32
 
 ```solidity
-function parse(address _preProc) external returns (bool _result)
+function setStorageBytes32(string varName, bytes32 data) external
 ```
 
-_Parse DSL code from the user and set the program bytecode in Agreement contract_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _preProc | address | Preprocessor address |
-
-### update
+### setStorageUint256
 
 ```solidity
-function update(uint256 _recordId, uint256[] _requiredRecords, address[] _signatories, string _transactionString, string[] _conditionStrings) public
-```
-
-### execute
-
-```solidity
-function execute(uint256 _recordId) external payable
+function setStorageUint256(string varName, uint256 data) external
 ```
 
 ### conditionLen
@@ -229,12 +323,6 @@ _Based on Record ID returns the number of condition strings_
 | ---- | ---- | ----------- |
 | [0] | uint256 | Number of Condition strings of the Record |
 
-### conditionString
-
-```solidity
-function conditionString(uint256 _recordId, uint256 i) external view returns (string)
-```
-
 ### getActiveRecords
 
 ```solidity
@@ -273,6 +361,47 @@ _return valuses for preview record before execution_
 | _transaction | string | string of transaction |
 | _isActive | bool | true if the record is active |
 
+### archiveRecord
+
+```solidity
+function archiveRecord(uint256 _recordId) external
+```
+
+_archived any of the existing records by recordId._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _recordId | uint256 | Record ID |
+
+### parse
+
+```solidity
+function parse(string _code, address _preProc) external
+```
+
+_Parse DSL code from the user and set the program bytecode in Context contract_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _code | string | DSL code input from the user |
+| _preProc | address | Preprocessor address |
+
+### update
+
+```solidity
+function update(uint256 _recordId, uint256[] _requiredRecords, address[] _signatories, string _transactionString, string[] _conditionStrings) external
+```
+
+### execute
+
+```solidity
+function execute(uint256 _recordId) external payable
+```
+
 ### _checkSignatories
 
 ```solidity
@@ -288,13 +417,34 @@ list or that 'ANYONE' address does not exist in signatures at all_
 | ---- | ---- | ----------- |
 | _signatories | address[] | the list of addresses |
 
+### _addNewVariable
+
+```solidity
+function _addNewVariable(string _varName, enum Agreement.ValueTypes _valueType) internal returns (bytes32 position)
+```
+
+_Created and save new Variable of seted Value_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _varName | string | seted value name in type of string |
+| _valueType | enum Agreement.ValueTypes | seted value type number |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| position | bytes32 | return _varName in type of bytes32 |
+
 ### _verify
 
 ```solidity
 function _verify(uint256 _recordId) internal view returns (bool)
 ```
 
-Verify that the user who wants to execute the record is amoung the signatories for this Record
+_Verify that the user who wants to execute the record is amoung the signatories for this Record_
 
 #### Parameters
 
@@ -397,21 +547,6 @@ _Fulfill Record_
 | ---- | ---- | ----------- |
 | result | bool | Boolean whether the record was successfully executed or not |
 
-### _execute
-
-```solidity
-function _execute(uint256 _msgValue, bytes _program) private
-```
-
-_Execute Record_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _msgValue | uint256 | Value that were sent along with function execution      // TODO: possibly remove this argument |
-| _program | bytes | provided bytcode of the program |
-
 ### _activeRecordsLen
 
 ```solidity
@@ -425,34 +560,4 @@ _return length of active records for getActiveRecords_
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint256 | count length of active records array |
-
-### _seeLast
-
-```solidity
-function _seeLast() private view returns (uint256)
-```
-
-### _anyone
-
-```solidity
-function _anyone() private view returns (address)
-```
-
-### _checkEmptyString
-
-```solidity
-function _checkEmptyString(string _string) private pure
-```
-
-### _checkZeroAddress
-
-```solidity
-function _checkZeroAddress(address _address) private pure
-```
-
-### _getProgram
-
-```solidity
-function _getProgram() private view returns (bytes)
-```
 

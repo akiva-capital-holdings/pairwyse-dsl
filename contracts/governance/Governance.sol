@@ -82,7 +82,7 @@ contract Governance is Agreement {
         if (_recordId == 0 || _recordId == 3) {
             _signatories[0] = ownerAddr;
         } else {
-            _signatories[0] = contextProgram.ANYONE();
+            _signatories[0] = IProgramContext(contextProgram).ANYONE();
         }
         _conditionStrings[0] = _condition;
         update(_recordId, _requiredRecords, _signatories, _record, _conditionStrings);

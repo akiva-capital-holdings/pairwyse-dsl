@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import { IAgreement } from '../dsl/interfaces/IAgreement.sol';
 import { IParser } from '../dsl/interfaces/IParser.sol';
 import { IDSLContext } from '../dsl/interfaces/IDSLContext.sol';
 import { IProgramContext } from '../dsl/interfaces/IProgramContext.sol';
 import { ProgramContext } from '../dsl/ProgramContext.sol';
 import { ErrorsAgreement } from '../dsl/libs/Errors.sol';
-import { UnstructuredStorage } from '../dsl/libs/UnstructuredStorage.sol';
 import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
-import { LinkedList } from '../dsl/helpers/LinkedList.sol';
+import { AgreementStorage } from './AgreementStorage.sol';
 
 // import 'hardhat/console.sol';
 
@@ -21,169 +21,169 @@ import { LinkedList } from '../dsl/helpers/LinkedList.sol';
  * Agreement contract that is used to implement any custom logic of a
  * financial agreement. Ex. lender-borrower agreement
  */
-contract Agreement is LinkedList {
-    using UnstructuredStorage for bytes32;
+contract Agreement is IAgreement, AgreementStorage {
     using StringUtils for string;
 
-    struct Variable {
-        string varName; // Name of variable
-        ValueTypes valueType; // Type of variable
-        bytes32 varHex; // Name of variable in type of bytes32
-        uint256 varId; // Id of variable
-        address varCreator; // address of owner
-    }
-
-    IParser public parser; // TODO: We can get rid of this dependency
-    IProgramContext public contextProgram;
+    uint256[] public recordIds; // array of recordId
+    address public parser; // TODO: We can get rid of this dependency
+    address public contextProgram;
     address public contextDSL;
     address public ownerAddr;
-
-    mapping(uint256 => Variable) public variables; // varId => Variable struct
-
-    enum ValueTypes {
-        ADDRESS,
-        UINT256,
-        BYTES32,
-        BOOL
-    }
-
-    event Parsed(address indexed preProccessor, string code);
-
-    event RecordArchived(uint256 indexed recordId);
-    event RecordUnarchived(uint256 indexed recordId);
-    event RecordActivated(uint256 indexed recordId);
-    event RecordDeactivated(uint256 indexed recordId);
-
-    event RecordExecuted(
-        address indexed signatory,
-        uint256 indexed recordId,
-        uint256 providedAmount,
-        string transaction
-    );
-
-    event NewRecord(
-        uint256 recordId,
-        uint256[] requiredRecords, // required transactions that have to be executed
-        address[] signatories, // addresses that can execute the transaction
-        string transaction, // DSL code string ex. `uint256 5 > uint256 3`
-        //  DSL code strings that have to be executed successfully before the `transaction DSL code`
-        string[] conditionStrings
-    );
-
-    modifier isReserved(string memory varName) {
-        bytes32 position = bytes4(keccak256(abi.encodePacked(varName)));
-        bytes32 MSG_SENDER_4_BYTES_HEX = 0x9ddd6a8100000000000000000000000000000000000000000000000000000000;
-        bytes32 ETH_4_BYTES_HEX = 0xaaaebeba00000000000000000000000000000000000000000000000000000000;
-        bytes32 GWEI_4_BYTES_HEX = 0x0c93a5d800000000000000000000000000000000000000000000000000000000;
-        require(position != MSG_SENDER_4_BYTES_HEX, ErrorsAgreement.AGR8); // check that variable is not 'MSG_SENDER'
-        require(position != ETH_4_BYTES_HEX, ErrorsAgreement.AGR8); // check that variable name is not 'ETH'
-        require(position != GWEI_4_BYTES_HEX, ErrorsAgreement.AGR8); // check that variable name is not 'GWEI'
-        _;
-    }
-
-    modifier doesVariableExist(string memory varName, ValueTypes valueType) {
-        for (uint256 i = 0; i <= varIds.length; i++) {
-            // check that value already exist
-            if (varName.equal(variables[i].varName)) {
-                // check that msg.sender can rewrite variable
-                require(
-                    msg.sender == variables[i].varCreator && valueType == variables[i].valueType,
-                    ErrorsAgreement.AGR8
-                );
-            }
-        }
-        _;
-    }
+    mapping(uint256 => Record) public records; // recordId => Record struct
 
     modifier onlyOwner() {
         require(msg.sender == ownerAddr, ErrorsAgreement.AGR11);
         _;
     }
 
-    /*
-        all mappings were moved to the Record struct as it uses less gas during contract deloyment
-    */
-    struct Record {
-        bool isExecuted;
-        bool isArchived;
-        bool isActive;
-        uint256[] requiredRecords;
-        address[] signatories;
-        string transactionString;
-        string[] conditionStrings;
-        bytes transactionProgram;
-        bytes[] conditions; // condition program in bytes
-        mapping(address => bool) isExecutedBySignatory;
-    }
-    mapping(uint256 => Record) public records; // recordId => Record struct
-    mapping(string => uint256) public recordsByString; // DSL condition as string => recordID
-    // recordId => (signatory => was tx executed by signatory)
-    mapping(uint256 => mapping(string => bool)) public isConditionSet;
-    mapping(uint256 => mapping(string => bool)) public isRecordSet;
-    mapping(uint256 => mapping(string => bool)) public isCondition;
-    mapping(uint256 => mapping(string => bool)) public isRecord;
-
-    uint256[] public recordIds; // array of recordId
-    uint256[] public varIds; // array of variable Ids
-
     /**
      * Sets parser address, creates new contextProgram instance, and setups contextProgram
      */
     constructor(address _parser, address _ownerAddr, address _dslContext) {
-        require(_parser != address(0), ErrorsAgreement.AGR12);
-        require(_ownerAddr != address(0), ErrorsAgreement.AGR12);
-        require(_dslContext != address(0), ErrorsAgreement.AGR12);
+        _checkZeroAddress(_parser);
+        _checkZeroAddress(_ownerAddr);
+        _checkZeroAddress(_dslContext);
         ownerAddr = _ownerAddr;
         contextDSL = _dslContext;
-        parser = IParser(_parser);
-        contextProgram = new ProgramContext();
+        parser = _parser;
+        contextProgram = address(new ProgramContext());
     }
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    function getStorageBool(bytes32 position) external view returns (bool data) {
-        return position.getStorageBool();
+    /**
+     * @dev archived any of the existing records by recordId.
+     * @param _recordId Record ID
+     */
+    function archiveRecord(uint256 _recordId) external onlyOwner {
+        _checkEmptyString(records[_recordId].transactionString);
+        records[_recordId].isArchived = true;
+
+        emit RecordArchived(_recordId);
     }
 
-    function getStorageAddress(bytes32 position) external view returns (address data) {
-        return position.getStorageAddress();
+    /**
+     * @dev unarchive any of the existing records by recordId
+     * @param _recordId Record ID
+     */
+    function unarchiveRecord(uint256 _recordId) external onlyOwner {
+        require(records[_recordId].isArchived != false, ErrorsAgreement.AGR10);
+        records[_recordId].isArchived = false;
+
+        emit RecordUnarchived(_recordId);
     }
 
-    function getStorageUint256(bytes32 position) external view returns (uint256 data) {
-        return position.getStorageUint256();
+    /**
+     * @dev activates the existing records by recordId, only awailable for ownerAddr
+     * @param _recordId Record ID
+     */
+    function activateRecord(uint256 _recordId) external onlyOwner {
+        _checkEmptyString(records[_recordId].transactionString);
+        records[_recordId].isActive = true;
+
+        emit RecordActivated(_recordId);
     }
 
-    function setStorageBool(
-        string memory varName,
-        bool data
-    ) external isReserved(varName) doesVariableExist(varName, ValueTypes.BOOL) {
-        bytes32 position = _addNewVariable(varName, ValueTypes.BOOL);
-        position.setStorageBool(data);
+    /**
+     * @dev deactivates the existing records by recordId, only awailable for ownerAddr
+     * @param _recordId Record ID
+     */
+    function deactivateRecord(uint256 _recordId) external onlyOwner {
+        require(records[_recordId].isActive != false, ErrorsAgreement.AGR10);
+        records[_recordId].isActive = false;
+
+        emit RecordDeactivated(_recordId);
     }
 
-    function setStorageAddress(
-        string memory varName,
-        address data
-    ) external isReserved(varName) doesVariableExist(varName, ValueTypes.ADDRESS) {
-        bytes32 position = _addNewVariable(varName, ValueTypes.ADDRESS);
-        position.setStorageAddress(data);
+    function parseFinished(address _preProc) external view returns (bool _result) {
+        uint256 recordId;
+        string memory _code;
+        for (uint256 i; i < recordIds.length; i++) {
+            uint256 count = 0;
+            recordId = recordIds[i];
+            _code = records[recordId].transactionString;
+            // check that the main transaction was set already
+            if (records[recordId].isRecordSet[_code]) {
+                for (uint256 j; j < records[recordId].conditionStrings.length; j++) {
+                    _code = records[recordId].conditionStrings[j];
+                    // check that the conditions were set already
+                    if (records[recordId].isConditionSet[_code]) {
+                        count++;
+                    }
+                }
+                return count == records[recordId].conditionStrings.length;
+            } else {
+                // is the record were not parsed it is no need to chack its conditions
+                return false;
+            }
+        }
     }
 
-    function setStorageBytes32(
-        string memory varName,
-        bytes32 data
-    ) external isReserved(varName) doesVariableExist(varName, ValueTypes.BYTES32) {
-        bytes32 position = _addNewVariable(varName, ValueTypes.BYTES32);
-        position.setStorageBytes32(data);
+    /**
+     * @dev Parse DSL code from the user and set the program bytecode in Agreement contract
+     * @param _preProc Preprocessor address
+     */
+    function parse(address _preProc) external returns (bool _result) {
+        string memory _code;
+        uint256 recordId;
+        for (uint256 i; i < recordIds.length; i++) {
+            recordId = recordIds[i];
+            _code = records[recordId].transactionString;
+            if (!records[recordId].isRecordSet[_code]) {
+                IParser(parser).parse(_preProc, contextDSL, contextProgram, _code);
+                records[recordId].isRecordSet[_code] = true;
+                records[recordId].transactionProgram = _getProgram();
+                emit Parsed(_preProc, _code);
+                return true;
+            } else {
+                for (uint256 j; j < records[recordId].conditionStrings.length; j++) {
+                    _code = records[recordId].conditionStrings[j];
+                    if (!records[recordId].isConditionSet[_code]) {
+                        IParser(parser).parse(_preProc, contextDSL, contextProgram, _code);
+                        records[recordId].isConditionSet[_code] = true;
+                        records[recordId].conditions.push(_getProgram());
+                        emit Parsed(_preProc, _code);
+                        return true;
+                    }
+                }
+            }
+        }
     }
 
-    function setStorageUint256(
-        string memory varName,
-        uint256 data
-    ) external isReserved(varName) doesVariableExist(varName, ValueTypes.UINT256) {
-        bytes32 position = _addNewVariable(varName, ValueTypes.UINT256);
-        position.setStorageUint256(data);
+    // TODO: rename to addRecord?
+    function update(
+        uint256 _recordId,
+        uint256[] memory _requiredRecords,
+        address[] memory _signatories,
+        string memory _transactionString,
+        string[] memory _conditionStrings
+    ) public {
+        _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
+        for (uint256 i = 0; i < _conditionStrings.length; i++) {
+            _addRecordCondition(_recordId, _conditionStrings[i]);
+        }
+        _addRecordTransaction(_recordId, _transactionString);
+        if (msg.sender == ownerAddr) {
+            records[_recordId].isActive = true;
+        }
+
+        emit NewRecord(
+            _recordId,
+            _requiredRecords,
+            _signatories,
+            _transactionString,
+            _conditionStrings
+        );
+    }
+
+    function execute(uint256 _recordId) external payable {
+        require(records[_recordId].isActive, ErrorsAgreement.AGR13);
+        require(_verify(_recordId), ErrorsAgreement.AGR1);
+        require(_validateRequiredRecords(_recordId), ErrorsAgreement.AGR2);
+        require(_validateConditions(_recordId, msg.value), ErrorsAgreement.AGR6);
+        require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
+        emit RecordExecuted(msg.sender, _recordId, msg.value, records[_recordId].transactionString);
     }
 
     /**
@@ -276,119 +276,6 @@ contract Agreement is LinkedList {
         _isActive = records[_recordId].isActive;
     }
 
-    /**
-     * @dev archived any of the existing records by recordId.
-     * @param _recordId Record ID
-     */
-    function archiveRecord(uint256 _recordId) external onlyOwner {
-        require(!StringUtils.equal(records[_recordId].transactionString, ''), ErrorsAgreement.AGR9);
-        records[_recordId].isArchived = true;
-
-        emit RecordArchived(_recordId);
-    }
-
-    /**
-     * @dev unarchive any of the existing records by recordId
-     * @param _recordId Record ID
-     */
-    function unarchiveRecord(uint256 _recordId) external onlyOwner {
-        require(records[_recordId].isArchived != false, ErrorsAgreement.AGR10);
-        records[_recordId].isArchived = false;
-
-        emit RecordUnarchived(_recordId);
-    }
-
-    /**
-     * @dev activates the existing records by recordId, only awailable for ownerAddr
-     * @param _recordId Record ID
-     */
-    function activateRecord(uint256 _recordId) external onlyOwner {
-        require(!StringUtils.equal(records[_recordId].transactionString, ''), ErrorsAgreement.AGR9);
-        records[_recordId].isActive = true;
-
-        emit RecordActivated(_recordId);
-    }
-
-    /**
-     * @dev deactivates the existing records by recordId, only awailable for ownerAddr
-     * @param _recordId Record ID
-     */
-    function deactivateRecord(uint256 _recordId) external onlyOwner {
-        require(records[_recordId].isActive != false, ErrorsAgreement.AGR10);
-        records[_recordId].isActive = false;
-
-        emit RecordDeactivated(_recordId);
-    }
-
-    /**
-     * @dev Parse DSL code from the user and set the program bytecode in Agreement contract
-     * @param _code DSL code input from the user
-     * @param _preProc Preprocessor address
-     * TODO: for loop for parsing till the function parse() returns TRUE value
-     * the main idea is not to provide _code parameter to the parser as we already have
-     * all of these records string
-     */
-    function parse(string memory _code, address _preProc) external {
-        uint256 _recordId = recordsByString[_code];
-        parser.parse(_preProc, contextDSL, address(contextProgram), _code);
-        bytes memory _p = IProgramContext(contextProgram).program();
-        /* 
-            TODO: additional checking if conditional and transaction has the same string
-
-            example:
-            transactionStr: 'bool true',
-            conditionStrings: ['bool true'],
-        */
-        if (isCondition[_recordId][_code] && !isConditionSet[_recordId][_code]) {
-            records[_recordId].conditions.push(_p);
-            isConditionSet[_recordId][_code] = true;
-        } else if (isRecord[_recordId][_code] && !isRecordSet[_recordId][_code]) {
-            records[_recordId].transactionProgram = _p;
-            isRecordSet[_recordId][_code] = true;
-        }
-        // TODO:
-        // else {
-        //     revert("DSL string is not present in Agreement or already set");
-        // }
-
-        emit Parsed(_preProc, _code);
-    }
-
-    // TODO: rename to addRecord?
-    function update(
-        uint256 _recordId,
-        uint256[] memory _requiredRecords,
-        address[] memory _signatories,
-        string memory _transactionString,
-        string[] memory _conditionStrings
-    ) public {
-        _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
-        for (uint256 i = 0; i < _conditionStrings.length; i++) {
-            _addRecordCondition(_recordId, _conditionStrings[i]);
-        }
-        _addRecordTransaction(_recordId, _transactionString);
-        if (msg.sender == ownerAddr) {
-            records[_recordId].isActive = true;
-        }
-
-        emit NewRecord(
-            _recordId,
-            _requiredRecords,
-            _signatories,
-            _transactionString,
-            _conditionStrings
-        );
-    }
-
-    function execute(uint256 _recordId) external payable {
-        require(records[_recordId].isActive, ErrorsAgreement.AGR13);
-        require(_verify(_recordId), ErrorsAgreement.AGR1);
-        require(_validateRequiredRecords(_recordId), ErrorsAgreement.AGR2);
-        require(_validateConditions(_recordId, msg.value), ErrorsAgreement.AGR6);
-        require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
-        emit RecordExecuted(msg.sender, _recordId, msg.value, records[_recordId].transactionString);
-    }
-
     /**********************
      * Internal Functions *
      *********************/
@@ -400,30 +287,13 @@ contract Agreement is LinkedList {
      */
     function _checkSignatories(address[] memory _signatories) internal view {
         require(_signatories.length != 0, ErrorsAgreement.AGR4);
-        require(_signatories[0] != address(0), ErrorsAgreement.AGR4);
+        _checkZeroAddress(_signatories[0]);
         if (_signatories.length > 1) {
             for (uint256 i = 0; i < _signatories.length; i++) {
-                require(_signatories[i] != address(0), ErrorsAgreement.AGR4);
-                require(_signatories[i] != contextProgram.ANYONE(), ErrorsAgreement.AGR4);
+                _checkZeroAddress(_signatories[i]);
+                require(_signatories[i] != _anyone(), ErrorsAgreement.AGR4);
             }
         }
-    }
-
-    /**
-     * @dev Created and save new Variable of seted Value
-     * @param _varName seted value name in type of string
-     * @param _valueType seted value type number
-     * @return position is a _varName in type of bytes32
-     */
-    function _addNewVariable(
-        string memory _varName,
-        ValueTypes _valueType
-    ) internal returns (bytes32 position) {
-        position = bytes4(keccak256(abi.encodePacked(_varName)));
-        uint256 arrPos = varIds.length;
-        varIds.push(arrPos);
-        Variable memory variable = Variable(_varName, _valueType, position, arrPos, msg.sender);
-        variables[arrPos] = variable;
     }
 
     /**
@@ -432,11 +302,12 @@ contract Agreement is LinkedList {
      * @return true if the user is allowed to execute the record, false - otherwise
      */
     function _verify(uint256 _recordId) internal view returns (bool) {
-        address[] memory signatoriesOfRecord = records[_recordId].signatories;
-        if (signatoriesOfRecord.length == 1 && signatoriesOfRecord[0] == contextProgram.ANYONE())
-            return true;
+        if (
+            records[_recordId].signatories.length == 1 &&
+            records[_recordId].signatories[0] == _anyone()
+        ) return true;
 
-        for (uint256 i = 0; i < signatoriesOfRecord.length; i++) {
+        for (uint256 i = 0; i < records[_recordId].signatories.length; i++) {
             if (records[_recordId].signatories[i] == msg.sender) return true;
         }
         return false;
@@ -480,10 +351,8 @@ contract Agreement is LinkedList {
      * @param _conditionStr DSL code for condition
      */
     function _addRecordCondition(uint256 _recordId, string memory _conditionStr) internal {
-        require(!_conditionStr.equal(''), ErrorsAgreement.AGR5);
+        _checkEmptyString(_conditionStr);
         records[_recordId].conditionStrings.push(_conditionStr);
-        isCondition[_recordId][_conditionStr] = true;
-        recordsByString[_conditionStr] = _recordId;
     }
 
     /**
@@ -493,15 +362,13 @@ contract Agreement is LinkedList {
     function _addRecordTransaction(uint256 _recordId, string memory _transactionString) internal {
         require(records[_recordId].conditionStrings.length > 0, ErrorsAgreement.AGR5);
         records[_recordId].transactionString = _transactionString;
-        isRecord[_recordId][_transactionString] = true;
-        recordsByString[_transactionString] = _recordId;
     }
 
     // TODO: add doc
     function _validateConditions(uint256 _recordId, uint256 _msgValue) internal returns (bool) {
         for (uint256 i = 0; i < records[_recordId].conditions.length; i++) {
             _execute(_msgValue, records[_recordId].conditions[i]);
-            if (IProgramContext(address(contextProgram)).stack().seeLast() == 0) return false;
+            if (_seeLast() == 0) return false;
         }
         return true;
     }
@@ -533,7 +400,7 @@ contract Agreement is LinkedList {
         if (executionProgress == signatoriesOfRecord.length) {
             records[_recordId].isExecuted = true;
         }
-        return IProgramContext(address(contextProgram)).stack().seeLast() == 0 ? false : true;
+        return _seeLast() == 0 ? false : true;
     }
 
     /**
@@ -542,10 +409,10 @@ contract Agreement is LinkedList {
      // TODO: possibly remove this argument
      * @param _program provided bytcode of the program
      */
-    function _execute(uint256 _msgValue, bytes memory _program) internal {
+    function _execute(uint256 _msgValue, bytes memory _program) private {
         IProgramContext(address(contextProgram)).setMsgValue(_msgValue);
         IProgramContext(address(contextProgram)).setProgram(_program);
-        Executor.execute(contextDSL, address(contextProgram));
+        Executor.execute(contextDSL, contextProgram);
     }
 
     /**
@@ -564,5 +431,25 @@ contract Agreement is LinkedList {
             }
         }
         return count;
+    }
+
+    function _seeLast() private view returns (uint256) {
+        return IProgramContext(contextProgram).stack().seeLast();
+    }
+
+    function _anyone() private view returns (address) {
+        return IProgramContext(contextProgram).ANYONE();
+    }
+
+    function _checkEmptyString(string memory _string) private pure {
+        require(!StringUtils.equal(_string, ''), ErrorsAgreement.AGR9);
+    }
+
+    function _checkZeroAddress(address _address) private pure {
+        require(_address != address(0), ErrorsAgreement.AGR12);
+    }
+
+    function _getProgram() private view returns (bytes memory) {
+        return IProgramContext(contextProgram).program();
     }
 }
