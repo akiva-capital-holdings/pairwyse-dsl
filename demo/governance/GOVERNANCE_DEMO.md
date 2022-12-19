@@ -1,5 +1,18 @@
 # Governance Demo
 
+## Prerequisites
+To setup Governance Demo use the same steps as in [Front End Demo V2](https://github.com/akiva-capital-holdings/solidity-dsl/blob/master/demo/v2/FE-demo-v2.md). Specifically read the following sections:
+* Setup Solidity SC
+* Setup FE
+* Setup Metamask
+* Reset MetaMask nonce (needed for localhost)
+
+However, please use the following commit IDs (insted of those, provided in Front End Demo V2):
+* Pairwyse DSL: [8a0b6923f89dba700e9587507649ee9e8e850a98](https://github.com/akiva-capital-holdings/solidity-dsl/commit/8a0b6923f89dba700e9587507649ee9e8e850a98)
+* Front End: [acb223214b4be906e4b694aab0b54d3fe5c010fc](https://github.com/akiva-capital-holdings/dsl-fe/commit/acb223214b4be906e4b694aab0b54d3fe5c010fc)
+
+## Steps
+
 1. **Solidity.** Run the hardhat node via `npx hardhat node` command. Keep it running in the separate terminal window.
 2. **Solidity.** Deploy contracts to localhost, copy & paste their addresses on Front End, replace agreement bytecode on Front End.
 
