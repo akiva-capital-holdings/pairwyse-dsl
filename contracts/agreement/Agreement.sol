@@ -161,13 +161,13 @@ contract Agreement {
         position.setStorageAddress(data);
     }
 
-    // function setStorageBytes32(
-    //     string memory varName,
-    //     bytes32 data
-    // ) external isReserved(varName) doesVariableExist(varName, ValueTypes.BYTES32) {
-    //     bytes32 position = _addNewVariable(varName, ValueTypes.BYTES32);
-    //     position.setStorageBytes32(data);
-    // }
+    function setStorageBytes32(
+        string memory varName,
+        bytes32 data
+    ) external isReserved(varName) doesVariableExist(varName, ValueTypes.BYTES32) {
+        bytes32 position = _addNewVariable(varName, ValueTypes.BYTES32);
+        position.setStorageBytes32(data);
+    }
 
     function setStorageUint256(
         string memory varName,
@@ -186,32 +186,32 @@ contract Agreement {
         return conditionContexts[_recordId].length;
     }
 
-    // /**
-    //  * @dev Based on Record ID returns the number of signatures
-    //  * @param _recordId Record ID
-    //  * @return Number of signatures in records
-    //  */
-    // function signatoriesLen(uint256 _recordId) external view returns (uint256) {
-    //     return signatories[_recordId].length;
-    // }
+    /**
+     * @dev Based on Record ID returns the number of signatures
+     * @param _recordId Record ID
+     * @return Number of signatures in records
+     */
+    function signatoriesLen(uint256 _recordId) external view returns (uint256) {
+        return signatories[_recordId].length;
+    }
 
-    // /**
-    //  * @dev Based on Record ID returns the number of required records
-    //  * @param _recordId Record ID
-    //  * @return Number of required records
-    //  */
-    // function requiredRecordsLen(uint256 _recordId) external view returns (uint256) {
-    //     return requiredRecords[_recordId].length;
-    // }
+    /**
+     * @dev Based on Record ID returns the number of required records
+     * @param _recordId Record ID
+     * @return Number of required records
+     */
+    function requiredRecordsLen(uint256 _recordId) external view returns (uint256) {
+        return requiredRecords[_recordId].length;
+    }
 
-    // /**
-    //  * @dev Based on Record ID returns the number of condition strings
-    //  * @param _recordId Record ID
-    //  * @return Number of Condition strings of the Record
-    //  */
-    // function conditionStringsLen(uint256 _recordId) external view returns (uint256) {
-    //     return conditionStrings[_recordId].length;
-    // }
+    /**
+     * @dev Based on Record ID returns the number of condition strings
+     * @param _recordId Record ID
+     * @return Number of Condition strings of the Record
+     */
+    function conditionStringsLen(uint256 _recordId) external view returns (uint256) {
+        return conditionStrings[_recordId].length;
+    }
 
     /**
      * @dev Sorted all records and return array of active records in Agreement

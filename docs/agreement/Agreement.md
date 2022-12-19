@@ -23,6 +23,17 @@ contract IContext context
 address ownerAddr
 ```
 
+### ValueTypes
+
+```solidity
+enum ValueTypes {
+  ADDRESS,
+  UINT256,
+  BYTES32,
+  BOOL
+}
+```
+
 ### Parsed
 
 ```solidity
@@ -68,7 +79,13 @@ event NewRecord(uint256 recordId, uint256[] requiredRecords, address[] signatori
 ### isReserved
 
 ```solidity
-modifier isReserved(bytes32 position)
+modifier isReserved(string varName)
+```
+
+### doesVariableExist
+
+```solidity
+modifier doesVariableExist(string varName, enum Agreement.ValueTypes valueType)
 ```
 
 ### onlyOwner
@@ -89,10 +106,28 @@ struct Record {
 }
 ```
 
+### Variable
+
+```solidity
+struct Variable {
+  string varName;
+  enum Agreement.ValueTypes valueType;
+  bytes32 varHex;
+  uint256 varId;
+  address varCreator;
+}
+```
+
 ### records
 
 ```solidity
 mapping(uint256 => struct Agreement.Record) records
+```
+
+### variables
+
+```solidity
+mapping(uint256 => struct Agreement.Variable) variables
 ```
 
 ### conditionContexts
@@ -131,6 +166,12 @@ mapping(uint256 => mapping(address => bool)) isExecutedBySignatory
 uint256[] recordIds
 ```
 
+### varIds
+
+```solidity
+uint256[] varIds
+```
+
 ### constructor
 
 ```solidity
@@ -166,25 +207,25 @@ function getStorageUint256(bytes32 position) external view returns (uint256 data
 ### setStorageBool
 
 ```solidity
-function setStorageBool(bytes32 position, bool data) external
+function setStorageBool(string varName, bool data) external
 ```
 
 ### setStorageAddress
 
 ```solidity
-function setStorageAddress(bytes32 position, address data) external
+function setStorageAddress(string varName, address data) external
 ```
 
 ### setStorageBytes32
 
 ```solidity
-function setStorageBytes32(bytes32 position, bytes32 data) external
+function setStorageBytes32(string varName, bytes32 data) external
 ```
 
 ### setStorageUint256
 
 ```solidity
-function setStorageUint256(bytes32 position, uint256 data) external
+function setStorageUint256(string varName, uint256 data) external
 ```
 
 ### conditionContextsLen
@@ -319,48 +360,6 @@ _archived any of the existing records by recordId._
 | ---- | ---- | ----------- |
 | _recordId | uint256 | Record ID |
 
-### unarchiveRecord
-
-```solidity
-function unarchiveRecord(uint256 _recordId) external
-```
-
-_unarchive any of the existing records by recordId_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _recordId | uint256 | Record ID |
-
-### activateRecord
-
-```solidity
-function activateRecord(uint256 _recordId) external
-```
-
-_activates the existing records by recordId, only awailable for ownerAddr_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _recordId | uint256 | Record ID |
-
-### deactivateRecord
-
-```solidity
-function deactivateRecord(uint256 _recordId) external
-```
-
-_deactivates the existing records by recordId, only awailable for ownerAddr_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _recordId | uint256 | Record ID |
-
 ### parse
 
 ```solidity
@@ -410,13 +409,34 @@ list or that 'ANYONE' address does not exist in signatures at all_
 | ---- | ---- | ----------- |
 | _signatories | address[] | the list of addresses |
 
+### _addNewVariable
+
+```solidity
+function _addNewVariable(string _varName, enum Agreement.ValueTypes _valueType) internal returns (bytes32 position)
+```
+
+_Created and save new Variable of seted Value_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _varName | string | seted value name in type of string |
+| _valueType | enum Agreement.ValueTypes | seted value type number |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| position | bytes32 | return _varName in type of bytes32 |
+
 ### _verify
 
 ```solidity
 function _verify(uint256 _recordId) internal view returns (bool)
 ```
 
-Verify that the user who wants to execute the record is amoung the signatories for this Record
+_Verify that the user who wants to execute the record is amoung the signatories for this Record_
 
 #### Parameters
 
@@ -436,7 +456,7 @@ Verify that the user who wants to execute the record is amoung the signatories f
 function _validateRequiredRecords(uint256 _recordId) internal view returns (bool)
 ```
 
-Check that all records required by this records were executed
+_Check that all records required by this records were executed_
 
 #### Parameters
 
