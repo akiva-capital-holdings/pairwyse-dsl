@@ -131,6 +131,35 @@ export const deployAgreement = async (hre: HardhatRuntimeEnvironment, multisigAd
   return agreement.address;
 };
 
+export const deployAgreementStore = async (
+  hre: HardhatRuntimeEnvironment,
+  multisigAddr: string
+) => {
+  const [parserAddr] = await deployBase(hre);
+
+  const AgreementStoreContract = await hre.ethers.getContractFactory('AgreementStore');
+  const agreementStore = await AgreementStoreContract.deploy(parserAddr, multisigAddr);
+  await agreementStore.deployed();
+
+  // Save Agreement bytecode into a file
+  const toFile = {
+    date: getPrettyDateTime(),
+    chainId: await getChainId(hre),
+    bytecode: AgreementStoreContract.bytecode,
+  };
+
+  const outputDir = path.join(__dirname, '..', '..', 'output');
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir);
+  }
+  fs.writeFileSync(
+    path.join(outputDir, `agreementStore.${hre.network.name}.json`),
+    JSON.stringify(toFile, null, 2)
+  );
+
+  return agreementStore.address;
+};
+
 export const deployGovernance = async (
   hre: HardhatRuntimeEnvironment,
   targetAgreementAddr: string,
