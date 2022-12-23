@@ -11,7 +11,7 @@ import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { AgreementStorage } from './AgreementStorage.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 // TODO: automatically make sure that no contract exceeds the maximum contract size
 
@@ -29,6 +29,7 @@ contract Agreement is IAgreement, AgreementStorage {
     address public contextProgram;
     address public contextDSL;
     address public ownerAddr;
+    uint256 nextParseIndex;
     mapping(uint256 => Record) public records; // recordId => Record struct
 
     modifier onlyOwner() {
@@ -96,28 +97,26 @@ contract Agreement is IAgreement, AgreementStorage {
         emit RecordDeactivated(_recordId);
     }
 
-    function parseFinished(address _preProc) external view returns (bool _result) {
+    function parseFinished() external view returns (bool _result) {
         uint256 recordId;
-        string memory _code;
+        string memory code;
         for (uint256 i; i < recordIds.length; i++) {
             uint256 count = 0;
             recordId = recordIds[i];
-            _code = records[recordId].transactionString;
+            code = records[recordId].transactionString;
             // check that the main transaction was set already
-            if (records[recordId].isRecordSet[_code]) {
+            if (records[recordId].isRecordSet[code]) {
                 for (uint256 j; j < records[recordId].conditionStrings.length; j++) {
-                    _code = records[recordId].conditionStrings[j];
+                    code = records[recordId].conditionStrings[j];
                     // check that the conditions were set already
-                    if (records[recordId].isConditionSet[_code]) {
+                    if (records[recordId].isConditionSet[code]) {
                         count++;
                     }
                 }
-                return count == records[recordId].conditionStrings.length;
-            } else {
-                // is the record were not parsed it is no need to chack its conditions
-                return false;
             }
+            if (count != records[recordId].conditionStrings.length) return false;
         }
+        return true;
     }
 
     /**
@@ -125,30 +124,42 @@ contract Agreement is IAgreement, AgreementStorage {
      * @param _preProc Preprocessor address
      */
     function parse(address _preProc) external returns (bool _result) {
-        string memory _code;
+        string memory code;
         uint256 recordId;
         for (uint256 i; i < recordIds.length; i++) {
             recordId = recordIds[i];
-            _code = records[recordId].transactionString;
-            if (!records[recordId].isRecordSet[_code]) {
-                IParser(parser).parse(_preProc, contextDSL, contextProgram, _code);
-                records[recordId].isRecordSet[_code] = true;
-                records[recordId].transactionProgram = _getProgram();
-                emit Parsed(_preProc, _code);
+            code = records[recordId].transactionString;
+            if (!records[recordId].isRecordSet[code]) {
+                _parse(recordId, _preProc, code, true);
                 return true;
             } else {
-                for (uint256 j; j < records[recordId].conditionStrings.length; j++) {
-                    _code = records[recordId].conditionStrings[j];
-                    if (!records[recordId].isConditionSet[_code]) {
-                        IParser(parser).parse(_preProc, contextDSL, contextProgram, _code);
-                        records[recordId].isConditionSet[_code] = true;
-                        records[recordId].conditions.push(_getProgram());
-                        emit Parsed(_preProc, _code);
+                for (uint256 j; j < conditionStringsLen(recordId); j++) {
+                    code = records[recordId].conditionStrings[j];
+                    if (!records[recordId].isConditionSet[code]) {
+                        _parse(recordId, _preProc, code, false);
                         return true;
                     }
                 }
             }
         }
+    }
+
+    function _parse(
+        uint256 _recordId,
+        address _preProc,
+        string memory _code,
+        bool _isRecord
+    ) internal {
+        IParser(parser).parse(_preProc, contextDSL, contextProgram, _code);
+        if (_isRecord) {
+            records[_recordId].isRecordSet[_code] = true;
+            records[_recordId].transactionProgram = _getProgram();
+        } else {
+            records[_recordId].isConditionSet[_code] = true;
+            records[_recordId].conditions.push(_getProgram());
+        }
+
+        emit Parsed(_preProc, _code);
     }
 
     // TODO: rename to addRecord?
@@ -184,42 +195,6 @@ contract Agreement is IAgreement, AgreementStorage {
         require(_validateConditions(_recordId, msg.value), ErrorsAgreement.AGR6);
         require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
         emit RecordExecuted(msg.sender, _recordId, msg.value, records[_recordId].transactionString);
-    }
-
-    /**
-     * @dev Based on Record ID returns the number of conditions
-     * @param _recordId Record ID
-     * @return Number of conditions of the Record
-     */
-    function conditionLen(uint256 _recordId) external view returns (uint256) {
-        return records[_recordId].conditions.length;
-    }
-
-    /**
-     * @dev Based on Record ID returns the number of signatures
-     * @param _recordId Record ID
-     * @return Number of signatures in records
-     */
-    function signatoriesLen(uint256 _recordId) external view returns (uint256) {
-        return records[_recordId].signatories.length;
-    }
-
-    /**
-     * @dev Based on Record ID returns the number of required records
-     * @param _recordId Record ID
-     * @return Number of required records
-     */
-    function requiredRecordsLen(uint256 _recordId) external view returns (uint256) {
-        return records[_recordId].requiredRecords.length;
-    }
-
-    /**
-     * @dev Based on Record ID returns the number of condition strings
-     * @param _recordId Record ID
-     * @return Number of Condition strings of the Record
-     */
-    function conditionStringsLen(uint256 _recordId) external view returns (uint256) {
-        return records[_recordId].conditionStrings.length;
     }
 
     function conditionString(uint256 _recordId, uint256 i) external view returns (string memory) {
@@ -368,6 +343,7 @@ contract Agreement is IAgreement, AgreementStorage {
     function _validateConditions(uint256 _recordId, uint256 _msgValue) internal returns (bool) {
         for (uint256 i = 0; i < records[_recordId].conditions.length; i++) {
             _execute(_msgValue, records[_recordId].conditions[i]);
+            // console.logBytes(records[_recordId].conditions[i]);
             if (_seeLast() == 0) return false;
         }
         return true;
@@ -385,6 +361,8 @@ contract Agreement is IAgreement, AgreementStorage {
         uint256 _msgValue,
         address _signatory
     ) internal returns (bool result) {
+        // console.log('\n');
+        // console.logBytes(records[_recordId].transactionProgram);
         require(!records[_recordId].isExecutedBySignatory[_signatory], ErrorsAgreement.AGR7);
         _execute(_msgValue, records[_recordId].transactionProgram);
         records[_recordId].isExecutedBySignatory[_signatory] = true;
@@ -433,6 +411,10 @@ contract Agreement is IAgreement, AgreementStorage {
         return count;
     }
 
+    function conditionStringsLen(uint256 _recordId) public view returns (uint256) {
+        return records[_recordId].conditionStrings.length;
+    }
+
     function _seeLast() private view returns (uint256) {
         return IProgramContext(contextProgram).stack().seeLast();
     }
@@ -442,7 +424,7 @@ contract Agreement is IAgreement, AgreementStorage {
     }
 
     function _checkEmptyString(string memory _string) private pure {
-        require(!StringUtils.equal(_string, ''), ErrorsAgreement.AGR9);
+        require(!StringUtils.equal(_string, ''), ErrorsAgreement.AGR5);
     }
 
     function _checkZeroAddress(address _address) private pure {

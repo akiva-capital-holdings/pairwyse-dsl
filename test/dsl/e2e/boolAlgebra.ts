@@ -11,6 +11,7 @@ import { checkStackTail } from '../../utils/utils';
 
 const { ethers } = hre;
 
+// works
 describe('Boolean Algebra', () => {
   let stack: Stack;
   let ctx: DSLContextMock;

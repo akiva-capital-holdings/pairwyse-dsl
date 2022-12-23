@@ -3,7 +3,8 @@ import { ethers, network } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ProgramContextMock } from '../../typechain-types/dsl/mocks';
 
-describe.skip('ProgramContext', () => {
+// works
+describe('ProgramContext', () => {
   let app: ProgramContextMock;
   let random: SignerWithAddress;
   let alice: SignerWithAddress;

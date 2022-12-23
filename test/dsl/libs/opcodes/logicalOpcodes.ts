@@ -11,6 +11,7 @@ import {
 } from '../../../../typechain-types';
 import { checkStack, pushToStack } from '../../../utils/utils';
 
+// works
 describe('Logical opcodes', () => {
   let StackCont: Stack__factory;
   let app: LogicalOpcodesMock;

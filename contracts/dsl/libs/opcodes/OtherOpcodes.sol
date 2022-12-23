@@ -9,7 +9,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
@@ -380,6 +380,7 @@ library OtherOpcodes {
 
     function opLoadLocal(address _ctxProgram, string memory funcSignature) public {
         bytes32 result = opLoadLocalGet(_ctxProgram, funcSignature);
+
         OpcodeHelpers.putToStack(_ctxProgram, uint256(result));
     }
 

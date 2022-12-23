@@ -11,7 +11,7 @@ import { ByteUtils } from './libs/ByteUtils.sol';
 import { Preprocessor } from './Preprocessor.sol';
 import { ErrorsParser } from './libs/Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev Parser of DSL code. This contract is a singleton and should not
@@ -671,7 +671,9 @@ contract Parser is IParser {
      * @dev Updates previous `program` with the next provided command
      */
     function _parseVariable(bytes memory _program) internal returns (bytes memory newProgram) {
-        newProgram = bytes.concat(_program, bytes4(keccak256(abi.encodePacked(_nextCmd()))));
+        bytes4 _cmd = bytes4(keccak256(abi.encodePacked(_nextCmd())));
+        // console.logBytes4(_cmd);
+        newProgram = bytes.concat(_program, _cmd);
     }
 
     /**

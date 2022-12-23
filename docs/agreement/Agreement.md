@@ -35,6 +35,12 @@ address contextDSL
 address ownerAddr
 ```
 
+### nextParseIndex
+
+```solidity
+uint256 nextParseIndex
+```
+
 ### records
 
 ```solidity
@@ -120,7 +126,7 @@ _deactivates the existing records by recordId, only awailable for ownerAddr_
 ### parseFinished
 
 ```solidity
-function parseFinished(address _preProc) external view returns (bool _result)
+function parseFinished() external view returns (bool _result)
 ```
 
 ### parse
@@ -137,6 +143,12 @@ _Parse DSL code from the user and set the program bytecode in Agreement contract
 | ---- | ---- | ----------- |
 | _preProc | address | Preprocessor address |
 
+### _parse
+
+```solidity
+function _parse(uint256 _recordId, address _preProc, string _code, bool _isRecord) internal
+```
+
 ### update
 
 ```solidity
@@ -148,86 +160,6 @@ function update(uint256 _recordId, uint256[] _requiredRecords, address[] _signat
 ```solidity
 function execute(uint256 _recordId) external payable
 ```
-
-### conditionLen
-
-```solidity
-function conditionLen(uint256 _recordId) external view returns (uint256)
-```
-
-_Based on Record ID returns the number of conditions_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _recordId | uint256 | Record ID |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | Number of conditions of the Record |
-
-### signatoriesLen
-
-```solidity
-function signatoriesLen(uint256 _recordId) external view returns (uint256)
-```
-
-_Based on Record ID returns the number of signatures_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _recordId | uint256 | Record ID |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | Number of signatures in records |
-
-### requiredRecordsLen
-
-```solidity
-function requiredRecordsLen(uint256 _recordId) external view returns (uint256)
-```
-
-_Based on Record ID returns the number of required records_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _recordId | uint256 | Record ID |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | Number of required records |
-
-### conditionStringsLen
-
-```solidity
-function conditionStringsLen(uint256 _recordId) external view returns (uint256)
-```
-
-_Based on Record ID returns the number of condition strings_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _recordId | uint256 | Record ID |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 | Number of Condition strings of the Record |
 
 ### conditionString
 
@@ -425,6 +357,12 @@ _return length of active records for getActiveRecords_
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint256 | count length of active records array |
+
+### conditionStringsLen
+
+```solidity
+function conditionStringsLen(uint256 _recordId) public view returns (uint256)
+```
 
 ### _seeLast
 

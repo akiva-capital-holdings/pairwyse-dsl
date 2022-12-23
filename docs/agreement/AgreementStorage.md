@@ -79,12 +79,6 @@ function setStorageBool(string varName, bool data) external
 function setStorageAddress(string varName, address data) external
 ```
 
-### setStorageBytes32
-
-```solidity
-function setStorageBytes32(string varName, bytes32 data) external
-```
-
 ### setStorageUint256
 
 ```solidity

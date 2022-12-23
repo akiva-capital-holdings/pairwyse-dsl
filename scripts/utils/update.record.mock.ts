@@ -44,11 +44,7 @@ export const unarchiveRecord = async (
 
 export const setRecord = async (data: any, app: AgreementMock) => {
   const { recordId, requiredRecords, signatories, conditionStrings, transactionStr } = data;
-  await app.addRecordBlueprint(recordId, requiredRecords, signatories);
-  for (let j = 0; j < conditionStrings.length; j++) {
-    await app.addRecordCondition(recordId, conditionStrings[j]);
-  }
-  await app.addRecordTransaction(recordId, transactionStr);
+  await app.update(recordId, requiredRecords, signatories, transactionStr, conditionStrings);
 };
 
 export const setRecords = async (records: Records[], app: AgreementMock) => {
@@ -57,27 +53,15 @@ export const setRecords = async (records: Records[], app: AgreementMock) => {
   }
 };
 
-export const parseConditions = async (
-  recordId: number,
-  app: AgreementMock | GovernanceMock,
-  preprAddr: string
-) => {
-  const condStrLen = (await app.conditionStringsLen(recordId)).toNumber();
-  for (let j = 0; j < condStrLen; j++) {
-    await app.parse(await app.conditionString(recordId, j), preprAddr);
+export const parse = async (app: AgreementMock | GovernanceMock, preprAddr: string) => {
+  let recLen = await app.parseFinished();
+
+  while (!recLen) {
+    await app.parse(preprAddr);
+    recLen = await app.parseFinished();
   }
 };
 
 export const setApp = async (ctx: ProgramContextMock, app: AgreementMock, sender: string) => {
   await ctx.setMsgSender(sender);
-};
-
-export const parseConditionsList = async (
-  recordIds: number[],
-  app: AgreementMock | GovernanceMock,
-  preprAddr: string
-) => {
-  for (let j = 0; j < recordIds.length; j++) {
-    await parseConditions(recordIds[j], app, preprAddr);
-  }
 };

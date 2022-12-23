@@ -5,7 +5,7 @@ import { ErrorsAgreement } from '../dsl/libs/Errors.sol';
 import { UnstructuredStorage } from '../dsl/libs/UnstructuredStorage.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * AgreementStorage used to manage all variables
@@ -86,14 +86,6 @@ contract AgreementStorage {
         position.setStorageAddress(data);
     }
 
-    function setStorageBytes32(
-        string memory varName,
-        bytes32 data
-    ) external isReserved(varName) doesVariableExist(varName, ValueTypes.BYTES32) {
-        bytes32 position = _addNewVariable(varName, ValueTypes.BYTES32);
-        position.setStorageBytes32(data);
-    }
-
     function setStorageUint256(
         string memory varName,
         uint256 data
@@ -117,5 +109,6 @@ contract AgreementStorage {
         Variable memory variable = Variable(_varName, _valueType, position, arrPos, msg.sender);
         variables[arrPos] = variable;
         position = bytes4(keccak256(abi.encodePacked(_varName)));
+        // console.logBytes32(position);
     }
 }

@@ -12,7 +12,7 @@ import {
   unarchiveRecord,
   setRecord,
   setRecords,
-  parseConditions,
+  parse,
   parseConditionsList,
 } from '../../scripts/utils/update.record.mock';
 
@@ -24,6 +24,7 @@ import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock
 
 const { ethers, network } = hre;
 
+//works
 describe('Simple Records in Agreement', () => {
   let app: AgreementMock;
   let multisig: MultisigMock;
@@ -57,8 +58,8 @@ describe('Simple Records in Agreement', () => {
     parser = await ethers.getContractAt('ParserMock', parserAddr);
 
     // Set variables
-    await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
-    await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
+    await app.setStorageAddress('RECEIVER', bob.address);
+    await app.setStorageUint256('LOCK_TIME', NEXT_MONTH);
   });
 
   beforeEach(async () => {
@@ -87,7 +88,7 @@ describe('Simple Records in Agreement', () => {
 
     it('should revert if `anyone` and zero addresses in the list', async () => {
       const signatories = [ethers.constants.AddressZero, anyone];
-      await expect(app.addRecordBlueprint(1, [], signatories)).to.be.revertedWith('AGR4');
+      await expect(app.addRecordBlueprint(1, [], signatories)).to.be.revertedWith('AGR12');
     });
 
     it('should revert if `anyone` was provided twice', async () => {
@@ -101,7 +102,7 @@ describe('Simple Records in Agreement', () => {
 
     it('should revert if `zeroAddress` address is the in the list', async () => {
       const signatories = [bob.address, alice.address, ethers.constants.AddressZero];
-      await expect(app.addRecordBlueprint(1, [], signatories)).to.be.revertedWith('AGR4');
+      await expect(app.addRecordBlueprint(1, [], signatories)).to.be.revertedWith('AGR12');
     });
   });
 
@@ -113,10 +114,10 @@ describe('Simple Records in Agreement', () => {
         .deploy(ethers.utils.parseEther('1000'));
 
       // Set variables
-      await app.setStorageAddress(hex4Bytes('ETH_RECEIVER'), bob.address);
-      await app.setStorageAddress(hex4Bytes('TOKEN_RECEIVER'), alice.address);
-      await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
-      await app.setStorageUint256(hex4Bytes('TOKEN_ADDR'), token.address);
+      await app.setStorageAddress('ETH_RECEIVER', bob.address);
+      await app.setStorageAddress('TOKEN_RECEIVER', alice.address);
+      await app.setStorageUint256('LOCK_TIME', NEXT_MONTH);
+      await app.setStorageUint256('TOKEN_ADDR', token.address);
 
       // Define Records
       records.push(
@@ -141,13 +142,7 @@ describe('Simple Records in Agreement', () => {
       const { recordId: recordId1 } = records[1];
       expect(records.length).equal(2);
 
-      // Parse all conditions and a transaction #1
-      await parseConditions(recordId0, app, preprAddr);
-      await app.parse(records[0].transactionStr, preprAddr);
-
-      // Parse all conditions and a transaction #2
-      await parseConditions(recordId1, app, preprAddr);
-      await app.parse(records[1].transactionStr, preprAddr);
+      await parse(app, preprAddr);
 
       // Top up contract (ETH)
       await anybody.sendTransaction({ to: app.address, value: oneEth });
@@ -155,14 +150,10 @@ describe('Simple Records in Agreement', () => {
       // Top up contract (tokens)
       await token.transfer(app.address, tenTokens);
       expect(await token.balanceOf(app.address)).to.equal(tenTokens);
-
       // Execute transactions
-      await expect(await app.fulfill(recordId0, 0, alice.address)).to.changeEtherBalance(
-        bob,
-        oneEth
-      );
+      await expect(await app.fulfill(1, 0, alice.address)).to.changeEtherBalance(bob, oneEth);
       await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-      await expect(() => app.fulfill(recordId1, 0, bob.address)).to.changeTokenBalance(
+      await expect(() => app.fulfill(2, 0, bob.address)).to.changeTokenBalance(
         token,
         alice,
         tenTokens
@@ -214,10 +205,10 @@ describe('Simple Records in Agreement', () => {
         .deploy(ethers.utils.parseEther('1000'));
 
       // Set variables
-      await app.setStorageAddress(hex4Bytes('TOKEN_ADDR'), token.address);
-      await app.setStorageAddress(hex4Bytes('BOB'), bob.address);
-      await app.setStorageAddress(hex4Bytes('ALICE'), alice.address);
-      await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
+      await app.setStorageAddress('TOKEN_ADDR', token.address);
+      await app.setStorageAddress('BOB', bob.address);
+      await app.setStorageAddress('ALICE', alice.address);
+      await app.setStorageUint256('LOCK_TIME', NEXT_MONTH);
 
       const record = {
         recordId: 8,
@@ -231,11 +222,7 @@ describe('Simple Records in Agreement', () => {
 
       await setRecord(record, app);
 
-      await app.parse(transactionStr, preprAddr);
-      await parseConditions(recordId, app, preprAddr);
-      // Parse all conditions and a transaction
-      const condCtxLen = (await app.conditionLen(recordId)).toNumber();
-      expect(condCtxLen).to.equal(1);
+      await parse(app, preprAddr);
       const condStrLen = (await app.conditionStringsLen(recordId)).toNumber();
       expect(condStrLen).to.equal(1);
 
@@ -258,12 +245,9 @@ describe('Simple Records in Agreement', () => {
 
       await setRecord(records[0], app);
 
-      await app.parse(transactionStr, preprAddr);
-      await parseConditions(recordId, app, preprAddr);
+      await parse(app, preprAddr);
 
       // Parse all conditions and a transaction
-      const condCtxLen = (await app.conditionLen(recordId)).toNumber();
-      expect(condCtxLen).to.equal(1);
       const condStrLen = (await app.conditionStringsLen(recordId)).toNumber();
       expect(condStrLen).to.equal(1);
 
@@ -285,11 +269,8 @@ describe('Simple Records in Agreement', () => {
       await setRecord(records[0], app);
 
       // Parse all conditions and a transaction
-      await app.parse(transactionStr, preprAddr);
-      await parseConditions(recordId, app, preprAddr);
+      await parse(app, preprAddr);
 
-      const condLen = (await app.conditionLen(recordId)).toNumber();
-      expect(condLen).to.equal(1);
       const condStrLen = (await app.conditionStringsLen(recordId)).toNumber();
       expect(condStrLen).to.equal(1);
 
@@ -334,27 +315,29 @@ describe('Simple Records in Agreement', () => {
 
   describe('Get actual record Id', () => {
     before(async () => {
+      let mainRec = 'sendEth RECEIVER 1000000000000000000';
+      let mainCond = 'blockTimestamp > var LOCK_TIME';
       records.push(
         {
           recordId: 96,
           requiredRecords: [],
           signatories: [alice.address],
-          transactionStr: 'sendEth RECEIVER 1000000000000000000',
-          conditionStrings: ['blockTimestamp > var LOCK_TIME'],
+          transactionStr: mainRec,
+          conditionStrings: [mainCond],
         },
         {
           recordId: 956,
           requiredRecords: [],
           signatories: [alice.address],
-          transactionStr: 'sendEth RECEIVER 1000000000000000000',
-          conditionStrings: ['blockTimestamp > var LOCK_TIME'],
+          transactionStr: mainRec,
+          conditionStrings: [mainCond],
         },
         {
           recordId: 11111,
           requiredRecords: [],
           signatories: [alice.address],
-          transactionStr: 'sendEth RECEIVER 1000000000000000000',
-          conditionStrings: ['blockTimestamp > var LOCK_TIME'],
+          transactionStr: mainRec,
+          conditionStrings: [mainCond],
         }
       );
 
@@ -364,8 +347,7 @@ describe('Simple Records in Agreement', () => {
 
         await setRecord(records[i], app);
 
-        await parseConditions(recordId, app, preprAddr);
-        await app.parse(transactionStr, preprAddr);
+        await parse(app, preprAddr);
 
         // Top up contract
         await anybody.sendTransaction({ to: app.address, value: oneEth });
@@ -373,12 +355,20 @@ describe('Simple Records in Agreement', () => {
         // Advance time
         // await ethers.provider.send('evm_increaseTime', [ONE_MONTH + ONE_MONTH]);
         await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-        await parseConditions(recordId, app, preprAddr);
+        await ethers.provider.send('evm_mine');
 
         // Validate again
         expect(await app.callStatic.validateConditions(recordId, 0)).equal(true);
       }
-
+      let r96 = await app.records(96);
+      let r956 = await app.records(956);
+      let r11111 = await app.records(11111);
+      expect(r96.transactionString).equal(mainRec);
+      expect(r96.isActive).equal(false);
+      expect(r956.transactionString).equal(mainRec);
+      expect(r956.isActive).equal(false);
+      expect(r11111.transactionString).equal(mainRec);
+      expect(r11111.isActive).equal(false);
       expect(records.length).equal(3);
     });
 
@@ -455,7 +445,7 @@ describe('Simple Records in Agreement', () => {
     before(async () => {
       const LBT = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp;
-      await app.setStorageUint256(hex4Bytes('LOCK_TIME'), LBT + ONE_MONTH);
+      await app.setStorageUint256('LOCK_TIME', LBT + ONE_MONTH);
 
       records.push({
         recordId,
@@ -466,15 +456,14 @@ describe('Simple Records in Agreement', () => {
       });
 
       await setRecord(records[0], app);
-      await parseConditions(recordId, app, preprAddr);
-      await app.parse(transactionStr, preprAddr);
+      await parse(app, preprAddr);
     });
 
     it('record with one transaction', async () => {
       await activateRecord(app, multisig, recordId);
 
       // Parse all conditions and a transaction
-      let condLen = (await app.conditionLen(recordId)).toNumber();
+      let condLen = (await app.conditionStringsLen(recordId)).toNumber();
       expect(condLen).to.equal(1);
 
       // Top up contract
@@ -489,10 +478,10 @@ describe('Simple Records in Agreement', () => {
       // Advance time
       // await ethers.provider.send('evm_increaseTime', [ONE_MONTH + ONE_MONTH]);
       await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-      await parseConditions(recordId, app, preprAddr);
+      await ethers.provider.send('evm_mine');
 
       // Parse all conditions and a transaction
-      condLen = (await app.conditionLen(recordId)).toNumber();
+      condLen = (await app.conditionStringsLen(recordId)).toNumber();
       expect(condLen).to.equal(1);
 
       // Validate again
@@ -590,8 +579,8 @@ describe('Simple Records in Agreement', () => {
       const [aggr2Addr] = await deployAgreementMock(hre, appAddr);
 
       const aggr2 = await ethers.getContractAt('AgreementMock', aggr2Addr);
-      await aggr1.setStorageUint256(hex4Bytes('RECORD_ID'), 23);
-      await aggr1.setStorageAddress(hex4Bytes('AGREEMENT_ADDR'), aggr2Addr);
+      await aggr1.setStorageUint256('RECORD_ID', 23);
+      await aggr1.setStorageAddress('AGREEMENT_ADDR', aggr2Addr);
       const input = 'enableRecord RECORD_ID at AGREEMENT_ADDR';
 
       // uses for the Agreement2 (test will check that stack has
@@ -621,12 +610,10 @@ describe('Simple Records in Agreement', () => {
       await setRecord(record2, aggr2);
 
       // parse all conditions and a transaction #1
-      await parseConditions(13, aggr1, preprAddr);
-      await aggr1.parse(record.transactionStr, preprAddr);
+      await parse(aggr1, preprAddr);
 
       // parse all conditions and a transaction #2
-      await parseConditions(23, aggr2, preprAddr);
-      await aggr2.parse(record2.transactionStr, preprAddr);
+      await parse(aggr2, preprAddr);
 
       // check that record can be activated for the main Aggreement
       let recordResult = await aggr1.records(13);
@@ -679,12 +666,12 @@ describe('Simple Records in Agreement', () => {
 
       const aggr2 = await ethers.getContractAt('AgreementMock', aggr2Addr);
       const aggr3 = await ethers.getContractAt('AgreementMock', aggr3Addr);
-      await aggr1.setStorageUint256(hex4Bytes('RECORD_ID_1'), 34);
-      await aggr1.setStorageUint256(hex4Bytes('RECORD_ID_2'), 15);
-      await aggr1.setStorageUint256(hex4Bytes('RECORD_ID_3'), 41);
-      await aggr1.setStorageAddress(hex4Bytes('AGREEMENT_ADDR'), aggr2Addr);
-      await aggr1.setStorageAddress(hex4Bytes('AGREEMENT_ADDR_2'), aggr2Addr);
-      await aggr1.setStorageAddress(hex4Bytes('AGREEMENT_ADDR_3'), aggr3Addr);
+      await aggr1.setStorageUint256('RECORD_ID_1', 34);
+      await aggr1.setStorageUint256('RECORD_ID_2', 15);
+      await aggr1.setStorageUint256('RECORD_ID_3', 41);
+      await aggr1.setStorageAddress('AGREEMENT_ADDR', aggr2Addr);
+      await aggr1.setStorageAddress('AGREEMENT_ADDR_2', aggr2Addr);
+      await aggr1.setStorageAddress('AGREEMENT_ADDR_3', aggr3Addr);
       // uses for the Agreement
       const input = `
         enableRecord RECORD_ID_1 at AGREEMENT_ADDR
@@ -739,13 +726,9 @@ describe('Simple Records in Agreement', () => {
       await setRecord(record3, aggr3);
 
       // parse all conditions and a transactions
-      await parseConditions(40, aggr1, preprAddr);
-      await parseConditionsList([34, 15], aggr2, preprAddr);
-      await parseConditions(41, aggr3, preprAddr);
-      await aggr1.parse(record.transactionStr, preprAddr);
-      await aggr2.parse(records2[0].transactionStr, preprAddr);
-      await aggr2.parse(records2[1].transactionStr, preprAddr);
-      await aggr3.parse(record3.transactionStr, preprAddr);
+      await parse(aggr1, preprAddr);
+      await parse(aggr2, preprAddr);
+      await parse(aggr3, preprAddr);
 
       // check that record can be activated for the main Aggreement
       let recordResult = await aggr1.records(40);
@@ -804,18 +787,18 @@ describe('Simple Records in Agreement', () => {
 
       // check that stacks were changed for the Aggreement2, Aggreement3
       await checkStackTail(stack2, [1, 1, 1, 1]); // bool true, enableRecord, enableRecord, enableRecord
-      await checkStackTail(stack21, [6]); // uint 6
+      await checkStackTail(stack21, [1, 6]); // bool true, uint 6
       await checkStackTail(stack3, []);
 
       await aggr2.connect(bob).execute(15);
 
       await checkStackTail(stack2, [1, 1, 1, 1]); // bool true, enableRecord, enableRecord, enableRecord
-      await checkStackTail(stack21, [6, 1, 66]); // uint 6, bool true, uint 66
+      await checkStackTail(stack21, [1, 6, 1, 66]); //  bool true, uint 6, bool true, uint 66
       await checkStackTail(stack3, []);
 
       await aggr3.connect(bob).execute(41);
       await checkStackTail(stack2, [1, 1, 1, 1]); // bool true, enableRecord, enableRecord, enableRecord
-      await checkStackTail(stack21, [6, 1, 66]); // uint 6, bool true, uint 66
+      await checkStackTail(stack21, [1, 6, 1, 66]); // bool true, uint 6, bool true, uint 66
       await checkStackTail(stack3, [1, 45]); // bool true, uint 45
     });
   });

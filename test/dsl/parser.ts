@@ -8,6 +8,7 @@ import { hex4Bytes, bnToLongHexString } from '../utils/utils';
 
 const { ethers, network } = hre;
 
+// works
 describe('Parser', () => {
   let sender: SignerWithAddress;
   let parser: ParserMock;
