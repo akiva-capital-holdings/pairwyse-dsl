@@ -30,7 +30,10 @@ async function main() {
     },
   });
 
-  fs.writeFileSync(path.join(__dirname, 'agreement.bytecode'), AgreementContract.bytecode);
+  fs.writeFileSync(
+    path.join(__dirname, '../bytecodeFolder/agreement.bytecode'),
+    AgreementContract.bytecode
+  );
 }
 
 main();

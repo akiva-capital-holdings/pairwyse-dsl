@@ -9,7 +9,10 @@ async function main() {
 
   const tokenContract = await hre.ethers.getContractFactory('ERC20Token');
 
-  fs.writeFileSync(path.join(__dirname, 'token.bytecode'), tokenContract.bytecode);
+  fs.writeFileSync(
+    path.join(__dirname, '../bytecodeFolder/ERC20Token.bytecode'),
+    tokenContract.bytecode
+  );
 }
 
 main();
