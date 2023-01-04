@@ -1914,7 +1914,7 @@ describe('End-to-end', () => {
         otherOpcodesLibAddr,
       ] = await deployOpcodeLibs(hre);
       const [parserAddr, executorLibAddr, preprAddr] = await deployBaseMock(hre);
-      const GovernanceMock = await hre.ethers.getContractFactory('GovernanceMock', {
+      const Governance = await hre.ethers.getContractFactory('Governance', {
         libraries: {
           Executor: executorLibAddr,
         },
@@ -1930,7 +1930,7 @@ describe('End-to-end', () => {
         otherOpcodesLibAddr
       );
       await DSLctx.deployed();
-      const governance = await GovernanceMock.deploy(
+      const governance = await Governance.deploy(
         parserAddr,
         alice.address,
         tokenAddr,
