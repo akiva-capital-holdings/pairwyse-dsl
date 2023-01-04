@@ -64,7 +64,10 @@ contract Governance is Agreement {
      * Uses a simple condition string `bool true`.
      * Records still have to be parsed using a preprocessor before execution. Such record becomes
      * non-upgradable. Check `isUpgradableRecord` modifier
-     * // TODO: add parameters in the doc
+     * @param _recordId is the record ID
+     * @param _record is a string of the main record for execution
+     * @param _condition is a string of the condition that will be checked before record execution
+     * @param _requiredRecordsLength is a flag for required records before execution
      */
     function _setParameters(
         uint256 _recordId,

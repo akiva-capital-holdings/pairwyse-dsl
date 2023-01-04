@@ -39,7 +39,7 @@ function addRecordCondition(uint256 _recordId, string _conditionStr) public
 ### addRecordTransaction
 
 ```solidity
-function addRecordTransaction(uint256 _recordId, string _transactionString) public
+function addRecordTransaction(uint256 _recordId, string _recordString) public
 ```
 
 ### fulfill

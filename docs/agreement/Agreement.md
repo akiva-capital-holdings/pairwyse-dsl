@@ -152,7 +152,7 @@ function _parse(uint256 _recordId, address _preProc, string _code, bool _isRecor
 ### update
 
 ```solidity
-function update(uint256 _recordId, uint256[] _requiredRecords, address[] _signatories, string _transactionString, string[] _conditionStrings) public
+function update(uint256 _recordId, uint256[] _requiredRecords, address[] _signatories, string _recordString, string[] _conditionStrings) public
 ```
 
 ### execute
@@ -184,7 +184,7 @@ _Sorted all records and return array of active records in Agreement_
 ### getRecord
 
 ```solidity
-function getRecord(uint256 _recordId) external view returns (uint256[] _requiredRecords, address[] _signatories, string[] _conditions, string _transaction, bool _isActive)
+function getRecord(uint256 _recordId) external view returns (uint256[] _requiredRecords, address[] _signatories, string[] _conditions, string _record, bool _isActive)
 ```
 
 _return valuses for preview record before execution_
@@ -202,7 +202,7 @@ _return valuses for preview record before execution_
 | _requiredRecords | uint256[] | array of required records in the record |
 | _signatories | address[] | array of signatories in the record |
 | _conditions | string[] | array of conditions in the record |
-| _transaction | string | string of transaction |
+| _record | string | string of record DSL transaction |
 | _isActive | bool | true if the record is active |
 
 ### _checkSignatories
@@ -295,17 +295,33 @@ inside Record_
 ### _addRecordTransaction
 
 ```solidity
-function _addRecordTransaction(uint256 _recordId, string _transactionString) internal
+function _addRecordTransaction(uint256 _recordId, string _recordString) internal
 ```
 
 _Adds a transaction that should be executed if all
 conditions inside Record are met_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _recordId | uint256 | Record ID |
+| _recordString | string | DSL code for record string |
 
 ### _validateConditions
 
 ```solidity
 function _validateConditions(uint256 _recordId, uint256 _msgValue) internal returns (bool)
 ```
+
+_Validate all conditions for the certain record ID_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _recordId | uint256 | Record ID to execute |
+| _msgValue | uint256 | Value that were sent along with function execution // TODO: possibly remove this argument |
 
 ### _fulfill
 

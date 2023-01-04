@@ -13,14 +13,14 @@ interface IAgreement {
         address indexed signatory,
         uint256 indexed recordId,
         uint256 providedAmount,
-        string transaction
+        string record
     );
 
     event NewRecord(
         uint256 recordId,
         uint256[] requiredRecords, // required transactions that have to be executed
         address[] signatories, // addresses that can execute the transaction
-        string transaction, // DSL code string ex. `uint256 5 > uint256 3`
+        string record, // DSL code string ex. `uint256 5 > uint256 3`
         //  DSL code strings that have to be executed successfully before the `transaction DSL code`
         string[] conditionStrings
     );
@@ -34,9 +34,9 @@ interface IAgreement {
         bool isActive;
         uint256[] requiredRecords;
         address[] signatories;
-        string transactionString;
+        string recordString;
         string[] conditionStrings;
-        bytes transactionProgram;
+        bytes recordProgram;
         bytes[] conditions; // condition program in bytes
         mapping(address => bool) isExecutedBySignatory;
         mapping(string => bool) isConditionSet;

@@ -159,7 +159,7 @@ export const createBulkVotes = async (governance: Governance, accounts: SignerWi
  */
 export const testTwoInputOneOutput = async (
   ST: Stack__factory,
-  context: Context,
+  context: ProgramContext,
   opcodes: Contract,
   opFunc: OpConditionalTxFunc,
   value1: number,

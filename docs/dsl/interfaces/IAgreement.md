@@ -33,13 +33,13 @@ event RecordDeactivated(uint256 recordId)
 ### RecordExecuted
 
 ```solidity
-event RecordExecuted(address signatory, uint256 recordId, uint256 providedAmount, string transaction)
+event RecordExecuted(address signatory, uint256 recordId, uint256 providedAmount, string record)
 ```
 
 ### NewRecord
 
 ```solidity
-event NewRecord(uint256 recordId, uint256[] requiredRecords, address[] signatories, string transaction, string[] conditionStrings)
+event NewRecord(uint256 recordId, uint256[] requiredRecords, address[] signatories, string record, string[] conditionStrings)
 ```
 
 ### Record
@@ -51,9 +51,9 @@ struct Record {
   bool isActive;
   uint256[] requiredRecords;
   address[] signatories;
-  string transactionString;
+  string recordString;
   string[] conditionStrings;
-  bytes transactionProgram;
+  bytes recordProgram;
   bytes[] conditions;
   mapping(address => bool) isExecutedBySignatory;
   mapping(string => bool) isConditionSet;

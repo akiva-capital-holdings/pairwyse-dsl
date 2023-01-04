@@ -59,7 +59,7 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
      * @param _recordId Record ID
      */
     function archiveRecord(uint256 _recordId) external onlyOwner {
-        _checkEmptyString(records[_recordId].transactionString);
+        _checkEmptyString(records[_recordId].recordString);
         records[_recordId].isArchived = true;
 
         emit RecordArchived(_recordId);
@@ -81,7 +81,7 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
      * @param _recordId Record ID
      */
     function activateRecord(uint256 _recordId) external onlyOwner {
-        _checkEmptyString(records[_recordId].transactionString);
+        _checkEmptyString(records[_recordId].recordString);
         records[_recordId].isActive = true;
 
         emit RecordActivated(_recordId);
@@ -104,7 +104,7 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
         for (uint256 i; i < recordIds.length; i++) {
             uint256 count = 0;
             recordId = recordIds[i];
-            code = records[recordId].transactionString;
+            code = records[recordId].recordString;
             // check that the main transaction was set already
             if (records[recordId].isRecordSet[code]) {
                 for (uint256 j; j < records[recordId].conditionStrings.length; j++) {
@@ -129,7 +129,7 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
         uint256 recordId;
         for (uint256 i; i < recordIds.length; i++) {
             recordId = recordIds[i];
-            code = records[recordId].transactionString;
+            code = records[recordId].recordString;
             if (!records[recordId].isRecordSet[code]) {
                 _parse(recordId, _preProc, code, true);
                 return true;
@@ -154,7 +154,7 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
         IParser(parser).parse(_preProc, contextDSL, contextProgram, _code);
         if (_isRecord) {
             records[_recordId].isRecordSet[_code] = true;
-            records[_recordId].transactionProgram = _getProgram();
+            records[_recordId].recordProgram = _getProgram();
         } else {
             records[_recordId].isConditionSet[_code] = true;
             records[_recordId].conditions.push(_getProgram());
@@ -168,25 +168,19 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
         uint256 _recordId,
         uint256[] memory _requiredRecords,
         address[] memory _signatories,
-        string memory _transactionString,
+        string memory _recordString,
         string[] memory _conditionStrings
     ) public {
         _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
         for (uint256 i = 0; i < _conditionStrings.length; i++) {
             _addRecordCondition(_recordId, _conditionStrings[i]);
         }
-        _addRecordTransaction(_recordId, _transactionString);
+        _addRecordTransaction(_recordId, _recordString);
         if (msg.sender == ownerAddr) {
             records[_recordId].isActive = true;
         }
 
-        emit NewRecord(
-            _recordId,
-            _requiredRecords,
-            _signatories,
-            _transactionString,
-            _conditionStrings
-        );
+        emit NewRecord(_recordId, _requiredRecords, _signatories, _recordString, _conditionStrings);
     }
 
     function execute(uint256 _recordId) external payable {
@@ -195,7 +189,7 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
         require(_validateRequiredRecords(_recordId), ErrorsAgreement.AGR2);
         require(_validateConditions(_recordId, msg.value), ErrorsAgreement.AGR6);
         require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
-        emit RecordExecuted(msg.sender, _recordId, msg.value, records[_recordId].transactionString);
+        emit RecordExecuted(msg.sender, _recordId, msg.value, records[_recordId].recordString);
     }
 
     function conditionString(uint256 _recordId, uint256 i) external view returns (string memory) {
@@ -229,7 +223,7 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
      * @return _requiredRecords array of required records in the record
      * @return _signatories array of signatories in the record
      * @return _conditions array of conditions in the record
-     * @return _transaction string of transaction
+     * @return _record string of record DSL transaction
      * @return _isActive true if the record is active
      */
     function getRecord(
@@ -241,14 +235,14 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
             uint256[] memory _requiredRecords,
             address[] memory _signatories,
             string[] memory _conditions,
-            string memory _transaction,
+            string memory _record,
             bool _isActive
         )
     {
         _requiredRecords = records[_recordId].requiredRecords;
         _signatories = records[_recordId].signatories;
         _conditions = records[_recordId].conditionStrings;
-        _transaction = records[_recordId].transactionString;
+        _record = records[_recordId].recordString;
         _isActive = records[_recordId].isActive;
     }
 
@@ -334,13 +328,19 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
     /**
      * @dev Adds a transaction that should be executed if all
      * conditions inside Record are met
+     * @param _recordId Record ID
+     * @param _recordString DSL code for record string
      */
-    function _addRecordTransaction(uint256 _recordId, string memory _transactionString) internal {
+    function _addRecordTransaction(uint256 _recordId, string memory _recordString) internal {
         require(records[_recordId].conditionStrings.length > 0, ErrorsAgreement.AGR5);
-        records[_recordId].transactionString = _transactionString;
+        records[_recordId].recordString = _recordString;
     }
 
-    // TODO: add doc
+    /**
+     * @dev Validate all conditions for the certain record ID
+     * @param _recordId Record ID to execute
+     * @param _msgValue Value that were sent along with function execution // TODO: possibly remove this argument
+     */
     function _validateConditions(uint256 _recordId, uint256 _msgValue) internal returns (bool) {
         for (uint256 i = 0; i < records[_recordId].conditions.length; i++) {
             _execute(_msgValue, records[_recordId].conditions[i]);
@@ -362,7 +362,7 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
         address _signatory
     ) internal returns (bool result) {
         require(!records[_recordId].isExecutedBySignatory[_signatory], ErrorsAgreement.AGR7);
-        _execute(_msgValue, records[_recordId].transactionProgram);
+        _execute(_msgValue, records[_recordId].recordProgram);
         records[_recordId].isExecutedBySignatory[_signatory] = true;
 
         // Check if record was executed by all signatories

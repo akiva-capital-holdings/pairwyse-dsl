@@ -41,8 +41,16 @@ function _setParameters(uint256 _recordId, string _record, string _condition, ui
 _Uploads 4 pre-defined records to Governance contract directly.
 Uses a simple condition string `bool true`.
 Records still have to be parsed using a preprocessor before execution. Such record becomes
-non-upgradable. Check `isUpgradableRecord` modifier
-// TODO: add parameters in the doc_
+non-upgradable. Check `isUpgradableRecord` modifier_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _recordId | uint256 | is the record ID |
+| _record | string | is a string of the main record for execution |
+| _condition | string | is a string of the condition that will be checked before record execution |
+| _requiredRecordsLength | uint256 | is a flag for required records before execution |
 
 ### _setBaseRecord
 

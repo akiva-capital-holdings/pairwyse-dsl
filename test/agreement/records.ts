@@ -361,11 +361,11 @@ describe('Simple Records in Agreement', () => {
       let r96 = await app.records(96);
       let r956 = await app.records(956);
       let r11111 = await app.records(11111);
-      expect(r96.transactionString).equal(mainRec);
+      expect(r96.recordString).equal(mainRec);
       expect(r96.isActive).equal(false);
-      expect(r956.transactionString).equal(mainRec);
+      expect(r956.recordString).equal(mainRec);
       expect(r956.isActive).equal(false);
-      expect(r11111.transactionString).equal(mainRec);
+      expect(r11111.recordString).equal(mainRec);
       expect(r11111.isActive).equal(false);
       expect(records.length).equal(3);
     });

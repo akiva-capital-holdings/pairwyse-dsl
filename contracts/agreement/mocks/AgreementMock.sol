@@ -34,8 +34,8 @@ contract AgreementMock is Agreement {
         _addRecordCondition(_recordId, _conditionStr);
     }
 
-    function addRecordTransaction(uint256 _recordId, string memory _transactionString) public {
-        _addRecordTransaction(_recordId, _transactionString);
+    function addRecordTransaction(uint256 _recordId, string memory _recordString) public {
+        _addRecordTransaction(_recordId, _recordString);
     }
 
     function fulfill(
