@@ -4,7 +4,6 @@ import { parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
 import { StringUtilsMock } from '../../../typechain-types';
 
-// works
 describe('StringUtils', () => {
   const num = '123456789012345678901234567890';
   let app: StringUtilsMock;

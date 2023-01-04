@@ -26,7 +26,6 @@ import { deployOpcodeLibs } from '../../../../scripts/utils/deploy.utils';
 
 const { ethers, network } = hre;
 
-// works
 describe('Other opcodes', () => {
   let StackCont: Stack__factory;
   /* eslint-enable camelcase */

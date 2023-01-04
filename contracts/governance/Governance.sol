@@ -96,8 +96,7 @@ contract Governance is Agreement {
      */
     function _setBaseRecord() internal {
         uint256 recordId = 0;
-        string memory record = 'uint256[] VOTERS '
-        'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
+        string memory record = 'uint256[] VOTERS';
         string memory _condition = 'bool true';
         _setParameters(recordId, record, _condition, 0);
     }
@@ -110,8 +109,7 @@ contract Governance is Agreement {
      */
     function _setYesRecord() internal {
         uint256 recordId = 1;
-        string memory record = 'insert 1 into VOTERS '
-        'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
+        string memory record = 'insert 1 into VOTERS';
         string memory _condition = string(
             abi.encodePacked(
                 '(GOV_BALANCE > 0) and (blockTimestamp < ',
@@ -130,8 +128,7 @@ contract Governance is Agreement {
      */
     function _setNoRecord() internal {
         uint256 recordId = 2;
-        string memory record = 'insert 0 into VOTERS '
-        'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
+        string memory record = 'insert 0 into VOTERS';
         string memory _condition = string(
             abi.encodePacked(
                 '(GOV_BALANCE > 0) and (blockTimestamp < ',
@@ -155,8 +152,7 @@ contract Governance is Agreement {
         string memory record = '(sumOf VOTERS) setUint256 YES_CTR '
         '(((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2)'
         'if ENABLE_RECORD end '
-        'ENABLE_RECORD { enableRecord RECORD_ID at AGREEMENT_ADDR } '
-        'uint256 1'; // Important: push `1` result to stack instead of OpcodeHelpers.putToStack
+        'ENABLE_RECORD { enableRecord RECORD_ID at AGREEMENT_ADDR }';
 
         string memory _condition = string(
             abi.encodePacked('blockTimestamp >= ', StringUtils.toString(deadline))

@@ -7,7 +7,6 @@ import { checkStack, checkStackTail, hex4Bytes } from '../../utils/utils';
 
 const { ethers } = hre;
 
-// works
 describe('Executor', () => {
   let ctxDSL: DSLContextMock;
   let ctxProgram: ProgramContextMock;

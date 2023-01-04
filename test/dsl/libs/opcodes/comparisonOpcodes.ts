@@ -11,7 +11,6 @@ import {
 } from '../../../../typechain-types';
 import { checkStack, pushToStack } from '../../../utils/utils';
 
-// works
 describe('Comparison opcodes', () => {
   // eslint-disable-next-line camelcase
   let StackCont: Stack__factory;

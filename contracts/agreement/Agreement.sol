@@ -10,8 +10,9 @@ import { ErrorsAgreement } from '../dsl/libs/Errors.sol';
 import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { AgreementStorage } from './AgreementStorage.sol';
+import { LinkedList } from '../dsl/helpers/LinkedList.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 // TODO: automatically make sure that no contract exceeds the maximum contract size
 
@@ -21,7 +22,7 @@ import 'hardhat/console.sol';
  * Agreement contract that is used to implement any custom logic of a
  * financial agreement. Ex. lender-borrower agreement
  */
-contract Agreement is IAgreement, AgreementStorage {
+contract Agreement is IAgreement, AgreementStorage, LinkedList {
     using StringUtils for string;
 
     uint256[] public recordIds; // array of recordId
@@ -343,7 +344,6 @@ contract Agreement is IAgreement, AgreementStorage {
     function _validateConditions(uint256 _recordId, uint256 _msgValue) internal returns (bool) {
         for (uint256 i = 0; i < records[_recordId].conditions.length; i++) {
             _execute(_msgValue, records[_recordId].conditions[i]);
-            // console.logBytes(records[_recordId].conditions[i]);
             if (_seeLast() == 0) return false;
         }
         return true;
@@ -361,8 +361,6 @@ contract Agreement is IAgreement, AgreementStorage {
         uint256 _msgValue,
         address _signatory
     ) internal returns (bool result) {
-        // console.log('\n');
-        // console.logBytes(records[_recordId].transactionProgram);
         require(!records[_recordId].isExecutedBySignatory[_signatory], ErrorsAgreement.AGR7);
         _execute(_msgValue, records[_recordId].transactionProgram);
         records[_recordId].isExecutedBySignatory[_signatory] = true;

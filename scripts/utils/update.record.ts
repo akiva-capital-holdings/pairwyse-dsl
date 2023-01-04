@@ -18,10 +18,9 @@ export const activateRecord = async (
 };
 
 export const parse = async (app: Agreement, preprAddr: string) => {
-  let recLen = await app.parseFinished();
-
-  while (!recLen) {
+  let parseFinished = await app.parseFinished();
+  while (!parseFinished) {
     await app.parse(preprAddr);
-    recLen = await app.parseFinished();
+    parseFinished = await app.parseFinished();
   }
 };

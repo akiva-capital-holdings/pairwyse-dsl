@@ -15,7 +15,7 @@ import { MultisigMock } from '../../../typechain-types/agreement/mocks/MultisigM
 const { ethers, network } = hre;
 dotenv.config();
 
-describe.only('Agreement: Investment Fund tests math', () => {
+describe('Agreement: Investment Fund tests math', () => {
   let agreement: Agreement;
   let agreementAddr: string;
   let preprocessorAddr: string;
@@ -67,14 +67,14 @@ describe.only('Agreement: Investment Fund tests math', () => {
       await dai.connect(alice).transfer(GP.address, GP_INITIAL);
       await dai.connect(GP).approve(agreementAddr, GP_INITIAL);
       console.log(`GP Initial Deposit = ${formatEther(GP_INITIAL)} DAI`);
-      await agreement.setStorageUint256('DAI', dai.address);
-      await agreement.setStorageUint256('GP', GP.address);
-      await agreement.setStorageUint256('AGREEMENT', agreementAddr);
-      await agreement.setStorageUint256('INITIAL_FUNDS_TARGET', INITIAL_FUNDS_TARGET);
-      await agreement.setStorageUint256('GP_INITIAL', GP_INITIAL);
-      await agreement.setStorageUint256('PLACEMENT_DATE', NEXT_MONTH);
-      await agreement.setStorageUint256('MANAGEMENT_PERCENT', MANAGEMENT_FEE_PERCENTAGE);
-      await agreement.setStorageUint256('DEPOSIT_MIN_PERCENT', DEPOSIT_MIN_PERCENT);
+      await agreement.setStorageUint256(hex4Bytes('DAI'), dai.address);
+      await agreement.setStorageUint256(hex4Bytes('GP'), GP.address);
+      await agreement.setStorageUint256(hex4Bytes('AGREEMENT'), agreementAddr);
+      await agreement.setStorageUint256(hex4Bytes('INITIAL_FUNDS_TARGET'), INITIAL_FUNDS_TARGET);
+      await agreement.setStorageUint256(hex4Bytes('GP_INITIAL'), GP_INITIAL);
+      await agreement.setStorageUint256(hex4Bytes('PLACEMENT_DATE'), NEXT_MONTH);
+      await agreement.setStorageUint256(hex4Bytes('MANAGEMENT_PERCENT'), MANAGEMENT_FEE_PERCENTAGE);
+      await agreement.setStorageUint256(hex4Bytes('DEPOSIT_MIN_PERCENT'), DEPOSIT_MIN_PERCENT);
 
       const txn1 = await agreement.connect(GP).execute(txId);
       EXPECTED_CONTRACT_BAL_BN = EXPECTED_CONTRACT_BAL_BN.add(GP_INITIAL);
@@ -104,9 +104,9 @@ describe.only('Agreement: Investment Fund tests math', () => {
         await dai.connect(LP).approve(agreementAddr, LP_INITIAL);
         console.log(`LP Initial Deposit = ${formatEther(LP_INITIAL)} DAI`);
 
-        await agreement.setStorageUint256('LP', LP.address);
-        await agreement.setStorageUint256('LP_INITIAL', LP_INITIAL);
-        await agreement.setStorageUint256('CLOSING_DATE', NEXT_TWO_MONTH);
+        await agreement.setStorageUint256(hex4Bytes('LP'), LP.address);
+        await agreement.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
+        await agreement.setStorageUint256(hex4Bytes('CLOSING_DATE'), NEXT_TWO_MONTH);
 
         const txn2 = await agreement.connect(LP).execute(txId);
 
@@ -156,9 +156,9 @@ describe.only('Agreement: Investment Fund tests math', () => {
 
         // Note: we give GP 2 days time to obtain P1 - MAX_PERCENT, P2 = DEPOSIT_MIN_PERCENT:
         // a P1% / P2% ratio of LP / GP deposits
-        await agreement.setStorageUint256('LOW_LIM', GP_GAP_DEPOSIT_LOWER_TIME);
-        await agreement.setStorageUint256('UP_LIM', GP_GAP_DEPOSIT_UPPER_TIME);
-        await agreement.setStorageUint256('P1', MAX_PERCENT);
+        await agreement.setStorageUint256(hex4Bytes('LOW_LIM'), GP_GAP_DEPOSIT_LOWER_TIME);
+        await agreement.setStorageUint256(hex4Bytes('UP_LIM'), GP_GAP_DEPOSIT_UPPER_TIME);
+        await agreement.setStorageUint256(hex4Bytes('P1'), MAX_PERCENT);
 
         const txn3Hash = await changeTokenBalanceAndGetTxHash(
           () => agreement.connect(GP).execute(txId),
@@ -191,14 +191,14 @@ describe.only('Agreement: Investment Fund tests math', () => {
         hex4Bytes('FUND_INVESTMENT_DATE'),
         NEXT_TWO_MONTH + 7 * ONE_DAY
       );
-      await agreement.setStorageUint256('P1', MAX_PERCENT);
-      await agreement.setStorageUint256('P2', DEPOSIT_MIN_PERCENT);
+      await agreement.setStorageUint256(hex4Bytes('P1'), MAX_PERCENT);
+      await agreement.setStorageUint256(hex4Bytes('P2'), DEPOSIT_MIN_PERCENT);
 
       for (let i = 0; i < LP_INITIAL_ARR.length; i++) {
         const LP = LPs[i];
         const LP_INITIAL = LP_INITIAL_ARR[i];
         // Note: Extremely unsafe!!! LP can set LP.address and LP_INITIAL by itself
-        await agreement.setStorageUint256('LP_INITIAL', LP_INITIAL);
+        await agreement.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
 
         if (GP_FAILS_TO_DO_GAP_DEPOSIT) {
           console.log(`LP withdraws LP Initial Deposit = ${formatEther(LP_INITIAL)} DAI`);
@@ -239,9 +239,9 @@ describe.only('Agreement: Investment Fund tests math', () => {
         const FUND_INVESTMENT_DATE = NEXT_TWO_MONTH + 7 * ONE_DAY;
 
         await ethers.provider.send('evm_setNextBlockTimestamp', [NEXT_TWO_MONTH + 7 * ONE_DAY]);
-        await agreement.setStorageUint256('FUND_INVESTMENT_DATE', FUND_INVESTMENT_DATE);
-        await agreement.setStorageUint256('PURCHASE_AMOUNT', PURCHASE_AMOUNT_BN);
-        await agreement.setStorageUint256('PURCHASE_PERCENT', PURCHASE_PERCENT);
+        await agreement.setStorageUint256(hex4Bytes('FUND_INVESTMENT_DATE'), FUND_INVESTMENT_DATE);
+        await agreement.setStorageUint256(hex4Bytes('PURCHASE_AMOUNT'), PURCHASE_AMOUNT_BN);
+        await agreement.setStorageUint256(hex4Bytes('PURCHASE_PERCENT'), PURCHASE_PERCENT);
 
         const txn5Hash = await changeTokenBalanceAndGetTxHash(
           () => agreement.connect(GP).execute(txId),
@@ -277,8 +277,8 @@ describe.only('Agreement: Investment Fund tests math', () => {
 
         await ethers.provider.send('evm_setNextBlockTimestamp', [FUND_INVESTMENT_DATE + ONE_YEAR]);
 
-        await agreement.setStorageUint256('WHALE', WHALE);
-        await agreement.setStorageUint256('GP_PURCHASE_RETURN', GP_PURCHASE_RETURN_BN);
+        await agreement.setStorageUint256(hex4Bytes('WHALE'), WHALE);
+        await agreement.setStorageUint256(hex4Bytes('GP_PURCHASE_RETURN'), GP_PURCHASE_RETURN_BN);
         await dai.connect(alice).approve(agreementAddr, GP_PURCHASE_RETURN_BN);
         console.log(`Fund Investment Return = ${formatEther(GP_PURCHASE_RETURN_BN)} DAI`);
 
@@ -369,8 +369,8 @@ describe.only('Agreement: Investment Fund tests math', () => {
 
         console.log(`GP Carry Charge = ${formatEther(CARRY_BN)} DAI`);
 
-        await agreement.setStorageUint256('HURDLE', HURDLE);
-        await agreement.setStorageUint256('PROFIT_PART', PROFIT_PART);
+        await agreement.setStorageUint256(hex4Bytes('HURDLE'), HURDLE);
+        await agreement.setStorageUint256(hex4Bytes('PROFIT_PART'), PROFIT_PART);
 
         const txn72Hash = await changeTokenBalanceAndGetTxHash(
           () => agreement.connect(GP).execute(txId),
@@ -452,8 +452,8 @@ describe.only('Agreement: Investment Fund tests math', () => {
           const LP = LPs[i];
           const LP_INITIAL = LP_INITIAL_ARR[i];
           // Note: Extremely unsafe!!! LP can set LP.address and LP_INITIAL by itself
-          await agreement.setStorageUint256('LP_INITIAL', LP_INITIAL);
-          await agreement.setStorageUint256('LP', LP.address);
+          await agreement.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
+          await agreement.setStorageUint256(hex4Bytes('LP'), LP.address);
 
           const ALL_LPS_PROFIT_BN = PROFIT_BN.gt(0) ? PROFIT_BN.sub(CARRY_BN) : BigNumber.from(0);
           const ALL_LPS_PROFIT = PROFIT > 0 ? PROFIT - CARRY : 0;
@@ -498,8 +498,8 @@ describe.only('Agreement: Investment Fund tests math', () => {
           const LP = LPs[i];
           const LP_INITIAL = LP_INITIAL_ARR[i];
           // Note: Extremely unsafe!!! LP can set LP.address and LP_INITIAL by itself
-          await agreement.setStorageUint256('LP_INITIAL', LP_INITIAL);
-          await agreement.setStorageUint256('LP', LP.address);
+          await agreement.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
+          await agreement.setStorageUint256(hex4Bytes('LP'), LP.address);
 
           const MANAGEMENT_FEE_LP_BN = MANAGEMENT_FEE_BN.mul(LP_INITIAL).div(LP_TOTAL);
           const MANAGEMENT_FEE_LP = (MANAGEMENT_FEE * LP_INITIAL.toNumber()) / LP_TOTAL.toNumber();

@@ -60,7 +60,6 @@ library OtherOpcodes {
 
         bytes memory data = OpcodeHelpers.nextBytes(_ctxProgram, 1);
         bool _boolVal = uint8(data[0]) == 1;
-
         // Set local variable by it's hex
         OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),

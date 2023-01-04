@@ -6,7 +6,6 @@ import { deployOpcodeLibs } from '../../scripts/utils/deploy.utils';
 import { Preprocessor } from '../../typechain-types';
 import { checkStringStack, split } from '../utils/utils';
 
-// works
 describe('Preprocessor', () => {
   let app: Preprocessor;
   let ctxAddr: string;

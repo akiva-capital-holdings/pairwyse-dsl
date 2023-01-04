@@ -16,7 +16,6 @@ import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.util
 
 const { ethers, network } = hre;
 
-// works
 describe('DSL: basic', () => {
   let stack: Stack;
   let ctx: DSLContext;
@@ -1631,8 +1630,7 @@ empty item', async () => {
           expect(await app.get(2, hex4Bytes('INDEXES'))).to.equal(`0x${new Array(64).join('0')}2`);
         });
 
-        // TODO: fix; fails due to out of gas
-        it.skip('should push several values with additional code \
+        it('should push several values with additional code \
 (declaration mixed with inserting)', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
@@ -1737,7 +1735,7 @@ empty item', async () => {
           );
         });
 
-        // TODO: fix; fails due to out of gas
+        // TODO: fix; reverted with reason string 'PRS1'
         it.skip('address: should push several values with additional code \
 (two different arrays)', async () => {
           // should be zero initial values
@@ -1791,7 +1789,7 @@ empty item', async () => {
           );
         });
 
-        // TODO: fix; fails due to out of gas
+        // TODO: fix; reverted with reason string 'PRS1'
         it.skip('address: push several values with additional code \
 (declaration mixed with inserting)', async () => {
           // should be zero initial values
@@ -1895,8 +1893,7 @@ empty item', async () => {
     });
 
     describe('Get element by index', () => {
-      // TODO: fix; fails due to out of gas
-      it.skip('get element in arrays with different types after inserting values', async () => {
+      it('get element in arrays with different types after inserting values', async () => {
         await app.parse(`
           uint256[] NUMBERS
           address[] INDEXES
@@ -1971,8 +1968,7 @@ after inserting values', async () => {
         await checkStackTail(stack, [3, 2]);
       });
 
-      // TODO: fix; fails due to out of gas
-      it.skip('return length of arrays with different types \
+      it('return length of arrays with different types \
 (mixed with additional code))', async () => {
         await app.parse(`
           uint256[] NUMBERS

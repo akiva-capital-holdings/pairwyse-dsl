@@ -14,7 +14,6 @@ dotenv.config();
 // TODO: business case -> investment fund
 
 const dynamicTestData = {} as DynamicTestData;
-// works
 const parentSuite = describe('Agreement: Investment Fund Simplified', () => {
   let snapshotId: number;
 

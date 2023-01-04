@@ -13,7 +13,6 @@ import {
   setRecord,
   setRecords,
   parse,
-  parseConditionsList,
 } from '../../scripts/utils/update.record.mock';
 
 import { deployPreprocessor } from '../../scripts/utils/deploy.utils';
@@ -24,7 +23,6 @@ import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock
 
 const { ethers, network } = hre;
 
-//works
 describe('Simple Records in Agreement', () => {
   let app: AgreementMock;
   let multisig: MultisigMock;
@@ -58,8 +56,8 @@ describe('Simple Records in Agreement', () => {
     parser = await ethers.getContractAt('ParserMock', parserAddr);
 
     // Set variables
-    await app.setStorageAddress('RECEIVER', bob.address);
-    await app.setStorageUint256('LOCK_TIME', NEXT_MONTH);
+    await app.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
+    await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
   });
 
   beforeEach(async () => {
@@ -114,10 +112,10 @@ describe('Simple Records in Agreement', () => {
         .deploy(ethers.utils.parseEther('1000'));
 
       // Set variables
-      await app.setStorageAddress('ETH_RECEIVER', bob.address);
-      await app.setStorageAddress('TOKEN_RECEIVER', alice.address);
-      await app.setStorageUint256('LOCK_TIME', NEXT_MONTH);
-      await app.setStorageUint256('TOKEN_ADDR', token.address);
+      await app.setStorageAddress(hex4Bytes('ETH_RECEIVER'), bob.address);
+      await app.setStorageAddress(hex4Bytes('TOKEN_RECEIVER'), alice.address);
+      await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
+      await app.setStorageUint256(hex4Bytes('TOKEN_ADDR'), token.address);
 
       // Define Records
       records.push(
@@ -205,10 +203,10 @@ describe('Simple Records in Agreement', () => {
         .deploy(ethers.utils.parseEther('1000'));
 
       // Set variables
-      await app.setStorageAddress('TOKEN_ADDR', token.address);
-      await app.setStorageAddress('BOB', bob.address);
-      await app.setStorageAddress('ALICE', alice.address);
-      await app.setStorageUint256('LOCK_TIME', NEXT_MONTH);
+      await app.setStorageAddress(hex4Bytes('TOKEN_ADDR'), token.address);
+      await app.setStorageAddress(hex4Bytes('BOB'), bob.address);
+      await app.setStorageAddress(hex4Bytes('ALICE'), alice.address);
+      await app.setStorageUint256(hex4Bytes('LOCK_TIME'), NEXT_MONTH);
 
       const record = {
         recordId: 8,
@@ -445,7 +443,7 @@ describe('Simple Records in Agreement', () => {
     before(async () => {
       const LBT = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp;
-      await app.setStorageUint256('LOCK_TIME', LBT + ONE_MONTH);
+      await app.setStorageUint256(hex4Bytes('LOCK_TIME'), LBT + ONE_MONTH);
 
       records.push({
         recordId,
@@ -579,8 +577,8 @@ describe('Simple Records in Agreement', () => {
       const [aggr2Addr] = await deployAgreementMock(hre, appAddr);
 
       const aggr2 = await ethers.getContractAt('AgreementMock', aggr2Addr);
-      await aggr1.setStorageUint256('RECORD_ID', 23);
-      await aggr1.setStorageAddress('AGREEMENT_ADDR', aggr2Addr);
+      await aggr1.setStorageUint256(hex4Bytes('RECORD_ID'), 23);
+      await aggr1.setStorageAddress(hex4Bytes('AGREEMENT_ADDR'), aggr2Addr);
       const input = 'enableRecord RECORD_ID at AGREEMENT_ADDR';
 
       // uses for the Agreement2 (test will check that stack has
@@ -666,12 +664,12 @@ describe('Simple Records in Agreement', () => {
 
       const aggr2 = await ethers.getContractAt('AgreementMock', aggr2Addr);
       const aggr3 = await ethers.getContractAt('AgreementMock', aggr3Addr);
-      await aggr1.setStorageUint256('RECORD_ID_1', 34);
-      await aggr1.setStorageUint256('RECORD_ID_2', 15);
-      await aggr1.setStorageUint256('RECORD_ID_3', 41);
-      await aggr1.setStorageAddress('AGREEMENT_ADDR', aggr2Addr);
-      await aggr1.setStorageAddress('AGREEMENT_ADDR_2', aggr2Addr);
-      await aggr1.setStorageAddress('AGREEMENT_ADDR_3', aggr3Addr);
+      await aggr1.setStorageUint256(hex4Bytes('RECORD_ID_1'), 34);
+      await aggr1.setStorageUint256(hex4Bytes('RECORD_ID_2'), 15);
+      await aggr1.setStorageUint256(hex4Bytes('RECORD_ID_3'), 41);
+      await aggr1.setStorageAddress(hex4Bytes('AGREEMENT_ADDR'), aggr2Addr);
+      await aggr1.setStorageAddress(hex4Bytes('AGREEMENT_ADDR_2'), aggr2Addr);
+      await aggr1.setStorageAddress(hex4Bytes('AGREEMENT_ADDR_3'), aggr3Addr);
       // uses for the Agreement
       const input = `
         enableRecord RECORD_ID_1 at AGREEMENT_ADDR
