@@ -20,7 +20,7 @@ async function main() {
 
   const [, executorLibAddr] = await deployBase(hre);
 
-  const AgreementContract = await hre.ethers.getContractFactory('Governance', {
+  const GovernanceContract = await hre.ethers.getContractFactory('Governance', {
     libraries: {
       ComparisonOpcodes: comparisonOpcodesLibAddr,
       BranchingOpcodes: branchingOpcodesLibAddr,
@@ -31,8 +31,8 @@ async function main() {
   });
 
   fs.writeFileSync(
-    path.join(__dirname, '../bytecodeFolder/governance.bytecode'),
-    AgreementContract.bytecode
+    path.join(__dirname, '..', 'bytecodeFolder', 'governance.bytecode'),
+    GovernanceContract.bytecode
   );
 }
 

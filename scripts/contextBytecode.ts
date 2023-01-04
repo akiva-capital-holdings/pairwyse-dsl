@@ -7,11 +7,11 @@ async function main() {
 
   // Note: run this on the same node as Front End to actually deploy these libraries
 
-  const tokenContract = await hre.ethers.getContractFactory('Context');
+  const contextContract = await hre.ethers.getContractFactory('Context');
 
   fs.writeFileSync(
-    path.join(__dirname, '../bytecodeFolder/context.bytecode'),
-    tokenContract.bytecode
+    path.join(__dirname, '..', 'bytecodeFolder', 'context.bytecode'),
+    contextContract.bytecode
   );
 }
 
