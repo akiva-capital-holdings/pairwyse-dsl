@@ -15,7 +15,8 @@
     "test": "yarn hardhat test",
     "size": "yarn hardhat size-contracts",
     "coverage": "yarn hardhat coverage",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "doc": "yarn hardhat docgen"
   },
   "dependencies": {
     "hardhat": "@2.11.2",

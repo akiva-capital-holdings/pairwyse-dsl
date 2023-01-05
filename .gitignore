@@ -20,5 +20,5 @@ artifacts
 # Code editors
 *.code-workspace
 
-# Bytecode
-bytecodeFolder
+# Bytecode folder
+bytecode

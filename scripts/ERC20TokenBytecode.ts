@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as hre from 'hardhat';
+import { checkOrCreateFolder } from '../utils/utils';
 
 async function main() {
   console.log(`Deploying from address ${(await hre.ethers.getSigners())[0].address}`);
@@ -8,11 +9,10 @@ async function main() {
   // Note: run this on the same node as Front End to actually deploy these libraries
 
   const tokenContract = await hre.ethers.getContractFactory('ERC20Token');
+  const bytecodeFolder = path.join(__dirname, '..', 'bytecode');
 
-  fs.writeFileSync(
-    path.join(__dirname, '..', 'bytecodeFolder', 'ERC20Token.bytecode'),
-    tokenContract.bytecode
-  );
+  checkOrCreateFolder(bytecodeFolder);
+  fs.writeFileSync(path.join(bytecodeFolder, 'ERC20Token.bytecode'), tokenContract.bytecode);
 }
 
 main();
