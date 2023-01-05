@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import * as hre from 'hardhat';
 import { deployBase, deployOpcodeLibs } from './utils/deploy.utils';
+import { checkOrCreateFolder } from '../utils/utils';
 
 /**
  * Deploy libraries that are required by Agreement & generate Agreement bytecode with those
@@ -29,8 +30,10 @@ async function main() {
       Executor: executorLibAddr,
     },
   });
+  const bytecodeFolder = path.join(__dirname, '..', 'bytecode');
 
-  fs.writeFileSync(path.join(__dirname, 'agreement.bytecode'), AgreementContract.bytecode);
+  checkOrCreateFolder(bytecodeFolder);
+  fs.writeFileSync(path.join(bytecodeFolder, 'agreement.bytecode'), AgreementContract.bytecode);
 }
 
 main();
