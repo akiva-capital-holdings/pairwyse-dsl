@@ -193,7 +193,7 @@ TODO: rename this function to addRecord_
 function execute(uint256 _recordId) external payable
 ```
 
-_Check if the recorcID executable (validate all conditions before
+_Check if the recorcID is executable (validate all conditions before
 record execution, check signatures)._
 
 #### Parameters
@@ -209,7 +209,7 @@ function conditionString(uint256 _recordId, uint256 i) external view returns (st
 ```
 
 _Returns the condition string for provided recordID
-and index for the searching condition_
+and index for the searching condition string_
 
 #### Parameters
 

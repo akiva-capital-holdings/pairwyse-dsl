@@ -212,7 +212,7 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
     }
 
     /**
-     * @dev Check if the recorcID executable (validate all conditions before
+     * @dev Check if the recorcID is executable (validate all conditions before
      * record execution, check signatures).
      * @param _recordId Record ID
      */
@@ -227,7 +227,7 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
 
     /**
      * @dev Returns the condition string for provided recordID
-     * and index for the searching condition
+     * and index for the searching condition string
      * @param _recordId Record ID
      */
     function conditionString(uint256 _recordId, uint256 i) external view returns (string memory) {
