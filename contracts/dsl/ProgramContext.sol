@@ -91,7 +91,6 @@ contract ProgramContext is IProgramContext {
      */
     function currentProgram() public view returns (bytes memory) {
         // program, index, step
-        // console.log(pc);
         return this.programSlice(program, pc, 1);
     }
 

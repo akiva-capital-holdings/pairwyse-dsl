@@ -19,7 +19,9 @@ library ByteUtils {
         return _data[_start:_end];
     }
 
-    // Convert an hexadecimal string in bytes (without "0x" prefix) to raw bytes
+    /**
+     * Convert an hexadecimal string in bytes (without "0x" prefix) to raw bytes
+     */
     function fromHexBytes(bytes memory ss) public pure returns (bytes memory) {
         require(ss.length % 2 == 0, ErrorsByteUtils.BUT4); // length must be even
         bytes memory r = new bytes(ss.length / 2);
@@ -29,7 +31,9 @@ library ByteUtils {
         return r;
     }
 
-    // Convert an hexadecimal character to their value
+    /**
+     * @dev Convert an hexadecimal character to their value
+     */
     function fromHexChar(bytes1 c) public pure returns (uint8) {
         if (c >= bytes1('0') && c <= bytes1('9')) {
             return uint8(c) - uint8(bytes1('0'));

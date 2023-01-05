@@ -181,7 +181,17 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
         emit Parsed(_preProc, _code);
     }
 
-    // TODO: rename to addRecord?
+    /**
+     * @dev Updates Agreement contract by DSL code for the record
+     * and its conditions. All records that will be updated still
+     * need to be parsed. Please, check the `parse` function for more details
+     * TODO: rename this function to addRecord
+     * @param _recordId Record ID
+     * @param _requiredRecords array of required records in the record
+     * @param _signatories array of signatories in the record
+     * @param _recordString string of record DSL transaction
+     * @param _conditionStrings the array of conditions string for the record
+     */
     function update(
         uint256 _recordId,
         uint256[] memory _requiredRecords,
@@ -201,6 +211,11 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
         emit NewRecord(_recordId, _requiredRecords, _signatories, _recordString, _conditionStrings);
     }
 
+    /**
+     * @dev Check if the recorcID executable (validate all conditions before
+     * record execution, check signatures).
+     * @param _recordId Record ID
+     */
     function execute(uint256 _recordId) external payable {
         require(records[_recordId].isActive, ErrorsAgreement.AGR13);
         require(_verify(_recordId), ErrorsAgreement.AGR1);
@@ -210,6 +225,11 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
         emit RecordExecuted(msg.sender, _recordId, msg.value, records[_recordId].recordString);
     }
 
+    /**
+     * @dev Returns the condition string for provided recordID
+     * and index for the searching condition
+     * @param _recordId Record ID
+     */
     function conditionString(uint256 _recordId, uint256 i) external view returns (string memory) {
         require(i < records[_recordId].conditionStrings.length, ErrorsAgreement.AGR16);
         return records[_recordId].conditionStrings[i];

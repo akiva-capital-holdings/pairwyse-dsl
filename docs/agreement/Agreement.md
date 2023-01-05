@@ -172,17 +172,51 @@ _Parse DSL code and set the program bytecode in Agreement contract_
 function update(uint256 _recordId, uint256[] _requiredRecords, address[] _signatories, string _recordString, string[] _conditionStrings) public
 ```
 
+_Updates Agreement contract by DSL code for the record
+and its conditions. All records that will be updated still
+need to be parsed. Please, check the `parse` function for more details
+TODO: rename this function to addRecord_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _recordId | uint256 | Record ID |
+| _requiredRecords | uint256[] | array of required records in the record |
+| _signatories | address[] | array of signatories in the record |
+| _recordString | string | string of record DSL transaction |
+| _conditionStrings | string[] | the array of conditions string for the record |
+
 ### execute
 
 ```solidity
 function execute(uint256 _recordId) external payable
 ```
 
+_Check if the recorcID executable (validate all conditions before
+record execution, check signatures)._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _recordId | uint256 | Record ID |
+
 ### conditionString
 
 ```solidity
 function conditionString(uint256 _recordId, uint256 i) external view returns (string)
 ```
+
+_Returns the condition string for provided recordID
+and index for the searching condition_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _recordId | uint256 | Record ID |
+| i | uint256 |  |
 
 ### getActiveRecords
 
