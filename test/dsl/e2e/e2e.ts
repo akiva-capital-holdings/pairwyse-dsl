@@ -1597,12 +1597,12 @@ describe('End-to-end', () => {
         console.log(code);
         await app.execute();
 
-        // const StackCont = await ethers.getContractFactory('Stack');
-        // const contextStackAddress = await ctxProgram.stack();
-        // stack = StackCont.attach(contextStackAddress);
-        // await checkStackTail(stack, [2, 3, 1]);
+        const StackCont = await ethers.getContractFactory('Stack');
+        const contextStackAddress = await ctxProgram.stack();
+        stack = StackCont.attach(contextStackAddress);
+        await checkStackTail(stack, [2, 3, 1]);
 
-        // expect(await app.getStorageUint256(hex4Bytes('YES_CTR'))).equal(3);
+        expect(await app.getStorageUint256(hex4Bytes('YES_CTR'))).equal(3);
       });
     });
   });

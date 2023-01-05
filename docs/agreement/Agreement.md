@@ -73,7 +73,7 @@ receive() external payable
 function archiveRecord(uint256 _recordId) external
 ```
 
-_archived any of the existing records by recordId._
+_archive any of the existing records by recordId._
 
 #### Parameters
 
@@ -128,6 +128,12 @@ _deactivates the existing records by recordId, only awailable for ownerAddr_
 ```solidity
 function parseFinished() external view returns (bool _result)
 ```
+
+_returns true if parsing was finished for the record including
+conditions otherwise, it returns false
+The `finished parsing` therm means that all record and conditions
+already parsed and have got their bytecodes, so all bytecodes
+already storing in the Agreement smart contract_
 
 ### parse
 
