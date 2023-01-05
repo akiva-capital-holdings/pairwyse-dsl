@@ -107,9 +107,10 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
      */
     function parseFinished() external view returns (bool _result) {
         uint256 j;
+        uint256 i;
         uint256 recordId;
         string memory code;
-        for (uint256 i; i < recordIds.length; i++) {
+        for (i; i < recordIds.length; i++) {
             uint256 count = 0;
             recordId = recordIds[i];
             code = records[recordId].recordString;
