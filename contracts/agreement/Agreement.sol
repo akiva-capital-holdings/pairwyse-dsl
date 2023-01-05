@@ -155,6 +155,14 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
         }
     }
 
+    /**
+     * @dev Parse DSL code and set the program bytecode in Agreement contract
+     * @param _recordId Record ID
+     * @param _preProc Preprocessor address
+     * @param _code DSL code for the record of the condition
+     * @param _isRecord a flag that shows if provided _code is a record or
+     * not (a condition then)
+     */
     function _parse(
         uint256 _recordId,
         address _preProc,

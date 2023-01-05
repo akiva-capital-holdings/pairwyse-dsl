@@ -155,6 +155,17 @@ _Parse DSL code from the user and set the program bytecode in Agreement contract
 function _parse(uint256 _recordId, address _preProc, string _code, bool _isRecord) internal
 ```
 
+_Parse DSL code and set the program bytecode in Agreement contract_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _recordId | uint256 | Record ID |
+| _preProc | address | Preprocessor address |
+| _code | string | DSL code for the record of the condition |
+| _isRecord | bool | a flag that shows if provided _code is a record or not (a condition then) |
+
 ### update
 
 ```solidity
