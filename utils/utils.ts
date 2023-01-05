@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 /**
@@ -23,3 +24,15 @@ export const getChainId = async (hre: HardhatRuntimeEnvironment) =>
  * @returns Cleaned array
  */
 export const removeEmptyValues = (arr: string[]) => arr.filter((x) => !!x);
+
+/**
+ * Checks the existence of the folder and if it doesn't exist - creates it
+ * @param folderName The name of the folder
+ */
+export const checkOrCreateFolder = (folderName: string) => {
+  console.log(folderName);
+  if (!fs.existsSync(folderName)) {
+    // create a folder
+    fs.mkdirSync(folderName, { recursive: true });
+  }
+};
