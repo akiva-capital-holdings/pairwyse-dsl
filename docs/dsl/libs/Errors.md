@@ -96,6 +96,20 @@ string AGR15
 string AGR16
 ```
 
+## ErrorsGovernance
+
+### GOV1
+
+```solidity
+string GOV1
+```
+
+### GOV2
+
+```solidity
+string GOV2
+```
+
 ## ErrorsContext
 
 ### CTX1

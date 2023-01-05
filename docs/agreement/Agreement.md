@@ -190,7 +190,13 @@ TODO: rename this function to addRecord_
 ### execute
 
 ```solidity
-function execute(uint256 _recordId) external payable
+function execute(uint256 _recordId) external payable virtual
+```
+
+### _verifyRecord
+
+```solidity
+function _verifyRecord(uint256 _recordId) internal
 ```
 
 _Check if the recorcID is executable (validate all conditions before

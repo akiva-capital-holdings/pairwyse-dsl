@@ -1992,12 +1992,15 @@ describe('End-to-end', () => {
       // check that account 3 and 7 can not vote anymore `YES`
       await expect(governance.connect(accounts[3]).execute(1)).to.be.revertedWith('AGR7');
       await expect(governance.connect(accounts[7]).execute(1)).to.be.revertedWith('AGR7');
-      // TODO: check that account 3 and 7 can vote `NO`
-      // we do not have a logic that checks
-      // `if the user voted yes already he could not vote NO then` or vice versa
-      // right now it is a simple transaction
-      // await expect(governance.connect(accounts[3]).execute(2)).to.be.revertedWith('AGR7');
-      // await expect(governance.connect(accounts[7]).execute(2)).to.be.revertedWith('AGR7');
+      // check that account 5 and 2 can not vote anymore `NO`
+      await expect(governance.connect(accounts[5]).execute(2)).to.be.revertedWith('AGR7');
+      await expect(governance.connect(accounts[2]).execute(2)).to.be.revertedWith('AGR7');
+      // check that account 3 and 7 can not vote `NO`
+      await expect(governance.connect(accounts[3]).execute(2)).to.be.revertedWith('GOV1');
+      await expect(governance.connect(accounts[7]).execute(2)).to.be.revertedWith('GOV1');
+      // check that account 3 and 7 can not vote `YES`
+      await expect(governance.connect(accounts[5]).execute(1)).to.be.revertedWith('GOV2');
+      await expect(governance.connect(accounts[2]).execute(1)).to.be.revertedWith('GOV2');
 
       // check that records for votes are still avaliable for other users
       recordGov = await governance.records(1);
