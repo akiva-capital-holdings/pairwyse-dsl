@@ -106,7 +106,6 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
      * already storing in the Agreement smart contract
      */
     function parseFinished() external view returns (bool _result) {
-        uint256 j;
         uint256 i;
         uint256 recordId;
         string memory code;
@@ -116,7 +115,7 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
             code = records[recordId].recordString;
             // check that the main transaction was set already
             if (records[recordId].isRecordSet[code]) {
-                for (j; j < records[recordId].conditionStrings.length; j++) {
+                for (uint256 j; j < records[recordId].conditionStrings.length; j++) {
                     code = records[recordId].conditionStrings[j];
                     // check that the conditions were set already
                     if (records[recordId].isConditionSet[code]) {
@@ -134,17 +133,17 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
      * @param _preProc Preprocessor address
      */
     function parse(address _preProc) external returns (bool _result) {
-        uint256 j;
+        uint256 i;
         uint256 recordId;
         string memory code;
-        for (uint256 i; i < recordIds.length; i++) {
+        for (i; i < recordIds.length; i++) {
             recordId = recordIds[i];
             code = records[recordId].recordString;
             if (!records[recordId].isRecordSet[code]) {
                 _parse(recordId, _preProc, code, true);
                 return true;
             } else {
-                for (j; j < conditionStringsLen(recordId); j++) {
+                for (uint256 j; j < conditionStringsLen(recordId); j++) {
                     code = records[recordId].conditionStrings[j];
                     if (!records[recordId].isConditionSet[code]) {
                         _parse(recordId, _preProc, code, false);
