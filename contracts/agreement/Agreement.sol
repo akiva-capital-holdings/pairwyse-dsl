@@ -215,13 +215,17 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
      * record execution, check signatures).
      * @param _recordId Record ID
      */
-    function execute(uint256 _recordId) external payable {
+    function execute(uint256 _recordId) external payable virtual {
+        _verifyRecord(_recordId);
+        require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
+        emit RecordExecuted(msg.sender, _recordId, msg.value, records[_recordId].recordString);
+    }
+
+    function _verifyRecord(uint256 _recordId) internal {
         require(records[_recordId].isActive, ErrorsAgreement.AGR13);
         require(_verify(_recordId), ErrorsAgreement.AGR1);
         require(_validateRequiredRecords(_recordId), ErrorsAgreement.AGR2);
         require(_validateConditions(_recordId, msg.value), ErrorsAgreement.AGR6);
-        require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
-        emit RecordExecuted(msg.sender, _recordId, msg.value, records[_recordId].recordString);
     }
 
     /**

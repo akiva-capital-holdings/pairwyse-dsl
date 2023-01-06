@@ -24,6 +24,12 @@ constructor(address _parser, address _ownerAddr, address _token, address _dslCon
 
 Sets parser address, creates new Context instance, and setups Context
 
+### execute
+
+```solidity
+function execute(uint256 _recordId) external payable
+```
+
 ### _setBaseRecords
 
 ```solidity

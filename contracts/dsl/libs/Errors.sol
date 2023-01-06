@@ -25,6 +25,11 @@ library ErrorsAgreement {
     string constant AGR16 = 'AGR16'; // Agreement: out of range
 }
 
+library ErrorsGovernance {
+    string constant GOV1 = 'GOV1'; // Governance: You can not vote YES anymore
+    string constant GOV2 = 'GOV2'; // Governance: You can not vote NO anymore
+}
+
 /**
  * @title List of Context errors
  */

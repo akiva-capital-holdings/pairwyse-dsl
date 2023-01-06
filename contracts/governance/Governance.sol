@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import { IParser } from '../dsl/interfaces/IParser.sol';
 import { IProgramContext } from '../dsl/interfaces/IProgramContext.sol';
 import { ProgramContext } from '../dsl/ProgramContext.sol';
-import { ErrorsAgreement } from '../dsl/libs/Errors.sol';
+import { ErrorsAgreement, ErrorsGovernance } from '../dsl/libs/Errors.sol';
 import { UnstructuredStorage } from '../dsl/libs/UnstructuredStorage.sol';
 import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
@@ -47,6 +47,19 @@ contract Governance is Agreement {
         deadline = _deadline;
         // all records use the same context
         _setBaseRecords();
+    }
+
+    function execute(uint256 _recordId) external payable override {
+        _verifyRecord(_recordId);
+        if (_recordId == 1) {
+            // if the user already voted NO he can not vote YES anymore
+            require(!records[2].isExecutedBySignatory[msg.sender], ErrorsGovernance.GOV2);
+        } else if (_recordId == 2) {
+            // if the user already voted YES he can not vote NO anymore
+            require(!records[1].isExecutedBySignatory[msg.sender], ErrorsGovernance.GOV1);
+        }
+        require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
+        emit RecordExecuted(msg.sender, _recordId, msg.value, records[_recordId].recordString);
     }
 
     /**
@@ -99,7 +112,9 @@ contract Governance is Agreement {
      */
     function _setBaseRecord() internal {
         uint256 recordId = 0;
-        string memory record = 'uint256[] VOTERS';
+        string memory record = 'declareArr struct VOTERS '
+        'struct YES_VOTE {vote: YES} '
+        'struct NO_VOTE {vote: NO}';
         string memory _condition = 'bool true';
         _setParameters(recordId, record, _condition, 0);
     }
@@ -112,7 +127,7 @@ contract Governance is Agreement {
      */
     function _setYesRecord() internal {
         uint256 recordId = 1;
-        string memory record = 'insert 1 into VOTERS';
+        string memory record = 'insert YES_VOTE into VOTERS';
         string memory _condition = string(
             abi.encodePacked(
                 '(GOV_BALANCE > 0) and (blockTimestamp < ',
@@ -131,7 +146,7 @@ contract Governance is Agreement {
      */
     function _setNoRecord() internal {
         uint256 recordId = 2;
-        string memory record = 'insert 0 into VOTERS';
+        string memory record = 'insert NO_VOTE into VOTERS';
         string memory _condition = string(
             abi.encodePacked(
                 '(GOV_BALANCE > 0) and (blockTimestamp < ',
@@ -152,7 +167,7 @@ contract Governance is Agreement {
      */
     function _setCheckVotingRecord() internal {
         uint256 recordId = 3;
-        string memory record = '(sumOf VOTERS) setUint256 YES_CTR '
+        string memory record = '(sumOf VOTERS.vote) setUint256 YES_CTR '
         '(((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2)'
         'if ENABLE_RECORD end '
         'ENABLE_RECORD { enableRecord RECORD_ID at AGREEMENT_ADDR }';
