@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import * as hre from 'hardhat';
 
-import { AgreementMock, ProgramContextMock, GovernanceMock } from '../../typechain-types';
+import { AgreementMock, ProgramContextMock } from '../../typechain-types';
 import { ParserMock } from '../../typechain-types/dsl/mocks';
 import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
 import { Records } from '../../test/types';
@@ -53,12 +53,11 @@ export const setRecords = async (records: Records[], app: AgreementMock) => {
   }
 };
 
-export const parse = async (app: AgreementMock | GovernanceMock, preprAddr: string) => {
-  let recLen = await app.parseFinished();
-
-  while (!recLen) {
+export const parse = async (app: AgreementMock, preprAddr: string) => {
+  let parseFinished = await app.parseFinished();
+  while (!parseFinished) {
     await app.parse(preprAddr);
-    recLen = await app.parseFinished();
+    parseFinished = await app.parseFinished();
   }
 };
 
