@@ -2,20 +2,13 @@
 pragma solidity ^0.8.0;
 
 import { Agreement } from '../Agreement.sol';
-import { IParser } from '../../dsl/interfaces/IParser.sol';
-import { IContext } from '../../dsl/interfaces/IContext.sol';
-import { Context } from '../../dsl/Context.sol';
-import { ErrorsAgreement } from '../../dsl/libs/Errors.sol';
-import { UnstructuredStorage } from '../../dsl/libs/UnstructuredStorage.sol';
-import { ComparisonOpcodes } from '../../dsl/libs/opcodes/ComparisonOpcodes.sol';
-import { BranchingOpcodes } from '../../dsl/libs/opcodes/BranchingOpcodes.sol';
-import { LogicalOpcodes } from '../../dsl/libs/opcodes/LogicalOpcodes.sol';
-import { OtherOpcodes } from '../../dsl/libs/opcodes/OtherOpcodes.sol';
-import { Executor } from '../../dsl/libs/Executor.sol';
-import { StringUtils } from '../../dsl/libs/StringUtils.sol';
 
 contract AgreementMock is Agreement {
-    constructor(address _parser, address _ownerAddr) Agreement(_parser, _ownerAddr) {}
+    constructor(
+        address _parser,
+        address _ownerAddr,
+        address _contextDSL
+    ) Agreement(_parser, _ownerAddr, _contextDSL) {}
 
     function verify(uint256 _recordId) public view returns (bool) {
         return _verify(_recordId);
@@ -37,20 +30,12 @@ contract AgreementMock is Agreement {
         _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
     }
 
-    function addRecordCondition(
-        uint256 _recordId,
-        string memory _conditionStr,
-        address _conditionCtx
-    ) public {
-        _addRecordCondition(_recordId, _conditionStr, _conditionCtx);
+    function addRecordCondition(uint256 _recordId, string memory _conditionStr) public {
+        _addRecordCondition(_recordId, _conditionStr);
     }
 
-    function addRecordTransaction(
-        uint256 _recordId,
-        string memory _transactionString,
-        address _recordContext
-    ) public {
-        _addRecordTransaction(_recordId, _transactionString, _recordContext);
+    function addRecordTransaction(uint256 _recordId, string memory _recordString) public {
+        _addRecordTransaction(_recordId, _recordString);
     }
 
     function fulfill(
@@ -59,9 +44,5 @@ contract AgreementMock is Agreement {
         address _signatory
     ) external returns (bool) {
         return _fulfill(_recordId, _msgValue, _signatory);
-    }
-
-    function setRecordContext(uint256 _recordId, address _context) external {
-        records[_recordId].recordContext = _context;
     }
 }

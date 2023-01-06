@@ -11,4 +11,9 @@ contract ByteUtilsMock {
     ) public pure returns (bytes memory) {
         return ByteUtils.slice(_data, _start, _end);
     }
+
+    // Convert an hexadecimal character to their value
+    function fromHexChar(bytes1 _c) public pure returns (uint8) {
+        return ByteUtils.fromHexChar(_c);
+    }
 }

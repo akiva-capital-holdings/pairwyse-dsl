@@ -15,156 +15,156 @@ event NewConditionalTx(address txObj)
 ### parse
 
 ```solidity
-function parse(address _preprAddr, address _ctxAddr, string _codeRaw) external
+function parse(address _preprAddr, address _dslCtxAddr, address _programCtxAddr, string _codeRaw) external
 ```
 
 ### parseCode
 
 ```solidity
-function parseCode(address _ctxAddr, string[] _code) external
+function parseCode(address _dslCtxAddr, address _programCtxAddr, string[] _code) external
 ```
 
 ### asmSetLocalBool
 
 ```solidity
-function asmSetLocalBool() external
+function asmSetLocalBool(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmSetUint256
 
 ```solidity
-function asmSetUint256() external
+function asmSetUint256(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmVar
 
 ```solidity
-function asmVar() external
+function asmVar(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmLoadRemote
 
 ```solidity
-function asmLoadRemote(address _ctxAddr) external
+function asmLoadRemote(bytes _program, address _ctxDSLAddr, address) external returns (bytes newProgram)
 ```
 
 ### asmDeclare
 
 ```solidity
-function asmDeclare(address _ctxAddr) external
+function asmDeclare(bytes _program, address _ctxDSLAddr, address) external returns (bytes newProgram)
 ```
 
 ### asmBool
 
 ```solidity
-function asmBool() external
+function asmBool(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmUint256
 
 ```solidity
-function asmUint256() external
+function asmUint256(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmSend
 
 ```solidity
-function asmSend() external
+function asmSend(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmTransfer
 
 ```solidity
-function asmTransfer() external
+function asmTransfer(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmTransferVar
 
 ```solidity
-function asmTransferVar() external
+function asmTransferVar(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmTransferFrom
 
 ```solidity
-function asmTransferFrom() external
+function asmTransferFrom(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmBalanceOf
 
 ```solidity
-function asmBalanceOf() external
+function asmBalanceOf(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmLengthOf
 
 ```solidity
-function asmLengthOf() external
+function asmLengthOf(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmSumOf
 
 ```solidity
-function asmSumOf() external
+function asmSumOf(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmSumThroughStructs
 
 ```solidity
-function asmSumThroughStructs() external
+function asmSumThroughStructs(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmTransferFromVar
 
 ```solidity
-function asmTransferFromVar() external
+function asmTransferFromVar(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmIfelse
 
 ```solidity
-function asmIfelse() external
+function asmIfelse(bytes _program, address _ctxDSLAddr, address _programCtxAddr) external returns (bytes newProgram)
 ```
 
 ### asmIf
 
 ```solidity
-function asmIf() external
+function asmIf(bytes _program, address _ctxDSLAddr, address _programCtxAddr) external returns (bytes newProgram)
 ```
 
 ### asmFunc
 
 ```solidity
-function asmFunc() external
+function asmFunc(bytes _program, address _ctxDSLAddr, address _programCtxAddr) external returns (bytes newProgram)
 ```
 
 ### asmGet
 
 ```solidity
-function asmGet() external
+function asmGet(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmPush
 
 ```solidity
-function asmPush() external
+function asmPush(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmStruct
 
 ```solidity
-function asmStruct(address _ctxAddr) external
+function asmStruct(bytes _program, address _ctxDSLAddr, address _programCtxAddr) external returns (bytes newProgram)
 ```
 
 ### asmForLoop
 
 ```solidity
-function asmForLoop() external
+function asmForLoop(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
 ### asmEnableRecord
 
 ```solidity
-function asmEnableRecord() external
+function asmEnableRecord(bytes _program, address, address) external returns (bytes newProgram)
 ```
 

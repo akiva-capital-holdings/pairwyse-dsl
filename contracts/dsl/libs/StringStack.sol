@@ -13,7 +13,8 @@ library StringStack {
 
     /**
      * @dev Push element to array in the first position
-     * @dev As the array has fixed size, we drop the last element when addind a new one to the beginning of the array
+     * As the array has fixed size, we drop the last element
+     * when addind a new one to the beginning of the array
      * @param _stack String stack
      * @param _element String to be added to the stack
      * @return Modified stack
@@ -26,12 +27,6 @@ library StringStack {
         return _stack;
     }
 
-    /**
-     * @dev Removes the top element from the stack
-     * @param _stack String stack
-     * @return Modified stack
-     * @return The top element from the stack
-     */
     function popFromStack(
         string[] memory _stack
     ) external pure returns (string[] memory, string memory) {
@@ -40,11 +35,6 @@ library StringStack {
         return (_stack, _topElement);
     }
 
-    /**
-     * @dev Returns the current length of stack (excluding empty strings!)
-     * @param _stack String stack
-     * @return The length of the stack excluding empty strings
-     */
     function stackLength(string[] memory _stack) public pure returns (uint256) {
         uint256 i;
         while (!_stack[i].equal('')) {
@@ -53,11 +43,6 @@ library StringStack {
         return i;
     }
 
-    /**
-     * @dev Returns the top element in the stack without removing it
-     * @param _stack String stack
-     * @return The top element in the stack
-     */
     function seeLastInStack(string[] memory _stack) public pure returns (string memory) {
         uint256 _len = stackLength(_stack);
         require(_len > 0, ErrorsStack.STK4);

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { ErrorsStringUtils } from './Errors.sol';
+import { ByteUtils } from './ByteUtils.sol';
 
 /**
  * @dev Library that simplifies working with strings in Solidity
@@ -85,29 +86,9 @@ library StringUtils {
         return false;
     }
 
-    /**
-     * @dev Converts a hex string (without "0x" prefix) to raw bytes
-     * @param _s Hex string
-     * @return Bytes resulter from hex sting
-     */
-    function fromHex(string memory _s) public pure returns (bytes memory) {
-        return fromHexBytes(bytes(_s));
-    }
-
-    // TODO: move this to BytesUtils lib
-    // TODO: @shadowsupercoder to provide better comments to the function
-    /**
-     * @dev Converts a hexadecimal string in hex format (without "0x" prefix) to raw bytes
-     * @param _b Input bytes
-     * @return Raw bytes
-     */
-    function fromHexBytes(bytes memory _b) public pure returns (bytes memory) {
-        require(_b.length % 2 == 0, ErrorsStringUtils.SUT2); // length must be even
-        bytes memory _r = new bytes(_b.length / 2);
-        for (uint256 i = 0; i < _b.length / 2; ++i) {
-            _r[i] = bytes1(fromHexChar(_b[2 * i]) * 16 + fromHexChar(_b[2 * i + 1]));
-        }
-        return _r;
+    // Convert an hexadecimal string (without "0x" prefix) to raw bytes
+    function fromHex(string memory s) public pure returns (bytes memory) {
+        return ByteUtils.fromHexBytes(bytes(s));
     }
 
     /**
@@ -208,24 +189,6 @@ library StringUtils {
         bytes1 _byte = bytes(_string)[0];
         bytes1 _byte2 = bytes(_string)[1];
         return uint8(_byte) == 48 && uint8(_byte2) == 120;
-    }
-
-    /**
-     * @dev Converts a hexadecimal character from bytes to number
-     * @param _c Hexadecimal character
-     * @return The number from hex character
-     */
-    function fromHexChar(bytes1 _c) public pure returns (uint8) {
-        if (_c >= bytes1('0') && _c <= bytes1('9')) {
-            return uint8(_c) - uint8(bytes1('0'));
-        }
-        if (_c >= bytes1('a') && _c <= bytes1('f')) {
-            return 10 + uint8(_c) - uint8(bytes1('a'));
-        }
-        if (_c >= bytes1('A') && _c <= bytes1('F')) {
-            return 10 + uint8(_c) - uint8(bytes1('A'));
-        }
-        revert(ErrorsStringUtils.SUT8);
     }
 
     /**

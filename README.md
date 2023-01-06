@@ -17,7 +17,7 @@ Run: `yarn hardhat node --network hardhat` to start a local node (in the separat
 1. Open or create the .env file
 2. Make sure the value is filled `REMOTE_GANACHE_URL= http://192.168.221.1:8545`
 3. Open Pritunl and run VPN
-4. Run: `npx hardhat run --network remoteGanache scripts/deploy.preprocessor.ts` to run a script
+4. Run: `yarn hardhat run --network remoteGanache scripts/deploy.preprocessor.ts` to run a script
 
 ### Deploy the contracts
 
@@ -26,7 +26,7 @@ Run: `yarn hardhat run scripts/deploy.agreement.ts --network localhost` to run a
 ### Deploy the contracts and verify on tenderly
 
 Use `--network tenderly` flag
-Ex.: `yarn hardhat run scripts/deploy.agreement.ts --network tenderly`
+Ex.: `yarn hardhat run scripts/deploy.<contract_name>.ts --network tenderly`
 
 ### Update AGREEMENT_ADDR in the .env file
 

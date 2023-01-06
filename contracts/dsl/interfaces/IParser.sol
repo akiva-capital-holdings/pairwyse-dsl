@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IContext } from './IContext.sol';
+import { IDSLContext } from './IDSLContext.sol';
 import { Preprocessor } from '../Preprocessor.sol';
 
 interface IParser {
@@ -12,55 +12,160 @@ interface IParser {
 
     // Functions
 
-    function parse(address _preprAddr, address _ctxAddr, string memory _codeRaw) external;
+    function parse(
+        address _preprAddr,
+        address _dslCtxAddr,
+        address _programCtxAddr,
+        string memory _codeRaw
+    ) external;
 
-    function parseCode(address _ctxAddr, string[] memory _code) external;
+    function parseCode(
+        address _dslCtxAddr,
+        address _programCtxAddr,
+        string[] memory _code
+    ) external;
 
-    function asmSetLocalBool() external;
+    function asmSetLocalBool(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmSetUint256() external;
+    function asmSetUint256(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmVar() external;
+    function asmVar(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmLoadRemote(address _ctxAddr) external;
+    function asmLoadRemote(
+        bytes memory _program,
+        address _ctxDSLAddr,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmDeclare(address _ctxAddr) external;
+    function asmDeclare(
+        bytes memory _program,
+        address _ctxDSLAddr,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmBool() external;
+    function asmBool(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmUint256() external;
+    function asmUint256(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmSend() external;
+    function asmSend(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmTransfer() external;
+    function asmTransfer(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmTransferVar() external;
+    function asmTransferVar(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmTransferFrom() external;
+    function asmTransferFrom(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmBalanceOf() external;
+    function asmBalanceOf(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmLengthOf() external;
+    function asmLengthOf(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmSumOf() external;
+    function asmSumOf(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmSumThroughStructs() external;
+    function asmSumThroughStructs(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmTransferFromVar() external;
+    function asmTransferFromVar(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmIfelse() external;
+    function asmIfelse(
+        bytes memory _program,
+        address _ctxDSLAddr,
+        address _programCtxAddr
+    ) external returns (bytes memory newProgram);
 
-    function asmIf() external;
+    function asmIf(
+        bytes memory _program,
+        address _ctxDSLAddr,
+        address _programCtxAddr
+    ) external returns (bytes memory newProgram);
 
-    function asmFunc() external;
+    function asmFunc(
+        bytes memory _program,
+        address _ctxDSLAddr,
+        address _programCtxAddr
+    ) external returns (bytes memory newProgram);
 
-    function asmGet() external;
+    function asmGet(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmPush() external;
+    function asmPush(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmStruct(address _ctxAddr) external;
+    function asmStruct(
+        bytes memory _program,
+        address _ctxDSLAddr,
+        address _programCtxAddr
+    ) external returns (bytes memory newProgram);
 
-    function asmForLoop() external;
+    function asmForLoop(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 
-    function asmEnableRecord() external;
+    function asmEnableRecord(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
 }

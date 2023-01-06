@@ -16,3 +16,11 @@ export const activateRecord = async (
   const { data } = await _app.populateTransaction.activateRecord(_recordId);
   return await executeTransaction(_app.address, _multisig, data as string);
 };
+
+export const parse = async (app: Agreement, preprAddr: string) => {
+  let parseFinished = await app.parseFinished();
+  while (!parseFinished) {
+    await app.parse(preprAddr);
+    parseFinished = await app.parseFinished();
+  }
+};

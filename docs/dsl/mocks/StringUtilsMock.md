@@ -42,12 +42,6 @@ function toUint256(string _s) public pure returns (uint256)
 function fromUint256toString(uint256 _s) public pure returns (string)
 ```
 
-### fromHexChar
-
-```solidity
-function fromHexChar(bytes1 _c) public pure returns (uint8)
-```
-
 ### parseScientificNotation
 
 ```solidity

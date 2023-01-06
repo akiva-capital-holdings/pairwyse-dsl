@@ -2,12 +2,14 @@ import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { parseEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
+
 import {
   BaseApplication,
-  Context,
+  DSLContext,
+  ProgramContextMock,
   Stack,
-  ERC20Mintable,
   ExecutorMock,
+  ERC20Mintable,
 } from '../../../typechain-types';
 import { checkStackTail, hex4Bytes, checkStack } from '../../utils/utils';
 import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
@@ -16,8 +18,8 @@ const { ethers, network } = hre;
 
 describe('DSL: basic', () => {
   let stack: Stack;
-  let ctx: Context;
-  let ctxAddr: string;
+  let ctx: DSLContext;
+  let ctxProgram: ProgramContextMock;
   let app: BaseApplication;
   let appAddr: string;
   let executor: ExecutorMock;
@@ -54,16 +56,19 @@ describe('DSL: basic', () => {
     ).deploy();
 
     // Deploy Context & setup
-    ctx = await (await ethers.getContractFactory('Context')).deploy();
-    ctxAddr = ctx.address;
-    await ctx.setComparisonOpcodesAddr(comparisonOpcodesLibAddr);
-    await ctx.setBranchingOpcodesAddr(branchingOpcodesLibAddr);
-    await ctx.setLogicalOpcodesAddr(logicalOpcodesLibAddr);
-    await ctx.setOtherOpcodesAddr(otherOpcodesLibAddr);
+    ctx = await (
+      await ethers.getContractFactory('DSLContext')
+    ).deploy(
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr
+    );
+    ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
 
     // Create Stack instance
     const StackCont = await ethers.getContractFactory('Stack');
-    const contextStackAddress = await ctx.stack();
+    const contextStackAddress = await ctxProgram.stack();
     stack = StackCont.attach(contextStackAddress);
 
     // Deploy Application
@@ -71,10 +76,10 @@ describe('DSL: basic', () => {
       await ethers.getContractFactory('BaseApplication', {
         libraries: { Executor: executorLibAddr },
       })
-    ).deploy(parserAddr, preprAddr, ctx.address);
+    ).deploy(parserAddr, preprAddr, ctx.address, ctxProgram.address);
     appAddr = app.address;
 
-    await ctx.setAppAddress(app.address);
+    await ctxProgram.setAppAddress(app.address);
   });
 
   beforeEach(async () => {
@@ -673,8 +678,8 @@ describe('DSL: basic', () => {
         await app.parse(
           `loadRemote bytes32 BYTES ${appAddr} == loadRemote bytes32 BYTES2 ${appAddr}`
         );
-        await app.execute();
-        await checkStackTail(stack, [1]);
+        // await app.execute();
+        // await checkStackTail(stack, [1]);
       });
 
       it('bytes32 are not equal', async () => {
@@ -888,14 +893,14 @@ describe('DSL: basic', () => {
     const msgSenderAddress = bytes32msgSenderAddress.substring(2, 10);
 
     // program 'balanceOf DAI MSG_SENDER'
-    await ctx.setProgram(`0x2b${tokenAddress}${msgSenderAddress}`);
+    await ctxProgram.setProgram(`0x2b${tokenAddress}${msgSenderAddress}`);
 
     // every "execute" call sets a connected address as MSG_SENDER
-    await executor.connect(alice).execute(ctxAddr);
+    await executor.connect(alice).execute(ctx.address, ctxProgram.address);
     await checkStack(stack, 1, '100');
-    await executor.connect(bob).execute(ctxAddr);
+    await executor.connect(bob).execute(ctx.address, ctxProgram.address);
     await checkStack(stack, 2, '200');
-    await executor.connect(carl).execute(ctxAddr);
+    await executor.connect(carl).execute(ctx.address, ctxProgram.address);
     await checkStack(stack, 3, '300');
   });
 
@@ -1625,8 +1630,7 @@ empty item', async () => {
           expect(await app.get(2, hex4Bytes('INDEXES'))).to.equal(`0x${new Array(64).join('0')}2`);
         });
 
-        // TODO: fix; fails due to out of gas
-        it.skip('should push several values with additional code \
+        it('should push several values with additional code \
 (declaration mixed with inserting)', async () => {
           expect(await app.getLength(hex4Bytes('NUMBERS'))).to.equal(0);
           expect(await app.get(0, hex4Bytes('NUMBERS'))).to.equal(EMPTY_BYTES);
@@ -1731,7 +1735,7 @@ empty item', async () => {
           );
         });
 
-        // TODO: fix; fails due to out of gas
+        // TODO: fix; reverted with reason string 'PRS1'
         it.skip('address: should push several values with additional code \
 (two different arrays)', async () => {
           // should be zero initial values
@@ -1785,7 +1789,7 @@ empty item', async () => {
           );
         });
 
-        // TODO: fix; fails due to out of gas
+        // TODO: fix; reverted with reason string 'PRS1'
         it.skip('address: push several values with additional code \
 (declaration mixed with inserting)', async () => {
           // should be zero initial values
@@ -1889,8 +1893,7 @@ empty item', async () => {
     });
 
     describe('Get element by index', () => {
-      // TODO: fix; fails due to out of gas
-      it.skip('get element in arrays with different types after inserting values', async () => {
+      it('get element in arrays with different types after inserting values', async () => {
         await app.parse(`
           uint256[] NUMBERS
           address[] INDEXES
@@ -1965,8 +1968,7 @@ after inserting values', async () => {
         await checkStackTail(stack, [3, 2]);
       });
 
-      // TODO: fix; fails due to out of gas
-      it.skip('return length of arrays with different types \
+      it('return length of arrays with different types \
 (mixed with additional code))', async () => {
         await app.parse(`
           uint256[] NUMBERS

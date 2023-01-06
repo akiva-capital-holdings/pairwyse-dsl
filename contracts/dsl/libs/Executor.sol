@@ -1,39 +1,49 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IContext } from '../interfaces/IContext.sol';
-import { ErrorsExecutor } from './Errors.sol';
+import { IDSLContext } from '../interfaces/IDSLContext.sol';
+import { IProgramContext } from '../interfaces/IProgramContext.sol';
+import { ErrorsExecutor, ErrorsContext } from './Errors.sol';
 
 // import 'hardhat/console.sol';
 
 library Executor {
-    function execute(address _ctx) public {
-        require(IContext(_ctx).program().length > 0, ErrorsExecutor.EXC1);
-        IContext(_ctx).setMsgSender(msg.sender);
+    function execute(address _dslContext, address _programContext) public {
+        bytes memory program = IProgramContext(_programContext).program();
+        require(program.length > 0, ErrorsExecutor.EXC1);
+        bytes memory opcodeBytes;
+        bytes1 opcodeByte;
+        bytes4 _selector;
+        address _lib;
+        bool success;
+        IDSLContext.OpcodeLibNames _libName;
 
-        while (IContext(_ctx).pc() < IContext(_ctx).program().length) {
-            bytes memory opcodeBytes = IContext(_ctx).programAt(IContext(_ctx).pc(), 1);
-            bytes1 opcodeByte1 = bytes1(uint8(opcodeBytes[0]));
-            bytes4 _selector = IContext(_ctx).selectorByOpcode(opcodeByte1);
+        IProgramContext(_programContext).setMsgSender(msg.sender);
+
+        while (IProgramContext(_programContext).pc() < program.length) {
+            opcodeBytes = IProgramContext(_programContext).currentProgram();
+            opcodeByte = bytes1(uint8(opcodeBytes[0]));
+            _selector = IDSLContext(_dslContext).selectorByOpcode(opcodeByte);
             require(_selector != 0x0, ErrorsExecutor.EXC2);
-            IContext.OpcodeLibNames _libName = IContext(_ctx).opcodeLibNameByOpcode(opcodeByte1);
-            IContext(_ctx).incPc(1);
 
-            address _lib;
+            _libName = IDSLContext(_dslContext).opcodeLibNameByOpcode(opcodeByte);
 
-            if (_libName == IContext.OpcodeLibNames.ComparisonOpcodes) {
-                _lib = IContext(_ctx).comparisonOpcodes();
-            } else if (_libName == IContext.OpcodeLibNames.BranchingOpcodes) {
-                _lib = IContext(_ctx).branchingOpcodes();
-            } else if (_libName == IContext.OpcodeLibNames.LogicalOpcodes) {
-                _lib = IContext(_ctx).logicalOpcodes();
+            IProgramContext(_programContext).incPc(1);
+
+            if (_libName == IDSLContext.OpcodeLibNames.ComparisonOpcodes) {
+                _lib = IDSLContext(_dslContext).comparisonOpcodes();
+            } else if (_libName == IDSLContext.OpcodeLibNames.BranchingOpcodes) {
+                _lib = IDSLContext(_dslContext).branchingOpcodes();
+            } else if (_libName == IDSLContext.OpcodeLibNames.LogicalOpcodes) {
+                _lib = IDSLContext(_dslContext).logicalOpcodes();
             } else {
-                _lib = IContext(_ctx).otherOpcodes();
+                _lib = IDSLContext(_dslContext).otherOpcodes();
             }
-
-            (bool success, ) = _lib.delegatecall(abi.encodeWithSelector(_selector, _ctx));
+            (success, ) = _lib.delegatecall(
+                abi.encodeWithSelector(_selector, _programContext, _dslContext)
+            );
             require(success, ErrorsExecutor.EXC3);
         }
-        IContext(_ctx).setPc(0);
+        IProgramContext(_programContext).setPc(0);
     }
 }

@@ -90,6 +90,12 @@ string AGR14
 string AGR15
 ```
 
+### AGR16
+
+```solidity
+string AGR16
+```
+
 ## ErrorsContext
 
 ### CTX1
@@ -120,6 +126,18 @@ string CTX4
 
 ```solidity
 string CTX5
+```
+
+### CTX6
+
+```solidity
+string CTX6
+```
+
+### CTX7
+
+```solidity
+string CTX7
 ```
 
 ## ErrorsStack
@@ -268,6 +286,18 @@ string BUT1
 string BUT2
 ```
 
+### BUT3
+
+```solidity
+string BUT3
+```
+
+### BUT4
+
+```solidity
+string BUT4
+```
+
 ## ErrorsExecutor
 
 ### EXC1
@@ -288,18 +318,18 @@ string EXC2
 string EXC3
 ```
 
+### EXC4
+
+```solidity
+string EXC4
+```
+
 ## ErrorsStringUtils
 
 ### SUT1
 
 ```solidity
 string SUT1
-```
-
-### SUT2
-
-```solidity
-string SUT2
 ```
 
 ### SUT3
@@ -330,12 +360,6 @@ string SUT6
 
 ```solidity
 string SUT7
-```
-
-### SUT8
-
-```solidity
-string SUT8
 ```
 
 ### SUT9

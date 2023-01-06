@@ -7,25 +7,25 @@ _Opcode libraries are: ComparisonOpcodes, BranchingOpcodes, LogicalOpcodes, and 
 ### putToStack
 
 ```solidity
-function putToStack(address _ctx, uint256 _value) public
+function putToStack(address _ctxProgram, uint256 _value) public
 ```
 
 ### nextBytes
 
 ```solidity
-function nextBytes(address _ctx, uint256 size) public returns (bytes out)
+function nextBytes(address _ctxProgram, uint256 size) public returns (bytes out)
 ```
 
 ### nextBytes1
 
 ```solidity
-function nextBytes1(address _ctx) public returns (bytes1)
+function nextBytes1(address _ctxProgram) public returns (bytes1)
 ```
 
 ### readBytesSlice
 
 ```solidity
-function readBytesSlice(address _ctx, uint256 _start, uint256 _end) public view returns (bytes32 res)
+function readBytesSlice(address _ctxProgram, uint256 _start, uint256 _end) public view returns (bytes32 res)
 ```
 
 _Reads the slice of bytes from the raw program
@@ -35,7 +35,7 @@ Warning! The maximum slice size can only be 32 bytes!_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
 | _start | uint256 | Start position to read |
 | _end | uint256 | End position to read |
 
@@ -48,7 +48,7 @@ Warning! The maximum slice size can only be 32 bytes!_
 ### nextBranchSelector
 
 ```solidity
-function nextBranchSelector(address _ctx, string baseOpName) public returns (bytes4)
+function nextBranchSelector(address _ctxDSL, address _ctxProgram, string baseOpName) public returns (bytes4)
 ```
 
 ### mustCall
@@ -96,6 +96,6 @@ _Check .delegatecall() function and returns data_
 ### getNextBytes
 
 ```solidity
-function getNextBytes(address _ctx, uint256 _bytesNum) public returns (bytes32 varNameB32)
+function getNextBytes(address _ctxProgram, uint256 _bytesNum) public returns (bytes32 varNameB32)
 ```
 

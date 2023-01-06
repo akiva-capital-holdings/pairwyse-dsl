@@ -23,10 +23,6 @@ async function main() {
 
   const AgreementContract = await hre.ethers.getContractFactory('Agreement', {
     libraries: {
-      ComparisonOpcodes: comparisonOpcodesLibAddr,
-      BranchingOpcodes: branchingOpcodesLibAddr,
-      LogicalOpcodes: logicalOpcodesLibAddr,
-      OtherOpcodes: otherOpcodesLibAddr,
       Executor: executorLibAddr,
     },
   });

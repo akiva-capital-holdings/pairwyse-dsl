@@ -46,17 +46,34 @@ export const deployOpcodeLibs = async (hre: HardhatRuntimeEnvironment) => {
   ];
 };
 
-export const deployContextFactory = async (hre: HardhatRuntimeEnvironment) => {
-  const ContextFactory = await hre.ethers.getContractFactory('ContextFactory');
-  const contextFactory = await ContextFactory.deploy();
-  await contextFactory.deployed();
-  return contextFactory.address;
+export const deployContextDSL = async (hre: HardhatRuntimeEnvironment) => {
+  const [
+    comparisonOpcodesLibAddr,
+    branchingOpcodesLibAddr,
+    logicalOpcodesLibAddr,
+    otherOpcodesLibAddr,
+  ] = await deployOpcodeLibs(hre);
+
+  const DSLContext = await hre.ethers.getContractFactory('DSLContext');
+  const DSLctx = await DSLContext.deploy(
+    comparisonOpcodesLibAddr,
+    branchingOpcodesLibAddr,
+    logicalOpcodesLibAddr,
+    otherOpcodesLibAddr
+  );
+  await DSLctx.deployed();
+  return DSLctx.address;
 };
 
 export const deployParser = async (hre: HardhatRuntimeEnvironment) => {
   // Deploy libraries
-  const stringLib = await (await hre.ethers.getContractFactory('StringUtils')).deploy();
+
   const byteLib = await (await hre.ethers.getContractFactory('ByteUtils')).deploy();
+  const stringLib = await (
+    await hre.ethers.getContractFactory('StringUtils', {
+      libraries: { ByteUtils: byteLib.address },
+    })
+  ).deploy();
 
   const parser = await (
     await hre.ethers.getContractFactory('Parser', {
@@ -67,11 +84,19 @@ export const deployParser = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 export const deployPreprocessor = async (hre: HardhatRuntimeEnvironment) => {
-  const stringLib = await (await hre.ethers.getContractFactory('StringUtils')).deploy();
+  const byteLib = await (await hre.ethers.getContractFactory('ByteUtils')).deploy();
+  const stringLib = await (
+    await hre.ethers.getContractFactory('StringUtils', {
+      libraries: { ByteUtils: byteLib.address },
+    })
+  ).deploy();
   const stringStackLib = await (await hre.ethers.getContractFactory('StringStack')).deploy();
   const preprocessor = await (
     await hre.ethers.getContractFactory('Preprocessor', {
-      libraries: { StringUtils: stringLib.address, StringStack: stringStackLib.address },
+      libraries: {
+        StringUtils: stringLib.address,
+        StringStack: stringStackLib.address,
+      },
     })
   ).deploy();
   return preprocessor.address;
@@ -98,18 +123,20 @@ export const deployAgreement = async (hre: HardhatRuntimeEnvironment, multisigAd
     otherOpcodesLibAddr,
   ] = await deployOpcodeLibs(hre);
 
+  const contextDSL = await (
+    await hre.ethers.getContractFactory('DSLContext')
+  ).deploy(
+    comparisonOpcodesLibAddr,
+    branchingOpcodesLibAddr,
+    logicalOpcodesLibAddr,
+    otherOpcodesLibAddr
+  );
   const [parserAddr, executorLibAddr] = await deployBase(hre);
 
   const AgreementContract = await hre.ethers.getContractFactory('Agreement', {
-    libraries: {
-      ComparisonOpcodes: comparisonOpcodesLibAddr,
-      BranchingOpcodes: branchingOpcodesLibAddr,
-      LogicalOpcodes: logicalOpcodesLibAddr,
-      OtherOpcodes: otherOpcodesLibAddr,
-      Executor: executorLibAddr,
-    },
+    libraries: { Executor: executorLibAddr },
   });
-  const agreement = await AgreementContract.deploy(parserAddr, multisigAddr);
+  const agreement = await AgreementContract.deploy(parserAddr, multisigAddr, contextDSL.address);
   await agreement.deployed();
 
   // Save Agreement bytecode into a file
@@ -129,73 +156,4 @@ export const deployAgreement = async (hre: HardhatRuntimeEnvironment, multisigAd
   );
 
   return agreement.address;
-};
-
-export const deployGovernance = async (
-  hre: HardhatRuntimeEnvironment,
-  targetAgreementAddr: string,
-  ownerAddr: string
-) => {
-  const Context = await hre.ethers.getContractFactory('Context');
-  const [
-    comparisonOpcodesLibAddr,
-    branchingOpcodesLibAddr,
-    logicalOpcodesLibAddr,
-    otherOpcodesLibAddr,
-  ] = await deployOpcodeLibs(hre);
-
-  const [parserAddr, executorLibAddr, preprAddr] = await deployBase(hre);
-  const GovernanceContract = await hre.ethers.getContractFactory('Governance', {
-    libraries: {
-      ComparisonOpcodes: comparisonOpcodesLibAddr,
-      BranchingOpcodes: branchingOpcodesLibAddr,
-      LogicalOpcodes: logicalOpcodesLibAddr,
-      OtherOpcodes: otherOpcodesLibAddr,
-      Executor: executorLibAddr,
-    },
-  });
-  const _contexts = [
-    await Context.deploy(),
-    await Context.deploy(),
-    await Context.deploy(),
-    await Context.deploy(),
-    await Context.deploy(),
-    await Context.deploy(),
-    await Context.deploy(),
-    await Context.deploy(),
-  ];
-  const contexts = [
-    _contexts[0].address,
-    _contexts[1].address,
-    _contexts[2].address,
-    _contexts[3].address,
-    _contexts[4].address,
-    _contexts[5].address,
-    _contexts[6].address,
-    _contexts[7].address,
-  ];
-  const governance = await GovernanceContract.deploy(parserAddr, ownerAddr, contexts);
-  await governance.deployed();
-
-  const transactionContext = await Context.deploy();
-  const conditionContext = await Context.deploy();
-  await transactionContext.setAppAddress(targetAgreementAddr);
-  await conditionContext.setAppAddress(targetAgreementAddr);
-  await _contexts[0].setAppAddress(governance.address);
-  await _contexts[1].setAppAddress(governance.address);
-  await _contexts[2].setAppAddress(governance.address);
-  await _contexts[3].setAppAddress(governance.address);
-  await _contexts[4].setAppAddress(governance.address);
-  await _contexts[5].setAppAddress(governance.address);
-  await _contexts[6].setAppAddress(governance.address);
-  await _contexts[7].setAppAddress(governance.address);
-
-  return {
-    governanceAddr: governance.address,
-    parserAddr,
-    preprAddr,
-    conditionContextAddr: conditionContext.address,
-    transactionContextAddr: transactionContext.address,
-    contexts,
-  };
 };

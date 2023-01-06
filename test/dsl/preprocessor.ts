@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { parseUnits } from 'ethers/lib/utils';
-
+import * as hre from 'hardhat';
+import { deployOpcodeLibs } from '../../scripts/utils/deploy.utils';
 import { Preprocessor } from '../../typechain-types';
 import { checkStringStack, split } from '../utils/utils';
 
@@ -12,11 +13,29 @@ describe('Preprocessor', () => {
 
   before(async () => {
     // Deploy required libraries
-    const stringLib = await (await ethers.getContractFactory('StringUtils')).deploy();
+    const byteLib = await (await ethers.getContractFactory('ByteUtils')).deploy();
+    const stringLib = await (
+      await ethers.getContractFactory('StringUtils', {
+        libraries: { ByteUtils: byteLib.address },
+      })
+    ).deploy();
     const strStackLib = await (await ethers.getContractFactory('StringStack')).deploy();
 
     // Deploy Context
-    const ctx = await (await ethers.getContractFactory('ContextMock')).deploy();
+    const [
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr,
+    ] = await deployOpcodeLibs(hre);
+    const ctx = await (
+      await ethers.getContractFactory('DSLContextMock')
+    ).deploy(
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr
+    );
     ctxAddr = ctx.address;
 
     // Setup operators & priorities
@@ -1852,6 +1871,29 @@ describe('Preprocessor', () => {
     });
 
     describe('arrays and structs', () => {
+      it.skip('uint256 issue with brackets', async () => {
+        // TODO: related to the ticket https://consideritdone.atlassian.net/browse/AK-635
+        const input = `
+          struct YES_VOTE {
+            vote: YES
+          }
+
+          struct NO_VOTE {
+            vote: NO
+          }
+          
+          struct[] RESULTS
+          insert YES_VOTE into RESULTS
+          insert NO_VOTE into RESULTS
+          insert YES_VOTE into RESULTS
+          sumOf RESULTS.vote
+          insert NO_VOTE into RESULTS
+          sumOf RESULTS.vote
+          
+          ((6 > 5) or (2 > 4))
+          `;
+        const cmds = await app.callStatic.transform(ctxAddr, input);
+      });
       // Note: this test fails due to gas limit
       it.skip('with different types of commands', async () => {
         // Only with structure operators are changed their place for in the list of commands

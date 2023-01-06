@@ -5,7 +5,7 @@ Opcodes for comparator operators such as >, <, =, !, etc.
 ### opEq
 
 ```solidity
-function opEq(address _ctx) public
+function opEq(address _ctxProgram, address) public
 ```
 
 _Compares two values in the stack. Put 1 to the stack if they are equal._
@@ -14,12 +14,13 @@ _Compares two values in the stack. Put 1 to the stack if they are equal._
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 
 ### opNotEq
 
 ```solidity
-function opNotEq(address _ctx) public
+function opNotEq(address _ctxProgram, address) public
 ```
 
 _Compares two values in the stack. Put 1 to the stack if they are not equal._
@@ -28,12 +29,13 @@ _Compares two values in the stack. Put 1 to the stack if they are not equal._
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 
 ### opLt
 
 ```solidity
-function opLt(address _ctx) public
+function opLt(address _ctxProgram, address) public
 ```
 
 _Compares two values in the stack. Put 1 to the stack if value1 < value2_
@@ -42,12 +44,13 @@ _Compares two values in the stack. Put 1 to the stack if value1 < value2_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 
 ### opGt
 
 ```solidity
-function opGt(address _ctx) public
+function opGt(address _ctxProgram, address) public
 ```
 
 _Compares two values in the stack. Put 1 to the stack if value1 > value2_
@@ -56,12 +59,13 @@ _Compares two values in the stack. Put 1 to the stack if value1 > value2_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 
 ### opLe
 
 ```solidity
-function opLe(address _ctx) public
+function opLe(address _ctxProgram, address) public
 ```
 
 _Compares two values in the stack. Put 1 to the stack if value1 <= value2_
@@ -70,12 +74,13 @@ _Compares two values in the stack. Put 1 to the stack if value1 <= value2_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 
 ### opGe
 
 ```solidity
-function opGe(address _ctx) public
+function opGe(address _ctxProgram, address) public
 ```
 
 _Compares two values in the stack. Put 1 to the stack if value1 >= value2_
@@ -84,12 +89,13 @@ _Compares two values in the stack. Put 1 to the stack if value1 >= value2_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 
 ### opNot
 
 ```solidity
-function opNot(address _ctx) public
+function opNot(address _ctxProgram, address) public
 ```
 
 _Revert last value in the stack_
@@ -98,12 +104,13 @@ _Revert last value in the stack_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 
 ### opSwap
 
 ```solidity
-function opSwap(address _ctx) public
+function opSwap(address _ctxProgram, address) public
 ```
 
 _Swaps two last element in the stack_
@@ -112,5 +119,6 @@ _Swaps two last element in the stack_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 

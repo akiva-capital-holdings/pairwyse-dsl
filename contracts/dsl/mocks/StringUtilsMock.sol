@@ -35,11 +35,6 @@ contract StringUtilsMock {
         return StringUtils.toString(_s);
     }
 
-    // Convert an hexadecimal character to their value
-    function fromHexChar(bytes1 _c) public pure returns (uint8) {
-        return StringUtils.fromHexChar(_c);
-    }
-
     // string decimal number with e symbol (1e18) to uint256 (in wei)
     function parseScientificNotation(string memory _s) public pure returns (string memory) {
         return StringUtils.parseScientificNotation(_s);

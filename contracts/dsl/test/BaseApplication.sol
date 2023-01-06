@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { IParser } from '../interfaces/IParser.sol';
-import { IContext } from '../interfaces/IContext.sol';
+import { IProgramContext } from '../interfaces/IProgramContext.sol';
 import { Executor } from '../libs/Executor.sol';
 import { StringUtils } from '../libs/StringUtils.sol';
 import { BaseStorage } from './BaseStorage.sol';
@@ -14,33 +14,40 @@ contract BaseApplication is BaseStorage {
     using StringUtils for string;
 
     address public parserAddr;
-    address public ctxAddr;
+    address public dslContext;
+    address public programContext;
     address public preprocessorAddr;
+
+    constructor(
+        address _parserAddr,
+        address _preprocessorAddr,
+        address _dslContext,
+        address _programContext
+    ) {
+        parserAddr = _parserAddr;
+        preprocessorAddr = _preprocessorAddr;
+        dslContext = _dslContext;
+        programContext = _programContext;
+        _setupContext();
+    }
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    constructor(address _parserAddr, address _preprocessorAddr, address _ctxAddr) {
-        parserAddr = _parserAddr;
-        preprocessorAddr = _preprocessorAddr;
-        ctxAddr = _ctxAddr;
-        _setupContext();
-    }
-
     function parse(string memory _program) external {
-        IParser(parserAddr).parse(preprocessorAddr, ctxAddr, _program);
+        IParser(parserAddr).parse(preprocessorAddr, dslContext, programContext, _program);
     }
 
     function parseCode(string[] memory _code) external {
-        IParser(parserAddr).parseCode(ctxAddr, _code);
+        IParser(parserAddr).parseCode(dslContext, programContext, _code);
     }
 
     function execute() external payable {
-        IContext(ctxAddr).setMsgValue(msg.value);
-        Executor.execute(ctxAddr);
+        IProgramContext(programContext).setMsgValue(msg.value);
+        Executor.execute(dslContext, programContext);
     }
 
     function _setupContext() internal {
-        IContext(ctxAddr).setMsgSender(msg.sender);
+        IProgramContext(programContext).setMsgSender(msg.sender);
     }
 }

@@ -5,22 +5,16 @@ import { hex4Bytes, setupGovernance } from '../scripts/utils/interact.utils';
 task('agreement:parse', 'Parse DSL code')
   .addParam('agreement', 'Agreement contract address')
   .addParam('code', 'DSL code to parse')
-  .addParam('context', 'Context contract address')
   .addParam('preprocessor', 'Preprocessor contract address')
-  .setAction(
-    async (
-      { agreement: agreementAddr, code, context: contextAddr, preprocessor: preprocessorAddr },
-      hre
-    ) => {
-      console.log(`Sender address ${(await hre.ethers.getSigners())[0].address}`);
+  .setAction(async ({ agreement: agreementAddr, code, preprocessor: preprocessorAddr }, hre) => {
+    console.log(`Deploying from address ${(await hre.ethers.getSigners())[0].address}`);
 
-      const agreement = await hre.ethers.getContractAt('Agreement', agreementAddr);
-      const tx = await agreement.parse(code, contextAddr, preprocessorAddr);
-      await tx.wait();
+    const agreement = await hre.ethers.getContractAt('Agreement', agreementAddr);
+    const tx = await agreement.parse(code, preprocessorAddr);
+    await tx.wait();
 
-      console.log('✅ Done ✅');
-    }
-  );
+    console.log('✅ Done ✅');
+  });
 
 task('top-up:agreement', 'Top up Agreement contract')
   .addParam('agreement', 'Agreement contract address')

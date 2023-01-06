@@ -5,7 +5,7 @@ Opcodes for set operators such as AND, OR, XOR
 ### opAnd
 
 ```solidity
-function opAnd(address _ctx) public
+function opAnd(address _ctxProgram, address) public
 ```
 
 _Compares two values in the stack. Put 1 if both of them are 1, put
@@ -15,12 +15,13 @@ _Compares two values in the stack. Put 1 if both of them are 1, put
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 
 ### opOr
 
 ```solidity
-function opOr(address _ctx) public
+function opOr(address _ctxProgram, address) public
 ```
 
 _Compares two values in the stack. Put 1 if either one of them is 1,
@@ -30,12 +31,13 @@ _Compares two values in the stack. Put 1 if either one of them is 1,
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 
 ### opXor
 
 ```solidity
-function opXor(address _ctx) public
+function opXor(address _ctxProgram, address) public
 ```
 
 _Compares two values in the stack. Put 1 if the values ​
@@ -45,12 +47,13 @@ _Compares two values in the stack. Put 1 if the values ​
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 
 ### opAdd
 
 ```solidity
-function opAdd(address _ctx) public
+function opAdd(address _ctxProgram, address) public
 ```
 
 _Add two values and put result in the stack._
@@ -59,12 +62,13 @@ _Add two values and put result in the stack._
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 
 ### opSub
 
 ```solidity
-function opSub(address _ctx) public
+function opSub(address _ctxProgram, address) public
 ```
 
 _Subtracts one value from enother and put result in the stack._
@@ -73,12 +77,13 @@ _Subtracts one value from enother and put result in the stack._
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 
 ### opMul
 
 ```solidity
-function opMul(address _ctx) public
+function opMul(address _ctxProgram, address) public
 ```
 
 _Multiplies values and put result in the stack._
@@ -87,12 +92,13 @@ _Multiplies values and put result in the stack._
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 
 ### opDiv
 
 ```solidity
-function opDiv(address _ctx) public
+function opDiv(address _ctxProgram, address) public
 ```
 
 Divide two numbers from the top of the stack
@@ -103,5 +109,6 @@ _This is an integer division. Example: 5 / 2 = 2_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context address |
+| _ctxProgram | address | Context address |
+|  | address |  |
 

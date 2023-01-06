@@ -4,8 +4,12 @@ import { deployExecutor, deployOpcodeLibs, deployPreprocessor } from './deploy.u
 
 export const deployParserMock = async (hre: HardhatRuntimeEnvironment) => {
   // Deploy libraries
-  const stringLib = await (await hre.ethers.getContractFactory('StringUtils')).deploy();
   const byteLib = await (await hre.ethers.getContractFactory('ByteUtils')).deploy();
+  const stringLib = await (
+    await hre.ethers.getContractFactory('StringUtils', {
+      libraries: { ByteUtils: byteLib.address },
+    })
+  ).deploy();
 
   const ParserMockContract = await hre.ethers.getContractFactory('ParserMock', {
     libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
@@ -30,21 +34,23 @@ export const deployAgreementMock = async (hre: HardhatRuntimeEnvironment, multis
     otherOpcodesLibAddr,
   ] = await deployOpcodeLibs(hre);
 
-  const [parserAddr, executorLibAddr] = await deployBaseMock(hre);
+  const contextDSL = await (
+    await hre.ethers.getContractFactory('DSLContextMock')
+  ).deploy(
+    comparisonOpcodesLibAddr,
+    branchingOpcodesLibAddr,
+    logicalOpcodesLibAddr,
+    otherOpcodesLibAddr
+  );
+  const [parserAddr, executorLibAddr, preprocessorAddr] = await deployBaseMock(hre);
 
-  const MockContract = await hre.ethers.getContractFactory('AgreementMock', {
-    libraries: {
-      ComparisonOpcodes: comparisonOpcodesLibAddr,
-      BranchingOpcodes: branchingOpcodesLibAddr,
-      LogicalOpcodes: logicalOpcodesLibAddr,
-      OtherOpcodes: otherOpcodesLibAddr,
-      Executor: executorLibAddr,
-    },
+  const AgreementContract = await hre.ethers.getContractFactory('AgreementMock', {
+    libraries: { Executor: executorLibAddr },
   });
-  const mock = await MockContract.deploy(parserAddr, multisigAddr);
-  await mock.deployed();
+  const agreement = await AgreementContract.deploy(parserAddr, multisigAddr, contextDSL.address);
+  await agreement.deployed();
 
-  console.log(`\x1b[32m AgreementMock address \x1b[0m\x1b[32m ${mock.address}\x1b[0m`);
+  console.log(`\x1b[32m AgreementMock address \x1b[0m\x1b[32m ${agreement.address}\x1b[0m`);
 
-  return mock.address;
+  return [agreement.address, parserAddr, executorLibAddr, preprocessorAddr];
 };

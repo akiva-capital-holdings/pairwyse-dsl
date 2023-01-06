@@ -6,11 +6,11 @@ import { BigNumber, Contract, ContractTransaction, utils } from 'ethers';
 import { formatEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 import { Suite, Test } from 'mocha';
-import { Stack__factory, Stack, Context, ERC20, Governance } from '../../typechain-types';
+import { Stack__factory, Stack, ProgramContext, ERC20, Governance } from '../../typechain-types';
 import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
 import { DynamicTestData, OpConditionalTxFunc, TxObject } from '../types';
 import { ONE_DAY, ONE_MONTH, ONE_YEAR } from './constants';
-import { activateRecord } from '../../scripts/utils/update.record';
+import { activateRecord, parse } from '../../scripts/utils/update.record';
 
 export const split = (expr: string) =>
   expr
@@ -60,11 +60,11 @@ export const bnToLongHexString = (num: BigNumber | string) => {
  *            from the beginning of the array
  */
 export const pushToStack = async (
-  context: Context,
+  contextProgram: ProgramContext,
   ST: Stack__factory,
   arr: (string | number | BigNumber)[]
 ) => {
-  const contextStackAddress = await context.stack();
+  const contextStackAddress = await contextProgram.stack();
   const stack = ST.attach(contextStackAddress);
 
   for (let i = 0; i < arr.length; ++i) {
@@ -159,7 +159,7 @@ export const createBulkVotes = async (governance: Governance, accounts: SignerWi
  */
 export const testTwoInputOneOutput = async (
   ST: Stack__factory,
-  context: Context,
+  context: ProgramContext,
   opcodes: Contract,
   opFunc: OpConditionalTxFunc,
   value1: number,
@@ -230,42 +230,11 @@ export const addSteps = async (
   agreementAddress: string,
   multisig: MultisigMock
 ) => {
-  let recordContext;
   const agreement = await ethers.getContractAt('Agreement', agreementAddress);
   for await (const step of steps) {
     console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
-    recordContext = await (await ethers.getContractFactory('Context')).deploy();
-    await recordContext.setAppAddress(agreementAddress);
-    const cdCtxsAddrs = []; // conditional context Addresses
-
     console.log('\nTerm Conditions');
     let result;
-
-    for (let j = 0; j < step.conditions.length; j++) {
-      const conditionContract = await (await ethers.getContractFactory('Context')).deploy();
-      await conditionContract.setAppAddress(agreementAddress);
-      cdCtxsAddrs.push(conditionContract.address);
-      result = await agreement.parse(
-        step.conditions[j],
-        conditionContract.address,
-        preprocessorAddr
-      );
-      await expect(result)
-        .to.emit(agreement, 'Parsed')
-        .withArgs(preprocessorAddr, conditionContract.address, step.conditions[j]);
-      console.log(
-        `\n\taddress: \x1b[35m${conditionContract.address}\x1b[0m\n\tcondition ${
-          j + 1
-        }:\n\t\x1b[33m${step.conditions[j]}\x1b[0m`
-      );
-    }
-    result = await agreement.parse(step.transaction, recordContext.address, preprocessorAddr);
-    await expect(result)
-      .to.emit(agreement, 'Parsed')
-      .withArgs(preprocessorAddr, recordContext.address, step.transaction);
-    console.log('\nTerm transaction');
-    console.log(`\n\taddress: \x1b[35m${recordContext.address}\x1b[0m`);
-    console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
 
     // Create Raw transaction
     const { data } = await agreement.populateTransaction.update(
@@ -273,9 +242,7 @@ export const addSteps = async (
       step.requiredTxs,
       step.signatories,
       step.transaction,
-      step.conditions,
-      recordContext.address,
-      cdCtxsAddrs
+      step.conditions
     );
 
     // Send this raw transaction with Multisig contract
@@ -285,7 +252,10 @@ export const addSteps = async (
     await activateRecord(agreement, multisig, Number(step.txId));
 
     console.log(`\nAgreement update transaction hash: \n\t\x1b[35m${hash}\x1b[0m`);
+    console.log('\nTerm transaction');
+    console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
   }
+  await parse(agreement, preprocessorAddr);
 };
 
 /**

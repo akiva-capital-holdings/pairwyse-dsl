@@ -67,9 +67,9 @@ describe('Agreement: Investment Fund tests math', () => {
       await dai.connect(alice).transfer(GP.address, GP_INITIAL);
       await dai.connect(GP).approve(agreementAddr, GP_INITIAL);
       console.log(`GP Initial Deposit = ${formatEther(GP_INITIAL)} DAI`);
-      await agreement.setStorageAddress(hex4Bytes('DAI'), dai.address);
-      await agreement.setStorageAddress(hex4Bytes('GP'), GP.address);
-      await agreement.setStorageAddress(hex4Bytes('AGREEMENT'), agreementAddr);
+      await agreement.setStorageUint256(hex4Bytes('DAI'), dai.address);
+      await agreement.setStorageUint256(hex4Bytes('GP'), GP.address);
+      await agreement.setStorageUint256(hex4Bytes('AGREEMENT'), agreementAddr);
       await agreement.setStorageUint256(hex4Bytes('INITIAL_FUNDS_TARGET'), INITIAL_FUNDS_TARGET);
       await agreement.setStorageUint256(hex4Bytes('GP_INITIAL'), GP_INITIAL);
       await agreement.setStorageUint256(hex4Bytes('PLACEMENT_DATE'), NEXT_MONTH);
@@ -104,7 +104,7 @@ describe('Agreement: Investment Fund tests math', () => {
         await dai.connect(LP).approve(agreementAddr, LP_INITIAL);
         console.log(`LP Initial Deposit = ${formatEther(LP_INITIAL)} DAI`);
 
-        await agreement.setStorageAddress(hex4Bytes('LP'), LP.address);
+        await agreement.setStorageUint256(hex4Bytes('LP'), LP.address);
         await agreement.setStorageUint256(hex4Bytes('LP_INITIAL'), LP_INITIAL);
         await agreement.setStorageUint256(hex4Bytes('CLOSING_DATE'), NEXT_TWO_MONTH);
 

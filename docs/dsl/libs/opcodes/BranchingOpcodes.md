@@ -5,25 +5,25 @@ Opcodes for logical operators such as if/esle, switch/case
 ### opIfelse
 
 ```solidity
-function opIfelse(address _ctx) public
+function opIfelse(address _ctxProgram, address) public
 ```
 
 ### opIf
 
 ```solidity
-function opIf(address _ctx) public
+function opIf(address _ctxProgram, address) public
 ```
 
 ### opFunc
 
 ```solidity
-function opFunc(address _ctx) public
+function opFunc(address _ctxProgram, address) public
 ```
 
 ### opForLoop
 
 ```solidity
-function opForLoop(address _ctx) external
+function opForLoop(address _ctxProgram, address) external
 ```
 
 _For loop setup. Responsible for checking iterating array existence, set the number of iterations_
@@ -32,12 +32,13 @@ _For loop setup. Responsible for checking iterating array existence, set the num
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 
 ### opStartLoop
 
 ```solidity
-function opStartLoop(address _ctx) public
+function opStartLoop(address _ctxProgram, address _ctxDSL) public
 ```
 
 _Does the real iterating process over the body of the for-loop_
@@ -46,12 +47,13 @@ _Does the real iterating process over the body of the for-loop_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | ProgramContext contract address |
+| _ctxDSL | address | DSL Context contract address |
 
 ### opEndLoop
 
 ```solidity
-function opEndLoop(address _ctx) public
+function opEndLoop(address _ctxProgram, address) public
 ```
 
 _This function is responsible for getting of the body of the for-loop_
@@ -60,17 +62,18 @@ _This function is responsible for getting of the body of the for-loop_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _ctx | address | Context contract address |
+| _ctxProgram | address | Context contract address |
+|  | address |  |
 
 ### opEnd
 
 ```solidity
-function opEnd(address _ctx) public
+function opEnd(address _ctxProgram, address) public
 ```
 
 ### getUint16
 
 ```solidity
-function getUint16(address _ctx) public returns (uint16)
+function getUint16(address _ctxProgram) public returns (uint16)
 ```
 

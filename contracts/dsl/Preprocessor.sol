@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IContext } from './interfaces/IContext.sol';
+import { IDSLContext } from './interfaces/IDSLContext.sol';
 import { IPreprocessor } from './interfaces/IPreprocessor.sol';
 import { StringStack } from './libs/StringStack.sol';
 import { StringUtils } from './libs/StringUtils.sol';
@@ -218,7 +218,7 @@ library Preprocessor {
             _prevChunk = i == 0 ? '' : _code[i - 1];
             _chunk = _code[i++];
 
-            if (IContext(_ctxAddr).isCommand(_chunk)) {
+            if (IDSLContext(_ctxAddr).isCommand(_chunk)) {
                 (_result, _resultCtr, i) = _processCommand(_result, _resultCtr, _code, i, _ctxAddr);
             } else if (_isCurlyBracket(_chunk)) {
                 (_result, _resultCtr) = _processCurlyBracket(_result, _resultCtr, _chunk);
@@ -234,7 +234,6 @@ library Preprocessor {
         return _result;
     }
 
-    // TODO: switch _ctxAddr & _code params order
     /**
      * @dev Transforms code in infix format to the postfix format
      * @param _code Array of DSL commands
@@ -441,7 +440,7 @@ library Preprocessor {
         uint256 i;
 
         // Replace alises with base commands
-        _chunk = IContext(_ctxAddr).aliases(_chunk);
+        _chunk = IDSLContext(_ctxAddr).aliases(_chunk);
 
         // Process multi-command aliases
         // Ex. `uint256[]` -> `declareArr uint256`
@@ -479,7 +478,7 @@ library Preprocessor {
         } else if (_chunk.equal('for')) {
             (_result, _resultCtr, i) = _processForCmd(_result, _resultCtr, _code, i);
         } else {
-            uint256 _skipCtr = IContext(_ctxAddr).numOfArgsByOpcode(_chunk) + 1;
+            uint256 _skipCtr = IDSLContext(_ctxAddr).numOfArgsByOpcode(_chunk) + 1;
 
             i--; // this is to include the command name in the loop below
             // add command arguments
@@ -574,8 +573,8 @@ library Preprocessor {
     ) internal view returns (string[] memory, uint256, string[] memory) {
         while (
             _stack.stackLength() > 0 &&
-            IContext(_ctxAddr).opsPriors(_chunk) <=
-            IContext(_ctxAddr).opsPriors(_stack.seeLastInStack())
+            IDSLContext(_ctxAddr).opsPriors(_chunk) <=
+            IDSLContext(_ctxAddr).opsPriors(_stack.seeLastInStack())
         ) {
             (_stack, _result[_resultCtr++]) = _stack.popFromStack();
         }
@@ -599,25 +598,23 @@ library Preprocessor {
 
     /**
      * @dev Checks if chunk is an operator
-     * @param _chunk Current piece of code that we're processing
      * @param _ctxAddr Context contract address
      * @return True or false based on whether chunk is an operator or not
      */
     function _isOperator(string memory _chunk, address _ctxAddr) internal view returns (bool) {
-        for (uint256 i = 0; i < IContext(_ctxAddr).operatorsLen(); i++) {
-            if (_chunk.equal(IContext(_ctxAddr).operators(i))) return true;
+        for (uint256 i = 0; i < IDSLContext(_ctxAddr).operatorsLen(); i++) {
+            if (_chunk.equal(IDSLContext(_ctxAddr).operators(i))) return true;
         }
         return false;
     }
 
     /**
      * @dev Checks if a string is an alias to a command from DSL
-     * @param _chunk Current piece of code that we're processing
      * @param _ctxAddr Context contract address
      * @return True or false based on whether chunk is an alias or not
      */
     function _isAlias(string memory _chunk, address _ctxAddr) internal view returns (bool) {
-        return !IContext(_ctxAddr).aliases(_chunk).equal('');
+        return !IDSLContext(_ctxAddr).aliases(_chunk).equal('');
     }
 
     /**
