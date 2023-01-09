@@ -118,10 +118,10 @@ describe.only('Multi Tranche', () => {
     await app.setStorageAddress(hex4Bytes('WUSDC_ADDR'), multiTranche.wrappedUSDC1());
     await app.setStorageUint256(hex4Bytes('ALLOWANCE'), alowance.toNumber());
 
-    await activateRecord(app, multisig, 1);
     await setRecord(record, app);
+    await activateRecord(app, multisig, 1);
     await parse(app, preprAddr);
-    await expect(await app.connect(creator).execute(1, { value: 100 })).to.changeEtherBalance(
+    await expect(await app.connect(creator).execute(1)).to.changeEtherBalance(
       multiTranche.address,
       10
     );
