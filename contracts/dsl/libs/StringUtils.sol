@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import { ErrorsStringUtils } from './Errors.sol';
 import { ByteUtils } from './ByteUtils.sol';
 
+import 'hardhat/console.sol';
+
 /**
  * @dev Library that simplifies working with strings in Solidity
  */
@@ -198,7 +200,6 @@ library StringUtils {
      */
     function isValidVarName(string memory _s) public pure returns (bool) {
         require(!equal(_s, ''), ErrorsStringUtils.SUT7);
-
         uint8 A = 0x41;
         uint8 Z = 0x5a;
         uint8 underscore = 0x5f;

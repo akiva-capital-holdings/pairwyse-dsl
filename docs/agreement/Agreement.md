@@ -193,12 +193,6 @@ TODO: rename this function to addRecord_
 function execute(uint256 _recordId) external payable virtual
 ```
 
-### _verifyRecord
-
-```solidity
-function _verifyRecord(uint256 _recordId) internal
-```
-
 _Check if the recorcID is executable (validate all conditions before
 record execution, check signatures)._
 
@@ -207,6 +201,12 @@ record execution, check signatures)._
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _recordId | uint256 | Record ID |
+
+### _verifyRecord
+
+```solidity
+function _verifyRecord(uint256 _recordId) internal
+```
 
 ### conditionString
 
