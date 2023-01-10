@@ -84,30 +84,57 @@ contract MultiTranche is Agreement {
         baseRecord[_recordId] = true; // sets the record as base record for the Governance contract
     }
 
+    /**
+     * @dev To enter the MultiTranche contract:
+     * 1. Understand how much USDC a user wants to deposit
+     * 2. Transfer USDC from the user to the MultiTranche
+     * 3. Mint WUSDC to the user's wallet in exchange for his/her USDC
+     */
     function _setEnterRecord() internal {
         _setParameters(
             1, // record ID
-            'bool true', // transaction
+            '(allowance USDC MSG_SENDER MULTI_TRANCHE) setUint256 ALLOWANCE '
+            'transferFrom USDC MSG_SENDER MULTI_TRANCHE ALLOWANCE '
+            'mint WUSDC MSG_SENDER ALLOWANCE ', // transaction
             'bool true', // condition
-            0 // required records lenght
+            0 // required records length
         );
     }
 
+    /**
+     * @dev If the deposits deadline has passed anyone can trigger the deposit of all USDC to
+     *      Compound. This is done in the following way:
+     * 1. Understand how much USDC there are on the MultiTranche contract
+     * 2. Deposit all USDC to Compound
+     * 3. Remember in a variable when the deposit happened
+     */
     function _setDepositAllRecord() internal {
         _setParameters(
             2, // record ID
-            'bool true', // transaction
-            'bool true', // condition
-            0 // required records lenght
+            '(balanceOf USDC MULTI_TRANCHE) setUint256 TOTAL_USDC'
+            'compound deposit USDC TOTAL_USDC '
+            'blockTimestamp setUint256 DEPOSIT_TIME', // transaction
+            'blockTimestamp > var DEPOSITS_DEADLINE', // condition
+            0 // required records length
         );
     }
 
+    /**
+     * @dev If USDC lock time is passed:
+     * 1. Understand how much WUSDC a user wants to withdraw
+     * 2. Withdraw requested amount of USDC from Compound
+     * 3. Burn user's WUSDC
+     * 4. Send USDC to the user
+     */
     function _setWithdrawRecord() internal {
         _setParameters(
             3, // record ID
-            'bool true', // transaction
-            'bool true', // condition
-            0 // required records lenght
+            '(allowance WUSDC MSG_SENDER MULTI_TRANCHE) setUint256 W_ALLOWANCE'
+            'compound withdraw USDC W_ALLOWANCE '
+            'burn WUSDC MSG_SENDER W_ALLOWANCE'
+            'transferFrom USDC MSG_SENDER W_ALLOWANCE ', // transaction
+            'blockTimestamp > (var DEPOSIT_TIME + var LOCK_TIME)', // condition
+            0 // required records length
         );
     }
 }
