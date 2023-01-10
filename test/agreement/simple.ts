@@ -183,9 +183,9 @@ describe('Agreement: Alice, Bob, Carl', () => {
   });
 
   it('Alice (borrower) and Bob (lender)', async () => {
-    const token = await (await ethers.getContractFactory('Token'))
+    const token = await (await ethers.getContractFactory('ERC20Premint'))
       .connect(bob)
-      .deploy(parseEther('1000'));
+      .deploy('Token', 'TKN', parseEther('1000'));
 
     await addSteps(
       preprocessorAddr,
@@ -230,9 +230,9 @@ describe('Agreement: Alice, Bob, Carl', () => {
   });
 
   it('Alice (borrower), Bob (lender), and Carl (insurer)', async () => {
-    const token = await (await ethers.getContractFactory('Token'))
+    const token = await (await ethers.getContractFactory('ERC20Premint'))
       .connect(bob)
-      .deploy(parseEther('1000'));
+      .deploy('Token', 'TKN', parseEther('1000'));
     await token.connect(bob).transfer(carl.address, tenTokens);
 
     await addSteps(
@@ -309,9 +309,9 @@ describe('Agreement: Alice, Bob, Carl', () => {
       'same amount of DAI in Agreement conditional tx',
     async () => {
       // Deploy Token contract
-      const daiToken = await (await ethers.getContractFactory('Token'))
+      const daiToken = await (await ethers.getContractFactory('ERC20Premint'))
         .connect(alice)
-        .deploy(parseEther('100'));
+        .deploy('Token', 'TKN', parseEther('100'));
 
       const PURCHASE_PERCENT = 10; // as an example
       // Set variables

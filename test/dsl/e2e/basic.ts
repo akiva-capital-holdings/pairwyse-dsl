@@ -785,8 +785,8 @@ describe('DSL: basic', () => {
   it('transfer', async () => {
     const [, receiver] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory('Token');
-    const dai = await Token.deploy(parseEther('1000'));
+    const Token = await ethers.getContractFactory('ERC20Premint');
+    const dai = await Token.deploy('Token', 'TKN', parseEther('1000'));
 
     const oneDAI = parseEther('1');
     await dai.transfer(app.address, oneDAI);
@@ -804,8 +804,8 @@ describe('DSL: basic', () => {
   it('transferVar', async () => {
     const [, receiver] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory('Token');
-    const dai = await Token.deploy(parseEther('1000'));
+    const Token = await ethers.getContractFactory('ERC20Premint');
+    const dai = await Token.deploy('Token', 'TKN', parseEther('1000'));
 
     const oneDAI = parseEther('1');
     await dai.transfer(app.address, oneDAI);
@@ -824,8 +824,8 @@ describe('DSL: basic', () => {
   it('transferFrom', async () => {
     const [owner, receiver] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory('Token');
-    const dai = await Token.deploy(parseEther('1000'));
+    const Token = await ethers.getContractFactory('ERC20Premint');
+    const dai = await Token.deploy('Token', 'TKN', parseEther('1000'));
 
     const oneDAI = parseEther('1');
     await dai.connect(owner).approve(app.address, oneDAI);
@@ -844,8 +844,8 @@ describe('DSL: basic', () => {
   it('transferFromVar', async () => {
     const [owner, receiver] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory('Token');
-    const dai = await Token.deploy(parseEther('1000'));
+    const Token = await ethers.getContractFactory('ERC20Premint');
+    const dai = await Token.deploy('Token', 'TKN', parseEther('1000'));
 
     const oneDAI = parseEther('1');
     await dai.connect(owner).approve(app.address, oneDAI);
@@ -865,8 +865,8 @@ describe('DSL: basic', () => {
   it('balance of', async () => {
     const [user] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory('Token');
-    const dai = await Token.connect(user).deploy(parseEther('1000'));
+    const Token = await ethers.getContractFactory('ERC20Premint');
+    const dai = await Token.connect(user).deploy('Token', 'TKN', parseEther('1000'));
 
     await app['setStorageAddress(bytes32,address)'](hex4Bytes('DAI'), dai.address);
     await app['setStorageAddress(bytes32,address)'](hex4Bytes('USER'), user.address);

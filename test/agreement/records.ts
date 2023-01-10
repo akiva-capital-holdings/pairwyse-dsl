@@ -107,9 +107,9 @@ describe('Simple Records in Agreement', () => {
   describe('Scenarios', () => {
     it('borrower/lender scenario', async () => {
       // Deploy Token contract
-      const token = await (await ethers.getContractFactory('Token'))
+      const token = await (await ethers.getContractFactory('ERC20Premint'))
         .connect(bob)
-        .deploy(ethers.utils.parseEther('1000'));
+        .deploy('Token', 'TKN', ethers.utils.parseEther('1000'));
 
       // Set variables
       await app.setStorageAddress(hex4Bytes('ETH_RECEIVER'), bob.address);
@@ -198,9 +198,9 @@ describe('Simple Records in Agreement', () => {
   describe('Required records', () => {
     it('validate', async () => {
       // Deploy Token contract
-      const token = await (await ethers.getContractFactory('Token'))
+      const token = await (await ethers.getContractFactory('ERC20Premint'))
         .connect(bob)
-        .deploy(ethers.utils.parseEther('1000'));
+        .deploy('Token', 'TKN', ethers.utils.parseEther('1000'));
 
       // Set variables
       await app.setStorageAddress(hex4Bytes('TOKEN_ADDR'), token.address);

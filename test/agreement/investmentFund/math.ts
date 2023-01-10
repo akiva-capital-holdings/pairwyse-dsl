@@ -565,9 +565,9 @@ describe('Agreement: Investment Fund tests math', () => {
     NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
     NEXT_TWO_MONTH = LAST_BLOCK_TIMESTAMP + 2 * ONE_MONTH;
 
-    dai = await (await ethers.getContractFactory('Token'))
+    dai = await (await ethers.getContractFactory('ERC20Premint'))
       .connect(alice)
-      .deploy(parseUnits('100000000', 18));
+      .deploy('Token', 'TKN', parseUnits('100000000', 18));
   });
 
   beforeEach(async () => {

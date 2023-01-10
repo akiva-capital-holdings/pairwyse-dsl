@@ -16,10 +16,15 @@ import {
   Parser,
 } from '../../../typechain-types';
 
-import { bnToLongHexString, checkStackTail, hex4Bytes, hex4BytesShort } from '../../utils/utils';
+import {
+  bnToLongHexString,
+  checkStackTail,
+  hex4Bytes,
+  hex4BytesShort,
+  createBulkVotes,
+} from '../../utils/utils';
 import { deployAgreement, deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
 import { deployBaseMock } from '../../../scripts/utils/deploy.utils.mock';
-import { createBulkVotes } from '../../utils/utils';
 import { getChainId, removeEmptyValues } from '../../../utils/utils';
 import { ONE_MONTH } from '../../utils/constants';
 import { parse } from '../../../scripts/utils/update.record';
@@ -1898,9 +1903,9 @@ describe('End-to-end', () => {
       NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
 
       // Deploy Token contract
-      const token = await (await ethers.getContractFactory('Token'))
+      const token = await (await ethers.getContractFactory('ERC20Premint'))
         .connect(alice)
-        .deploy(ethers.utils.parseEther('1000'));
+        .deploy('Token', 'TKN', ethers.utils.parseEther('1000'));
       await token.deployed();
       tokenAddr = token.address;
     });

@@ -69,19 +69,19 @@ contract AgreementStorage {
         return position.getStorageUint256();
     }
 
-    function setStorageUint256(bytes32 position, uint256 data) external isReserved(position) {
+    function setStorageUint256(bytes32 position, uint256 data) public isReserved(position) {
         position.setStorageUint256(data);
     }
 
-    function setStorageBytes32(bytes32 position, bytes32 data) external isReserved(position) {
+    function setStorageBytes32(bytes32 position, bytes32 data) public isReserved(position) {
         position.setStorageBytes32(data);
     }
 
-    function setStorageAddress(bytes32 position, address data) external isReserved(position) {
+    function setStorageAddress(bytes32 position, address data) public isReserved(position) {
         position.setStorageAddress(data);
     }
 
-    function setStorageBool(bytes32 position, bool data) external isReserved(position) {
+    function setStorageBool(bytes32 position, bool data) public isReserved(position) {
         position.setStorageBool(data);
     }
 

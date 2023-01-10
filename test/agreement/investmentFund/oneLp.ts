@@ -25,9 +25,9 @@ const parentSuite = describe('Agreement: Investment Fund. One LP', () => {
     [, , , dynamicTestData.whale, dynamicTestData.GP, ...dynamicTestData.LPs] =
       await ethers.getSigners();
 
-    dynamicTestData.dai = await (await ethers.getContractFactory('Token'))
+    dynamicTestData.dai = await (await ethers.getContractFactory('ERC20Premint'))
       .connect(dynamicTestData.whale)
-      .deploy(parseUnits('100000000', 18));
+      .deploy('Token', 'TKN', parseUnits('100000000', 18));
 
     // Add all necessary Records
     // `base = 4` - steps for businessCases with one LP

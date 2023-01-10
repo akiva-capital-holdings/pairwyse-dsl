@@ -3,11 +3,13 @@ pragma solidity ^0.8.0;
 
 import { IParser } from '../dsl/interfaces/IParser.sol';
 import { IProgramContext } from '../dsl/interfaces/IProgramContext.sol';
+import { IERC20Mintable } from '../dsl/interfaces/IERC20Mintable.sol';
 import { ProgramContext } from '../dsl/ProgramContext.sol';
 import { ErrorsAgreement, ErrorsGovernance } from '../dsl/libs/Errors.sol';
 import { UnstructuredStorage } from '../dsl/libs/UnstructuredStorage.sol';
 import { Executor } from '../dsl/libs/Executor.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
+import { ERC20Mintable } from '../dsl/helpers/ERC20Mintable.sol';
 import { Agreement } from '../agreement/Agreement.sol';
 
 // import 'hardhat/console.sol';
@@ -17,6 +19,7 @@ contract MultiTranche is Agreement {
 
     uint256 public deadline;
     mapping(uint256 => bool) public baseRecord; // recordId => true/false
+    IERC20Mintable public wusdc;
 
     /**
      * Sets parser address, creates new Context instance, and setups Context
@@ -27,19 +30,8 @@ contract MultiTranche is Agreement {
         address _dslContext
     ) Agreement(_parser, _ownerAddr, _dslContext) {
         _setBaseRecords();
-    }
-
-    function execute(uint256 _recordId) external payable override {
-        _verifyRecord(_recordId);
-        if (_recordId == 1) {
-            // if the user already voted NO he can not vote YES anymore
-            require(!records[2].isExecutedBySignatory[msg.sender], ErrorsGovernance.GOV2);
-        } else if (_recordId == 2) {
-            // if the user already voted YES he can not vote NO anymore
-            require(!records[1].isExecutedBySignatory[msg.sender], ErrorsGovernance.GOV1);
-        }
-        require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
-        emit RecordExecuted(msg.sender, _recordId, msg.value, records[_recordId].recordString);
+        wusdc = new ERC20Mintable('Wrapped USDC', 'WUSDC');
+        _setDefaultVariables();
     }
 
     /**
@@ -47,8 +39,21 @@ contract MultiTranche is Agreement {
      */
     function _setBaseRecords() internal {
         _setEnterRecord();
-        _setDepositAllRecord();
-        _setWithdrawRecord();
+        // _setDepositAllRecord();
+        // _setWithdrawRecord();
+    }
+
+    function _setDefaultVariables() internal {
+        // Set WUSDC variable
+        setStorageAddress(
+            0x1896092e00000000000000000000000000000000000000000000000000000000,
+            address(wusdc)
+        );
+        // Set MULTI_TRANCHE variable
+        setStorageAddress(
+            0x0a371cf900000000000000000000000000000000000000000000000000000000,
+            address(this)
+        );
     }
 
     /**
@@ -70,15 +75,8 @@ contract MultiTranche is Agreement {
         address[] memory _signatories = new address[](1);
         string[] memory _conditionStrings = new string[](1);
         uint256[] memory _requiredRecords;
-        if (_requiredRecordsLength != 0) {
-            _requiredRecords = new uint256[](1);
-            _requiredRecords[0] = 0; // required always 0 record
-        }
-        if (_recordId == 0 || _recordId == 3) {
-            _signatories[0] = ownerAddr;
-        } else {
-            _signatories[0] = IProgramContext(contextProgram).ANYONE();
-        }
+
+        _signatories[0] = IProgramContext(contextProgram).ANYONE();
         _conditionStrings[0] = _condition;
         update(_recordId, _requiredRecords, _signatories, _record, _conditionStrings);
         baseRecord[_recordId] = true; // sets the record as base record for the Governance contract
@@ -94,8 +92,8 @@ contract MultiTranche is Agreement {
         _setParameters(
             1, // record ID
             '(allowance USDC MSG_SENDER MULTI_TRANCHE) setUint256 ALLOWANCE '
-            'transferFrom USDC MSG_SENDER MULTI_TRANCHE ALLOWANCE '
-            'mint WUSDC MSG_SENDER ALLOWANCE ', // transaction
+            'transferFromVar USDC MSG_SENDER MULTI_TRANCHE ALLOWANCE '
+            'mint WUSDC MSG_SENDER ALLOWANCE', // transaction
             'bool true', // condition
             0 // required records length
         );
@@ -139,7 +137,7 @@ contract MultiTranche is Agreement {
             '(allowance WUSDC MSG_SENDER MULTI_TRANCHE) setUint256 W_ALLOWANCE'
             'compound withdraw USDC W_ALLOWANCE '
             'burn WUSDC MSG_SENDER W_ALLOWANCE'
-            'transferFrom USDC MSG_SENDER W_ALLOWANCE ', // transaction
+            'transferFromVar USDC MSG_SENDER W_ALLOWANCE', // transaction
             'blockTimestamp > (var DEPOSIT_TIME + var LOCK_TIME)', // condition
             0 // required records length
         );

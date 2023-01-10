@@ -34,8 +34,8 @@ task('deploy-and-mint:erc20', 'To deploy erc20 mock')
 
     // Deploy the token
     const token = await (
-      await hre.ethers.getContractFactory('Token')
-    ).deploy(hre.ethers.utils.parseEther(`${totalSupplyValue}`));
+      await hre.ethers.getContractFactory('ERC20Premint')
+    ).deploy('Token', 'TKN', hre.ethers.utils.parseEther(`${totalSupplyValue}`));
 
     // Display deployed address
     console.log(`\x1b[42m Token address \x1b[0m\x1b[32m ${token.address}\x1b[0m`);

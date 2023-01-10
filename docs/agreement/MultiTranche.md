@@ -12,6 +12,12 @@ uint256 deadline
 mapping(uint256 => bool) baseRecord
 ```
 
+### wusdc
+
+```solidity
+contract IERC20Mintable wusdc
+```
+
 ### constructor
 
 ```solidity
@@ -20,21 +26,6 @@ constructor(address _parser, address _ownerAddr, address _dslContext) public
 
 Sets parser address, creates new Context instance, and setups Context
 
-### execute
-
-```solidity
-function execute(uint256 _recordId) external payable
-```
-
-_Check if the recorcID is executable (validate all conditions before
-record execution, check signatures)._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _recordId | uint256 | Record ID |
-
 ### _setBaseRecords
 
 ```solidity
@@ -42,6 +33,12 @@ function _setBaseRecords() internal
 ```
 
 _Uploads 4 pre-defined records to Governance contract directly_
+
+### _setDefaultVariables
+
+```solidity
+function _setDefaultVariables() internal
+```
 
 ### _setParameters
 
