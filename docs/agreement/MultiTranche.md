@@ -31,14 +31,8 @@ mapping(uint256 => bool) baseRecord
 ### constructor
 
 ```solidity
-constructor(address _parser, address _ownerAddr, address _token, address _dslContext, uint256 _deadline) public
+constructor(address _parser, address _ownerAddr, address _token, address _dslContext, uint256 _deadline, address _agreement, address _investor) public
 ```
 
 Sets parser address, creates new Context instance, and setups Context
-
-### mintWrappedUSDC
-
-```solidity
-function mintWrappedUSDC(address spender) external
-```
 
