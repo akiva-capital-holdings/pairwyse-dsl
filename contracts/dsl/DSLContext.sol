@@ -472,6 +472,39 @@ contract DSLContext is IDSLContext {
             true
         );
 
+        // Ex. `allowance DAI OWNER SPENDER`
+        _addOpcode(
+            'allowance',
+            0x42,
+            OtherOpcodes.opAllowance.selector,
+            IParser.asmAllowanceMintBurn.selector,
+            OpcodeLibNames.OtherOpcodes,
+            3,
+            true
+        );
+
+        // Ex. `mint DAI TO AMOUNT`
+        _addOpcode(
+            'mint',
+            0x43,
+            OtherOpcodes.opMint.selector,
+            IParser.asmAllowanceMintBurn.selector,
+            OpcodeLibNames.OtherOpcodes,
+            3,
+            true
+        );
+
+        // Ex. `burn DAI OWNER AMOUNT`
+        _addOpcode(
+            'burn',
+            0x44,
+            OtherOpcodes.opBurn.selector,
+            IParser.asmAllowanceMintBurn.selector,
+            OpcodeLibNames.OtherOpcodes,
+            3,
+            true
+        );
+
         /** Example:
             func SUM_OF_NUMBERS endf
             end

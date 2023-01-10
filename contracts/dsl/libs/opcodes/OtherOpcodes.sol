@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import { IDSLContext } from '../../interfaces/IDSLContext.sol';
 import { IProgramContext } from '../../interfaces/IProgramContext.sol';
 import { IERC20 } from '../../interfaces/IERC20.sol';
+import { IERC20Mintable } from '../../interfaces/IERC20Mintable.sol';
 import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
@@ -251,6 +252,10 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
+    /****************
+     * ERC20 Tokens *
+     ***************/
+
     function opTransfer(address _ctxProgram, address) public {
         address payable token = payable(
             address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
@@ -290,22 +295,6 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
-    function opBalanceOf(address _ctxProgram, address) public {
-        address payable token = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
-        address payable user = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
-        uint256 balance = IERC20(token).balanceOf(user);
-        OpcodeHelpers.putToStack(_ctxProgram, balance);
-    }
-
-    function opLengthOf(address _ctxProgram, address) public {
-        uint256 _length = uint256(opLoadLocalGet(_ctxProgram, 'getLength(bytes32)'));
-        OpcodeHelpers.putToStack(_ctxProgram, _length);
-    }
-
     function opTransferFromVar(address _ctxProgram, address) public {
         address payable token = payable(
             address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
@@ -320,6 +309,64 @@ library OtherOpcodes {
 
         IERC20(token).transferFrom(from, to, amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    function opBalanceOf(address _ctxProgram, address) public {
+        address payable token = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
+        );
+        address payable user = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
+        );
+        uint256 balance = IERC20(token).balanceOf(user);
+        OpcodeHelpers.putToStack(_ctxProgram, balance);
+    }
+
+    function opAllowance(address _ctxProgram, address) public {
+        address payable token = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
+        );
+        address payable owner = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
+        );
+        address payable spender = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
+        );
+        uint256 allowance = IERC20(token).allowance(owner, spender);
+        OpcodeHelpers.putToStack(_ctxProgram, allowance);
+    }
+
+    function opMint(address _ctxProgram, address) public {
+        address payable token = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
+        );
+        address payable to = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
+        );
+        uint256 amount = uint256(opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)'));
+        IERC20Mintable(token).mint(to, amount);
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    function opBurn(address _ctxProgram, address) public {
+        address payable token = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
+        );
+        address payable to = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
+        );
+        uint256 amount = uint256(opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)'));
+        IERC20Mintable(token).burn(to, amount);
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    /********************
+     * end ERC20 Tokens *
+     *******************/
+
+    function opLengthOf(address _ctxProgram, address) public {
+        uint256 _length = uint256(opLoadLocalGet(_ctxProgram, 'getLength(bytes32)'));
+        OpcodeHelpers.putToStack(_ctxProgram, _length);
     }
 
     function opUint256Get(address _ctxProgram, address) public returns (uint256) {

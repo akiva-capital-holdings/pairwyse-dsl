@@ -3,6 +3,7 @@ import { expect } from 'chai';
 /* eslint-disable camelcase */
 import { BigNumber } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { parseEther } from 'ethers/lib/utils';
 import {
   Stack__factory,
   ProgramContextMock,
@@ -529,6 +530,85 @@ describe('Other opcodes', () => {
     await checkStackTail(stack, []);
     await app.opBalanceOf(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStackTail(stack, [testAmount]);
+  });
+
+  it('opAllowance', async () => {
+    const [, owner, spender] = await ethers.getSigners();
+    const expectedAllowance = parseEther('150');
+
+    await testERC20.mint(owner.address, expectedAllowance);
+    await testERC20.connect(owner).approve(spender.address, expectedAllowance);
+
+    const bytes32TokenAddr = hex4Bytes('TOKEN_ADDR');
+    const bytes32OwnerAddr = hex4Bytes('OWNER');
+    const bytes32SpenderAddr = hex4Bytes('SPENDER');
+
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32TokenAddr, testERC20.address);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32OwnerAddr, owner.address);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32SpenderAddr, spender.address);
+
+    const tokenAddress = bytes32TokenAddr.substring(2, 10);
+    const ownerAddress = bytes32OwnerAddr.substring(2, 10);
+    const spenderAddress = bytes32SpenderAddr.substring(2, 10);
+
+    await ctxProgram.setProgram(`0x${tokenAddress}${ownerAddress}${spenderAddress}`);
+
+    await checkStackTail(stack, []);
+    await app.opAllowance(ctxProgramAddr, ethers.constants.AddressZero);
+    await checkStackTail(stack, [expectedAllowance]);
+  });
+
+  it('opMint', async () => {
+    const [, to] = await ethers.getSigners();
+    const amount = parseEther('150');
+
+    expect(await testERC20.balanceOf(to.address)).to.equal(0);
+
+    const bytes32TokenAddr = hex4Bytes('TOKEN_ADDR');
+    const bytes32ToAddr = hex4Bytes('TO');
+    const bytes32Amount = hex4Bytes('AMOUNT');
+
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32TokenAddr, testERC20.address);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32ToAddr, to.address);
+    await clientApp['setStorageUint256(bytes32,uint256)'](bytes32Amount, amount);
+
+    const tokenAddress = bytes32TokenAddr.substring(2, 10);
+    const toAddress = bytes32ToAddr.substring(2, 10);
+    const amountVar = bytes32Amount.substring(2, 10);
+
+    await ctxProgram.setProgram(`0x${tokenAddress}${toAddress}${amountVar}`);
+
+    await checkStackTail(stack, []);
+    await app.opMint(ctxProgramAddr, ethers.constants.AddressZero);
+    expect(await testERC20.balanceOf(to.address)).to.equal(amount);
+    await checkStackTail(stack, [1]);
+  });
+
+  it('opBurn', async () => {
+    const [, to] = await ethers.getSigners();
+    const amount = parseEther('150');
+
+    await testERC20.mint(to.address, amount);
+    expect(await testERC20.balanceOf(to.address)).to.equal(amount);
+
+    const bytes32TokenAddr = hex4Bytes('TOKEN_ADDR');
+    const bytes32ToAddr = hex4Bytes('TO');
+    const bytes32Amount = hex4Bytes('AMOUNT');
+
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32TokenAddr, testERC20.address);
+    await clientApp['setStorageAddress(bytes32,address)'](bytes32ToAddr, to.address);
+    await clientApp['setStorageUint256(bytes32,uint256)'](bytes32Amount, amount);
+
+    const tokenAddress = bytes32TokenAddr.substring(2, 10);
+    const toAddress = bytes32ToAddr.substring(2, 10);
+    const amountVar = bytes32Amount.substring(2, 10);
+
+    await ctxProgram.setProgram(`0x${tokenAddress}${toAddress}${amountVar}`);
+
+    await checkStackTail(stack, []);
+    await app.opBurn(ctxProgramAddr, ethers.constants.AddressZero);
+    expect(await testERC20.balanceOf(to.address)).to.equal(0);
+    await checkStackTail(stack, [1]);
   });
 
   it('opUint256Get', async () => {

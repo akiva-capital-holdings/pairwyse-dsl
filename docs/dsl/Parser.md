@@ -243,6 +243,12 @@ Example of a command:
 balanceOf TOKEN USER
 ```_
 
+### asmAllowanceMintBurn
+
+```solidity
+function asmAllowanceMintBurn(bytes _program, address, address) public returns (bytes newProgram)
+```
+
 ### asmLengthOf
 
 ```solidity

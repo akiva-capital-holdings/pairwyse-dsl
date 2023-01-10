@@ -24,7 +24,7 @@ const { ethers } = hre;
 /**
  * Multi Tranche Agreement Template contract tests
  */
-describe.only('Multi Tranche', () => {
+describe('Multi Tranche', () => {
   let creator: SignerWithAddress;
   let investor1: SignerWithAddress;
   let investor2: SignerWithAddress;

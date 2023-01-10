@@ -368,6 +368,16 @@ contract Parser is IParser {
         newProgram = _parseVariable(newProgram); // user address
     }
 
+    function asmAllowanceMintBurn(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
+        newProgram = _parseVariable(_program); // token address, token address, token address
+        newProgram = _parseVariable(newProgram); // owner, to, owner
+        newProgram = _parseVariable(newProgram); // spender, amount, amount
+    }
+
     /**
      * @dev Updates previous `program` with getting the length of the dsl array by its name
      * The command return non zero value only if the array name was declared and have at least one value.

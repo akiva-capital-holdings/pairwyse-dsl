@@ -101,6 +101,13 @@ contract MultiTranche is Agreement {
         );
     }
 
+    // TODO
+    // - compound deposit
+    // - compound withdraw
+    // - allowance ERC20 [✅ done]
+    // - burn ERC20 [✅ done]
+    // - mint ERC20 [✅ done]
+
     /**
      * @dev If the deposits deadline has passed anyone can trigger the deposit of all USDC to
      *      Compound. This is done in the following way:

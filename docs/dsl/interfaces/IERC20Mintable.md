@@ -1,10 +1,6 @@
-## ERC20Mintable
+## IERC20Mintable
 
-### constructor
-
-```solidity
-constructor(string _name, string _symbol) public
-```
+_Interface of ERC20 token with `mint` and `burn` functions_
 
 ### mint
 

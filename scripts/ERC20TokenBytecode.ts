@@ -8,11 +8,11 @@ async function main() {
 
   // Note: run this on the same node as Front End to actually deploy these libraries
 
-  const tokenContract = await hre.ethers.getContractFactory('ERC20Token');
+  const tokenContract = await hre.ethers.getContractFactory('ERC20Premint');
   const bytecodeFolder = path.join(__dirname, '..', 'bytecode');
 
   checkOrCreateFolder(bytecodeFolder);
-  fs.writeFileSync(path.join(bytecodeFolder, 'ERC20Token.bytecode'), tokenContract.bytecode);
+  fs.writeFileSync(path.join(bytecodeFolder, 'ERC20Premint.bytecode'), tokenContract.bytecode);
 }
 
 main();

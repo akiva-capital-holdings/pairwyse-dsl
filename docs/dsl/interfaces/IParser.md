@@ -96,6 +96,12 @@ function asmTransferFrom(bytes _program, address, address) external returns (byt
 function asmBalanceOf(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
+### asmAllowanceMintBurn
+
+```solidity
+function asmAllowanceMintBurn(bytes _program, address, address) external returns (bytes newProgram)
+```
+
 ### asmLengthOf
 
 ```solidity
