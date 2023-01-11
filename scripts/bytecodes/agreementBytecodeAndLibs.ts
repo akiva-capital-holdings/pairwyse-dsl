@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import * as hre from 'hardhat';
-import { deployBase, deployOpcodeLibs } from './utils/deploy.utils';
-import { checkOrCreateFolder } from '../utils/utils';
+import { deployBase, deployOpcodeLibs } from '../utils/deploy.utils';
+import { checkOrCreateFolder } from '../../utils/utils';
 
 /**
  * Deploy libraries that are required by Agreement & generate Agreement bytecode with those

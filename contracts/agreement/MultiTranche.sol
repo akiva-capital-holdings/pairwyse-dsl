@@ -135,8 +135,8 @@ contract MultiTranche is Agreement {
         _setParameters(
             3, // record ID
             '(allowance WUSDC MSG_SENDER MULTI_TRANCHE) setUint256 W_ALLOWANCE'
+            'burn WUSDC MSG_SENDER W_ALLOWANCE '
             'compound withdraw USDC W_ALLOWANCE '
-            'burn WUSDC MSG_SENDER W_ALLOWANCE'
             'transferFromVar USDC MSG_SENDER W_ALLOWANCE', // transaction
             'blockTimestamp > (var DEPOSIT_TIME + var LOCK_TIME)', // condition
             0 // required records length

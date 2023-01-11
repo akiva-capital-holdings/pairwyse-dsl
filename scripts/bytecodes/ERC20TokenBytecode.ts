@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as hre from 'hardhat';
-import { checkOrCreateFolder } from '../utils/utils';
+import { checkOrCreateFolder } from '../../utils/utils';
 
 async function main() {
   console.log(`Deploying from address ${(await hre.ethers.getSigners())[0].address}`);

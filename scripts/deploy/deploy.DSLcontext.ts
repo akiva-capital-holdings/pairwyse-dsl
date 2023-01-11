@@ -1,5 +1,5 @@
 import * as hre from 'hardhat';
-import { deployContextDSL } from './utils/deploy.utils';
+import { deployContextDSL } from '../utils/deploy.utils';
 
 export async function main() {
   console.log(`Deploying from address ${(await hre.ethers.getSigners())[0].address}`);
