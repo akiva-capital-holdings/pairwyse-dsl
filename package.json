@@ -19,6 +19,7 @@
     "doc": "yarn hardhat docgen"
   },
   "dependencies": {
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
     "hardhat": "@2.11.2",
     "hardhat-contract-sizer": "^2.6.1",
     "solidity-docgen": "^0.6.0-beta.29"
