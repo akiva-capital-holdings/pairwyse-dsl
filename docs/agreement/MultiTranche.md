@@ -6,10 +6,16 @@
 uint256 deadline
 ```
 
-### wusdc
+### wcusdc
 
 ```solidity
-contract IERC20Mintable wusdc
+contract IERC20Mintable wcusdc
+```
+
+### compounds
+
+```solidity
+mapping(address => address) compounds
 ```
 
 ### constructor
@@ -53,28 +59,16 @@ non-upgradable. Check `isUpgradableRecord` modifier_
 | _record | string | is a string of the main record for execution |
 | _condition | string | is a string of the condition that will be checked before record execution |
 
-### _setEnterRecord
+### _setDepositRecord
 
 ```solidity
-function _setEnterRecord() internal
+function _setDepositRecord() internal
 ```
 
 _To enter the MultiTranche contract:
 1. Understand how much USDC a user wants to deposit
 2. Transfer USDC from the user to the MultiTranche
 3. Mint WUSDC to the user's wallet in exchange for his/her USDC_
-
-### _setDepositAllRecord
-
-```solidity
-function _setDepositAllRecord() internal
-```
-
-_If the deposits deadline has passed anyone can trigger the deposit of all USDC to
-     Compound. This is done in the following way:
-1. Understand how much USDC there are on the MultiTranche contract
-2. Deposit all USDC to Compound
-3. Remember in a variable when the deposit happened_
 
 ### _setWithdrawRecord
 

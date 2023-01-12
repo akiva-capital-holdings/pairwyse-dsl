@@ -11,24 +11,27 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
     using StringUtils for string;
 
     function opLoadRemoteAny(address _ctxProgram, address _ctxDSL) public {
-        address libAddr = IDSLContext(_ctxDSL).otherOpcodes();
-        bytes4 _selector = OpcodeHelpers.nextBranchSelector(_ctxDSL, _ctxProgram, 'loadRemote');
-        OpcodeHelpers.mustDelegateCall(
-            libAddr,
-            abi.encodeWithSelector(_selector, _ctxProgram, _ctxDSL)
-        );
+        _mustDelegateCall(_ctxProgram, _ctxDSL, 'loadRemote');
     }
 
     function opCompound(address _ctxProgram, address _ctxDSL) public {
+        _mustDelegateCall(_ctxProgram, _ctxDSL, 'compound');
+    }
+
+    function _mustDelegateCall(
+        address _ctxProgram,
+        address _ctxDSL,
+        string memory _opcode
+    ) internal {
         address libAddr = IDSLContext(_ctxDSL).otherOpcodes();
-        bytes4 _selector = OpcodeHelpers.nextBranchSelector(_ctxDSL, _ctxProgram, 'compound');
+        bytes4 _selector = OpcodeHelpers.nextBranchSelector(_ctxDSL, _ctxProgram, _opcode);
         OpcodeHelpers.mustDelegateCall(
             libAddr,
             abi.encodeWithSelector(_selector, _ctxProgram, _ctxDSL)
@@ -44,7 +47,7 @@ library OtherOpcodes {
     }
 
     function opBlockChainId(address _ctxProgram, address) public {
-        OpcodeHelpers.putToStack(_ctxProgram, block.chainid);
+        // OpcodeHelpers.putToStack(_ctxProgram, block.chainid);
     }
 
     function opMsgSender(address _ctxProgram, address) public {
@@ -55,10 +58,10 @@ library OtherOpcodes {
     }
 
     function opMsgValue(address _ctxProgram, address) public {
-        OpcodeHelpers.putToStack(
-            _ctxProgram,
-            uint256(uint160(IProgramContext(_ctxProgram).msgValue()))
-        );
+        // OpcodeHelpers.putToStack(
+        //     _ctxProgram,
+        //     uint256(uint160(IProgramContext(_ctxProgram).msgValue()))
+        // );
     }
 
     /**
@@ -260,7 +263,7 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
-    function _getAddress(address _ctxProgram) public returns (address result) {
+    function _getAddress(address _ctxProgram) internal returns (address result) {
         result = address(
             uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)')))
         );
@@ -447,9 +450,21 @@ library OtherOpcodes {
         (address token, uint256 amount) = _getTokenInfo(_ctxProgram);
         // approve simple token to use it into the market
         IERC20(token).approve(cUSDC, amount);
-
+        // get the last balance of cToken in the contract
+        uint256 previosBalance = IcToken(cUSDC).balanceOf(address(this));
         // supply assets into the market and receives cTokens in exchange
         IcToken(cUSDC).mint(amount);
+        // get the current balance of cToken in the contract
+        uint256 currentBalance = IcToken(cUSDC).balanceOf(address(this)) - previosBalance;
+        // Set cUSDC_BALANCE variable by it's hex
+        OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature(
+                'setStorageUint256(bytes32,uint256)',
+                0x09f8f35900000000000000000000000000000000000000000000000000000000,
+                currentBalance
+            )
+        );
 
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
@@ -460,11 +475,8 @@ library OtherOpcodes {
         (address token, uint256 amount) = _getTokenInfo(_ctxProgram);
 
         // redeems cTokens in exchange for the underlying asset (USDC)
-        IcToken(cUSDC).redeemUnderlying(amount);
-
-        // TODO: amount for redeem() function is cTokens
-        // can be usefull if needs to provide user investments + rewards
-        // IcToken(cUSDC).redeem(amount);
+        // amount - amount of cTokens
+        IcToken(cUSDC).redeem(amount);
 
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }

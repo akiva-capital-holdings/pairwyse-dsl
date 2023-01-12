@@ -18,10 +18,12 @@ contract MultiTranche is Agreement {
     using UnstructuredStorage for bytes32;
 
     uint256 public deadline;
-    IERC20Mintable public wusdc;
+    IERC20Mintable public wcusdc; // WcUSDC
 
     // might be used if rewards should be send to the user in additional to his invest
     // mapping(address => uint256) public info; // user - amount cTokens
+
+    mapping(address => address) public compounds; // token => cToken
 
     /**
      * Sets parser address, creates new Context instance, and setups Context
@@ -32,7 +34,7 @@ contract MultiTranche is Agreement {
         address _dslContext
     ) Agreement(_parser, _ownerAddr, _dslContext) {
         _setBaseRecords();
-        wusdc = new ERC20Mintable('Wrapped USDC', 'WUSDC');
+        wcusdc = new ERC20Mintable('Wrapped cUSDC', 'WcUSDC');
         _setDefaultVariables();
     }
 
@@ -40,22 +42,32 @@ contract MultiTranche is Agreement {
      * @dev Uploads 4 pre-defined records to Governance contract directly
      */
     function _setBaseRecords() internal {
-        _setEnterRecord();
-        _setDepositAllRecord();
+        // _setEnterRecord();
+        _setDepositRecord();
         _setWithdrawRecord();
     }
 
     function _setDefaultVariables() internal {
-        // Set WUSDC variable
+        // Set WcUSDC variable
         setStorageAddress(
-            0x1896092e00000000000000000000000000000000000000000000000000000000,
-            address(wusdc)
+            0x7188be9000000000000000000000000000000000000000000000000000000000,
+            address(wcusdc)
         );
         // Set MULTI_TRANCHE variable
         setStorageAddress(
             0x0a371cf900000000000000000000000000000000000000000000000000000000,
             address(this)
         );
+        // Set cUSDC variable
+        address cUSDC = 0x39AA39c021dfbaE8faC545936693aC917d5E7563;
+        setStorageAddress(
+            0x48ebcbd300000000000000000000000000000000000000000000000000000000,
+            cUSDC
+        );
+        // Set USDC variable
+        address USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+        setStorageAddress(0xd6aca1be00000000000000000000000000000000000000000000000000000000, USDC);
+        compounds[USDC] = cUSDC;
     }
 
     /**
@@ -87,13 +99,15 @@ contract MultiTranche is Agreement {
      * 2. Transfer USDC from the user to the MultiTranche
      * 3. Mint WUSDC to the user's wallet in exchange for his/her USDC
      */
-    function _setEnterRecord() internal {
+    function _setDepositRecord() internal {
         _setParameters(
             1, // record ID
             '(allowance USDC MSG_SENDER MULTI_TRANCHE) setUint256 ALLOWANCE '
             'transferFromVar USDC MSG_SENDER MULTI_TRANCHE ALLOWANCE '
-            'mint WUSDC MSG_SENDER ALLOWANCE', // transaction
-            'bool true' // condition
+            'compound deposit USDC ALLOWANCE '
+            'mint WcUSDC MSG_SENDER cUSDC_BALANCE '
+            'blockTimestamp setUint256 DEPOSIT_TIME', // transaction
+            'blockTimestamp > var DEPOSITS_DEADLINE' // condition
         );
     }
 
@@ -105,25 +119,6 @@ contract MultiTranche is Agreement {
     // - mint ERC20 [✅ done]
 
     /**
-     * @dev If the deposits deadline has passed anyone can trigger the deposit of all USDC to
-     *      Compound. This is done in the following way:
-     * 1. Understand how much USDC there are on the MultiTranche contract
-     * 2. Deposit all USDC to Compound
-     * 3. Remember in a variable when the deposit happened
-     */
-    function _setDepositAllRecord() internal {
-        // 'compound deposit USDC TOTAL_USDC '
-        _setParameters(
-            2, // record ID
-            '(balanceOf USDC MULTI_TRANCHE) setUint256 TOTAL_USDC '
-            'bool true '
-            'compound deposit USDC TOTAL_USDC '
-            'blockTimestamp setUint256 DEPOSIT_TIME', // transaction
-            'blockTimestamp > var DEPOSITS_DEADLINE' // condition
-        );
-    }
-
-    /**
      * @dev If USDC lock time is passed:
      * 1. Understand how much WUSDC a user wants to withdraw
      * 2. Withdraw requested amount of USDC from Compound
@@ -131,13 +126,13 @@ contract MultiTranche is Agreement {
      * 4. Send USDC to the user
      */
     function _setWithdrawRecord() internal {
-        // 'compound withdraw USDC W_ALLOWANCE '
         _setParameters(
-            3, // record ID
-            '(allowance WUSDC MSG_SENDER MULTI_TRANCHE) setUint256 W_ALLOWANCE '
+            2, // record ID
+            '(allowance WcUSDC MSG_SENDER MULTI_TRANCHE) setUint256 W_ALLOWANCE '
             'compound withdraw USDC W_ALLOWANCE '
-            'burn WUSDC MSG_SENDER W_ALLOWANCE '
-            'transferVar USDC MSG_SENDER W_ALLOWANCE ', // transaction
+            'burn WcUSDC MSG_SENDER W_ALLOWANCE '
+            '(balanceOf USDC MULTI_TRANCHE) setUint256 USDC_TOTAL '
+            'transferVar USDC MSG_SENDER USDC_TOTAL ', // transaction
             'blockTimestamp > (var DEPOSIT_TIME + var LOCK_TIME)' // condition
         );
     }

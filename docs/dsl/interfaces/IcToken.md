@@ -32,10 +32,10 @@ _Accrues interest whether or not the operation succeeds, unless reverted_
 | ---- | ---- | ----------- |
 | [0] | uint256 | uint 0=success, otherwise a failure (see ErrorReporter.sol for details) |
 
-### redeemUnderlying
+### redeem
 
 ```solidity
-function redeemUnderlying(uint256 redeemTokens) external returns (uint256)
+function redeem(uint256 redeemTokens) external returns (uint256)
 ```
 
 Sender redeems cTokens in exchange for the underlying asset

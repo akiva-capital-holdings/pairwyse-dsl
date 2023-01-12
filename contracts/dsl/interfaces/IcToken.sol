@@ -24,7 +24,7 @@ interface IcToken {
      * @param redeemTokens The number of cTokens to redeem into underlying
      * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
      */
-    function redeemUnderlying(uint256 redeemTokens) external returns (uint);
+    function redeem(uint256 redeemTokens) external returns (uint);
 
     /**
      * @notice Approve `spender` to transfer up to `amount` from `src`

@@ -12,6 +12,12 @@ function opLoadRemoteAny(address _ctxProgram, address _ctxDSL) public
 function opCompound(address _ctxProgram, address _ctxDSL) public
 ```
 
+### _mustDelegateCall
+
+```solidity
+function _mustDelegateCall(address _ctxProgram, address _ctxDSL, string _opcode) internal
+```
+
 ### opBlockNumber
 
 ```solidity
@@ -223,7 +229,7 @@ function opSendEth(address _ctxProgram, address) public
 ### _getAddress
 
 ```solidity
-function _getAddress(address _ctxProgram) public returns (address result)
+function _getAddress(address _ctxProgram) internal returns (address result)
 ```
 
 ### opTransfer
