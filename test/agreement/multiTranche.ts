@@ -15,10 +15,10 @@ const { ethers } = hre;
 /**
  * Multi Tranche Agreement Template contract tests
  * Execute this test only using ALCHEMY_FORK with blockNumber: 16381381:
- * `yarn test --network hardhat`
+ * `yarn test --network mainFork`
  * another block can change rewards and expected results in tests
  */
-describe.only('Multi Tranche', () => {
+describe.skip('Multi Tranche', () => {
   let creator: SignerWithAddress;
   let investor1: SignerWithAddress;
   let investor2: SignerWithAddress;

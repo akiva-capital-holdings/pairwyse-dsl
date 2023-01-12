@@ -48,6 +48,12 @@ function opMsgSender(address _ctxProgram, address) public
 function opMsgValue(address _ctxProgram, address) public
 ```
 
+### _getParam
+
+```solidity
+function _getParam(address _ctxProgram, uint256 _slice) internal returns (bytes32)
+```
+
 ### opSetLocalBool
 
 ```solidity
@@ -328,16 +334,16 @@ function opCompoundDeposit(address _ctxProgram) public
 function opCompoundWithdraw(address _ctxProgram) public
 ```
 
-### _getTokenInfo
-
-```solidity
-function _getTokenInfo(address _ctxProgram) public returns (address, uint256)
-```
-
 ### opEnableRecord
 
 ```solidity
 function opEnableRecord(address _ctxProgram, address) public
+```
+
+### _getTokenInfo
+
+```solidity
+function _getTokenInfo(address _ctxProgram) public returns (address, uint256)
 ```
 
 ### _sumOfStructVars

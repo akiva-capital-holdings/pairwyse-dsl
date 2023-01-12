@@ -47,7 +47,7 @@ library OtherOpcodes {
     }
 
     function opBlockChainId(address _ctxProgram, address) public {
-        // OpcodeHelpers.putToStack(_ctxProgram, block.chainid);
+        OpcodeHelpers.putToStack(_ctxProgram, block.chainid);
     }
 
     function opMsgSender(address _ctxProgram, address) public {
@@ -58,10 +58,14 @@ library OtherOpcodes {
     }
 
     function opMsgValue(address _ctxProgram, address) public {
-        // OpcodeHelpers.putToStack(
-        //     _ctxProgram,
-        //     uint256(uint160(IProgramContext(_ctxProgram).msgValue()))
-        // );
+        OpcodeHelpers.putToStack(
+            _ctxProgram,
+            uint256(uint160(IProgramContext(_ctxProgram).msgValue()))
+        );
+    }
+
+    function _getParam(address _ctxProgram, uint256 _slice) internal returns (bytes32) {
+        return OpcodeHelpers.getNextBytes(_ctxProgram, _slice);
     }
 
     /**
@@ -70,8 +74,7 @@ library OtherOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opSetLocalBool(address _ctxProgram, address) public {
-        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
-
+        bytes32 _varNameB32 = _getParam(_ctxProgram, 4);
         bytes memory data = OpcodeHelpers.nextBytes(_ctxProgram, 1);
         bool _boolVal = uint8(data[0]) == 1;
         // Set local variable by it's hex
@@ -87,7 +90,7 @@ library OtherOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opSetUint256(address _ctxProgram, address) public {
-        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
+        bytes32 _varNameB32 = _getParam(_ctxProgram, 4);
         uint256 _val = IProgramContext(_ctxProgram).stack().pop();
 
         // Set local variable by it's hex
@@ -104,7 +107,7 @@ library OtherOpcodes {
      */
     function opGet(address _ctxProgram, address) public {
         uint256 _index = opUint256Get(_ctxProgram, address(0));
-        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
+        bytes32 _arrNameB32 = _getParam(_ctxProgram, 4);
 
         // check if the array exists
         bytes memory data = OpcodeHelpers.mustCall(
@@ -129,7 +132,7 @@ library OtherOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opSumOf(address _ctxProgram, address _ctxDSL) public {
-        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
+        bytes32 _arrNameB32 = _getParam(_ctxProgram, 4);
 
         _checkArrType(_ctxDSL, _ctxProgram, _arrNameB32, 'uint256');
         bytes32 _length = _getArrLength(_ctxProgram, _arrNameB32);
@@ -144,8 +147,8 @@ library OtherOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opSumThroughStructs(address _ctxProgram, address _ctxDSL) public {
-        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
-        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
+        bytes32 _arrNameB32 = _getParam(_ctxProgram, 4);
+        bytes32 _varNameB32 = _getParam(_ctxProgram, 4);
 
         _checkArrType(_ctxDSL, _ctxProgram, _arrNameB32, 'struct');
         bytes32 _length = _getArrLength(_ctxProgram, _arrNameB32);
@@ -163,12 +166,12 @@ library OtherOpcodes {
      */
     function opStruct(address _ctxProgram, address) public {
         // get the first variable name
-        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
+        bytes32 _varNameB32 = _getParam(_ctxProgram, 4);
 
         // till found the `endStruct` opcode
         while (bytes4(_varNameB32) != 0xcb398fe1) {
             // get a variable value for current _varNameB32
-            bytes32 _value = OpcodeHelpers.getNextBytes(_ctxProgram, 32);
+            bytes32 _value = _getParam(_ctxProgram, 32);
             OpcodeHelpers.mustCall(
                 IProgramContext(_ctxProgram).appAddr(),
                 abi.encodeWithSignature(
@@ -178,7 +181,7 @@ library OtherOpcodes {
                 )
             );
             // get the next variable name in struct
-            _varNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
+            _varNameB32 = _getParam(_ctxProgram, 4);
         }
     }
 
@@ -187,8 +190,8 @@ library OtherOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opPush(address _ctxProgram, address) public {
-        bytes32 _varValue = OpcodeHelpers.getNextBytes(_ctxProgram, 32);
-        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
+        bytes32 _varValue = _getParam(_ctxProgram, 32);
+        bytes32 _arrNameB32 = _getParam(_ctxProgram, 4);
         // check if the array exists
         bytes memory data = OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),
@@ -210,8 +213,8 @@ library OtherOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opDeclare(address _ctxProgram, address) public {
-        bytes32 _arrType = OpcodeHelpers.getNextBytes(_ctxProgram, 1);
-        bytes32 _arrName = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
+        bytes32 _arrType = _getParam(_ctxProgram, 1);
+        bytes32 _arrName = _getParam(_ctxProgram, 4);
 
         OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),
@@ -311,8 +314,7 @@ library OtherOpcodes {
     function opBalanceOf(address _ctxProgram, address) public {
         address payable token = payable(_getAddress(_ctxProgram));
         address payable user = payable(_getAddress(_ctxProgram));
-        uint256 balance = IERC20(token).balanceOf(user);
-        OpcodeHelpers.putToStack(_ctxProgram, balance);
+        OpcodeHelpers.putToStack(_ctxProgram, IERC20(token).balanceOf(user));
     }
 
     function opAllowance(address _ctxProgram, address) public {
@@ -349,15 +351,7 @@ library OtherOpcodes {
     }
 
     function opUint256Get(address _ctxProgram, address) public returns (uint256) {
-        bytes memory data = OpcodeHelpers.nextBytes(_ctxProgram, 32);
-
-        // Convert bytes to bytes32
-        bytes32 result;
-        assembly {
-            result := mload(add(data, 0x20))
-        }
-
-        return uint256(result);
+        return uint256(_getParam(_ctxProgram, 32));
     }
 
     function opLoadLocalGet(
@@ -366,7 +360,7 @@ library OtherOpcodes {
     ) public returns (bytes32 result) {
         bytes32 MSG_SENDER = 0x9ddd6a8100000000000000000000000000000000000000000000000000000000;
         bytes memory data;
-        bytes32 varNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
+        bytes32 varNameB32 = _getParam(_ctxProgram, 4);
         if (varNameB32 == MSG_SENDER) {
             data = abi.encode(IProgramContext(_ctxProgram).msgSender());
         } else {
@@ -377,20 +371,11 @@ library OtherOpcodes {
             );
         }
 
-        // Convert bytes to bytes32
-        assembly {
-            result := mload(add(data, 0x20))
-        }
+        result = bytes32(data);
     }
 
     function opAddressGet(address _ctxProgram, address) public returns (address) {
-        bytes memory contractAddrBytes = OpcodeHelpers.nextBytes(_ctxProgram, 20);
-
-        // Convert bytes to bytes32
-        bytes32 contractAddrB32;
-        assembly {
-            contractAddrB32 := mload(add(contractAddrBytes, 0x20))
-        }
+        bytes32 contractAddrB32 = _getParam(_ctxProgram, 20);
         /**
          * Shift bytes to the left so that
          * 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512000000000000000000000000
@@ -410,16 +395,9 @@ library OtherOpcodes {
     }
 
     function opLoadRemote(address _ctxProgram, string memory funcSignature) public {
-        bytes memory varName = OpcodeHelpers.nextBytes(_ctxProgram, 4);
-        bytes memory contractAddrBytes = OpcodeHelpers.nextBytes(_ctxProgram, 20);
+        bytes32 varNameB32 = _getParam(_ctxProgram, 4);
+        bytes32 contractAddrB32 = _getParam(_ctxProgram, 20);
 
-        // Convert bytes to bytes32
-        bytes32 varNameB32;
-        bytes32 contractAddrB32;
-        assembly {
-            varNameB32 := mload(add(varName, 0x20))
-            contractAddrB32 := mload(add(contractAddrBytes, 0x20))
-        }
         /**
          * Shift bytes to the left so that
          * 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512000000000000000000000000
@@ -436,26 +414,25 @@ library OtherOpcodes {
             contractAddr,
             abi.encodeWithSignature(funcSignature, varNameB32)
         );
-        // Convert bytes to bytes32
-        bytes32 result;
-        assembly {
-            result := mload(add(data, 0x20))
-        }
 
-        OpcodeHelpers.putToStack(_ctxProgram, uint256(result));
+        OpcodeHelpers.putToStack(_ctxProgram, uint256(bytes32(data)));
     }
 
     function opCompoundDeposit(address _ctxProgram) public {
-        address cUSDC = 0x39AA39c021dfbaE8faC545936693aC917d5E7563; // Compound USDC Token
         (address token, uint256 amount) = _getTokenInfo(_ctxProgram);
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+        address cToken = address(uint160(uint256(bytes32(data))));
         // approve simple token to use it into the market
-        IERC20(token).approve(cUSDC, amount);
+        IERC20(token).approve(cToken, amount);
         // get the last balance of cToken in the contract
-        uint256 previosBalance = IcToken(cUSDC).balanceOf(address(this));
+        uint256 previosBalance = IcToken(cToken).balanceOf(address(this));
         // supply assets into the market and receives cTokens in exchange
-        IcToken(cUSDC).mint(amount);
+        IcToken(cToken).mint(amount);
         // get the current balance of cToken in the contract
-        uint256 currentBalance = IcToken(cUSDC).balanceOf(address(this)) - previosBalance;
+        uint256 currentBalance = IcToken(cToken).balanceOf(address(this)) - previosBalance;
         // Set cUSDC_BALANCE variable by it's hex
         OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),
@@ -470,14 +447,29 @@ library OtherOpcodes {
     }
 
     function opCompoundWithdraw(address _ctxProgram) public {
-        address cUSDC = 0x39AA39c021dfbaE8faC545936693aC917d5E7563; // Compound USDC Token
-        // `token` can be used in the future for more different underluing tokens
         (address token, uint256 amount) = _getTokenInfo(_ctxProgram);
+        // `token` can be used in the future for more different underluing tokens
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+        address cToken = address(uint160(uint256(bytes32(data))));
 
         // redeems cTokens in exchange for the underlying asset (USDC)
         // amount - amount of cTokens
-        IcToken(cUSDC).redeem(amount);
+        IcToken(cToken).redeem(amount);
 
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    function opEnableRecord(address _ctxProgram, address) public {
+        uint256 recordId = uint256(opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)'));
+        address payable contractAddr = payable(_getAddress(_ctxProgram));
+
+        OpcodeHelpers.mustCall(
+            contractAddr,
+            abi.encodeWithSignature('activateRecord(uint256)', recordId)
+        );
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
@@ -485,21 +477,6 @@ library OtherOpcodes {
         address payable token = payable(_getAddress(_ctxProgram));
         uint256 amount = uint256(opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)'));
         return (token, amount);
-    }
-
-    function opEnableRecord(address _ctxProgram, address) public {
-        bytes32 result = opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)');
-
-        uint256 recordId = uint256(result);
-        bytes32 addr = opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)');
-
-        address payable contractAddr = payable(address(uint160(uint256(addr))));
-
-        OpcodeHelpers.mustCall(
-            contractAddr,
-            abi.encodeWithSignature('activateRecord(uint256)', recordId)
-        );
-        OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
     /**
