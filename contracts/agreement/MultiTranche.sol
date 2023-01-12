@@ -20,9 +20,6 @@ contract MultiTranche is Agreement {
     uint256 public deadline;
     IERC20Mintable public wcusdc; // WcUSDC
 
-    // might be used if rewards should be send to the user in additional to his invest
-    // mapping(address => uint256) public info; // user - amount cTokens
-
     mapping(address => address) public compounds; // token => cToken
 
     /**
@@ -42,7 +39,6 @@ contract MultiTranche is Agreement {
      * @dev Uploads 4 pre-defined records to Governance contract directly
      */
     function _setBaseRecords() internal {
-        // _setEnterRecord();
         _setDepositRecord();
         _setWithdrawRecord();
     }
@@ -110,13 +106,6 @@ contract MultiTranche is Agreement {
             'blockTimestamp > var DEPOSITS_DEADLINE' // condition
         );
     }
-
-    // TODO
-    // - compound deposit
-    // - compound withdraw
-    // - allowance ERC20 [✅ done]
-    // - burn ERC20 [✅ done]
-    // - mint ERC20 [✅ done]
 
     /**
      * @dev If USDC lock time is passed:

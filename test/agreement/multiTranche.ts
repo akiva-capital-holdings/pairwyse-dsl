@@ -15,7 +15,7 @@ const { ethers } = hre;
 /**
  * Multi Tranche Agreement Template contract tests
  * Execute this test only using ALCHEMY_FORK with blockNumber: 16381381:
- * `yarn test --network mainFork`
+ * `yarn test --network hardhat`
  * another block can change rewards and expected results in tests
  */
 describe.skip('Multi Tranche', () => {
@@ -37,7 +37,6 @@ describe.skip('Multi Tranche', () => {
   const [depositRecord, withdrawRecord] = [1, 2];
 
   before(async () => {
-    // console.log(hex4Bytes('WcUSDC'));
     [creator, investor1, investor2, investor3, anyone] = await ethers.getSigners();
 
     preprocessorAddr = await deployPreprocessor(hre);
