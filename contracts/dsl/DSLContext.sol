@@ -731,6 +731,22 @@ contract DSLContext is IDSLContext {
         _addOpcodeBranch(name, 'struct', 0x02, bytes4(0x0));
         _addOpcodeBranch(name, 'address', 0x03, IStorageUniversal.setStorageAddress.selector);
 
+        // Ex. `compound deposit USDC TOTAL_USDC` or
+        // `compound withdraw USDC TOTAL_USDC`
+        name = 'compound';
+        _addOpcode(
+            name,
+            0x45,
+            OtherOpcodes.opCompound.selector,
+            IParser.asmCompound.selector,
+            OpcodeLibNames.OtherOpcodes,
+            3,
+            true
+        );
+        // types that 'compound' have for loading data
+        _addOpcodeBranch(name, 'deposit', 0x01, OtherOpcodes.opCompoundDeposit.selector);
+        _addOpcodeBranch(name, 'withdraw', 0x02, OtherOpcodes.opCompoundWithdraw.selector);
+
         /***********
          * Aliases *
          **********/

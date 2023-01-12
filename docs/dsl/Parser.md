@@ -85,6 +85,12 @@ Example of a command:
 declare ARR_NAME
 ```_
 
+### asmCompound
+
+```solidity
+function asmCompound(bytes _program, address _ctxDSLAddr, address) public returns (bytes newProgram)
+```
+
 ### asmGet
 
 ```solidity

@@ -34,6 +34,7 @@ const {
   TENDERLY_PROJECT,
   TENDERLY_USERNAME,
   TENDERLY_FORK_ID,
+  ALCHEMY_FORK,
 } = process.env;
 
 const config: HardhatUserConfig = {
@@ -55,7 +56,11 @@ const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
-      chainId: 51337,
+      // chainId: 51337,
+      forking: {
+        url: ALCHEMY_FORK || '',
+        blockNumber: 16381381,
+      },
     },
     localhost: {
       timeout: 1e9,

@@ -6,6 +6,12 @@
 function opLoadRemoteAny(address _ctxProgram, address _ctxDSL) public
 ```
 
+### opCompound
+
+```solidity
+function opCompound(address _ctxProgram, address _ctxDSL) public
+```
+
 ### opBlockNumber
 
 ```solidity
@@ -214,6 +220,12 @@ function opUint256(address _ctxProgram, address) public
 function opSendEth(address _ctxProgram, address) public
 ```
 
+### _getAddress
+
+```solidity
+function _getAddress(address _ctxProgram) public returns (address result)
+```
+
 ### opTransfer
 
 ```solidity
@@ -296,6 +308,24 @@ function opLoadLocal(address _ctxProgram, string funcSignature) public
 
 ```solidity
 function opLoadRemote(address _ctxProgram, string funcSignature) public
+```
+
+### opCompoundDeposit
+
+```solidity
+function opCompoundDeposit(address _ctxProgram) public
+```
+
+### opCompoundWithdraw
+
+```solidity
+function opCompoundWithdraw(address _ctxProgram) public
+```
+
+### _getTokenInfo
+
+```solidity
+function _getTokenInfo(address _ctxProgram) public returns (address, uint256)
 ```
 
 ### opEnableRecord

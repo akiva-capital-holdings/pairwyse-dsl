@@ -54,6 +54,12 @@ function asmLoadRemote(bytes _program, address _ctxDSLAddr, address) external re
 function asmDeclare(bytes _program, address _ctxDSLAddr, address) external returns (bytes newProgram)
 ```
 
+### asmCompound
+
+```solidity
+function asmCompound(bytes _program, address _ctxDSLAddr, address) external returns (bytes newProgram)
+```
+
 ### asmBool
 
 ```solidity

@@ -20,6 +20,9 @@ contract MultiTranche is Agreement {
     uint256 public deadline;
     IERC20Mintable public wusdc;
 
+    // might be used if rewards should be send to the user in additional to his invest
+    // mapping(address => uint256) public info; // user - amount cTokens
+
     /**
      * Sets parser address, creates new Context instance, and setups Context
      */
@@ -114,6 +117,7 @@ contract MultiTranche is Agreement {
             2, // record ID
             '(balanceOf USDC MULTI_TRANCHE) setUint256 TOTAL_USDC '
             'bool true '
+            'compound deposit USDC TOTAL_USDC '
             'blockTimestamp setUint256 DEPOSIT_TIME', // transaction
             'blockTimestamp > var DEPOSITS_DEADLINE' // condition
         );
@@ -131,6 +135,7 @@ contract MultiTranche is Agreement {
         _setParameters(
             3, // record ID
             '(allowance WUSDC MSG_SENDER MULTI_TRANCHE) setUint256 W_ALLOWANCE '
+            'compound withdraw USDC W_ALLOWANCE '
             'burn WUSDC MSG_SENDER W_ALLOWANCE '
             'transferVar USDC MSG_SENDER W_ALLOWANCE ', // transaction
             'blockTimestamp > (var DEPOSIT_TIME + var LOCK_TIME)' // condition

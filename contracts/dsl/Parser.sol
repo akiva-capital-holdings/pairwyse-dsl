@@ -144,6 +144,17 @@ contract Parser is IParser {
         newProgram = _parseVariable(newProgram); // program += bytecode for `ARR_NAME`
     }
 
+    function asmCompound(
+        bytes memory _program,
+        address _ctxDSLAddr,
+        address
+    ) public returns (bytes memory newProgram) {
+        // program += bytecode for type of transaction for compound contract (deposit/withdraw)
+        newProgram = _parseBranchOf(_program, _ctxDSLAddr, 'compound');
+        newProgram = _parseVariable(newProgram); // program += bytecode for `TOKEN`
+        newProgram = _parseVariable(newProgram); // program += bytecode for `AMOUNT`
+    }
+
     /**
      * @dev Updates the program with the element by index from the provived array's name
      *

@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import { IDSLContext } from '../../interfaces/IDSLContext.sol';
 import { IProgramContext } from '../../interfaces/IProgramContext.sol';
 import { IERC20 } from '../../interfaces/IERC20.sol';
+import { IcToken } from '../../interfaces/IcToken.sol';
 import { IERC20Mintable } from '../../interfaces/IERC20Mintable.sol';
 import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
@@ -19,6 +20,15 @@ library OtherOpcodes {
     function opLoadRemoteAny(address _ctxProgram, address _ctxDSL) public {
         address libAddr = IDSLContext(_ctxDSL).otherOpcodes();
         bytes4 _selector = OpcodeHelpers.nextBranchSelector(_ctxDSL, _ctxProgram, 'loadRemote');
+        OpcodeHelpers.mustDelegateCall(
+            libAddr,
+            abi.encodeWithSelector(_selector, _ctxProgram, _ctxDSL)
+        );
+    }
+
+    function opCompound(address _ctxProgram, address _ctxDSL) public {
+        address libAddr = IDSLContext(_ctxDSL).otherOpcodes();
+        bytes4 _selector = OpcodeHelpers.nextBranchSelector(_ctxDSL, _ctxProgram, 'compound');
         OpcodeHelpers.mustDelegateCall(
             libAddr,
             abi.encodeWithSelector(_selector, _ctxProgram, _ctxDSL)
@@ -244,12 +254,16 @@ library OtherOpcodes {
     }
 
     function opSendEth(address _ctxProgram, address) public {
-        address payable recipient = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
+        address payable recipient = payable(_getAddress(_ctxProgram));
         uint256 amount = opUint256Get(_ctxProgram, address(0));
         recipient.transfer(amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    function _getAddress(address _ctxProgram) public returns (address result) {
+        result = address(
+            uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)')))
+        );
     }
 
     /****************
@@ -257,54 +271,34 @@ library OtherOpcodes {
      ***************/
 
     function opTransfer(address _ctxProgram, address) public {
-        address payable token = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
-        address payable recipient = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
+        address payable token = payable(_getAddress(_ctxProgram));
+        address payable recipient = payable(_getAddress(_ctxProgram));
         uint256 amount = opUint256Get(_ctxProgram, address(0));
         IERC20(token).transfer(recipient, amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
     function opTransferVar(address _ctxProgram, address) public {
-        address payable token = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
-        address payable recipient = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
+        address payable token = payable(_getAddress(_ctxProgram));
+        address payable recipient = payable(_getAddress(_ctxProgram));
         uint256 amount = uint256(opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)'));
         IERC20(token).transfer(recipient, amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
     function opTransferFrom(address _ctxProgram, address) public {
-        address payable token = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
-        address payable from = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
-        address payable to = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
+        address payable token = payable(_getAddress(_ctxProgram));
+        address payable from = payable(_getAddress(_ctxProgram));
+        address payable to = payable(_getAddress(_ctxProgram));
         uint256 amount = opUint256Get(_ctxProgram, address(0));
         IERC20(token).transferFrom(from, to, amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
     function opTransferFromVar(address _ctxProgram, address) public {
-        address payable token = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
-        address payable from = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
-        address payable to = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
+        address payable token = payable(_getAddress(_ctxProgram));
+        address payable from = payable(_getAddress(_ctxProgram));
+        address payable to = payable(_getAddress(_ctxProgram));
         uint256 amount = uint256(opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)'));
 
         IERC20(token).transferFrom(from, to, amount);
@@ -312,49 +306,31 @@ library OtherOpcodes {
     }
 
     function opBalanceOf(address _ctxProgram, address) public {
-        address payable token = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
-        address payable user = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
+        address payable token = payable(_getAddress(_ctxProgram));
+        address payable user = payable(_getAddress(_ctxProgram));
         uint256 balance = IERC20(token).balanceOf(user);
         OpcodeHelpers.putToStack(_ctxProgram, balance);
     }
 
     function opAllowance(address _ctxProgram, address) public {
-        address payable token = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
-        address payable owner = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
-        address payable spender = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
+        address payable token = payable(_getAddress(_ctxProgram));
+        address payable owner = payable(_getAddress(_ctxProgram));
+        address payable spender = payable(_getAddress(_ctxProgram));
         uint256 allowance = IERC20(token).allowance(owner, spender);
         OpcodeHelpers.putToStack(_ctxProgram, allowance);
     }
 
     function opMint(address _ctxProgram, address) public {
-        address payable token = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
-        address payable to = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
+        address payable token = payable(_getAddress(_ctxProgram));
+        address payable to = payable(_getAddress(_ctxProgram));
         uint256 amount = uint256(opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)'));
         IERC20Mintable(token).mint(to, amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
     function opBurn(address _ctxProgram, address) public {
-        address payable token = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
-        address payable to = payable(
-            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
-        );
+        address payable token = payable(_getAddress(_ctxProgram));
+        address payable to = payable(_getAddress(_ctxProgram));
         uint256 amount = uint256(opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)'));
         IERC20Mintable(token).burn(to, amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
@@ -464,6 +440,39 @@ library OtherOpcodes {
         }
 
         OpcodeHelpers.putToStack(_ctxProgram, uint256(result));
+    }
+
+    function opCompoundDeposit(address _ctxProgram) public {
+        address cUSDC = 0x39AA39c021dfbaE8faC545936693aC917d5E7563; // Compound USDC Token
+        (address token, uint256 amount) = _getTokenInfo(_ctxProgram);
+        // approve simple token to use it into the market
+        IERC20(token).approve(cUSDC, amount);
+
+        // supply assets into the market and receives cTokens in exchange
+        IcToken(cUSDC).mint(amount);
+
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    function opCompoundWithdraw(address _ctxProgram) public {
+        address cUSDC = 0x39AA39c021dfbaE8faC545936693aC917d5E7563; // Compound USDC Token
+        // `token` can be used in the future for more different underluing tokens
+        (address token, uint256 amount) = _getTokenInfo(_ctxProgram);
+
+        // redeems cTokens in exchange for the underlying asset (USDC)
+        IcToken(cUSDC).redeemUnderlying(amount);
+
+        // TODO: amount for redeem() function is cTokens
+        // can be usefull if needs to provide user investments + rewards
+        // IcToken(cUSDC).redeem(amount);
+
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    function _getTokenInfo(address _ctxProgram) public returns (address, uint256) {
+        address payable token = payable(_getAddress(_ctxProgram));
+        uint256 amount = uint256(opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)'));
+        return (token, amount);
     }
 
     function opEnableRecord(address _ctxProgram, address) public {
