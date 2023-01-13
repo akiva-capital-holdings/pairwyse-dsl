@@ -731,8 +731,9 @@ contract DSLContext is IDSLContext {
         _addOpcodeBranch(name, 'struct', 0x02, bytes4(0x0));
         _addOpcodeBranch(name, 'address', 0x03, IStorageUniversal.setStorageAddress.selector);
 
-        // Ex. `compound deposit USDC TOTAL_USDC` or
-        // `compound withdraw USDC TOTAL_USDC`
+        // Ex.
+        // `compound deposit USDC` - deposits all USDC tokens to compound, receives cUSDC
+        // `compound withdraw USDC` - withdtaw all USDC tokens from compound in exchange on cUSDC
         name = 'compound';
         _addOpcode(
             name,
@@ -740,7 +741,7 @@ contract DSLContext is IDSLContext {
             OtherOpcodes.opCompound.selector,
             IParser.asmCompound.selector,
             OpcodeLibNames.OtherOpcodes,
-            3,
+            2,
             true
         );
         // types that 'compound' have for loading data

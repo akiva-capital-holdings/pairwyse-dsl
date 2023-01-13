@@ -340,12 +340,6 @@ function opCompoundWithdraw(address _ctxProgram) public
 function opEnableRecord(address _ctxProgram, address) public
 ```
 
-### _getTokenInfo
-
-```solidity
-function _getTokenInfo(address _ctxProgram) public returns (address, uint256)
-```
-
 ### _sumOfStructVars
 
 ```solidity

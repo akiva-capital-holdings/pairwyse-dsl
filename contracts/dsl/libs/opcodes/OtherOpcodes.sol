@@ -419,35 +419,23 @@ library OtherOpcodes {
     }
 
     function opCompoundDeposit(address _ctxProgram) public {
-        (address token, uint256 amount) = _getTokenInfo(_ctxProgram);
+        address payable token = payable(_getAddress(_ctxProgram));
         bytes memory data = OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),
             abi.encodeWithSignature('compounds(address)', token)
         );
         address cToken = address(uint160(uint256(bytes32(data))));
+        uint256 balance = IcToken(token).balanceOf(address(this));
         // approve simple token to use it into the market
-        IERC20(token).approve(cToken, amount);
-        // get the last balance of cToken in the contract
-        uint256 previosBalance = IcToken(cToken).balanceOf(address(this));
+        IERC20(token).approve(cToken, balance);
         // supply assets into the market and receives cTokens in exchange
-        IcToken(cToken).mint(amount);
-        // get the current balance of cToken in the contract
-        uint256 currentBalance = IcToken(cToken).balanceOf(address(this)) - previosBalance;
-        // Set cUSDC_BALANCE variable by it's hex
-        OpcodeHelpers.mustCall(
-            IProgramContext(_ctxProgram).appAddr(),
-            abi.encodeWithSignature(
-                'setStorageUint256(bytes32,uint256)',
-                0x09f8f35900000000000000000000000000000000000000000000000000000000,
-                currentBalance
-            )
-        );
+        IcToken(cToken).mint(balance);
 
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
     function opCompoundWithdraw(address _ctxProgram) public {
-        (address token, uint256 amount) = _getTokenInfo(_ctxProgram);
+        address payable token = payable(_getAddress(_ctxProgram));
         // `token` can be used in the future for more different underluing tokens
         bytes memory data = OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),
@@ -457,7 +445,7 @@ library OtherOpcodes {
 
         // redeems cTokens in exchange for the underlying asset (USDC)
         // amount - amount of cTokens
-        IcToken(cToken).redeem(amount);
+        IcToken(cToken).redeem(IcToken(cToken).balanceOf(address(this)));
 
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
@@ -471,12 +459,6 @@ library OtherOpcodes {
             abi.encodeWithSignature('activateRecord(uint256)', recordId)
         );
         OpcodeHelpers.putToStack(_ctxProgram, 1);
-    }
-
-    function _getTokenInfo(address _ctxProgram) public returns (address, uint256) {
-        address payable token = payable(_getAddress(_ctxProgram));
-        uint256 amount = uint256(opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)'));
-        return (token, amount);
     }
 
     /**

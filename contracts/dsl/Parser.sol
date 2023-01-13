@@ -152,7 +152,6 @@ contract Parser is IParser {
         // program += bytecode for type of transaction for compound contract (deposit/withdraw)
         newProgram = _parseBranchOf(_program, _ctxDSLAddr, 'compound');
         newProgram = _parseVariable(newProgram); // program += bytecode for `TOKEN`
-        newProgram = _parseVariable(newProgram); // program += bytecode for `AMOUNT`
     }
 
     /**

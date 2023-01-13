@@ -6,10 +6,10 @@
 uint256 deadline
 ```
 
-### wcusdc
+### wusdc
 
 ```solidity
-contract IERC20Mintable wcusdc
+contract IERC20Mintable wusdc
 ```
 
 ### compounds
@@ -59,6 +59,12 @@ non-upgradable. Check `isUpgradableRecord` modifier_
 | _record | string | is a string of the main record for execution |
 | _condition | string | is a string of the condition that will be checked before record execution |
 
+### _setEnterRecord
+
+```solidity
+function _setEnterRecord() internal
+```
+
 ### _setDepositRecord
 
 ```solidity
@@ -81,4 +87,10 @@ _If USDC lock time is passed:
 2. Withdraw requested amount of USDC from Compound
 3. Burn user's WUSDC
 4. Send USDC to the user_
+
+### _setClaimRecord
+
+```solidity
+function _setClaimRecord() internal
+```
 
