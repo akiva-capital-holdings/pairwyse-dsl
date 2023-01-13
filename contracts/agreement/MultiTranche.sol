@@ -41,7 +41,7 @@ contract MultiTranche is Agreement {
         _setEnterRecord();
         _setDepositRecord();
         _setWithdrawRecord();
-        _setClaimRecord();
+        // _setClaimRecord();
     }
 
     function _setDefaultVariables() internal {
@@ -66,15 +66,12 @@ contract MultiTranche is Agreement {
         setStorageAddress(0xd6aca1be00000000000000000000000000000000000000000000000000000000, USDC);
         compounds[USDC] = cUSDC;
 
-        // Set LOCK_TIME variable
-        uint256 LOCK_TIME = 2 weeks;
-        setStorageUint256(
-            0x27533ff000000000000000000000000000000000000000000000000000000000,
-            LOCK_TIME
-        );
-
-        // declare variable WUSDC_TOTAL = 0
-        setStorageUint256(0x3593acaa00000000000000000000000000000000000000000000000000000000, 0);
+        // // Set LOCK_TIME variable
+        // uint256 LOCK_TIME = 2 weeks;
+        // setStorageUint256(
+        //     0x27533ff000000000000000000000000000000000000000000000000000000000,
+        //     LOCK_TIME
+        // );
     }
 
     /**
@@ -112,13 +109,13 @@ contract MultiTranche is Agreement {
     }
 
     function _setEnterRecord() internal {
+        // 'blockTimestamp < var DEPOSITS_DEADLINE' // condition
         _setParameters(
             1, // record ID
             '(allowance USDC MSG_SENDER MULTI_TRANCHE) setUint256 ALLOWANCE '
             'transferFromVar USDC MSG_SENDER MULTI_TRANCHE ALLOWANCE '
-            'mint WUSDC MSG_SENDER ALLOWANCE '
-            '(var WUSDC_TOTAL + var ALLOWANCE) setUint256 WUSDC_TOTAL ', // transaction
-            'blockTimestamp < var DEPOSITS_DEADLINE ' // condition
+            'mint WUSDC MSG_SENDER ALLOWANCE', // transaction
+            'bool true' // condition
         );
     }
 
@@ -129,11 +126,12 @@ contract MultiTranche is Agreement {
      * 3. Mint WUSDC to the user's wallet in exchange for his/her USDC
      */
     function _setDepositRecord() internal {
+        // 'blockTimestamp > var DEPOSITS_DEADLINE' // condition
         _setParameters(
             2, // record ID
-            'compound deposit USDC '
+            'compound deposit all USDC '
             'blockTimestamp setUint256 DEPOSIT_TIME', // transaction
-            'blockTimestamp < var DEPOSITS_DEADLINE' // condition
+            'bool true' // condition
         );
     }
 
@@ -147,31 +145,22 @@ contract MultiTranche is Agreement {
     function _setWithdrawRecord() internal {
         _setParameters(
             3, // record ID
-            'compound withdraw USDC '
-            '(balanceOf USDC MULTI_TRANCHE) setUint256 USDC_TOTAL ', // transaction
+            '(allowance WUSDC MSG_SENDER MULTI_TRANCHE) setUint256 W_ALLOWANCE '
+            'burn WUSDC MSG_SENDER W_ALLOWANCE '
+            'compound withdraw W_ALLOWANCE USDC '
+            'transferVar USDC MSG_SENDER W_ALLOWANCE ', // transaction
             'blockTimestamp > (var DEPOSIT_TIME + var LOCK_TIME)' // condition
         );
     }
 
-    /* 
-    ERROR after adding
-
-    'ifelse A B end '
-    'A { (var WUSDC_TOTAL - var USER_AMOUNT) setUint256 WUSDC_TOTAL} '
-    'B { 0 setUint256 WUSDC_TOTAL} '
-*/
-    function _setClaimRecord() internal {
-        _setParameters(
-            4, // record ID
-            '(allowance WUSDC MSG_SENDER MULTI_TRANCHE) setUint256 W_ALLOWANCE '
-            'burn WUSDC MSG_SENDER W_ALLOWANCE '
-            '((((var W_ALLOWANCE * 10000) / var WUSDC_TOTAL) * var USDC_TOTAL)/ 10000) setUint256 USER_AMOUNT '
-            'transferVar USDC MSG_SENDER USER_AMOUNT '
-            'var WUSDC_TOTAL > var USER_AMOUNT '
-            'ifelse A B end '
-            'A { (var WUSDC_TOTAL - var USER_AMOUNT) setUint256 WUSDC_TOTAL} '
-            'B { 0 setUint256 WUSDC_TOTAL} ', // transaction
-            'blockTimestamp > (var DEPOSIT_TIME + var LOCK_TIME) ' // condition
-        );
-    }
+    // function _setClaimRecord() internal {
+    //     _setParameters(
+    //         4, // record ID
+    //         '(allowance WUSDC MSG_SENDER MULTI_TRANCHE) setUint256 W_ALLOWANCE '
+    //         'burn WUSDC MSG_SENDER W_ALLOWANCE '
+    //         '((((var W_ALLOWANCE * 10000) / var WUSDC_TOTAL) * var USDC_TOTAL)/ 10000) setUint256 USER_AMOUNT '
+    //         'transferVar USDC MSG_SENDER USER_AMOUNT', // transaction
+    //         'blockTimestamp > (var DEPOSIT_TIME + var LOCK_TIME) ' // condition
+    //     );
+    // }
 }
