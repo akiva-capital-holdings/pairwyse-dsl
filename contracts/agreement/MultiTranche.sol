@@ -18,7 +18,6 @@ contract MultiTranche is Agreement {
     using UnstructuredStorage for bytes32;
 
     uint256 public deadline;
-    mapping(uint256 => bool) public baseRecord; // recordId => true/false
     IERC20Mintable public wusdc;
 
     /**
@@ -39,8 +38,8 @@ contract MultiTranche is Agreement {
      */
     function _setBaseRecords() internal {
         _setEnterRecord();
-        // _setDepositAllRecord();
-        // _setWithdrawRecord();
+        _setDepositAllRecord();
+        _setWithdrawRecord();
     }
 
     function _setDefaultVariables() internal {
@@ -64,13 +63,11 @@ contract MultiTranche is Agreement {
      * @param _recordId is the record ID
      * @param _record is a string of the main record for execution
      * @param _condition is a string of the condition that will be checked before record execution
-     * @param _requiredRecordsLength is a flag for required records before execution
      */
     function _setParameters(
         uint256 _recordId,
         string memory _record,
-        string memory _condition,
-        uint256 _requiredRecordsLength
+        string memory _condition // uint256 _requiredRecordsLength
     ) internal {
         address[] memory _signatories = new address[](1);
         string[] memory _conditionStrings = new string[](1);
@@ -79,7 +76,6 @@ contract MultiTranche is Agreement {
         _signatories[0] = IProgramContext(contextProgram).ANYONE();
         _conditionStrings[0] = _condition;
         update(_recordId, _requiredRecords, _signatories, _record, _conditionStrings);
-        baseRecord[_recordId] = true; // sets the record as base record for the Governance contract
     }
 
     /**
@@ -94,8 +90,7 @@ contract MultiTranche is Agreement {
             '(allowance USDC MSG_SENDER MULTI_TRANCHE) setUint256 ALLOWANCE '
             'transferFromVar USDC MSG_SENDER MULTI_TRANCHE ALLOWANCE '
             'mint WUSDC MSG_SENDER ALLOWANCE', // transaction
-            'bool true', // condition
-            0 // required records length
+            'bool true' // condition
         );
     }
 
@@ -114,13 +109,13 @@ contract MultiTranche is Agreement {
      * 3. Remember in a variable when the deposit happened
      */
     function _setDepositAllRecord() internal {
+        // 'compound deposit USDC TOTAL_USDC '
         _setParameters(
             2, // record ID
-            '(balanceOf USDC MULTI_TRANCHE) setUint256 TOTAL_USDC'
-            'compound deposit USDC TOTAL_USDC '
+            '(balanceOf USDC MULTI_TRANCHE) setUint256 TOTAL_USDC '
+            'bool true '
             'blockTimestamp setUint256 DEPOSIT_TIME', // transaction
-            'blockTimestamp > var DEPOSITS_DEADLINE', // condition
-            0 // required records length
+            'blockTimestamp > var DEPOSITS_DEADLINE' // condition
         );
     }
 
@@ -132,14 +127,13 @@ contract MultiTranche is Agreement {
      * 4. Send USDC to the user
      */
     function _setWithdrawRecord() internal {
+        // 'compound withdraw USDC W_ALLOWANCE '
         _setParameters(
             3, // record ID
-            '(allowance WUSDC MSG_SENDER MULTI_TRANCHE) setUint256 W_ALLOWANCE'
+            '(allowance WUSDC MSG_SENDER MULTI_TRANCHE) setUint256 W_ALLOWANCE '
             'burn WUSDC MSG_SENDER W_ALLOWANCE '
-            'compound withdraw USDC W_ALLOWANCE '
-            'transferFromVar USDC MSG_SENDER W_ALLOWANCE', // transaction
-            'blockTimestamp > (var DEPOSIT_TIME + var LOCK_TIME)', // condition
-            0 // required records length
+            'transferVar USDC MSG_SENDER W_ALLOWANCE ', // transaction
+            'blockTimestamp > (var DEPOSIT_TIME + var LOCK_TIME)' // condition
         );
     }
 }

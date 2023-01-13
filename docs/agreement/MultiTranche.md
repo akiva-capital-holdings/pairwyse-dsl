@@ -6,12 +6,6 @@
 uint256 deadline
 ```
 
-### baseRecord
-
-```solidity
-mapping(uint256 => bool) baseRecord
-```
-
 ### wusdc
 
 ```solidity
@@ -43,7 +37,7 @@ function _setDefaultVariables() internal
 ### _setParameters
 
 ```solidity
-function _setParameters(uint256 _recordId, string _record, string _condition, uint256 _requiredRecordsLength) internal
+function _setParameters(uint256 _recordId, string _record, string _condition) internal
 ```
 
 _Uploads 4 pre-defined records to Governance contract directly.
@@ -58,7 +52,6 @@ non-upgradable. Check `isUpgradableRecord` modifier_
 | _recordId | uint256 | is the record ID |
 | _record | string | is a string of the main record for execution |
 | _condition | string | is a string of the condition that will be checked before record execution |
-| _requiredRecordsLength | uint256 | is a flag for required records before execution |
 
 ### _setEnterRecord
 

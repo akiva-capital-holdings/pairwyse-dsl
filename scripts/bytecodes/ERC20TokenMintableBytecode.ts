@@ -1,28 +1,18 @@
 import fs from 'fs';
 import path from 'path';
 import * as hre from 'hardhat';
-import { deployBase } from '../utils/deploy.utils';
 import { checkOrCreateFolder } from '../../utils/utils';
 
-/**
- * Deploy libraries that are required by Agreement & generate Agreement bytecode with those
- * libraries
- */
 async function main() {
   console.log(`Deploying from address ${(await hre.ethers.getSigners())[0].address}`);
 
   // Note: run this on the same node as Front End to actually deploy these libraries
 
-  const [, executorLibAddr] = await deployBase(hre);
-  const Governance = await hre.ethers.getContractFactory('Governance', {
-    libraries: {
-      Executor: executorLibAddr,
-    },
-  });
-
+  const tokenContract = await hre.ethers.getContractFactory('ERC20Mintable');
   const bytecodeFolder = path.join(__dirname, '../..', 'bytecode');
+
   checkOrCreateFolder(bytecodeFolder);
-  fs.writeFileSync(path.join(bytecodeFolder, 'governance.bytecode'), Governance.bytecode);
+  fs.writeFileSync(path.join(bytecodeFolder, 'ERC20Mintable.bytecode'), tokenContract.bytecode);
 }
 
 main();
