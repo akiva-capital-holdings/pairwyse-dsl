@@ -7,6 +7,7 @@ import { getChainId, getPrettyDateTime } from '../../utils/utils';
 
 export const deployOpcodeLibs = async (hre: HardhatRuntimeEnvironment) => {
   const opcodeHelpersLib = await (await hre.ethers.getContractFactory('OpcodeHelpers')).deploy();
+  console.log({ opcodeHelpersLib: opcodeHelpersLib.address });
   const comparisonOpcodesLib = await (
     await hre.ethers.getContractFactory('ComparisonOpcodes', {
       libraries: {
@@ -54,6 +55,13 @@ export const deployContextDSL = async (hre: HardhatRuntimeEnvironment) => {
     otherOpcodesLibAddr,
   ] = await deployOpcodeLibs(hre);
 
+  console.log({
+    comparisonOpcodesLibAddr,
+    branchingOpcodesLibAddr,
+    logicalOpcodesLibAddr,
+    otherOpcodesLibAddr,
+  });
+
   const DSLContext = await hre.ethers.getContractFactory('DSLContext');
   const DSLctx = await DSLContext.deploy(
     comparisonOpcodesLibAddr,
@@ -65,19 +73,14 @@ export const deployContextDSL = async (hre: HardhatRuntimeEnvironment) => {
   return DSLctx.address;
 };
 
-export const deployParser = async (hre: HardhatRuntimeEnvironment) => {
+export const deployParser = async (hre: HardhatRuntimeEnvironment, stringUtilsAddr: string) => {
   // Deploy libraries
-
   const byteLib = await (await hre.ethers.getContractFactory('ByteUtils')).deploy();
-  const stringLib = await (
-    await hre.ethers.getContractFactory('StringUtils', {
-      libraries: { ByteUtils: byteLib.address },
-    })
-  ).deploy();
+  console.log({ byteLib: byteLib.address });
 
   const parser = await (
     await hre.ethers.getContractFactory('Parser', {
-      libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
+      libraries: { StringUtils: stringUtilsAddr, ByteUtils: byteLib.address },
     })
   ).deploy();
   return parser.address;

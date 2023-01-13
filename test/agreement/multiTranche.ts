@@ -46,12 +46,6 @@ describe.only('Multi Tranche', () => {
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
     ] = await deployOpcodeLibs(hre);
-    const [parserAddr, executorLibAddr] = await deployBaseMock(hre);
-    const MultiTrancheCont = await hre.ethers.getContractFactory('MultiTranche', {
-      libraries: {
-        Executor: executorLibAddr,
-      },
-    });
 
     const DSLContext = await (
       await ethers.getContractFactory('DSLContextMock')
@@ -62,6 +56,14 @@ describe.only('Multi Tranche', () => {
       otherOpcodesLibAddr
     );
     await DSLContext.deployed();
+
+    const [parserAddr, executorLibAddr] = await deployBaseMock(hre);
+
+    const MultiTrancheCont = await hre.ethers.getContractFactory('MultiTranche', {
+      libraries: {
+        Executor: executorLibAddr,
+      },
+    });
     multiTranche = await MultiTrancheCont.deploy(parserAddr, creator.address, DSLContext.address);
     await multiTranche.deployed();
 

@@ -26,6 +26,7 @@ const {
   REMOTE_GANACHE_MNEMONIC,
   ROPSTEN_URL,
   RINKEBY_URL,
+  GOERLI_URL,
   PRIVATE_KEY,
   TENDERLY_FORK_URL,
   REPORT_GAS,
@@ -81,6 +82,10 @@ const config: HardhatUserConfig = {
     },
     rinkeby: {
       url: RINKEBY_URL || '',
+      accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+    },
+    goerli: {
+      url: GOERLI_URL || '',
       accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
     },
     tenderly: {
