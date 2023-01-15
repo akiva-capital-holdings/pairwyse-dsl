@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv';
 
 import { HardhatUserConfig } from 'hardhat/config';
+import './tasks/bytecode';
 import './tasks/deploy';
 import './tasks/interact';
 import './tasks/others';
