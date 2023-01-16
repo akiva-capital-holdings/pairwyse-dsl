@@ -58,11 +58,7 @@ const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
-      // chainId: 51337,
-      forking: {
-        url: ALCHEMY_FORK || '',
-        blockNumber: 16381381,
-      },
+      chainId: 51337,
     },
     localhost: {
       timeout: 1e9,
@@ -85,15 +81,49 @@ const config: HardhatUserConfig = {
       url: RINKEBY_URL || '',
       accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
     },
-    goerli: {
-      url: GOERLI_URL || '',
-      accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
-    },
     tenderly: {
       url: TENDERLY_FORK_URL || '',
       chainId: 1,
     },
   },
+  // networks: {
+  //   hardhat: {
+  //     // chainId: 51337,
+  //     forking: {
+  //       url: ALCHEMY_FORK || '',
+  //       blockNumber: 16381381,
+  //     },
+  //   },
+  //   localhost: {
+  //     timeout: 1e9,
+  //     url: 'http://127.0.0.1:8545',
+  //   },
+  //   remoteGanache: {
+  //     url: REMOTE_GANACHE_URL || '',
+  //     timeout: 1e9,
+  //     chainId: 31337,
+  //     accounts: {
+  //       mnemonic:
+  //         REMOTE_GANACHE_MNEMONIC || 'test test test test test test test test test test test junk',
+  //     },
+  //   },
+  //   ropsten: {
+  //     url: ROPSTEN_URL || '',
+  //     accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+  //   },
+  //   rinkeby: {
+  //     url: RINKEBY_URL || '',
+  //     accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+  //   },
+  //   goerli: {
+  //     url: GOERLI_URL || '',
+  //     accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+  //   },
+  //   tenderly: {
+  //     url: TENDERLY_FORK_URL || '',
+  //     chainId: 1,
+  //   },
+  // },
   gasReporter: {
     enabled: REPORT_GAS === 'true',
     currency: 'USD',

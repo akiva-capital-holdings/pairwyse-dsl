@@ -12,7 +12,7 @@ import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { AgreementStorage } from './AgreementStorage.sol';
 import { LinkedList } from '../dsl/helpers/LinkedList.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 // TODO: automatically make sure that no contract exceeds the maximum contract size
 
@@ -217,6 +217,7 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
      */
     function execute(uint256 _recordId) external payable virtual {
         _verifyRecord(_recordId);
+        console.log(_recordId);
         require(_fulfill(_recordId, msg.value, msg.sender), ErrorsAgreement.AGR3);
         emit RecordExecuted(msg.sender, _recordId, msg.value, records[_recordId].recordString);
     }

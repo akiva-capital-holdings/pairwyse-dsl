@@ -73,14 +73,21 @@ export const deployContextDSL = async (hre: HardhatRuntimeEnvironment) => {
   return DSLctx.address;
 };
 
-export const deployParser = async (hre: HardhatRuntimeEnvironment, stringUtilsAddr: string) => {
+export const deployParser = async (hre: HardhatRuntimeEnvironment) => {
   // Deploy libraries
   const byteLib = await (await hre.ethers.getContractFactory('ByteUtils')).deploy();
   console.log({ byteLib: byteLib.address });
 
+  const stringLib = await (
+    await hre.ethers.getContractFactory('StringUtils', {
+      libraries: { ByteUtils: byteLib.address },
+    })
+  ).deploy();
+  console.log({ stringLib: stringLib.address });
+
   const parser = await (
     await hre.ethers.getContractFactory('Parser', {
-      libraries: { StringUtils: stringUtilsAddr, ByteUtils: byteLib.address },
+      libraries: { StringUtils: stringLib.address, ByteUtils: byteLib.address },
     })
   ).deploy();
   return parser.address;
