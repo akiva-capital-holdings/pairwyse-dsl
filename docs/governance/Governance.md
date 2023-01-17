@@ -30,6 +30,15 @@ Sets parser address, creates new Context instance, and setups Context
 function execute(uint256 _recordId) external payable
 ```
 
+_Check if the recorcID is executable (validate all conditions before
+record execution, check signatures)._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _recordId | uint256 | Record ID |
+
 ### _setBaseRecords
 
 ```solidity
