@@ -19,7 +19,7 @@ task(
     const contextDSLAddr = await deployContextDSL(hre);
     const parserAddr = await deployParser(hre, stringLib);
     const preprocessorAddr = await deployPreprocessor(hre);
-    const agreementAddr = await deployAgreement(hre, safe);
+    const agreementAddr = await deployAgreement(hre, safe, stringLib);
 
     // Display deployed addresses
     console.log(`\x1b[42m DSL Context address \x1b[0m\x1b[32m ${contextDSLAddr}\x1b[0m`);

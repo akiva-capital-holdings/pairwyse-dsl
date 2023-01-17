@@ -56,13 +56,13 @@ contract MultiTranche is Agreement {
             address(this)
         );
         // Set cUSDC variable
-        address cUSDC = 0x39AA39c021dfbaE8faC545936693aC917d5E7563;
+        address cUSDC = 0x73506770799Eb04befb5AaE4734e58C2C624F493;
         setStorageAddress(
             0x48ebcbd300000000000000000000000000000000000000000000000000000000,
             cUSDC
         );
         // Set USDC variable
-        address USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+        address USDC = 0x07865c6E87B9F70255377e024ace6630C1Eaa37F;
         setStorageAddress(0xd6aca1be00000000000000000000000000000000000000000000000000000000, USDC);
         compounds[USDC] = cUSDC;
 

@@ -110,15 +110,19 @@ export const deployExecutor = async (hre: HardhatRuntimeEnvironment) => {
   return executorLib.address;
 };
 
-export const deployBase = async (hre: HardhatRuntimeEnvironment) => {
-  const parserAddr = await deployParser(hre);
+export const deployBase = async (hre: HardhatRuntimeEnvironment, stringUtilsAddr: string) => {
+  const parserAddr = await deployParser(hre, stringUtilsAddr);
   const executorLibAddr = await deployExecutor(hre);
   const preprocessorAddr = await deployPreprocessor(hre);
 
   return [parserAddr, executorLibAddr, preprocessorAddr];
 };
 
-export const deployAgreement = async (hre: HardhatRuntimeEnvironment, multisigAddr: string) => {
+export const deployAgreement = async (
+  hre: HardhatRuntimeEnvironment,
+  multisigAddr: string,
+  stringUtilsAddr: string
+) => {
   const [
     comparisonOpcodesLibAddr,
     branchingOpcodesLibAddr,
@@ -134,7 +138,7 @@ export const deployAgreement = async (hre: HardhatRuntimeEnvironment, multisigAd
     logicalOpcodesLibAddr,
     otherOpcodesLibAddr
   );
-  const [parserAddr, executorLibAddr] = await deployBase(hre);
+  const [parserAddr, executorLibAddr] = await deployBase(hre, stringUtilsAddr);
 
   const AgreementContract = await hre.ethers.getContractFactory('Agreement', {
     libraries: { Executor: executorLibAddr },

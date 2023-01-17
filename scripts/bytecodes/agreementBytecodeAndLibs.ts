@@ -1,25 +1,28 @@
 import fs from 'fs';
 import path from 'path';
 import * as hre from 'hardhat';
-import { deployBase, deployOpcodeLibs } from '../utils/deploy.utils';
+import { deployBase } from '../utils/deploy.utils';
 import { checkOrCreateFolder } from '../../utils/utils';
 
 /**
  * Deploy libraries that are required by Agreement & generate Agreement bytecode with those
  * libraries
  */
-async function main() {
+export async function agreementBytecodeAndLibs() {
   console.log(`Deploying from address ${(await hre.ethers.getSigners())[0].address}`);
-
   // Note: run this on the same node as Front End to actually deploy these libraries
-  const [
-    comparisonOpcodesLibAddr,
-    branchingOpcodesLibAddr,
-    logicalOpcodesLibAddr,
-    otherOpcodesLibAddr,
-  ] = await deployOpcodeLibs(hre);
 
-  const [, executorLibAddr] = await deployBase(hre);
+  const byteLib = await (await hre.ethers.getContractFactory('ByteUtils')).deploy();
+  const stringUtilsLib = await (
+    await hre.ethers.getContractFactory('StringUtils', {
+      libraries: { ByteUtils: byteLib.address },
+    })
+  ).deploy();
+
+  const [parserAddr, executorLibAddr, preprocessorAddr] = await deployBase(
+    hre,
+    stringUtilsLib.address
+  );
 
   const AgreementContract = await hre.ethers.getContractFactory('Agreement', {
     libraries: {
@@ -28,8 +31,11 @@ async function main() {
   });
   const bytecodeFolder = path.join(__dirname, '..', 'bytecode');
 
+  console.log({
+    parserAddr,
+    preprocessorAddr,
+  });
+
   checkOrCreateFolder(bytecodeFolder);
   fs.writeFileSync(path.join(bytecodeFolder, 'agreement.bytecode'), AgreementContract.bytecode);
 }
-
-main();

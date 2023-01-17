@@ -2,6 +2,24 @@
 
 _Interface of the cToken that defined as asset in https://v2-app.compound.finance/_
 
+### name
+
+```solidity
+function name() external view returns (string)
+```
+
+### symbol
+
+```solidity
+function symbol() external view returns (string)
+```
+
+### decimals
+
+```solidity
+function decimals() external view returns (uint8)
+```
+
 ### balanceOf
 
 ```solidity

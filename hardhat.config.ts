@@ -60,8 +60,8 @@ const config: HardhatUserConfig = {
     hardhat: {
       // chainId: 51337,
       forking: {
-        url: ALCHEMY_FORK || '',
-        blockNumber: 16381381,
+        url: GOERLI_URL || '',
+        blockNumber: 8327594,
       },
     },
     localhost: {
