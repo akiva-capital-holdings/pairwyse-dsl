@@ -11,8 +11,9 @@ task('bytecode:multitranche', 'Get a bytecode of MultiTranche contract')
       },
     });
 
-    fs.writeFileSync(
-      path.join(__dirname, '..', 'bytecode', 'multiTranche.bytecode'),
-      MultiTrancheCont.bytecode
-    );
+    const outputDir = path.join(__dirname, '..', 'bytecode');
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir);
+    }
+    fs.writeFileSync(path.join(outputDir, 'multiTranche.bytecode'), MultiTrancheCont.bytecode);
   });
