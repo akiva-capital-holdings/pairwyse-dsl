@@ -109,13 +109,12 @@ contract MultiTranche is Agreement {
     }
 
     function _setEnterRecord() internal {
-        // 'blockTimestamp < var DEPOSITS_DEADLINE' // condition
         _setParameters(
             1, // record ID
             '(allowance USDC MSG_SENDER MULTI_TRANCHE) setUint256 ALLOWANCE '
             'transferFromVar USDC MSG_SENDER MULTI_TRANCHE ALLOWANCE '
             'mint WUSDC MSG_SENDER ALLOWANCE', // transaction
-            'bool true' // condition
+            'blockTimestamp < var DEPOSITS_DEADLINE' // condition
         );
     }
 
@@ -131,7 +130,7 @@ contract MultiTranche is Agreement {
             2, // record ID
             'compound deposit all USDC '
             'blockTimestamp setUint256 DEPOSIT_TIME', // transaction
-            'bool true' // condition
+            'blockTimestamp > var DEPOSITS_DEADLINE' // condition
         );
     }
 
@@ -153,15 +152,4 @@ contract MultiTranche is Agreement {
             'blockTimestamp > (var DEPOSIT_TIME + var LOCK_TIME)' // condition
         );
     }
-
-    // function _setClaimRecord() internal {
-    //     _setParameters(
-    //         4, // record ID
-    //         '(allowance WUSDC MSG_SENDER MULTI_TRANCHE) setUint256 W_ALLOWANCE '
-    //         'burn WUSDC MSG_SENDER W_ALLOWANCE '
-    //         '((((var W_ALLOWANCE * 10000) / var WUSDC_TOTAL) * var USDC_TOTAL)/ 10000) setUint256 USER_AMOUNT '
-    //         'transferVar USDC MSG_SENDER USER_AMOUNT', // transaction
-    //         'blockTimestamp > (var DEPOSIT_TIME + var LOCK_TIME) ' // condition
-    //     );
-    // }
 }
