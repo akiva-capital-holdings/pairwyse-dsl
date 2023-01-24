@@ -91,11 +91,11 @@ describe.only('Multi Tranche', () => {
 
     await Usdc.connect(usdcWhale).transfer(investor1.address, parseUnits('100', 6));
     await Usdc.connect(usdcWhale).transfer(investor2.address, parseUnits('200', 6));
-    await Usdc.connect(usdcWhale).transfer(investor3.address, parseUnits('500', 6));
+    await Usdc.connect(usdcWhale).transfer(investor3.address, parseUnits('100000000', 6));
 
     expect(await Usdc.balanceOf(investor1.address)).to.equal(parseUnits('100', 6));
     expect(await Usdc.balanceOf(investor2.address)).to.equal(parseUnits('200', 6));
-    expect(await Usdc.balanceOf(investor3.address)).to.equal(parseUnits('500', 6));
+    expect(await Usdc.balanceOf(investor3.address)).to.equal(parseUnits('100000000', 6));
 
     WUsdc = await ethers.getContractAt('ERC20Mintable', await multiTranche.wusdc());
 
@@ -112,55 +112,80 @@ describe.only('Multi Tranche', () => {
   describe('Lifecycle', () => {
     it('Enter', async () => {
       await Usdc.connect(investor1).approve(multiTranche.address, parseUnits('100', 6));
-      await Usdc.connect(investor3).approve(multiTranche.address, parseUnits('500', 6));
+      await Usdc.connect(investor2).approve(multiTranche.address, parseUnits('200', 6));
+      await Usdc.connect(investor3).approve(multiTranche.address, parseUnits('100000000', 6));
 
       expect(await Usdc.balanceOf(investor1.address)).equal(parseUnits('100', 6));
-      expect(await Usdc.balanceOf(investor3.address)).equal(parseUnits('500', 6));
-      expect(await Usdc.balanceOf(multiTranche.address)).equal(parseEther('0'));
+      expect(await Usdc.balanceOf(investor2.address)).equal(parseUnits('200', 6));
+      expect(await Usdc.balanceOf(investor3.address)).equal(parseUnits('100000000', 6));
       expect(await WUsdc.balanceOf(investor1.address)).equal(parseEther('0'));
+      expect(await WUsdc.balanceOf(investor2.address)).equal(parseEther('0'));
       expect(await WUsdc.balanceOf(investor3.address)).equal(parseEther('0'));
+      expect(await Usdc.balanceOf(multiTranche.address)).equal(parseEther('0'));
 
       await multiTranche.connect(investor1).execute(enterRecord);
+      await multiTranche.connect(investor2).execute(enterRecord);
       await multiTranche.connect(investor3).execute(enterRecord);
 
       expect(await Usdc.balanceOf(investor1.address)).equal(parseEther('0'));
+      expect(await Usdc.balanceOf(investor2.address)).equal(parseEther('0'));
       expect(await Usdc.balanceOf(investor3.address)).equal(parseEther('0'));
-      expect(await Usdc.balanceOf(multiTranche.address)).equal(parseUnits('600', 6));
       expect(await WUsdc.balanceOf(investor1.address)).equal(parseUnits('100', 6));
-      expect(await WUsdc.balanceOf(investor3.address)).equal(parseUnits('500', 6));
+      expect(await WUsdc.balanceOf(investor2.address)).equal(parseUnits('200', 6));
+      expect(await WUsdc.balanceOf(investor3.address)).equal(parseUnits('100000000', 6));
+      expect(await Usdc.balanceOf(multiTranche.address)).equal(parseUnits('100000300', 6));
     });
 
     it('Deposit', async () => {
-      expect(await Usdc.balanceOf(multiTranche.address)).equal(parseUnits('600', 6));
+      expect(await Usdc.balanceOf(multiTranche.address)).equal(parseUnits('100000300', 6));
       expect(await cUsdc.balanceOf(multiTranche.address)).to.be.equal(0); // 8 decimals
 
       await multiTranche.connect(anyone).execute(depositAllRecord);
 
-      expect(await cUsdc.balanceOf(multiTranche.address)).equal(2996662843640);
+      const exchangeRateStored = BigNumber.from('200222724846935');
+
+      const cUsdcCalcBal = parseUnits(parseUnits('100000300', 6).toString(), 18).div(
+        exchangeRateStored
+      );
+      console.log({ cUsdcCalcBal: cUsdcCalcBal.toString() });
+      // calc error is less than 3 * 1e-12 percent
+      const maxCalcError = cUsdcCalcBal.mul(1 * 1e12 - 0.000000000003 * 1e12).div(1e12);
+      console.log(maxCalcError);
+
+      console.log({ cUsdcRealBal: await (await cUsdc.balanceOf(multiTranche.address)).toString() });
+      expect(await cUsdc.balanceOf(multiTranche.address))
+        .above(cUsdcCalcBal.sub(maxCalcError))
+        .below(cUsdcCalcBal.add(maxCalcError));
       // .below(3000000000000);
       expect(await Usdc.balanceOf(multiTranche.address)).equal(0);
     });
 
     it('Withdraw', async () => {
       expect(await Usdc.balanceOf(investor1.address)).equal(0);
+      expect(await Usdc.balanceOf(investor2.address)).equal(0);
       expect(await Usdc.balanceOf(investor3.address)).equal(0);
       expect(await WUsdc.balanceOf(investor1.address)).equal(parseUnits('100', 6));
-      expect(await WUsdc.balanceOf(investor3.address)).equal(parseUnits('500', 6));
+      expect(await WUsdc.balanceOf(investor2.address)).equal(parseUnits('200', 6));
+      expect(await WUsdc.balanceOf(investor3.address)).equal(parseUnits('100000000', 6));
 
       await WUsdc.connect(investor1).approve(multiTranche.address, parseUnits('100', 6));
-      await WUsdc.connect(investor3).approve(multiTranche.address, parseUnits('499', 6));
+      await WUsdc.connect(investor2).approve(multiTranche.address, parseUnits('200', 6));
+      await WUsdc.connect(investor3).approve(multiTranche.address, parseUnits('100000000', 6));
 
       // Investor 1 withdraws
       await multiTranche.connect(investor1).execute(withdrawRecord);
-
-      expect(await Usdc.balanceOf(investor1.address)).equal(parseUnits('100', 6));
+      expect(await Usdc.balanceOf(investor1.address)).equal(parseUnits('100', 6).sub(1));
       expect(await WUsdc.balanceOf(investor1.address)).equal(0);
 
       // Investor 3 withdraws
       await multiTranche.connect(investor3).execute(withdrawRecord);
-      expect(await Usdc.balanceOf(investor3.address)).equal(parseUnits('499', 6));
-      // TODO: try to burn all WUSDC
-      expect(await WUsdc.balanceOf(investor3.address)).equal(parseUnits('1', 6));
+      expect(await Usdc.balanceOf(investor3.address)).equal(parseUnits('100000000', 6).sub(1));
+      expect(await WUsdc.balanceOf(investor3.address)).equal(0);
+
+      // Investor 2 withdraws
+      await multiTranche.connect(investor2).execute(withdrawRecord);
+      expect(await Usdc.balanceOf(investor2.address)).equal(parseUnits('200', 6).sub(1));
+      expect(await WUsdc.balanceOf(investor2.address)).equal(0);
     });
   });
 

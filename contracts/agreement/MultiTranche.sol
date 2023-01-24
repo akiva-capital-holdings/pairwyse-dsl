@@ -148,7 +148,8 @@ contract MultiTranche is Agreement {
             '(allowance WUSDC MSG_SENDER MULTI_TRANCHE) setUint256 W_ALLOWANCE '
             'burn WUSDC MSG_SENDER W_ALLOWANCE '
             'compound withdraw W_ALLOWANCE USDC '
-            'transferVar USDC MSG_SENDER W_ALLOWANCE ', // transaction
+            '(W_ALLOWANCE - 1) setUint256 OUT_USDC '
+            'transferVar USDC MSG_SENDER OUT_USDC', // transaction
             'blockTimestamp > (var DEPOSIT_TIME + var LOCK_TIME)' // condition
         );
     }
