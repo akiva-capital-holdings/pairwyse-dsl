@@ -20,6 +20,12 @@ function symbol() external view returns (string)
 function decimals() external view returns (uint8)
 ```
 
+### exchangeRateStored
+
+```solidity
+function exchangeRateStored() external view returns (uint256)
+```
+
 ### balanceOf
 
 ```solidity

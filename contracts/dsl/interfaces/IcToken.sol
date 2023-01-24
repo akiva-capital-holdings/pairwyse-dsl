@@ -11,6 +11,8 @@ interface IcToken {
 
     function decimals() external view returns (uint8);
 
+    function exchangeRateStored() external view returns (uint256);
+
     /**
      * @dev Returns the amount of tokens owned by `account`.
      */
