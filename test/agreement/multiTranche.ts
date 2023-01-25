@@ -30,6 +30,7 @@ describe.only('Multi Tranche', () => {
   let WUSDC: ERC20Mintable;
   let USDCwhale: SignerWithAddress;
 
+  // Note: these addresses are for Goerli testnet
   const USDC_ADDR = '0x07865c6E87B9F70255377e024ace6630C1Eaa37F';
   const CUSDC_ADDR = '0x73506770799Eb04befb5AaE4734e58C2C624F493';
   const USDC_WHALE_ADDR = '0x75c0c372da875a4fc78e8a37f58618a6d18904e8';
@@ -107,14 +108,20 @@ describe.only('Multi Tranche', () => {
 
   describe('Lifecycle', () => {
     before(async () => {
-      // Set the necessary variables
+      /**
+       * Set the necessary variables
+       */
+
+      // Set DEPOSITS_DEADLINE as block.timestamp +100 seconds
       const lastBlock = await hre.ethers.provider.getBlock('latest');
       const lastBlockTimestamp = lastBlock.timestamp;
       await multiTranche.setStorageUint256(
         hex4Bytes('DEPOSITS_DEADLINE'),
         lastBlockTimestamp + 100
       );
-      console.log({ lastBlockTimestamp });
+
+      // Set LOCK_TIME to 1 minute
+      await multiTranche.setStorageUint256(hex4Bytes('LOCK_TIME'), 60);
     });
 
     it('Enter', async () => {
@@ -130,13 +137,11 @@ describe.only('Multi Tranche', () => {
       expect(await WUSDC.balanceOf(investor3.address)).equal(parseEther('0'));
       expect(await USDC.balanceOf(multiTranche.address)).equal(parseEther('0'));
 
-      const lastBlock = await hre.ethers.provider.getBlock('latest');
-      const lastBlockTimestamp = lastBlock.timestamp;
-      console.log({ lastBlockTimestamp });
-
       await multiTranche.connect(investor1).execute(enterRecord);
       await multiTranche.connect(investor2).execute(enterRecord);
       await multiTranche.connect(investor3).execute(enterRecord);
+      // Anyone can execute the enter record
+      await multiTranche.connect(anyone).execute(enterRecord);
 
       expect(await USDC.balanceOf(investor1.address)).equal(parseEther('0'));
       expect(await USDC.balanceOf(investor2.address)).equal(parseEther('0'));
@@ -148,11 +153,93 @@ describe.only('Multi Tranche', () => {
     });
 
     it('Deposit', async () => {
-      await mine(100, { interval: 200 }); // mine one block with timestamp +100 secs
+      await mine(100); // mine one block with timestamp +100 secs
+
+      expect(await USDC.balanceOf(multiTranche.address)).equal(parseUnits('100000300', 6));
+      expect(await CUSDC.balanceOf(multiTranche.address)).to.be.equal(0); // 8 decimals
+
+      await multiTranche.connect(anyone).execute(depositAllRecord);
+      const CUSDCBal = await CUSDC.balanceOf(multiTranche.address);
+
+      expect(await CUSDC.balanceOf(multiTranche.address)).equal(CUSDCBal);
+      expect(await USDC.balanceOf(multiTranche.address)).equal(0);
+    });
+
+    it('Withdraw', async () => {
+      expect(await USDC.balanceOf(investor1.address)).equal(0);
+      expect(await USDC.balanceOf(investor2.address)).equal(0);
+      expect(await USDC.balanceOf(investor3.address)).equal(0);
+      expect(await WUSDC.balanceOf(investor1.address)).equal(parseUnits('100', 6));
+      expect(await WUSDC.balanceOf(investor2.address)).equal(parseUnits('200', 6));
+      expect(await WUSDC.balanceOf(investor3.address)).equal(parseUnits('100000000', 6));
+
+      await mine(60);
+
+      await WUSDC.connect(investor1).approve(multiTranche.address, parseUnits('100', 6));
+      await WUSDC.connect(investor2).approve(multiTranche.address, parseUnits('200', 6));
+      await WUSDC.connect(investor3).approve(multiTranche.address, parseUnits('100000000', 6));
+
+      // Investor 1 withdraws
+      await multiTranche.connect(investor1).execute(withdrawRecord);
+      expect(await USDC.balanceOf(investor1.address)).equal(parseUnits('100', 6).sub(1));
+      expect(await WUSDC.balanceOf(investor1.address)).equal(0);
+
+      // Investor 3 withdraws
+      await multiTranche.connect(investor3).execute(withdrawRecord);
+      expect(await USDC.balanceOf(investor3.address)).equal(parseUnits('100000000', 6).sub(1));
+      expect(await WUSDC.balanceOf(investor3.address)).equal(0);
+
+      // Investor 2 withdraws
+      await multiTranche.connect(investor2).execute(withdrawRecord);
+      expect(await USDC.balanceOf(investor2.address)).equal(parseUnits('200', 6).sub(1));
+      expect(await WUSDC.balanceOf(investor2.address)).equal(0);
+    });
+  });
+
+  describe.skip('Condition checks', () => {
+    before(async () => {
+      // Set the necessary variables
       const lastBlock = await hre.ethers.provider.getBlock('latest');
       const lastBlockTimestamp = lastBlock.timestamp;
-      console.log({ lastBlockTimestamp });
+      await multiTranche.setStorageUint256(
+        hex4Bytes('DEPOSITS_DEADLINE'),
+        lastBlockTimestamp + 100
+      );
+    });
 
+    it('Enter', async () => {
+      await USDC.connect(investor1).approve(multiTranche.address, parseUnits('100', 6));
+      await USDC.connect(investor2).approve(multiTranche.address, parseUnits('200', 6));
+      await USDC.connect(investor3).approve(multiTranche.address, parseUnits('100000000', 6));
+
+      expect(await USDC.balanceOf(investor1.address)).equal(parseUnits('100', 6));
+      expect(await USDC.balanceOf(investor2.address)).equal(parseUnits('200', 6));
+      expect(await USDC.balanceOf(investor3.address)).equal(parseUnits('100000000', 6));
+      expect(await WUSDC.balanceOf(investor1.address)).equal(parseEther('0'));
+      expect(await WUSDC.balanceOf(investor2.address)).equal(parseEther('0'));
+      expect(await WUSDC.balanceOf(investor3.address)).equal(parseEther('0'));
+      expect(await USDC.balanceOf(multiTranche.address)).equal(parseEther('0'));
+
+      await multiTranche.connect(investor1).execute(enterRecord);
+      await multiTranche.connect(investor2).execute(enterRecord);
+      await multiTranche.connect(investor3).execute(enterRecord);
+      // Anyone can execute the enter record
+      await multiTranche.connect(anyone).execute(enterRecord);
+
+      await mine(100); // mine one block with timestamp +100 secs
+      // No entrance is possible after DEPOSITS_DEADLINE has passed
+      await expect(multiTranche.connect(anyone).execute(enterRecord)).revertedWith('AGR6');
+
+      expect(await USDC.balanceOf(investor1.address)).equal(parseEther('0'));
+      expect(await USDC.balanceOf(investor2.address)).equal(parseEther('0'));
+      expect(await USDC.balanceOf(investor3.address)).equal(parseEther('0'));
+      expect(await WUSDC.balanceOf(investor1.address)).equal(parseUnits('100', 6));
+      expect(await WUSDC.balanceOf(investor2.address)).equal(parseUnits('200', 6));
+      expect(await WUSDC.balanceOf(investor3.address)).equal(parseUnits('100000000', 6));
+      expect(await USDC.balanceOf(multiTranche.address)).equal(parseUnits('100000300', 6));
+    });
+
+    it('Deposit', async () => {
       expect(await USDC.balanceOf(multiTranche.address)).equal(parseUnits('100000300', 6));
       expect(await CUSDC.balanceOf(multiTranche.address)).to.be.equal(0); // 8 decimals
 

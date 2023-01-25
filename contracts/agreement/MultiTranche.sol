@@ -125,7 +125,6 @@ contract MultiTranche is Agreement {
      * 3. Mint WUSDC to the user's wallet in exchange for his/her USDC
      */
     function _setDepositRecord() internal {
-        // 'blockTimestamp > var DEPOSITS_DEADLINE' // condition
         _setParameters(
             2, // record ID
             'compound deposit all USDC '
