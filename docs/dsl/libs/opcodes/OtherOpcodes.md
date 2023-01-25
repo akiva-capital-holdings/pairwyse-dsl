@@ -97,6 +97,12 @@ _Sums uin256 elements from the array (array name should be provided)_
 | _ctxProgram | address | ProgramContext contract address |
 | _ctxDSL | address | DSLContext contract instance address |
 
+### opVotersBalance
+
+```solidity
+function opVotersBalance(address _ctxProgram, address) public
+```
+
 ### opSumThroughStructs
 
 ```solidity
@@ -390,4 +396,5 @@ _Returns array's length_
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | bytes32 | Array's length in bytecode |
+
 

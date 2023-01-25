@@ -50,3 +50,4 @@ function setStorageAddress(bytes32 position, address data) external
 function setStorageBool(bytes32 position, bool data) external
 ```
 
+

@@ -258,6 +258,12 @@ Example of a command:
 lengthOf ARR_NAME
 ```_
 
+### asmVotersbalance
+
+```solidity
+function asmVotersbalance(bytes _program, address, address) public returns (bytes newProgram)
+```
+
 ### asmSumOf
 
 ```solidity
@@ -474,4 +480,5 @@ _Deletes empty elements from the _input array and sets the result as a `cmds` st
 ```solidity
 function _setLabelPos(address _programCtxAddr, string _name, uint256 _value) internal
 ```
+
 

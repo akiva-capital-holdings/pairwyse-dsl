@@ -538,6 +538,18 @@ contract DSLContext is IDSLContext {
             true
         );
 
+        // Sums all balances of address in an array
+        // Ex. `votersBalance TOKEN_ADDRESS ADDRESS_ARRAY`
+        _addOpcode(
+            'votersBalance',
+            0x40,
+            OtherOpcodes.opVotersBalance.selector,
+            IParser.asmVotersbalance.selector,
+            OpcodeLibNames.OtherOpcodes,
+            2,
+            true
+        );
+
         /* Sums struct variables values from the `struct type` array
             Ex. `sumThroughStructs ARR_NAME STRUCT_VARIABLE_NAME`
 

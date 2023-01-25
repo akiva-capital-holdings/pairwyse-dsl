@@ -102,6 +102,12 @@ function asmBalanceOf(bytes _program, address, address) external returns (bytes 
 function asmLengthOf(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
+### asmVotersbalance
+
+```solidity
+function asmVotersbalance(bytes _program, address, address) external returns (bytes newProgram)
+```
+
 ### asmSumOf
 
 ```solidity
@@ -167,4 +173,5 @@ function asmForLoop(bytes _program, address, address) external returns (bytes ne
 ```solidity
 function asmEnableRecord(bytes _program, address, address) external returns (bytes newProgram)
 ```
+
 

@@ -382,6 +382,15 @@ contract Parser is IParser {
         return _parseVariable(_program); // array name
     }
 
+    function asmVotersbalance(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
+        newProgram = _parseVariable(_program); // token address
+        newProgram = _parseVariable(newProgram); // users address array name
+    }
+
     /**
      * @dev Updates previous `program` with the name of the dsl array that will
      * be used to sum uint256 variables

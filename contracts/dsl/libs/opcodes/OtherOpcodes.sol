@@ -9,7 +9,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
@@ -121,6 +121,22 @@ library OtherOpcodes {
         bytes32 _length = _getArrLength(_ctxProgram, _arrNameB32);
         // sum items and store into the stack
         uint256 total = _sumOfVars(_ctxProgram, _arrNameB32, _length);
+        OpcodeHelpers.putToStack(_ctxProgram, total);
+    }
+
+    function opVotersBalance(address _ctxProgram, address) public {
+        uint256 total;
+        address payable token = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
+        );
+        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
+        bytes32 _length = _getArrLength(_ctxProgram, _arrNameB32);
+        for (uint256 i = 0; i < uint256(_length); i++) {
+            bytes memory user = _getItem(_ctxProgram, i, _arrNameB32);
+            address userAddress = address(uint160(uint256(bytes32(user))));
+            uint256 balance = IERC20(token).balanceOf(userAddress);
+            total = total + balance;
+        }
         OpcodeHelpers.putToStack(_ctxProgram, total);
     }
 

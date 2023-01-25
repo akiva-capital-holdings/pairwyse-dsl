@@ -99,3 +99,4 @@ _Check .delegatecall() function and returns data_
 function getNextBytes(address _ctxProgram, uint256 _bytesNum) public returns (bytes32 varNameB32)
 ```
 
+

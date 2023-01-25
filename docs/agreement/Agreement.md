@@ -193,12 +193,6 @@ TODO: rename this function to addRecord_
 function execute(uint256 _recordId) external payable virtual
 ```
 
-### _verifyRecord
-
-```solidity
-function _verifyRecord(uint256 _recordId) internal
-```
-
 _Check if the recorcID is executable (validate all conditions before
 record execution, check signatures)._
 
@@ -207,6 +201,12 @@ record execution, check signatures)._
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _recordId | uint256 | Record ID |
+
+### _verifyRecord
+
+```solidity
+function _verifyRecord(uint256 _recordId) internal
+```
 
 ### conditionString
 
@@ -402,21 +402,6 @@ _Fulfill Record_
 | ---- | ---- | ----------- |
 | result | bool | Boolean whether the record was successfully executed or not |
 
-### _execute
-
-```solidity
-function _execute(uint256 _msgValue, bytes _program) private
-```
-
-_Execute Record_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _msgValue | uint256 | Value that were sent along with function execution      // TODO: possibly remove this argument |
-| _program | bytes | provided bytcode of the program |
-
 ### _activeRecordsLen
 
 ```solidity
@@ -437,33 +422,4 @@ _return length of active records for getActiveRecords_
 function conditionStringsLen(uint256 _recordId) public view returns (uint256)
 ```
 
-### _seeLast
-
-```solidity
-function _seeLast() private view returns (uint256)
-```
-
-### _anyone
-
-```solidity
-function _anyone() private view returns (address)
-```
-
-### _checkEmptyString
-
-```solidity
-function _checkEmptyString(string _string) private pure
-```
-
-### _checkZeroAddress
-
-```solidity
-function _checkZeroAddress(address _address) private pure
-```
-
-### _getProgram
-
-```solidity
-function _getProgram() private view returns (bytes)
-```
 

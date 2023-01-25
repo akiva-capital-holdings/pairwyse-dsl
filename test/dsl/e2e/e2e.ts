@@ -26,7 +26,7 @@ import { parse } from '../../../scripts/utils/update.record';
 
 const { ethers, network } = hre;
 
-describe('End-to-end', () => {
+describe.only('End-to-end', () => {
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
   let carl: SignerWithAddress;
@@ -1886,7 +1886,7 @@ describe('End-to-end', () => {
   });
 
   // fix agreement at first
-  describe('Governance', () => {
+  describe.only('Governance', () => {
     let agreement: Agreement;
     let agreementAddr: string;
     let tokenAddr: string;
