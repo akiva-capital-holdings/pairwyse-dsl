@@ -3,6 +3,7 @@ import * as dotenv from 'dotenv';
 import { HardhatUserConfig } from 'hardhat/config';
 import './tasks/bytecode';
 import './tasks/deploy';
+import './tasks/docs';
 import './tasks/interact';
 import './tasks/others';
 import '@typechain/hardhat';

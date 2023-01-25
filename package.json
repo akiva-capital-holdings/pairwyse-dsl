@@ -16,7 +16,7 @@
     "size": "yarn hardhat size-contracts",
     "coverage": "yarn hardhat coverage",
     "prepare": "husky install",
-    "doc": "yarn hardhat docgen"
+    "docs": "yarn hardhat docs"
   },
   "dependencies": {
     "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
