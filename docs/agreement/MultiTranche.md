@@ -6,10 +6,10 @@
 uint256 deadline
 ```
 
-### wusdc
+### WUSDC
 
 ```solidity
-contract IERC20Mintable wusdc
+contract IERC20Mintable WUSDC
 ```
 
 ### compounds
@@ -32,7 +32,7 @@ Sets parser address, creates new Context instance, and setups Context
 function _setBaseRecords() internal
 ```
 
-_Uploads 4 pre-defined records to Governance contract directly_
+_Uploads pre-defined records to Governance contract directly_
 
 ### _setDefaultVariables
 
@@ -65,16 +65,21 @@ non-upgradable. Check `isUpgradableRecord` modifier_
 function _setEnterRecord() internal
 ```
 
+_If DEPOSITS_DEADLINE hasn't passed, then to enter the MultiTranche contract:
+1. Understand how much USDC a user wants to deposit
+2. Transfer USDC from the user to the MultiTranche
+3. Mint WUSDC to the user's wallet in exchange for his/her USDC_
+
 ### _setDepositRecord
 
 ```solidity
 function _setDepositRecord() internal
 ```
 
-_To enter the MultiTranche contract:
-1. Understand how much USDC a user wants to deposit
-2. Transfer USDC from the user to the MultiTranche
-3. Mint WUSDC to the user's wallet in exchange for his/her USDC_
+_If DEPOSITS_DEADLINE is passed to deposit USDC to MultiTranche:
+1. Deposit all collected on MultiTranche USDC to Compound.
+   As a result MultiTranche receives cUSDC tokens from Compound
+2. Remember the deposit time in DEPOSIT_TIME variable_
 
 ### _setWithdrawRecord
 
