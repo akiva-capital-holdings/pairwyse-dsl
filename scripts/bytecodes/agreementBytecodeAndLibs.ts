@@ -5,8 +5,8 @@ import { deployBase } from '../utils/deploy.utils';
 import { checkOrCreateFolder } from '../../utils/utils';
 
 /**
- * Deploy libraries that are required by Agreement & generate Agreement bytecode with those
- * libraries
+ * @dev Deploy libraries that are required by Agreement & generate Agreement bytecode with those
+ *      libraries
  */
 export async function agreementBytecodeAndLibs() {
   console.log(`Deploying from address ${(await hre.ethers.getSigners())[0].address}`);

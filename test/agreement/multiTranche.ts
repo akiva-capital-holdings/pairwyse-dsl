@@ -97,7 +97,7 @@ describe.only('Multi Tranche', () => {
     expect(await USDC.balanceOf(investor2.address)).to.equal(parseUnits('200', 6));
     expect(await USDC.balanceOf(investor3.address)).to.equal(parseUnits('100000000', 6));
 
-    WUSDC = await ethers.getContractAt('ERC20Mintable', await multiTranche.wusdc());
+    WUSDC = await ethers.getContractAt('ERC20Mintable', await multiTranche.WUSDC());
 
     await parse(multiTranche, preprocessorAddr);
 

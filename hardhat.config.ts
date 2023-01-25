@@ -59,7 +59,6 @@ const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
-      // chainId: 51337,
       forking: {
         url: GOERLI_URL || '',
         blockNumber: 8327594,
@@ -89,6 +88,13 @@ const config: HardhatUserConfig = {
     goerli: {
       url: GOERLI_URL || '',
       accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+    },
+    'goerli:fork': {
+      url: GOERLI_URL || '',
+      forking: {
+        url: GOERLI_URL || '',
+        blockNumber: 8327594,
+      },
     },
     tenderly: {
       url: TENDERLY_FORK_URL || '',

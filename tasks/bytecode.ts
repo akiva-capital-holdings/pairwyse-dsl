@@ -2,6 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { task } from 'hardhat/config';
 
+/**
+ * @dev Get MultiTranche smart contract bytecode
+ */
 task('bytecode:multitranche', 'Get a bytecode of MultiTranche contract')
   .addParam('executorLib', 'Executor library address')
   .setAction(async ({ executorLib }, hre) => {
