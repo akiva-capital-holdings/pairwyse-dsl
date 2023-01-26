@@ -3,7 +3,11 @@ import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
 import { addSteps, hex4Bytes } from '../utils/utils';
-import { deployAgreement, deployPreprocessor } from '../../scripts/utils/deploy.utils';
+import {
+  deployAgreement,
+  deployPreprocessor,
+  deployStringUtils,
+} from '../../scripts/utils/deploy.utils';
 import {
   aliceAndBobSteps,
   aliceBobAndCarl,
@@ -13,7 +17,7 @@ import {
 import { Agreement } from '../../typechain-types';
 import { anyone, ONE_DAY, ONE_MONTH } from '../utils/constants';
 import { MultisigMock } from '../../typechain-types/agreement/mocks/MultisigMock';
-import { parse } from '../../scripts/utils/update.record.mock';
+
 const { ethers, network } = hre;
 
 describe('Agreement: Alice, Bob, Carl', () => {
@@ -21,6 +25,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
   let agreementAddr: string;
   let preprocessorAddr: string;
   let multisig: MultisigMock;
+  let stringUtilsAddr: string;
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
   let carl: SignerWithAddress;
@@ -33,7 +38,8 @@ describe('Agreement: Alice, Bob, Carl', () => {
 
   before(async () => {
     multisig = await (await ethers.getContractFactory('MultisigMock')).deploy();
-    agreementAddr = await deployAgreement(hre, multisig.address);
+    stringUtilsAddr = await deployStringUtils(hre);
+    agreementAddr = await deployAgreement(hre, multisig.address, stringUtilsAddr);
     preprocessorAddr = await deployPreprocessor(hre);
     agreement = await ethers.getContractAt('Agreement', agreementAddr);
 
@@ -69,7 +75,8 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await expect(agreement.connect(bob).execute(txId)).to.be.revertedWith('AGR1');
   });
 
-  // TODO: does not work, check - https://github.com/akiva-capital-holdings/solidity-dsl/pull/101/files
+  // TODO: does not work,
+  //       check - https://github.com/akiva-capital-holdings/solidity-dsl/pull/101/files
   describe.skip('Agreement: check value name', () => {
     it('fails if a user tries to set a system variable', async () => {
       await expect(agreement.setStorageAddress('MSG_SENDER', bob.address)).to.be.revertedWith(
@@ -109,7 +116,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
   });
 
   it('update test', async () => {
-    const updateAgreementAddr = await deployAgreement(hre, alice.address);
+    const updateAgreementAddr = await deployAgreement(hre, alice.address, stringUtilsAddr);
     const updateAgreement = await ethers.getContractAt('Agreement', updateAgreementAddr);
     const firstTxId = '1';
     const secondTxId = '2';
@@ -358,7 +365,7 @@ describe('Agreement: Alice, Bob, Carl', () => {
   );
 
   it('checks events', async () => {
-    const updateAgreementAddr = await deployAgreement(hre, alice.address);
+    const updateAgreementAddr = await deployAgreement(hre, alice.address, stringUtilsAddr);
     const updateAgreement = await ethers.getContractAt('AgreementMock', updateAgreementAddr);
     const txId = 1;
     const signatories = [alice.address];

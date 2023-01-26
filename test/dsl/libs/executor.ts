@@ -1,7 +1,10 @@
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import * as hre from 'hardhat';
-import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
+import {
+  deployBase,
+  deployOpcodeLibs,
+  deployStringUtils,
+} from '../../../scripts/utils/deploy.utils';
 import { DSLContextMock, ProgramContextMock, Stack, ExecutorMock } from '../../../typechain-types';
 import { checkStack, checkStackTail, hex4Bytes } from '../../utils/utils';
 
@@ -14,11 +17,8 @@ describe('Executor', () => {
   let ctxProgramAddr: string;
   let stack: Stack;
   let app: ExecutorMock;
-  let sender: SignerWithAddress;
 
   before(async () => {
-    [sender] = await ethers.getSigners();
-
     // Deploy libraries
     const [
       comparisonOpcodesLibAddr,
@@ -26,7 +26,8 @@ describe('Executor', () => {
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
     ] = await deployOpcodeLibs(hre);
-    const [, executorLibAddr] = await deployBase(hre);
+    const stringUtilsAddr = await deployStringUtils(hre);
+    const [, executorLibAddr] = await deployBase(hre, stringUtilsAddr);
 
     // Deploy ExecutorMock
     app = await (

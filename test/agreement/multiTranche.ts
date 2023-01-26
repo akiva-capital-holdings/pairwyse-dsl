@@ -17,7 +17,7 @@ const { ethers } = hre;
  * `yarn test --network hardhat`
  * another block can change rewards and expected results in tests
  */
-describe.only('Multi Tranche', () => {
+describe.skip('Multi Tranche', () => {
   let creator: SignerWithAddress;
   let investor1: SignerWithAddress;
   let investor2: SignerWithAddress;

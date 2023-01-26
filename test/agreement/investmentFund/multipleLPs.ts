@@ -4,7 +4,11 @@ import { Suite } from 'mocha';
 import dotenv from 'dotenv';
 import { addSteps, businessCaseTest } from '../../utils/utils';
 import { businessCaseSteps } from '../../../scripts/data/agreement';
-import { deployAgreement, deployPreprocessor } from '../../../scripts/utils/deploy.utils';
+import {
+  deployAgreement,
+  deployPreprocessor,
+  deployStringUtils,
+} from '../../../scripts/utils/deploy.utils';
 import { ONE_MONTH } from '../../utils/constants';
 import { DynamicTestData } from '../../types';
 
@@ -19,7 +23,8 @@ const parentSuite = describe('Agreement: Investment Fund. Multiple LPs', () => {
   before(async () => {
     // Deploy the contracts
     const multisig = await (await ethers.getContractFactory('MultisigMock')).deploy();
-    const agreementAddr = await deployAgreement(hre, multisig.address);
+    const stringUtilsAddr = await deployStringUtils(hre);
+    const agreementAddr = await deployAgreement(hre, multisig.address, stringUtilsAddr);
     const preprocessorAddr = await deployPreprocessor(hre);
     dynamicTestData.agreement = await ethers.getContractAt('Agreement', agreementAddr);
     [, , , dynamicTestData.whale, dynamicTestData.GP, ...dynamicTestData.LPs] =

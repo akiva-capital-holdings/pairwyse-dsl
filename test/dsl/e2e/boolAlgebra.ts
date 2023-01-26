@@ -1,5 +1,9 @@
 import * as hre from 'hardhat';
-import { deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
+import {
+  deployBase,
+  deployOpcodeLibs,
+  deployStringUtils,
+} from '../../../scripts/utils/deploy.utils';
 
 import {
   BaseApplication,
@@ -26,7 +30,8 @@ describe('Boolean Algebra', () => {
       otherOpcodesLibAddr,
     ] = await deployOpcodeLibs(hre);
 
-    const [parserAddr, executorLibAddr, preprAddr] = await deployBase(hre);
+    const stringUtilsAddr = await deployStringUtils(hre);
+    const [parserAddr, executorLibAddr, preprAddr] = await deployBase(hre, stringUtilsAddr);
 
     // Deploy Context
     ctx = await (

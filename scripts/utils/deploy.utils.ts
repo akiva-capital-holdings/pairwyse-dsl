@@ -86,6 +86,16 @@ export const deployParser = async (hre: HardhatRuntimeEnvironment, stringUtilsAd
   return parser.address;
 };
 
+export const deployStringUtils = async (hre: HardhatRuntimeEnvironment) => {
+  const byteLib = await (await hre.ethers.getContractFactory('ByteUtils')).deploy();
+  const stringLib = await (
+    await hre.ethers.getContractFactory('StringUtils', {
+      libraries: { ByteUtils: byteLib.address },
+    })
+  ).deploy();
+  return stringLib.address;
+};
+
 export const deployPreprocessor = async (hre: HardhatRuntimeEnvironment) => {
   const byteLib = await (await hre.ethers.getContractFactory('ByteUtils')).deploy();
   const stringLib = await (

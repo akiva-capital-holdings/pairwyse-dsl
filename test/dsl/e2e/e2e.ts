@@ -12,8 +12,6 @@ import {
   Preprocessor,
   Stack,
   Agreement,
-  Governance,
-  Parser,
 } from '../../../typechain-types';
 
 import {
@@ -23,7 +21,11 @@ import {
   hex4BytesShort,
   createBulkVotes,
 } from '../../utils/utils';
-import { deployAgreement, deployBase, deployOpcodeLibs } from '../../../scripts/utils/deploy.utils';
+import {
+  deployAgreement,
+  deployOpcodeLibs,
+  deployStringUtils,
+} from '../../../scripts/utils/deploy.utils';
 import { deployBaseMock } from '../../../scripts/utils/deploy.utils.mock';
 import { getChainId, removeEmptyValues } from '../../../utils/utils';
 import { ONE_MONTH } from '../../utils/constants';
@@ -1924,7 +1926,6 @@ describe('End-to-end', () => {
           Executor: executorLibAddr,
         },
       });
-      const parser = await ethers.getContractAt('ParserMock', parserAddr);
 
       const DSLctx = await (
         await ethers.getContractFactory('DSLContextMock')
@@ -1947,7 +1948,8 @@ describe('End-to-end', () => {
 
       // 2. Alice creates a new record in Agreement. This record is disabled
       // Create Agreement contract
-      agreementAddr = await deployAgreement(hre, governance.address);
+      const stringUtilsAddr = await deployStringUtils(hre);
+      agreementAddr = await deployAgreement(hre, governance.address, stringUtilsAddr);
       agreement = await ethers.getContractAt('Agreement', agreementAddr);
       const txId = '133';
       const conditions = ['bool true'];
