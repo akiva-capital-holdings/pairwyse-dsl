@@ -1,7 +1,7 @@
 {
   "name": "dsl-smart-contract",
   "version": "1.0.0",
-  "license": "NO",
+  "license": "UNLICENSED",
   "private": true,
   "scripts": {
     "lint": "yarn lint:ts && yarn lint:sol",
@@ -12,7 +12,9 @@
     "prettier:ts": "npx prettier --write \"**/*.ts\"",
     "typechain": "npx hardhat typechain",
     "build": "yarn hardhat compile",
-    "test": "yarn hardhat test",
+    "test": "yarn test:fork & yarn test:local",
+    "test:local": "npx hardhat test test/local/**/*.ts --config hardhat.config.ts",
+    "test:fork": "npx hardhat test test/goerliFork/**/*.ts --config hardhat-fork.config.ts",
     "size": "yarn hardhat size-contracts",
     "coverage": "yarn hardhat coverage",
     "prepare": "husky install",
