@@ -4,7 +4,7 @@ import { Array } from '../../../typechain-types';
 
 const { ethers, network } = hre;
 
-describe.only('Array', () => {
+describe('Array', () => {
   let array: Array;
   let snapshotId: number;
 

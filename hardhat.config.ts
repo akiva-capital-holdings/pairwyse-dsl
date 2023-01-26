@@ -57,6 +57,9 @@ const config: HardhatUserConfig = {
   // Note: make `tenderly` to verify contracts on Tenderly during running deployment scripts
   defaultNetwork: 'hardhat',
   networks: {
+    hardhat: {
+      chainId: 31337,
+    },
     localhost: {
       timeout: 1e9,
       url: 'http://127.0.0.1:8545',
