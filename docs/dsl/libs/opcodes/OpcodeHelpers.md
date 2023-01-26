@@ -22,6 +22,12 @@ function nextBytes(address _ctxProgram, uint256 size) public returns (bytes out)
 function nextBytes1(address _ctxProgram) public returns (bytes1)
 ```
 
+### addItemToArray
+
+```solidity
+function addItemToArray(address _ctxProgram, bytes32 _varValue, bytes32 _arrNameB32) public
+```
+
 ### readBytesSlice
 
 ```solidity
