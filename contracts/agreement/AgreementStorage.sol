@@ -85,6 +85,7 @@ contract AgreementStorage {
         position.setStorageBool(data);
     }
 
+    // TODO: enable `doesVariableExist` check
     // function setStorageBool(
     //     string memory varName,
     //     bool data

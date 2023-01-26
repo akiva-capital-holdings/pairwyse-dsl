@@ -37,6 +37,7 @@ const {
   TENDERLY_PROJECT,
   TENDERLY_USERNAME,
   TENDERLY_FORK_ID,
+  ALCHEMY_FORK,
 } = process.env;
 
 const config: HardhatUserConfig = {
@@ -57,6 +58,12 @@ const config: HardhatUserConfig = {
   // Note: make `tenderly` to verify contracts on Tenderly during running deployment scripts
   defaultNetwork: 'hardhat',
   networks: {
+    hardhat: {
+      forking: {
+        url: GOERLI_URL || '',
+        blockNumber: 8327594,
+      },
+    },
     localhost: {
       timeout: 1e9,
       url: 'http://127.0.0.1:8545',

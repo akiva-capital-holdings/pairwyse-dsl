@@ -5,6 +5,14 @@ pragma solidity ^0.8.0;
  * @dev Interface of the cToken that defined as asset in https://v2-app.compound.finance/
  */
 interface IcToken {
+    function name() external view returns (string memory);
+
+    function symbol() external view returns (string memory);
+
+    function decimals() external view returns (uint8);
+
+    function exchangeRateStored() external view returns (uint256);
+
     /**
      * @dev Returns the amount of tokens owned by `account`.
      */

@@ -11,14 +11,15 @@ task(
   'Deploy main contracts: Preprocessor, Parser, ContextFactory, Agreement, and required libraries'
 )
   .addParam('safe', 'GnosisSafe address that could execute Agreement.update() function')
-  .setAction(async ({ safe }, hre) => {
+  .addParam('stringLib', 'StringLib address')
+  .setAction(async ({ safe, stringLib }, hre) => {
     console.log(`Deploying from address ${(await hre.ethers.getSigners())[0].address}`);
 
     // Deploy the contracts
     const contextDSLAddr = await deployContextDSL(hre);
-    const parserAddr = await deployParser(hre);
+    const parserAddr = await deployParser(hre, stringLib);
     const preprocessorAddr = await deployPreprocessor(hre);
-    const agreementAddr = await deployAgreement(hre, safe);
+    const agreementAddr = await deployAgreement(hre, safe, stringLib);
 
     // Display deployed addresses
     console.log(`\x1b[42m DSL Context address \x1b[0m\x1b[32m ${contextDSLAddr}\x1b[0m`);
@@ -39,4 +40,12 @@ task('deploy-and-mint:erc20', 'To deploy erc20 mock')
 
     // Display deployed address
     console.log(`\x1b[42m Token address \x1b[0m\x1b[32m ${token.address}\x1b[0m`);
+  });
+
+task('deploy:parser')
+  .addParam('stringUtils', 'StringUtils address')
+  .setAction(async ({ stringUtils }, hre) => {
+    console.log(`Deploying from address ${(await hre.ethers.getSigners())[0].address}`);
+    const parserAddr = await deployParser(hre, stringUtils);
+    console.log(`\x1b[42m Parser address \x1b[0m\x1b[32m ${parserAddr}\x1b[0m`);
   });

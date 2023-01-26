@@ -128,7 +128,7 @@ contract Parser is IParser {
     }
 
     /**
-     * @dev Updates the program with the name(its position) of the array
+     * @dev Updates the program with the name (its position) of the array
      *
      * Example of a command:
      * ```
@@ -144,6 +144,15 @@ contract Parser is IParser {
         newProgram = _parseVariable(newProgram); // program += bytecode for `ARR_NAME`
     }
 
+    /**
+     * @dev Interacts with Compound cUSDC smart contract to make a deposit or withdrawal
+     *
+     * Example of a command:
+     * ```
+     * compound deposit USDC
+     * compound withdraw USDC
+     * ```
+     */
     function asmCompound(
         bytes memory _program,
         address _ctxDSLAddr,
@@ -151,6 +160,7 @@ contract Parser is IParser {
     ) public returns (bytes memory newProgram) {
         // program += bytecode for type of transaction for compound contract (deposit/withdraw)
         newProgram = _parseBranchOf(_program, _ctxDSLAddr, 'compound');
+        _nextCmd(); // skip `all` keyword
         newProgram = _parseVariable(newProgram); // program += bytecode for `TOKEN`
     }
 
