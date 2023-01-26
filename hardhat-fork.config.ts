@@ -37,7 +37,6 @@ const {
   TENDERLY_PROJECT,
   TENDERLY_USERNAME,
   TENDERLY_FORK_ID,
-  ALCHEMY_FORK,
 } = process.env;
 
 const config: HardhatUserConfig = {

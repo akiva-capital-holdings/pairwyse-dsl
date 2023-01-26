@@ -26,6 +26,7 @@ jobs:
         run: yarn build
         env:
           TENDERLY_FORK_URL: ${{ secrets.TENDERLY_FORK_URL }}
+          GOERLI_URL: ${{ secrets.GOERLI_URL }}
       - name: Running tests on a Goerli fork
         run: yarn test:fork
   tests_locally:
