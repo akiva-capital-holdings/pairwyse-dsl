@@ -1,5 +1,14 @@
 # Solidity DSL
 
+## Demos
+
+All demo descriptions can be found in [demo](/demo/) folder.
+
+- [Governance Demo](demo/governance/GOVERNANCE_DEMO.md)
+- [Nivaura Demo](demo/nivaura/NIVAURA_DEMO.md)
+
+## Setup
+
 ### Install Dependencies
 
 Execute: `yarn install`

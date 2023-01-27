@@ -1,7 +1,9 @@
 import * as dotenv from 'dotenv';
 
 import { HardhatUserConfig } from 'hardhat/config';
+import './tasks/bytecode';
 import './tasks/deploy';
+import './tasks/docs';
 import './tasks/interact';
 import './tasks/others';
 import '@typechain/hardhat';
@@ -26,6 +28,7 @@ const {
   REMOTE_GANACHE_MNEMONIC,
   ROPSTEN_URL,
   RINKEBY_URL,
+  GOERLI_URL,
   PRIVATE_KEY,
   TENDERLY_FORK_URL,
   REPORT_GAS,
@@ -55,7 +58,7 @@ const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
-      chainId: 51337,
+      chainId: 31337,
     },
     localhost: {
       timeout: 1e9,
@@ -77,6 +80,17 @@ const config: HardhatUserConfig = {
     rinkeby: {
       url: RINKEBY_URL || '',
       accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+    },
+    goerli: {
+      url: GOERLI_URL || '',
+      accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+    },
+    'goerli:fork': {
+      url: GOERLI_URL || '',
+      forking: {
+        url: GOERLI_URL || '',
+        blockNumber: 8327594,
+      },
     },
     tenderly: {
       url: TENDERLY_FORK_URL || '',

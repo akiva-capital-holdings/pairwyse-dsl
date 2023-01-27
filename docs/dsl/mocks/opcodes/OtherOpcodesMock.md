@@ -60,16 +60,34 @@ function opSetUint256(address _ctxProgram, address) public
 function opTransferVar(address _ctxProgram, address) public
 ```
 
+### opTransferFromVar
+
+```solidity
+function opTransferFromVar(address _ctxProgram, address) public
+```
+
 ### opBalanceOf
 
 ```solidity
 function opBalanceOf(address _ctxProgram, address) public
 ```
 
-### opTransferFromVar
+### opAllowance
 
 ```solidity
-function opTransferFromVar(address _ctxProgram, address) public
+function opAllowance(address _ctxProgram, address) public
+```
+
+### opMint
+
+```solidity
+function opMint(address _ctxProgram, address) public
+```
+
+### opBurn
+
+```solidity
+function opBurn(address _ctxProgram, address) public
 ```
 
 ### opLoadLocalUint256

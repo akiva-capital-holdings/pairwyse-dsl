@@ -234,7 +234,6 @@ export const addSteps = async (
   for await (const step of steps) {
     console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
     console.log('\nTerm Conditions');
-    let result;
 
     // Create Raw transaction
     const { data } = await agreement.populateTransaction.update(

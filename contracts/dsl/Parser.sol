@@ -128,7 +128,7 @@ contract Parser is IParser {
     }
 
     /**
-     * @dev Updates the program with the name(its position) of the array
+     * @dev Updates the program with the name (its position) of the array
      *
      * Example of a command:
      * ```
@@ -142,6 +142,26 @@ contract Parser is IParser {
     ) public returns (bytes memory newProgram) {
         newProgram = _parseBranchOf(_program, _ctxDSLAddr, 'declareArr'); // program += bytecode for type of array
         newProgram = _parseVariable(newProgram); // program += bytecode for `ARR_NAME`
+    }
+
+    /**
+     * @dev Interacts with Compound cUSDC smart contract to make a deposit or withdrawal
+     *
+     * Example of a command:
+     * ```
+     * compound deposit USDC
+     * compound withdraw USDC
+     * ```
+     */
+    function asmCompound(
+        bytes memory _program,
+        address _ctxDSLAddr,
+        address
+    ) public returns (bytes memory newProgram) {
+        // program += bytecode for type of transaction for compound contract (deposit/withdraw)
+        newProgram = _parseBranchOf(_program, _ctxDSLAddr, 'compound');
+        _nextCmd(); // skip `all` keyword
+        newProgram = _parseVariable(newProgram); // program += bytecode for `TOKEN`
     }
 
     /**
@@ -366,6 +386,16 @@ contract Parser is IParser {
     ) public returns (bytes memory newProgram) {
         newProgram = _parseVariable(_program); // token address
         newProgram = _parseVariable(newProgram); // user address
+    }
+
+    function asmAllowanceMintBurn(
+        bytes memory _program,
+        address,
+        address
+    ) public returns (bytes memory newProgram) {
+        newProgram = _parseVariable(_program); // token address, token address, token address
+        newProgram = _parseVariable(newProgram); // owner, to, owner
+        newProgram = _parseVariable(newProgram); // spender, amount, amount
     }
 
     /**

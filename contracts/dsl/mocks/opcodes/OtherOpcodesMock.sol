@@ -42,12 +42,24 @@ contract OtherOpcodesMock {
         OtherOpcodes.opTransferVar(_ctxProgram, address(0));
     }
 
+    function opTransferFromVar(address _ctxProgram, address) public {
+        OtherOpcodes.opTransferFromVar(_ctxProgram, address(0));
+    }
+
     function opBalanceOf(address _ctxProgram, address) public {
         OtherOpcodes.opBalanceOf(_ctxProgram, address(0));
     }
 
-    function opTransferFromVar(address _ctxProgram, address) public {
-        OtherOpcodes.opTransferFromVar(_ctxProgram, address(0));
+    function opAllowance(address _ctxProgram, address) public {
+        OtherOpcodes.opAllowance(_ctxProgram, address(0));
+    }
+
+    function opMint(address _ctxProgram, address) public {
+        OtherOpcodes.opMint(_ctxProgram, address(0));
+    }
+
+    function opBurn(address _ctxProgram, address) public {
+        OtherOpcodes.opBurn(_ctxProgram, address(0));
     }
 
     function opLoadLocalUint256(address _ctxProgram, address) public {
