@@ -558,7 +558,7 @@ describe('Other opcodes', () => {
   });
 
   it('opMint', async () => {
-    const [, to] = await ethers.getSigners();
+    const [from, to] = await ethers.getSigners();
     const amount = parseEther('150');
 
     expect(await testERC20.balanceOf(to.address)).to.equal(0);
@@ -578,7 +578,7 @@ describe('Other opcodes', () => {
     await ctxProgram.setProgram(`0x${tokenAddress}${toAddress}${amountVar}`);
 
     await checkStackTail(stack, []);
-    await app.opMint(ctxProgramAddr, ethers.constants.AddressZero);
+    await app.connect(from).opMint(ctxProgramAddr, ethers.constants.AddressZero);
     expect(await testERC20.balanceOf(to.address)).to.equal(amount);
     await checkStackTail(stack, [1]);
   });
@@ -921,6 +921,7 @@ describe('Other opcodes', () => {
     });
   });
 
+  // TODO: fix the test. It should test `opEnableRecord` function
   describe('opEnableRecord', () => {
     it.skip('check that record 54 was activated', async () => {
       // // can not be testet right now directly

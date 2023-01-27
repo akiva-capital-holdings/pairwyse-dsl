@@ -54,6 +54,22 @@ function opMsgValue(address _ctxProgram, address) public
 function _getParam(address _ctxProgram, uint256 _slice) internal returns (bytes32)
 ```
 
+_This is a wrapper function for OpcodeHelpers.getNextBytes() that is returning the slice of the program that
+     we're working with_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+| _slice | uint256 | Slice size |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes32 | the slice of the program |
+
 ### opSetLocalBool
 
 ```solidity
@@ -232,17 +248,20 @@ function opUint256(address _ctxProgram, address) public
 function opSendEth(address _ctxProgram, address) public
 ```
 
-### _getAddress
-
-```solidity
-function _getAddress(address _ctxProgram) internal returns (address result)
-```
-
 ### opTransfer
 
 ```solidity
 function opTransfer(address _ctxProgram, address) public
 ```
+
+_Calls IER20 transfer() function and puts to stack `1`_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+|  | address |  |
 
 ### opTransferVar
 
@@ -339,6 +358,26 @@ function opCompoundWithdraw(address _ctxProgram) public
 ```solidity
 function opEnableRecord(address _ctxProgram, address) public
 ```
+
+### _getAddress
+
+```solidity
+function _getAddress(address _ctxProgram) internal returns (address result)
+```
+
+_Reads a variable of type `address`_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| result | address | The address value |
 
 ### _sumOfStructVars
 

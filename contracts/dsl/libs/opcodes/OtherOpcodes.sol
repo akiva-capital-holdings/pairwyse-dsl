@@ -64,6 +64,13 @@ library OtherOpcodes {
         );
     }
 
+    /**
+     * @dev This is a wrapper function for OpcodeHelpers.getNextBytes() that is returning the slice of the program that
+     *      we're working with
+     * @param _ctxProgram ProgramContext contract address
+     * @param _slice Slice size
+     * @return the slice of the program
+     */
     function _getParam(address _ctxProgram, uint256 _slice) internal returns (bytes32) {
         return OpcodeHelpers.getNextBytes(_ctxProgram, _slice);
     }
@@ -266,16 +273,14 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
-    function _getAddress(address _ctxProgram) internal returns (address result) {
-        result = address(
-            uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)')))
-        );
-    }
-
     /****************
      * ERC20 Tokens *
      ***************/
 
+    /**
+     * @dev Calls IER20 transfer() function and puts to stack `1`
+     * @param _ctxProgram ProgramContext contract address
+     */
     function opTransfer(address _ctxProgram, address) public {
         address payable token = payable(_getAddress(_ctxProgram));
         address payable recipient = payable(_getAddress(_ctxProgram));
@@ -459,6 +464,17 @@ library OtherOpcodes {
             abi.encodeWithSignature('activateRecord(uint256)', recordId)
         );
         OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    /**
+     * @dev Reads a variable of type `address`
+     * @param _ctxProgram ProgramContext contract address
+     * @return result The address value
+     */
+    function _getAddress(address _ctxProgram) internal returns (address result) {
+        result = address(
+            uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)')))
+        );
     }
 
     /**

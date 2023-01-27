@@ -46,7 +46,7 @@ function _setDefaultVariables() internal
 function _setParameters(uint256 _recordId, string _record, string _condition) internal
 ```
 
-_Uploads 4 pre-defined records to Governance contract directly.
+_Uploads pre-defined records to MultiTranche contract directly.
 Uses a simple condition string `bool true`.
 Records still have to be parsed using a preprocessor before execution. Such record becomes
 non-upgradable. Check `isUpgradableRecord` modifier_

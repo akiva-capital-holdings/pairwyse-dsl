@@ -31,6 +31,7 @@ describe('DSL: basic', () => {
   let PREV_MONTH: number;
   let lastBlockTimestamp: number;
   let snapshotId: number;
+  let dai: ERC20Mintable;
 
   before(async () => {
     lastBlockTimestamp = (
@@ -83,6 +84,10 @@ describe('DSL: basic', () => {
       })
     ).deploy(parserAddr, preprAddr, ctx.address, ctxProgram.address);
     appAddr = app.address;
+
+    // Deploy Token
+    const Token = await ethers.getContractFactory('ERC20Premint');
+    dai = await Token.deploy('Token', 'TKN', parseEther('1000'));
 
     await ctxProgram.setAppAddress(app.address);
   });
@@ -790,9 +795,6 @@ describe('DSL: basic', () => {
   it('transfer', async () => {
     const [, receiver] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory('ERC20Premint');
-    const dai = await Token.deploy('Token', 'TKN', parseEther('1000'));
-
     const oneDAI = parseEther('1');
     await dai.transfer(app.address, oneDAI);
     expect(await dai.balanceOf(app.address)).to.equal(oneDAI);
@@ -808,9 +810,6 @@ describe('DSL: basic', () => {
 
   it('transferVar', async () => {
     const [, receiver] = await ethers.getSigners();
-
-    const Token = await ethers.getContractFactory('ERC20Premint');
-    const dai = await Token.deploy('Token', 'TKN', parseEther('1000'));
 
     const oneDAI = parseEther('1');
     await dai.transfer(app.address, oneDAI);
@@ -829,9 +828,6 @@ describe('DSL: basic', () => {
   it('transferFrom', async () => {
     const [owner, receiver] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory('ERC20Premint');
-    const dai = await Token.deploy('Token', 'TKN', parseEther('1000'));
-
     const oneDAI = parseEther('1');
     await dai.connect(owner).approve(app.address, oneDAI);
     expect(await dai.allowance(owner.address, app.address)).to.equal(oneDAI);
@@ -848,9 +844,6 @@ describe('DSL: basic', () => {
 
   it('transferFromVar', async () => {
     const [owner, receiver] = await ethers.getSigners();
-
-    const Token = await ethers.getContractFactory('ERC20Premint');
-    const dai = await Token.deploy('Token', 'TKN', parseEther('1000'));
 
     const oneDAI = parseEther('1');
     await dai.connect(owner).approve(app.address, oneDAI);
@@ -869,9 +862,6 @@ describe('DSL: basic', () => {
 
   it('balance of', async () => {
     const [user] = await ethers.getSigners();
-
-    const Token = await ethers.getContractFactory('ERC20Premint');
-    const dai = await Token.connect(user).deploy('Token', 'TKN', parseEther('1000'));
 
     await app['setStorageAddress(bytes32,address)'](hex4Bytes('DAI'), dai.address);
     await app['setStorageAddress(bytes32,address)'](hex4Bytes('USER'), user.address);

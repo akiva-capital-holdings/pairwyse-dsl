@@ -9,7 +9,6 @@ describe('Array', () => {
   let snapshotId: number;
 
   before(async () => {
-    console.log(__dirname);
     array = await (await ethers.getContractFactory('Array')).deploy();
   });
 
