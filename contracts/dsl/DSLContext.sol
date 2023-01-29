@@ -538,7 +538,7 @@ contract DSLContext is IDSLContext {
             true
         );
 
-        // Sums all balances of address in an array
+        // Sums all balances in array of account address
         // Ex. `votersBalance TOKEN_ADDRESS ADDRESS_ARRAY`
         _addOpcode(
             'votersBalance',

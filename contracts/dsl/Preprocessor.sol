@@ -138,7 +138,7 @@ library Preprocessor {
         string memory _separators,
         string memory _separatorsToKeep
     ) public pure returns (string[] memory) {
-        string[] memory _result = new string[](100);
+        string[] memory _result = new string[](50);
         uint256 resultCtr;
         string memory buffer; // here we collect DSL commands, var names, etc. symbol by symbol
         string memory char;

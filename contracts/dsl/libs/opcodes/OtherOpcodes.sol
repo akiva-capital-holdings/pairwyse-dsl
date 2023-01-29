@@ -9,7 +9,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 library OtherOpcodes {
     using UnstructuredStorage for bytes32;
@@ -124,6 +124,10 @@ library OtherOpcodes {
         OpcodeHelpers.putToStack(_ctxProgram, total);
     }
 
+    /**
+     * @dev Sums all balance in array of account address
+     * @param _ctxProgram ProgramContext contract address
+     */
     function opVotersBalance(address _ctxProgram, address) public {
         uint256 total;
         address payable token = payable(

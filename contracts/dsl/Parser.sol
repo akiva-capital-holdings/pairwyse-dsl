@@ -382,6 +382,15 @@ contract Parser is IParser {
         return _parseVariable(_program); // array name
     }
 
+    /**
+     * @dev Updates previous `program` with getting the sum of voters tokens
+     * The `TOKEN`, `ARRAY` address parameters should be stored in smart contract
+     *
+     * Example of a command:
+     * ```
+     * votersBalance TOKEN ARRAY_NAME
+     * ```
+     */
     function asmVotersbalance(
         bytes memory _program,
         address,

@@ -103,6 +103,15 @@ _Sums uin256 elements from the array (array name should be provided)_
 function opVotersBalance(address _ctxProgram, address) public
 ```
 
+_Sums all balance in array of account address_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+|  | address |  |
+
 ### opSumThroughStructs
 
 ```solidity
