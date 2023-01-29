@@ -32,15 +32,15 @@ library OpcodeHelpers {
         return nextBytes(_ctxProgram, 1)[0];
     }
 
-    function addItemToArray(address _ctxProgram, bytes32 _varValue, bytes32 _arrNameB32)public{
-            mustCall(
-               IProgramContext(_ctxProgram).appAddr(),
-               abi.encodeWithSignature(
-                   'addItem(bytes32,bytes32)',
-                   _varValue, // value that pushes to the array
-                   _arrNameB32 // array name, ex. INDEX_LIST, PARTNERS
-               )
-               );
+    function addItemToArray(address _ctxProgram, bytes32 _varValue, bytes32 _arrNameB32) public {
+        mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature(
+                'addItem(bytes32,bytes32)',
+                _varValue, // value that pushes to the array
+                _arrNameB32 // array name, ex. INDEX_LIST, PARTNERS
+            )
+        );
     }
 
     /**

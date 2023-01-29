@@ -99,7 +99,7 @@ The end result after executing a `split()` function is
 | ---- | ---- | ----------- |
 | _program | string | is a user's DSL code string |
 | _separators | string | Separators that will be used to split the string |
-| _separatorsToKeep | string | we're using symbols from this string as separators but not removing                          them from the resulting array |
+| _separatorsToKeep | string | we're using symbols from this string as separators but not removing                          them from the resulting array |
 
 #### Return Values
 

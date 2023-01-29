@@ -112,12 +112,11 @@ contract Governance is Agreement {
      */
     function _setBaseRecord() internal {
         uint256 recordId = 0;
-        string memory record = 
-        'declareArr struct VOTERS '
+        string memory record = 'declareArr struct VOTERS '
         'struct YES_VOTE {vote: YES} '
         'struct NO_VOTE {vote: NO} '
-        'declareArr address YESVOTERSADDRESS '
-        'declareArr address NOVOTERSADDRESS';
+        'declareArr address YES_VOTERS '
+        'declareArr address NO_VOTERS';
 
         string memory _condition = 'bool true';
         _setParameters(recordId, record, _condition, 0);
@@ -131,9 +130,9 @@ contract Governance is Agreement {
      */
     function _setYesRecord() internal {
         uint256 recordId = 1;
-        string memory record = 
-        'insert MSG_SENDER into YESVOTERSADDRESS';
-     
+        string memory record = 'insert YES_VOTE into VOTERS '
+        'insert MSG_SENDER into YES_VOTERS';
+
         string memory _condition = string(
             abi.encodePacked(
                 '(GOV_BALANCE > 0) and (blockTimestamp < ',
@@ -143,9 +142,6 @@ contract Governance is Agreement {
         );
         _setParameters(recordId, record, _condition, 1);
     }
-
-    //    'insert MSG_SENDER into YESVOTERSADDRESS'
-    // 'insert YES_VOTE into VOTERS ';
 
     /**
      * @dev Inserts VOTE_NO structure to the VOTERS list,
@@ -155,9 +151,9 @@ contract Governance is Agreement {
      */
     function _setNoRecord() internal {
         uint256 recordId = 2;
-        string memory record = 
-        'insert MSG_SENDER into NOVOTERSADDRESS';
-      
+        string memory record = 'insert NO_VOTE into VOTERS '
+        'insert MSG_SENDER into NO_VOTERS';
+
         string memory _condition = string(
             abi.encodePacked(
                 '(GOV_BALANCE > 0) and (blockTimestamp < ',
@@ -167,8 +163,6 @@ contract Governance is Agreement {
         );
         _setParameters(recordId, record, _condition, 1);
     }
-    //   'insert MSG_SENDER into NOVOTERSADDRESS'
-    // 'insert NO_VOTE into VOTERS ';
 
     /**
      * @dev Sums up the results of the voting, if results are more than 50%
@@ -181,16 +175,18 @@ contract Governance is Agreement {
     function _setCheckVotingRecord() internal {
         uint256 recordId = 3;
 
-        string memory record = '(sumOf VOTERS.vote) setUint256 YES_CTR '
-        '(((lengthOf VOTERS * 1e10) / (YES_CTR * 1e10)) < 2) '
-        '(votersBalance TOKEN YESVOTERSADDRESS) setUint256 YES_BAL '
-        '(votersBalance TOKEN NoVOTERSADDRESS) setUint256 NO_BAL '
-        'YES_BAL > NO_BAL '
-        'if ENABLE_RECORD end '
+        string memory record = 'if ENABLE_RECORD end '
         'ENABLE_RECORD { enableRecord RECORD_ID at AGREEMENT_ADDR }';
 
         string memory _condition = string(
-            abi.encodePacked('blockTimestamp >= ', StringUtils.toString(deadline))
+            abi.encodePacked(
+                '(sumOf VOTERS.vote) setUint256 YES_CTR ',
+                '(votersBalance TOKEN YES_VOTERS) setUint256 YES_BALANCE ',
+                '(votersBalance TOKEN NO_VOTERS) setUint256 NO_BALANCE ',
+                '(YES_BALANCE > NO_BALANCE) and (blockTimestamp >= ',
+                StringUtils.toString(deadline),
+                ' )'
+            )
         );
         _setParameters(recordId, record, _condition, 1);
     }
