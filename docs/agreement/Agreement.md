@@ -164,7 +164,7 @@ _Parse DSL code and set the program bytecode in Agreement contract_
 | _recordId | uint256 | Record ID |
 | _preProc | address | Preprocessor address |
 | _code | string | DSL code for the record of the condition |
-| _isRecord | bool | a flag that shows if provided _code is a record or not (a condition then) |
+| _isRecord | bool | a flag that shows if provided _code is a record or not (a condition then) |
 
 ### update
 
@@ -402,6 +402,21 @@ _Fulfill Record_
 | ---- | ---- | ----------- |
 | result | bool | Boolean whether the record was successfully executed or not |
 
+### _execute
+
+```solidity
+function _execute(uint256 _msgValue, bytes _program) private
+```
+
+_Execute Record_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _msgValue | uint256 | Value that were sent along with function execution      // TODO: possibly remove this argument |
+| _program | bytes | provided bytcode of the program |
+
 ### _activeRecordsLen
 
 ```solidity
@@ -420,6 +435,36 @@ _return length of active records for getActiveRecords_
 
 ```solidity
 function conditionStringsLen(uint256 _recordId) public view returns (uint256)
+```
+
+### _seeLast
+
+```solidity
+function _seeLast() private view returns (uint256)
+```
+
+### _anyone
+
+```solidity
+function _anyone() private view returns (address)
+```
+
+### _checkEmptyString
+
+```solidity
+function _checkEmptyString(string _string) private pure
+```
+
+### _checkZeroAddress
+
+```solidity
+function _checkZeroAddress(address _address) private pure
+```
+
+### _getProgram
+
+```solidity
+function _getProgram() private view returns (bytes)
 ```
 
 

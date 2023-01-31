@@ -32,6 +32,12 @@ library OpcodeHelpers {
         return nextBytes(_ctxProgram, 1)[0];
     }
 
+    /**
+     * @dev add value in bytes32 to array
+     * @param _ctxProgram Context contract address
+     * @param _varValue added value
+     * @param _arrNameB32 name of array
+     */
     function addItemToArray(address _ctxProgram, bytes32 _varValue, bytes32 _arrNameB32) public {
         mustCall(
             IProgramContext(_ctxProgram).appAddr(),

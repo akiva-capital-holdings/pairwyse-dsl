@@ -28,6 +28,16 @@ function nextBytes1(address _ctxProgram) public returns (bytes1)
 function addItemToArray(address _ctxProgram, bytes32 _varValue, bytes32 _arrNameB32) public
 ```
 
+_add value in bytes32 to array_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | Context contract address |
+| _varValue | bytes32 | added value |
+| _arrNameB32 | bytes32 | name of array |
+
 ### readBytesSlice
 
 ```solidity

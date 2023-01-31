@@ -103,7 +103,7 @@ _Sums uin256 elements from the array (array name should be provided)_
 function opVotersBalance(address _ctxProgram, address) public
 ```
 
-_Sums all balance in array of account address_
+_Finds a sum of all tokens of users in the array_
 
 #### Parameters
 

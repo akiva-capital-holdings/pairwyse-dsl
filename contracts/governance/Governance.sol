@@ -22,7 +22,6 @@ import { Agreement } from '../agreement/Agreement.sol';
 contract Governance is Agreement {
     using UnstructuredStorage for bytes32;
 
-    uint256 public deadline;
     mapping(uint256 => bool) public baseRecord; // recordId => true/false
 
     /**
@@ -44,7 +43,10 @@ contract Governance is Agreement {
             ErrorsAgreement.AGR12
         );
 
-        deadline = _deadline;
+        UnstructuredStorage.setStorageUint256(
+            0x11d887ad00000000000000000000000000000000000000000000000000000000, // `DEADLINE` in bytes32
+            _deadline);
+
         // all records use the same context
         _setBaseRecords();
     }
@@ -112,9 +114,7 @@ contract Governance is Agreement {
      */
     function _setBaseRecord() internal {
         uint256 recordId = 0;
-        string memory record = 'declareArr struct VOTERS '
-        'struct YES_VOTE {vote: YES} '
-        'struct NO_VOTE {vote: NO} '
+        string memory record = 
         'declareArr address YES_VOTERS '
         'declareArr address NO_VOTERS';
 
@@ -130,16 +130,10 @@ contract Governance is Agreement {
      */
     function _setYesRecord() internal {
         uint256 recordId = 1;
-        string memory record = 'insert YES_VOTE into VOTERS '
-        'insert MSG_SENDER into YES_VOTERS';
+        string memory record = 'insert MSG_SENDER into YES_VOTERS';
 
-        string memory _condition = string(
-            abi.encodePacked(
-                '(GOV_BALANCE > 0) and (blockTimestamp < ',
-                StringUtils.toString(deadline),
-                ' )'
-            )
-        );
+        string memory _condition = 'blockTimestamp < DEADLINE';
+ 
         _setParameters(recordId, record, _condition, 1);
     }
 
@@ -151,16 +145,10 @@ contract Governance is Agreement {
      */
     function _setNoRecord() internal {
         uint256 recordId = 2;
-        string memory record = 'insert NO_VOTE into VOTERS '
-        'insert MSG_SENDER into NO_VOTERS';
+        string memory record = 'insert MSG_SENDER into NO_VOTERS';
 
-        string memory _condition = string(
-            abi.encodePacked(
-                '(GOV_BALANCE > 0) and (blockTimestamp < ',
-                StringUtils.toString(deadline),
-                ' )'
-            )
-        );
+        string memory _condition = 'blockTimestamp < DEADLINE';
+   
         _setParameters(recordId, record, _condition, 1);
     }
 
@@ -175,19 +163,11 @@ contract Governance is Agreement {
     function _setCheckVotingRecord() internal {
         uint256 recordId = 3;
 
-        string memory record = 'if ENABLE_RECORD end '
-        'ENABLE_RECORD { enableRecord RECORD_ID at AGREEMENT_ADDR }';
+        string memory record = 'enableRecord RECORD_ID at AGREEMENT_ADDR';
 
-        string memory _condition = string(
-            abi.encodePacked(
-                '(sumOf VOTERS.vote) setUint256 YES_CTR ',
-                '(votersBalance TOKEN YES_VOTERS) setUint256 YES_BALANCE ',
-                '(votersBalance TOKEN NO_VOTERS) setUint256 NO_BALANCE ',
-                '(YES_BALANCE > NO_BALANCE) and (blockTimestamp >= ',
-                StringUtils.toString(deadline),
-                ' )'
-            )
-        );
+        string memory _condition =
+                '((votersBalance TOKEN YES_VOTERS) > (votersBalance TOKEN NO_VOTERS)) and (blockTimestamp >= DEADLINE)';
+
         _setParameters(recordId, record, _condition, 1);
     }
 

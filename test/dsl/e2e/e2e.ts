@@ -32,7 +32,7 @@ import { parse } from '../../../scripts/utils/update.record';
 
 const { ethers, network } = hre;
 
-describe('End-to-end', () => {
+describe.only('End-to-end', () => {
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
   let carl: SignerWithAddress;
@@ -1921,7 +1921,7 @@ describe('End-to-end', () => {
         otherOpcodesLibAddr,
       ] = await deployOpcodeLibs(hre);
       [parserAddr, executorLibAddr, preprAddr] = await deployBaseMock(hre);
-      const GovernanCecontract = await hre.ethers.getContractFactory('Governance', {
+      const GovernanceContract = await hre.ethers.getContractFactory('Governance', {
         libraries: {
           Executor: executorLibAddr,
         },
@@ -1937,7 +1937,7 @@ describe('End-to-end', () => {
         otherOpcodesLibAddr
       );
       await DSLctx.deployed();
-      governance = await GovernanCecontract.deploy(
+      governance = await GovernanceContract.deploy(
         parserAddr,
         alice.address,
         tokenAddr,
@@ -1957,7 +1957,6 @@ describe('End-to-end', () => {
 
       await governance.setStorageUint256(hex4Bytes('RECORD_ID'), txId);
       await governance.setStorageAddress(hex4Bytes('AGREEMENT_ADDR'), agreementAddr);
-      await governance.setStorageUint256(hex4Bytes('GOV_BALANCE'), 55);
       await governance.setStorageAddress(hex4Bytes('TOKEN'), tokenAddr);
 
       // check that added record can not be executable for now
@@ -1972,10 +1971,10 @@ describe('End-to-end', () => {
       await parse(agreement, preprAddr);
     });
 
-    it('Voting process. Record in agreement is activated', async () => {
-      await token.connect(alice).approve(bob.address, 500000);
-      await token.connect(alice).approve(carl.address, 500000);
-      await token.connect(alice).approve(david.address, 500000);
+    it(
+      'Voters vote "YES" by majority of the voters '+
+      'AND by majority of the tokens that voted.'+
+      'The target Agreement record IS activated.', async () => {
       await token.connect(alice).transfer(bob.address, 500000);
       await token.connect(alice).transfer(carl.address, 500000);
       await token.connect(alice).transfer(david.address, 500000);
@@ -2044,14 +2043,9 @@ describe('End-to-end', () => {
       // Increase time that is more that deadline and execute the record
       await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
 
-      // Check that the result of voting is zero
-      expect(await governance.getStorageUint256(hex4Bytes('YES_CTR'))).to.be.equal(0);
       await governance.connect(alice).execute(3); // execute Voting results after deadline
       await expect(governance.connect(accounts[3]).execute(3)).to.be.revertedWith('AGR1');
       await expect(governance.connect(alice).execute(3)).to.be.revertedWith('AGR7');
-
-      // Check that the result of voting is 8 votes
-      expect(await governance.getStorageUint256(hex4Bytes('YES_CTR'))).to.be.equal(8);
 
       recordGov = await governance.records(3);
       expect(recordGov.isActive).to.be.equal(true);
@@ -2076,17 +2070,15 @@ describe('End-to-end', () => {
       await expect(governance.connect(accounts[13]).execute(2)).to.be.revertedWith('AGR6');
     });
 
-    it('Voting process. YES_BALANCE < NO_BALANCE YES_VOTERS > NO_VOTERS', async () => {
-      await token.connect(alice).approve(bob.address, 100000);
-      await token.connect(alice).approve(carl.address, 100000);
-      await token.connect(alice).approve(david.address, 500000);
-      await token.connect(alice).transfer(bob.address, 100000);
-      await token.connect(alice).transfer(carl.address, 100000);
+    it(
+      'Voters vote "NO" by majority of the voters'+
+      ' AND by majority of the tokens that voted.'+
+      'The target Agreement record isnt activated.', async () => {;
+      await token.connect(alice).transfer(bob.address, 500000);
+      await token.connect(alice).transfer(carl.address, 500000);
       await token.connect(alice).transfer(david.address, 500000);
 
       await expect(agreement.execute(txId)).to.be.revertedWith('AGR13');
-      let record = await agreement.records(txId);
-      expect(record.isActive).to.be.equal(false);
 
       // 3. Governance voting occurs. If consensus is met -> enable the target record.
       // -------> check the setRecord data and execution <-------
@@ -2101,7 +2093,7 @@ describe('End-to-end', () => {
       await expect(governance.connect(alice).execute(0)).to.be.revertedWith('AGR7');
 
       await governance.connect(bob).execute(1);
-      await governance.connect(carl).execute(1);
+      await governance.connect(carl).execute(2);
       await governance.connect(david).execute(2);
 
       // -------> check the yesRecord data and execution <-------
@@ -2133,18 +2125,15 @@ describe('End-to-end', () => {
 
       // Increase time that is more that deadline and execute the record
       await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-
-      // Check that the result of voting is zero
-      expect(await governance.getStorageUint256(hex4Bytes('YES_CTR'))).to.be.equal(0);
 
       // Balance condition isn't satisfied
       await expect(governance.connect(alice).execute(3)).to.be.revertedWith('AGR6');
     });
 
-    it('Voting process. YES_BALANCE < NO_BALANCE bob transfer token to carl', async () => {
-      await token.connect(alice).approve(bob.address, 100000);
-      await token.connect(alice).approve(carl.address, 100000);
-      await token.connect(alice).approve(david.address, 500000);
+    it(
+      'Voters vote "YES" by minority of the voters'+
+      'BUT they hold the majority of the tokens. '+
+      'The target Agreement record IS activated.', async () => {
       await token.connect(alice).transfer(bob.address, 100000);
       await token.connect(alice).transfer(carl.address, 100000);
       await token.connect(alice).transfer(david.address, 500000);
@@ -2164,12 +2153,9 @@ describe('End-to-end', () => {
       expect(recordGov.isActive).to.be.equal(true);
       expect(recordGov.isExecuted).to.be.equal(true);
       await expect(governance.connect(alice).execute(0)).to.be.revertedWith('AGR7');
-      await governance.connect(bob).execute(1);
-      await governance.connect(carl).execute(1);
-      await governance.connect(david).execute(2);
-
-      await token.connect(bob).approve(carl.address, 100000);
-      await token.connect(bob).transfer(carl.address, 100000);
+      await governance.connect(bob).execute(2);
+      await governance.connect(carl).execute(2);
+      await governance.connect(david).execute(1);
 
       // -------> check the yesRecord data and execution <-------
       recordGov = await governance.records(1);
@@ -2185,27 +2171,42 @@ describe('End-to-end', () => {
       recordGov = await governance.records(1);
       expect(recordGov.isActive).to.be.equal(true);
       expect(recordGov.isExecuted).to.be.equal(false);
-
+      
       recordGov = await governance.records(2);
       expect(recordGov.isActive).to.be.equal(true);
       expect(recordGov.isExecuted).to.be.equal(false);
-
+      
       // -------> check the checkRecord data and execution <-------
       recordGov = await governance.records(3);
       expect(recordGov.isActive).to.be.equal(true);
       expect(recordGov.isExecuted).to.be.equal(false);
-
+      
       // Deadline condition isn't satisfied
       await expect(governance.connect(alice).execute(3)).to.be.revertedWith('AGR6');
-
+      
       // Increase time that is more that deadline and execute the record
       await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-
-      // Check that the result of voting is zero
-      expect(await governance.getStorageUint256(hex4Bytes('YES_CTR'))).to.be.equal(0);
-
-      // Balance condition isn't satisfied
-      await expect(governance.connect(alice).execute(3)).to.be.revertedWith('AGR6');
+      
+      await governance.connect(alice).execute(3); // execute Voting results after deadline
+      await expect(governance.connect(accounts[3]).execute(3)).to.be.revertedWith('AGR1');
+      await expect(governance.connect(alice).execute(3)).to.be.revertedWith('AGR7');
+      
+      recordGov = await governance.records(3);
+      expect(recordGov.isActive).to.be.equal(true);
+      expect(recordGov.isExecuted).to.be.equal(true);
+      
+      // check that record in agreement was activated
+      record = await agreement.records(txId);
+      expect(record.isActive).to.be.equal(true);
+      
+      // Check that the result in agreement contract of the AGREEMENT_RESULT variable is zero
+      expect(await agreement.getStorageUint256(hex4Bytes('AGREEMENT_RESULT'))).to.be.equal(0);
+      
+      // check that record in agreement can be executed
+      await agreement.execute(txId);
+      
+      // check that the result in agreement contract of the AGREEMENT_RESULT variable is 5
+      expect(await agreement.getStorageUint256(hex4Bytes('AGREEMENT_RESULT'))).to.be.equal(5);
     });
   });
 });

@@ -125,7 +125,7 @@ library OtherOpcodes {
     }
 
     /**
-     * @dev Sums all balance in array of account address
+     * @dev Finds a sum of all tokens of users in the array
      * @param _ctxProgram ProgramContext contract address
      */
     function opVotersBalance(address _ctxProgram, address) public {
@@ -152,7 +152,7 @@ library OtherOpcodes {
             );
             address voterAddress = address(uint160(bytes20(data)));
             uint256 balance = IERC20(token).balanceOf(voterAddress);
-            total = total + balance;
+            total += balance;
         }
         OpcodeHelpers.putToStack(_ctxProgram, total);
     }
