@@ -45,7 +45,8 @@ contract Governance is Agreement {
 
         UnstructuredStorage.setStorageUint256(
             0x11d887ad00000000000000000000000000000000000000000000000000000000, // `DEADLINE` in bytes32
-            _deadline);
+            _deadline
+        );
 
         // all records use the same context
         _setBaseRecords();
@@ -114,8 +115,7 @@ contract Governance is Agreement {
      */
     function _setBaseRecord() internal {
         uint256 recordId = 0;
-        string memory record = 
-        'declareArr address YES_VOTERS '
+        string memory record = 'declareArr address YES_VOTERS '
         'declareArr address NO_VOTERS';
 
         string memory _condition = 'bool true';
@@ -133,7 +133,7 @@ contract Governance is Agreement {
         string memory record = 'insert MSG_SENDER into YES_VOTERS';
 
         string memory _condition = 'blockTimestamp < DEADLINE';
- 
+
         _setParameters(recordId, record, _condition, 1);
     }
 
@@ -148,7 +148,7 @@ contract Governance is Agreement {
         string memory record = 'insert MSG_SENDER into NO_VOTERS';
 
         string memory _condition = 'blockTimestamp < DEADLINE';
-   
+
         _setParameters(recordId, record, _condition, 1);
     }
 
@@ -165,8 +165,8 @@ contract Governance is Agreement {
 
         string memory record = 'enableRecord RECORD_ID at AGREEMENT_ADDR';
 
-        string memory _condition =
-                '((votersBalance TOKEN YES_VOTERS) > (votersBalance TOKEN NO_VOTERS)) and (blockTimestamp >= DEADLINE)';
+        string
+            memory _condition = '((votersBalance TOKEN YES_VOTERS) > (votersBalance TOKEN NO_VOTERS)) and (blockTimestamp >= DEADLINE)';
 
         _setParameters(recordId, record, _condition, 1);
     }
