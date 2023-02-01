@@ -55,6 +55,12 @@ interface IParser {
         address
     ) external returns (bytes memory newProgram);
 
+    function asmCompound(
+        bytes memory _program,
+        address _ctxDSLAddr,
+        address
+    ) external returns (bytes memory newProgram);
+
     function asmBool(
         bytes memory _program,
         address,
@@ -92,6 +98,12 @@ interface IParser {
     ) external returns (bytes memory newProgram);
 
     function asmBalanceOf(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
+
+    function asmAllowanceMintBurn(
         bytes memory _program,
         address,
         address

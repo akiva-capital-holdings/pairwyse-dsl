@@ -472,6 +472,39 @@ contract DSLContext is IDSLContext {
             true
         );
 
+        // Ex. `allowance DAI OWNER SPENDER`
+        _addOpcode(
+            'allowance',
+            0x42,
+            OtherOpcodes.opAllowance.selector,
+            IParser.asmAllowanceMintBurn.selector,
+            OpcodeLibNames.OtherOpcodes,
+            3,
+            true
+        );
+
+        // Ex. `mint DAI TO AMOUNT`
+        _addOpcode(
+            'mint',
+            0x43,
+            OtherOpcodes.opMint.selector,
+            IParser.asmAllowanceMintBurn.selector,
+            OpcodeLibNames.OtherOpcodes,
+            3,
+            true
+        );
+
+        // Ex. `burn DAI OWNER AMOUNT`
+        _addOpcode(
+            'burn',
+            0x44,
+            OtherOpcodes.opBurn.selector,
+            IParser.asmAllowanceMintBurn.selector,
+            OpcodeLibNames.OtherOpcodes,
+            3,
+            true
+        );
+
         /** Example:
             func SUM_OF_NUMBERS endf
             end
@@ -709,6 +742,23 @@ contract DSLContext is IDSLContext {
         _addOpcodeBranch(name, 'uint256', 0x01, IStorageUniversal.setStorageUint256.selector);
         _addOpcodeBranch(name, 'struct', 0x02, bytes4(0x0));
         _addOpcodeBranch(name, 'address', 0x03, IStorageUniversal.setStorageAddress.selector);
+
+        // Ex.
+        // `compound deposit USDC` - deposits all USDC tokens to compound, receives cUSDC
+        // `compound withdraw USDC` - withdtaw all USDC tokens from compound in exchange on cUSDC
+        name = 'compound';
+        _addOpcode(
+            name,
+            0x45,
+            OtherOpcodes.opCompound.selector,
+            IParser.asmCompound.selector,
+            OpcodeLibNames.OtherOpcodes,
+            2,
+            true
+        );
+        // types that 'compound' have for loading data
+        _addOpcodeBranch(name, 'deposit', 0x01, OtherOpcodes.opCompoundDeposit.selector);
+        _addOpcodeBranch(name, 'withdraw', 0x02, OtherOpcodes.opCompoundWithdraw.selector);
 
         /***********
          * Aliases *

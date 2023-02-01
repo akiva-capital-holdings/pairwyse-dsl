@@ -78,11 +78,25 @@ Example of a command:
 function asmDeclare(bytes _program, address _ctxDSLAddr, address) public returns (bytes newProgram)
 ```
 
-_Updates the program with the name(its position) of the array
+_Updates the program with the name (its position) of the array
 
 Example of a command:
 ```
 declare ARR_NAME
+```_
+
+### asmCompound
+
+```solidity
+function asmCompound(bytes _program, address _ctxDSLAddr, address) public returns (bytes newProgram)
+```
+
+_Interacts with Compound cUSDC smart contract to make a deposit or withdrawal
+
+Example of a command:
+```
+compound deposit USDC
+compound withdraw USDC
 ```_
 
 ### asmGet
@@ -242,6 +256,12 @@ Example of a command:
 ```
 balanceOf TOKEN USER
 ```_
+
+### asmAllowanceMintBurn
+
+```solidity
+function asmAllowanceMintBurn(bytes _program, address, address) public returns (bytes newProgram)
+```
 
 ### asmLengthOf
 

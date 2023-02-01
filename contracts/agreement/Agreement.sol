@@ -30,7 +30,7 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
     address public contextProgram;
     address public contextDSL;
     address public ownerAddr;
-    uint256 nextParseIndex;
+    uint256 public nextParseIndex;
     mapping(uint256 => Record) public records; // recordId => Record struct
 
     modifier onlyOwner() {

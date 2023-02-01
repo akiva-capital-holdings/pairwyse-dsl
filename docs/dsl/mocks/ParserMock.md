@@ -1,11 +1,5 @@
 ## ParserMock
 
-### constructor
-
-```solidity
-constructor() public
-```
-
 ### asmLoadRemoteExt
 
 ```solidity

@@ -5,9 +5,6 @@ import { UnstructuredStorageMock } from '../../dsl/mocks/UnstructuredStorageMock
 import { Parser } from '../Parser.sol';
 
 contract ParserMock is Parser, UnstructuredStorageMock {
-    // solhint-disable-next-line no-empty-blocks
-    constructor() {}
-
     function asmLoadRemoteExt(bytes memory _program, address _dslCtxAddr, address) external {
         asmLoadRemote(_program, _dslCtxAddr, address(0));
     }

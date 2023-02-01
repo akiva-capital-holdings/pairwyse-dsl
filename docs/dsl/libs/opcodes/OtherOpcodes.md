@@ -6,6 +6,18 @@
 function opLoadRemoteAny(address _ctxProgram, address _ctxDSL) public
 ```
 
+### opCompound
+
+```solidity
+function opCompound(address _ctxProgram, address _ctxDSL) public
+```
+
+### _mustDelegateCall
+
+```solidity
+function _mustDelegateCall(address _ctxProgram, address _ctxDSL, string _opcode) internal
+```
+
 ### opBlockNumber
 
 ```solidity
@@ -35,6 +47,28 @@ function opMsgSender(address _ctxProgram, address) public
 ```solidity
 function opMsgValue(address _ctxProgram, address) public
 ```
+
+### _getParam
+
+```solidity
+function _getParam(address _ctxProgram, uint256 _slice) internal returns (bytes32)
+```
+
+_This is a wrapper function for OpcodeHelpers.getNextBytes() that is returning the slice of the program that
+     we're working with_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+| _slice | uint256 | Slice size |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes32 | the slice of the program |
 
 ### opSetLocalBool
 
@@ -235,6 +269,15 @@ function opSendEth(address _ctxProgram, address) public
 function opTransfer(address _ctxProgram, address) public
 ```
 
+_Calls IER20 transfer() function and puts to stack `1`_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+|  | address |  |
+
 ### opTransferVar
 
 ```solidity
@@ -247,22 +290,40 @@ function opTransferVar(address _ctxProgram, address) public
 function opTransferFrom(address _ctxProgram, address) public
 ```
 
+### opTransferFromVar
+
+```solidity
+function opTransferFromVar(address _ctxProgram, address) public
+```
+
 ### opBalanceOf
 
 ```solidity
 function opBalanceOf(address _ctxProgram, address) public
 ```
 
+### opAllowance
+
+```solidity
+function opAllowance(address _ctxProgram, address) public
+```
+
+### opMint
+
+```solidity
+function opMint(address _ctxProgram, address) public
+```
+
+### opBurn
+
+```solidity
+function opBurn(address _ctxProgram, address) public
+```
+
 ### opLengthOf
 
 ```solidity
 function opLengthOf(address _ctxProgram, address) public
-```
-
-### opTransferFromVar
-
-```solidity
-function opTransferFromVar(address _ctxProgram, address) public
 ```
 
 ### opUint256Get
@@ -295,11 +356,43 @@ function opLoadLocal(address _ctxProgram, string funcSignature) public
 function opLoadRemote(address _ctxProgram, string funcSignature) public
 ```
 
+### opCompoundDeposit
+
+```solidity
+function opCompoundDeposit(address _ctxProgram) public
+```
+
+### opCompoundWithdraw
+
+```solidity
+function opCompoundWithdraw(address _ctxProgram) public
+```
+
 ### opEnableRecord
 
 ```solidity
 function opEnableRecord(address _ctxProgram, address) public
 ```
+
+### _getAddress
+
+```solidity
+function _getAddress(address _ctxProgram) internal returns (address result)
+```
+
+_Reads a variable of type `address`_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| result | address | The address value |
 
 ### _sumOfStructVars
 

@@ -25,7 +25,7 @@ task('impersonate-dai-holders', 'Impersonate accounts on Mainnet fork that hold 
     );
     const signers = mainnetDaiHolders.map((holder) => hre.ethers.provider.getSigner(holder));
 
-    const dai = await hre.ethers.getContractAt('Token', MAINNET_DAI_ADDR);
+    const dai = await hre.ethers.getContractAt('ERC20Premint', MAINNET_DAI_ADDR);
     const userBalances = await Promise.all(
       mainnetDaiHolders.map((holder) => dai.balanceOf(holder))
     );
