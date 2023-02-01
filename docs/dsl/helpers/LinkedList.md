@@ -12,24 +12,6 @@ variable ARR_NAME -> [type: array,elementType: uint256, linkToNextEl: 0x123]
 bytes32 EMPTY
 ```
 
-### heads
-
-```solidity
-mapping(bytes32 => bytes32) heads
-```
-
-### types
-
-```solidity
-mapping(bytes32 => bytes1) types
-```
-
-### lengths
-
-```solidity
-mapping(bytes32 => uint256) lengths
-```
-
 ### getType
 
 ```solidity

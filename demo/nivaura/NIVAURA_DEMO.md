@@ -33,10 +33,14 @@ For commit with ID 95709a7f291ce61541bc78189e906ae73c2ffe53
 4. Prepare another MetaMask address (investor) with some GETH (about 0.2 GETH) and 100 Goerli USDC (or more)
 
 <hr>
-`Note: to receive GETH you may use one of the awailable GETH Faucets like https://goerlifaucet.com/`
+
+Note: to receive GETH you may use one of the awailable GETH Faucets like https://goerlifaucet.com/
+
 <hr>
 <hr>
-`Note: to receive Goerli USDC you must use USDC Faucet contract located at [0x75442Ac771a7243433e033F3F8EaB2631e22938f](https://goerli.etherscan.io/address/0x75442ac771a7243433e033f3f8eab2631e22938f#writeContract) and call the `drip` function.
+
+Note: to receive Goerli USDC you must use USDC Faucet contract located at [0x75442Ac771a7243433e033F3F8EaB2631e22938f](https://goerli.etherscan.io/address/0x75442ac771a7243433e033f3f8eab2631e22938f#writeContract) and call the `drip` function.
+
 <hr>
 
 ## Front End interactions
@@ -47,12 +51,20 @@ For commit with ID 95709a7f291ce61541bc78189e906ae73c2ffe53
 2. On this tab from the dropdown menu select "MultiTranche" option and hit "Create Agreement" button. After this you'll have many MetaMask prompts to send transactions (about 7-10 transaction). Make sure you'll confirm all of the transactions.
 3. After the MultiTranche contract is deployed (you'll see a MultiTranche address in the notification on the rigth of the screen) navigate to the "Definition" tab.
 4. Define a variable `DEPOSITS_DEADLINE` of type "number" with a timestamp in seconds of any time in the future. This variable controls the deadline to control <hr>
-   `Note: for the demo, the best option would be about 3 minutes. You may use https://www.unixtimestamp.com/ website to find the timestamp of any given time.`
+   `Note: for the demo, the best option would be about 3 minutes. You may use https://www.unixtimestamp.com/ website to find the timestamp of any given time. Make sure that your timestamp is in UTC`
    <hr>
 5. (optional) Define a `LOCK_TIME` variable. This variable controls how long the user cannot withdraw his/her USDC. Set this variable to any positive number (in seconds) to lock the withdrawal.
 
 ### Interact with MultiTranche Contract
 
 1. Connect to the website with the investor address.
-2. Navigate to `Agreement Interaction` -> `Execution` tab, and copy the Agreement address from the input field.
-3. Open a Goerli USDC smart contract in block explorer.
+2. Navigate to MultiTranche contract on Goerli and get WUSDC address. You may check [this contract](https://goerli.etherscan.io/address/0xf7322923a414629b9A53422eD64a0874DFF3d8Ec#readContract) as an example.
+3. Add the WUSDC token to investor's MetaMask wallet. Your balance should be 0 WUSDC.
+4. Navigate to `Agreement Interaction` -> `Execution` tab, and copy the MultiTranche address (labeled as `Agreement address`) from the input field.
+5. Open a [Goerli USDC smart contract](https://goerli.etherscan.io/token/0x07865c6E87B9F70255377e024ace6630C1Eaa37F?a=0x127a009e97644e25f4f5f3cb37e5c78bcf5f4c34#writeProxyContract) in block explorer. Use `approve` function to approve 100 USDC (100000000 – with decimals) to be spent by MultiTranche contract address.
+6. Execute the record #1 through `Execution` tab. After transaction is confirmed, your WUSDC balance (you may check in MetaMask) should be increased to <strike>100 WUSDC</strike> 0.0000000001 WUSDC.
+7. After a deadline is in the past – execute the record #2.
+8. If you have set a `LOCK_TIME` variable to a non-zero value, wait until the lock time has passed.
+9. Open a Goerli WUSDC smart contract in [Goerli block explorer](https://goerli.etherscan.io/). Use `approve` function to approve <strike>100 WUSDC</strike> 0.0000000001 WUSDC (100000000 – with decimals) to be spent by MultiTranche contract address.
+10. Execute the record #3. After the transaction is confirmed, the investor's USDC balance should be increased by 100 USDC. The WUSDC balance should become 0 WUSDC.
+11. The Demo is completed!
