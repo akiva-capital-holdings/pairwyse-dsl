@@ -51,8 +51,11 @@ Note: to receive Goerli USDC you must use USDC Faucet contract located at [0x754
 2. On this tab from the dropdown menu select "MultiTranche" option and hit "Create Agreement" button. After this you'll have many MetaMask prompts to send transactions (about 7-10 transaction). Make sure you'll confirm all of the transactions.
 3. After the MultiTranche contract is deployed (you'll see a MultiTranche address in the notification on the rigth of the screen) navigate to the "Definition" tab.
 4. Define a variable `DEPOSITS_DEADLINE` of type "number" with a timestamp in seconds of any time in the future. This variable controls the deadline to control <hr>
-   `Note: for the demo, the best option would be about 3 minutes. You may use https://www.unixtimestamp.com/ website to find the timestamp of any given time. Make sure that your timestamp is in UTC`
+
+   Note: for the demo, the best option would be about 3 minutes. You may use https://www.unixtimestamp.com/ website to find the timestamp of any given time. Make sure that your timestamp is in UTC
+
    <hr>
+
 5. (optional) Define a `LOCK_TIME` variable. This variable controls how long the user cannot withdraw his/her USDC. Set this variable to any positive number (in seconds) to lock the withdrawal.
 
 ### Interact with MultiTranche Contract
