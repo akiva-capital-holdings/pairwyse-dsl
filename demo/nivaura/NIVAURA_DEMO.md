@@ -24,3 +24,51 @@ For commit with ID 95709a7f291ce61541bc78189e906ae73c2ffe53
 - ByteUtils [0x1C407CDD4975532Bb5f3f614FB3b48478f597f49](https://goerli.etherscan.io/address/0x1C407CDD4975532Bb5f3f614FB3b48478f597f49#code)
 - Parser [0x4827b97709B2E8cf1F53Da11f7Fb069CD18F739d](https://goerli.etherscan.io/address/0x4827b97709B2E8cf1F53Da11f7Fb069CD18F739d#code)
 - Executor [0x69D4725cc55980416bA5AEd6EC565547D281c8F9](https://goerli.etherscan.io/address/0x69D4725cc55980416bA5AEd6EC565547D281c8F9#code)
+
+## Prerequisites #1
+
+To setup MultiTranche Demo use the same steps as in [Front End Demo V2](https://github.com/akiva-capital-holdings/solidity-dsl/blob/master/demo/v2/FE-demo-v2.md). Specifically read the following sections:
+
+- Setup Solidity SC
+- Setup FE
+- Setup Metamask
+- Reset MetaMask nonce (needed for localhost)
+
+However, please use the following commit IDs (insted of those, provided in Front End Demo V2):
+
+- Pairwyse DSL: [ef968481133b7a73c09af28c4c29a76082164d5a](https://github.com/akiva-capital-holdings/solidity-dsl/commit/ef968481133b7a73c09af28c4c29a76082164d5a)
+- Front End: [2a6bd5a68c7fa797907621a2054dc7369fd52543](https://github.com/akiva-capital-holdings/dsl-fe/commit/2a6bd5a68c7fa797907621a2054dc7369fd52543)
+
+<hr>
+`Note: you'll also need an account with enough GETH (Goerli Ethereum). Enough is about 1 GETH on your balance.`
+<hr>
+
+## Prerequisites #2
+
+1. **Front End.** Run Front End with `yarn start:stage`
+2. Open your browser with MetaMask and navigate to http://localhost:3000
+3. Authorize on the website with MetaMask address (creator) that has enough GETH and make sure MetaMask is connected to Goerli network.
+4. Prepare another MetaMask address (investor) with some GETH (about 0.2 GETH) and 100 Goerli USDC (or more)
+
+<hr>
+`Note: to receive GETH you may use one of the awailable GETH Faucets like https://goerlifaucet.com/`
+<hr>
+<hr>
+`Note: to receive Goerli USDC you may use one of the awailable GETH Faucets like https://goerlifaucet.com/`
+<hr>
+
+## Front End interactions
+
+### Create and Setup MultiTranche Agreement
+
+1. Click on "Agreement Interaction", you'll be redirected on Agreement creation tab.
+2. On this tab from the dropdown menu select "MultiTranche" option and hit "Create Agreement" button. After this you'll have many MetaMask prompts to send transactions (about 7-10 transaction). Make sure you'll confirm all of the transactions.
+3. After the MultiTranche contract is deployed (you'll see a MultiTranche address in the notification on the rigth of the screen) navigate to the "Definition" tab.
+4. Define a variable `DEPOSITS_DEADLINE` of type "number" with a timestamp in seconds of any time in the future. This variable controls the deadline to control <hr>
+   `Note: for the demo, the best option would be about 3 minutes. You may use https://www.unixtimestamp.com/ website to find the timestamp of any given time.`
+   <hr>
+5. (optional) Define a `LOCK_TIME` variable. This variable controls how long the user cannot withdraw his/her USDC. Set this variable to any positive number (in seconds) to lock the withdrawal.
+
+### Interact with MultiTranche Contract
+
+1. Connect to the website with

@@ -6,11 +6,11 @@ import { task } from 'hardhat/config';
  * @dev Get MultiTranche smart contract bytecode
  */
 task('bytecode:multitranche', 'Get a bytecode of MultiTranche contract')
-  .addParam('executorLib', 'Executor library address')
-  .setAction(async ({ executorLib }, hre) => {
+  .addParam('executor', 'Executor library address')
+  .setAction(async ({ executor }, hre) => {
     const MultiTrancheCont = await hre.ethers.getContractFactory('MultiTranche', {
       libraries: {
-        Executor: executorLib,
+        Executor: executor,
       },
     });
 
