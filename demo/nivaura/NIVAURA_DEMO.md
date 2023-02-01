@@ -25,25 +25,7 @@ For commit with ID 95709a7f291ce61541bc78189e906ae73c2ffe53
 - Parser [0x4827b97709B2E8cf1F53Da11f7Fb069CD18F739d](https://goerli.etherscan.io/address/0x4827b97709B2E8cf1F53Da11f7Fb069CD18F739d#code)
 - Executor [0x69D4725cc55980416bA5AEd6EC565547D281c8F9](https://goerli.etherscan.io/address/0x69D4725cc55980416bA5AEd6EC565547D281c8F9#code)
 
-## Prerequisites #1
-
-To setup MultiTranche Demo use the same steps as in [Front End Demo V2](https://github.com/akiva-capital-holdings/solidity-dsl/blob/master/demo/v2/FE-demo-v2.md). Specifically read the following sections:
-
-- Setup Solidity SC
-- Setup FE
-- Setup Metamask
-- Reset MetaMask nonce (needed for localhost)
-
-However, please use the following commit IDs (insted of those, provided in Front End Demo V2):
-
-- Pairwyse DSL: [ef968481133b7a73c09af28c4c29a76082164d5a](https://github.com/akiva-capital-holdings/solidity-dsl/commit/ef968481133b7a73c09af28c4c29a76082164d5a)
-- Front End: [2a6bd5a68c7fa797907621a2054dc7369fd52543](https://github.com/akiva-capital-holdings/dsl-fe/commit/2a6bd5a68c7fa797907621a2054dc7369fd52543)
-
-<hr>
-`Note: you'll also need an account with enough GETH (Goerli Ethereum). Enough is about 1 GETH on your balance.`
-<hr>
-
-## Prerequisites #2
+## Prerequisites
 
 1. **Front End.** Run Front End with `yarn start:stage`
 2. Open your browser with MetaMask and navigate to http://localhost:3000
@@ -54,7 +36,7 @@ However, please use the following commit IDs (insted of those, provided in Front
 `Note: to receive GETH you may use one of the awailable GETH Faucets like https://goerlifaucet.com/`
 <hr>
 <hr>
-`Note: to receive Goerli USDC you may use one of the awailable GETH Faucets like https://goerlifaucet.com/`
+`Note: to receive Goerli USDC you must use USDC Faucet contract located at [0x75442Ac771a7243433e033F3F8EaB2631e22938f](https://goerli.etherscan.io/address/0x75442ac771a7243433e033f3f8eab2631e22938f#writeContract) and call the `drip` function.
 <hr>
 
 ## Front End interactions
@@ -71,4 +53,6 @@ However, please use the following commit IDs (insted of those, provided in Front
 
 ### Interact with MultiTranche Contract
 
-1. Connect to the website with
+1. Connect to the website with the investor address.
+2. Navigate to `Agreement Interaction` -> `Execution` tab, and copy the Agreement address from the input field.
+3. Open a Goerli USDC smart contract in block explorer.
