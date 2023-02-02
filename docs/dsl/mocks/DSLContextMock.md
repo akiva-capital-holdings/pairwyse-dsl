@@ -30,4 +30,3 @@ function addOperatorExt(string _op, uint256 _priority) external
 function addOpcodeForOperatorExt(string _name, bytes1 _opcode, bytes4 _opSelector, bytes4 _asmSelector, enum IDSLContext.OpcodeLibNames _libName, uint256 _priority) external
 ```
 
-

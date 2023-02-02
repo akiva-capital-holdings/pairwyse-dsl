@@ -102,4 +102,3 @@ _This will overwrite the approval amount for `spender`
 | ---- | ---- | ----------- |
 | [0] | bool | Whether or not the approval succeeded |
 
-

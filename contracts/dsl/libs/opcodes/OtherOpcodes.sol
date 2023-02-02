@@ -161,7 +161,7 @@ library OtherOpcodes {
         bytes32 _length = _getArrLength(_ctxProgram, _arrNameB32);
         require(uint256(_length) > 0, ErrorsGeneralOpcodes.OP6);
         for (uint256 i = 0; i < uint256(_length); i++) {
-            (bytes memory data) = OpcodeHelpers.mustCall(
+            bytes memory data = OpcodeHelpers.mustCall(
                 IProgramContext(_ctxProgram).appAddr(),
                 abi.encodeWithSignature(
                     'get(uint256,bytes32)',

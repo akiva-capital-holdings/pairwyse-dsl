@@ -24,4 +24,3 @@ function fromHexChar(bytes1 c) public pure returns (uint8)
 
 _Convert an hexadecimal character to their value_
 
-

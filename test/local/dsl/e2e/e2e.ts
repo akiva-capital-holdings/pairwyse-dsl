@@ -11,29 +11,12 @@ import {
   ProgramContextMock,
   Preprocessor,
   Stack,
-  Agreement,
-  Governance,
-  Parser,
-  ERC20Premint,
 } from '../../../../typechain-types';
 
-import {
-  bnToLongHexString,
-  checkStackTail,
-  hex4Bytes,
-  hex4BytesShort,
-  createBulkVotes,
-
-} from '../../../utils/utils';
-import {
-  deployAgreement,
-  deployOpcodeLibs,
-  deployStringUtils,
-} from '../../../../scripts/utils/deploy.utils';
+import { bnToLongHexString, checkStackTail, hex4Bytes, hex4BytesShort } from '../../../utils/utils';
+import { deployOpcodeLibs } from '../../../../scripts/utils/deploy.utils';
 import { deployBaseMock } from '../../../../scripts/utils/deploy.utils.mock';
 import { getChainId, removeEmptyValues } from '../../../../utils/utils';
-import { ONE_MONTH } from '../../../utils/constants';
-import { parse } from '../../../../scripts/utils/update.record';
 
 const { ethers, network } = hre;
 
@@ -441,7 +424,7 @@ describe('End-to-end', () => {
             '01'; // true
           expect(await ctxProgram.program()).to.equal(expectedProgram);
 
-          // Execute and check
+          // Execute and Check
           await app.execute();
           const StackCont = await ethers.getContractFactory('Stack');
           const contextStackAddress = await ctxProgram.stack();
@@ -514,7 +497,7 @@ describe('End-to-end', () => {
             '1fff709e'; // NUMBERS
           expect(await ctxProgram.program()).to.equal(expectedProgram);
 
-          // Execute and check
+          // Execute and Check
           await app.execute();
           const StackCont = await ethers.getContractFactory('Stack');
           const contextStackAddress = await ctxProgram.stack();
@@ -587,7 +570,7 @@ describe('End-to-end', () => {
             '04'; // >
           expect(await ctxProgram.program()).to.equal(expectedProgram);
 
-          // Execute and check
+          // Execute and Check
           await app.execute();
           const StackCont = await ethers.getContractFactory('Stack');
           const contextStackAddress = await ctxProgram.stack();
@@ -621,7 +604,7 @@ describe('End-to-end', () => {
             '1fff709e'; // NUMBERS
           expect(await ctxProgram.program()).to.equal(expectedProgram);
 
-          // Execute and check
+          // Execute and Check
           await app.execute();
           const StackCont = await ethers.getContractFactory('Stack');
           const contextStackAddress = await ctxProgram.stack();
@@ -650,7 +633,7 @@ describe('End-to-end', () => {
             '3c8423ff'; // PARTNERS
           expect(await ctxProgram.program()).to.equal(expectedProgram);
 
-          // Execute and check
+          // Execute and Check
           expect(app.execute()).revertedWith('EXC3');
           const StackCont = await ethers.getContractFactory('Stack');
           const contextStackAddress = await ctxProgram.stack();
@@ -762,7 +745,7 @@ describe('End-to-end', () => {
             '04'; // >
           expect(await ctxProgram.program()).to.equal(expectedProgram);
 
-          // Execute and check
+          // Execute and Check
           await app.execute();
           const StackCont = await ethers.getContractFactory('Stack');
           const contextStackAddress = await ctxProgram.stack();
@@ -836,7 +819,7 @@ describe('End-to-end', () => {
           '257b3678'; // bytecode for INDEXES
         expect(await ctxProgram.program()).to.equal(expectedProgram);
 
-        // Execute and check
+        // Execute and Check
         await checkStackTail(stack, []);
 
         await app.execute();
@@ -933,7 +916,7 @@ describe('End-to-end', () => {
           '257b3678'; // bytecode for INDEXES
         expect(await ctxProgram.program()).to.equal(expectedProgram);
 
-        // Execute and check
+        // Execute and Check
         await checkStackTail(stack, []);
 
         await app.execute();
@@ -1096,7 +1079,7 @@ describe('End-to-end', () => {
       const expectedProgram = '0x1800';
       expect(await ctxProgram.program()).to.equal(expectedProgram);
 
-      // Execute and check
+      // Execute and Check
       await app.execute();
       const StackCont = await ethers.getContractFactory('Stack');
       const contextStackAddress = await ctxProgram.stack();
@@ -1126,7 +1109,7 @@ describe('End-to-end', () => {
             'cb398fe1' // endStruct
         );
 
-        // Execute and check
+        // Execute and Check
         expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(0);
         await app.execute();
         expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(3);
@@ -1192,7 +1175,7 @@ describe('End-to-end', () => {
             '4a871642' // BOB.lastPayment
         );
 
-        // Execute and check
+        // Execute and Check
         expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(0);
         expect(await app.getStorageUint256(hex4Bytes('RESULT_AFTER'))).equal(0);
         await app.execute();
@@ -1229,7 +1212,7 @@ describe('End-to-end', () => {
             'cb398fe1' // endStruct
         );
 
-        // Execute and check
+        // Execute and Check
         expect(await app.getStorageUint256(hex4Bytes('BOB.account'))).equal(0);
         await app.execute();
         expect(await app.getStorageUint256(hex4Bytes('BOB.account'))).equal(
@@ -1316,7 +1299,7 @@ describe('End-to-end', () => {
             '842db530' // RESULT_2
         );
 
-        // Execute and check
+        // Execute and Check
         expect(await app.getStorageUint256(hex4Bytes('RESULT_1'))).equal(0);
         expect(await app.getStorageUint256(hex4Bytes('RESULT_2'))).equal(0);
         await app.execute();
@@ -1367,7 +1350,7 @@ describe('End-to-end', () => {
             'cb398fe1' // endStruct
         );
 
-        // Execute and check
+        // Execute and Check
         expect(await app.getStorageUint256(hex4Bytes('BOB.account'))).equal(0);
         expect(await app.getStorageUint256(hex4Bytes('BOB.lastPayment'))).equal(0);
         await app.execute();
@@ -1400,7 +1383,7 @@ describe('End-to-end', () => {
         // to Parser
         await app.parseCode(code);
 
-        // Execute and check
+        // Execute and Check
         expect(await app.getStorageUint256(hex4Bytes('RESULT_1'))).equal(0);
         expect(await app.getStorageUint256(hex4Bytes('RESULT_2'))).equal(0);
         expect(await app.getStorageUint256(hex4Bytes('RESULT_3'))).equal(0);
@@ -1769,7 +1752,7 @@ describe('End-to-end', () => {
       // Execution
       await app.execute();
 
-      // Variable checks
+      // Variable Checks
       expect(await app.getStorageUint256(hex4Bytes('TOTAL_DEPOSIT'))).equal(2 + 3 + 4);
       /**
        * 1 - setUint256 TOTAL_DEPOSIT (first iteration)
@@ -1870,7 +1853,7 @@ describe('End-to-end', () => {
       // Execution
       await app.execute();
 
-      // Variable checks
+      // Variable Checks
       expect(await app.getStorageUint256(hex4Bytes('TOTAL_DEPOSIT'))).equal(2 * 3 * 4);
       const balancesAfter = {
         bob: await bob.getBalance(),
@@ -1891,346 +1874,5 @@ describe('End-to-end', () => {
        */
       await checkStackTail(stack, [1, 1, 1, 1, 1, 1, 1]);
     });
-  });
-
-  // fix agreement at first
-  describe('Governance', () => {
-    let agreement: Agreement;
-    let agreementAddr: string;
-    let tokenAddr: string;
-    let token: ERC20Premint;
-    let governance: Governance;
-    let preprAddr: string;
-    let parserAddr: string;
-    let executorLibAddr: string;
-    let txId: string;
-
-    before(async () => {
-      const LAST_BLOCK_TIMESTAMP = (
-        await ethers.provider.getBlock(await ethers.provider.getBlockNumber())
-      ).timestamp;
-      NEXT_MONTH = LAST_BLOCK_TIMESTAMP + ONE_MONTH;
-
-      // Deploy Token contract
-
-      token = await (await ethers.getContractFactory('ERC20Premint'))
-        .connect(alice)
-        .deploy('Token', 'TKN', ethers.utils.parseEther('1000'));
-      await token.deployed();
-      tokenAddr = token.address;
-
-      // 1. Governance contract is deployed; it will be an owner of Agreement.
-      const [
-        comparisonOpcodesLibAddr,
-        branchingOpcodesLibAddr,
-        logicalOpcodesLibAddr,
-        otherOpcodesLibAddr,
-      ] = await deployOpcodeLibs(hre);
-      [parserAddr, executorLibAddr, preprAddr] = await deployBaseMock(hre);
-      const GovernanceContract = await hre.ethers.getContractFactory('Governance', {
-        libraries: {
-          Executor: executorLibAddr,
-        },
-      });
-
-      const DSLctx = await (
-        await ethers.getContractFactory('DSLContextMock')
-      ).deploy(
-        comparisonOpcodesLibAddr,
-        branchingOpcodesLibAddr,
-        logicalOpcodesLibAddr,
-        otherOpcodesLibAddr
-      );
-      await DSLctx.deployed();
-      governance = await GovernanceContract.deploy(
-        parserAddr,
-        alice.address,
-        tokenAddr,
-        DSLctx.address,
-        NEXT_MONTH
-      );
-      await governance.deployed();
-      await parse(governance, preprAddr);
-
-      // 2. Alice creates a new record in Agreement. This record is disabled
-      // Create Agreement contract
-      const stringUtilsAddr = await deployStringUtils(hre);
-      agreementAddr = await deployAgreement(hre, governance.address, stringUtilsAddr);
-      agreement = await ethers.getContractAt('Agreement', agreementAddr);
-      txId = '133';
-      const conditions = ['bool true'];
-      const transaction = '(uint256 5) setUint256 AGREEMENT_RESULT';
-
-      await governance.setStorageUint256(hex4Bytes('RECORD_ID'), txId);
-      await governance.setStorageAddress(hex4Bytes('AGREEMENT_ADDR'), agreementAddr);
-      await governance.setStorageAddress(hex4Bytes('TOKEN'), tokenAddr);
-
-      // check that added record can not be executable for now
-      await agreement.connect(alice).update(
-        txId,
-        [], // required records
-        [alice.address],
-        transaction,
-        conditions
-      );
-
-      await parse(agreement, preprAddr);
-    });
-
-    it(
-      'Voters vote "YES" by majority of the voters ' +
-        'AND by majority of the tokens that voted.' +
-        'The target Agreement record IS activated.',
-      async () => {
-        // check that the agreement record is not active
-        await expect(agreement.execute(txId)).to.be.revertedWith('AGR13');
-        let record = await agreement.records(txId);
-        expect(record.isActive).to.be.equal(false);
-
-        // 3. Governance voting occurs. If consensus is met -> enable the target record.
-        // check the setRecord data and execution 
-        let recordGov = await governance.records(0);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(false);
-
-        await governance.connect(alice).execute(0); // sets DSL code for the base record
-        recordGov = await governance.records(0);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(true);
-
-        // check that the base record has already been created
-        await expect(governance.connect(alice).execute(0)).to.be.revertedWith('AGR7');
-
-        // filling account wallets
-        await token.connect(alice).transfer(carl.address, 500000);
-        await token.connect(alice).transfer(david.address, 500000);
-
-        // check that account cannot vote with an empty wallet
-        await expect(governance.connect(bob).execute(1)).to.be.revertedWith('AGR6');
-        await token.connect(alice).transfer(bob.address, 500000);
-
-        // accounts make their vote
-        await governance.connect(bob).execute(1); // yes vote
-        await governance.connect(carl).execute(1); // yes vote
-        await governance.connect(david).execute(2); // no vote
-
-        // check the yesRecord data and execution
-        recordGov = await governance.records(1);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(false);
-
-        // check the noRecord data and execution 
-        recordGov = await governance.records(2);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(false);
-
-        // check the checkRecord data and execution
-        recordGov = await governance.records(3);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(false);
-
-        // Deadline condition isn't satisfied
-        await expect(governance.connect(alice).execute(3)).to.be.revertedWith('AGR6');
-
-        // Increase time that is more that deadline and execute the record
-        await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-
-        await governance.connect(alice).execute(3); // execute Voting results after deadline
-        await expect(governance.connect(accounts[3]).execute(3)).to.be.revertedWith('AGR1');
-        await expect(governance.connect(alice).execute(3)).to.be.revertedWith('AGR7');
-
-        recordGov = await governance.records(3);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(true);
-
-        // check that record in agreement was activated
-        record = await agreement.records(txId);
-        expect(record.isActive).to.be.equal(true);
-
-        // Check that the result in agreement contract of the AGREEMENT_RESULT variable is zero
-        expect(await agreement.getStorageUint256(hex4Bytes('AGREEMENT_RESULT'))).to.be.equal(0);
-
-        // check that record in agreement can be executed
-        await agreement.execute(txId);
-
-        // check that the result in agreement contract of the AGREEMENT_RESULT variable is 5
-        expect(await agreement.getStorageUint256(hex4Bytes('AGREEMENT_RESULT'))).to.be.equal(5);
-
-        // check that no one can vote anymore because of deadline
-        await expect(governance.connect(bob).execute(2)).to.be.revertedWith('AGR6');
-        await expect(governance.connect(carl).execute(2)).to.be.revertedWith('AGR6');
-        await expect(governance.connect(david).execute(2)).to.be.revertedWith('AGR6');
-      }
-    );
-
-    it(
-      'Voters vote "NO" by majority of the voters' +
-        ' AND by majority of the tokens that voted.' +
-        'The target Agreement record isnt activated.',
-      async () => {
-        // check that the agreement record is not active
-        await expect(agreement.execute(txId)).to.be.revertedWith('AGR13');
-        let record = await agreement.records(txId);
-        expect(record.isActive).to.be.equal(false);
-
-        // 3. Governance voting occurs. If consensus is met -> enable the target record.
-        // check the setRecord data and execution 
-        let recordGov = await governance.records(0);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(false);
-
-        await governance.connect(alice).execute(0); // sets DSL code for the base record
-        recordGov = await governance.records(0);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(true);
-
-        // check that the base record has already been created
-        await expect(governance.connect(alice).execute(0)).to.be.revertedWith('AGR7');
-
-        // filling account wallets
-        await token.connect(alice).transfer(carl.address, 500000);
-        await token.connect(alice).transfer(david.address, 500000);
-
-        // check that account cannot vote with an empty wallet
-        await expect(governance.connect(bob).execute(1)).to.be.revertedWith('AGR6');
-        await token.connect(alice).transfer(bob.address, 500000);
-
-        // accounts make their vote
-        await governance.connect(bob).execute(2); // no vote
-        await governance.connect(carl).execute(2); // no vote
-        await governance.connect(david).execute(1); // yes vote
-
-        // check the yesRecord data and execution
-        recordGov = await governance.records(1);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(false);
-
-        // check the noRecord data and execution 
-        recordGov = await governance.records(2);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(false);
-
-        // check the checkRecord data and execution
-        recordGov = await governance.records(3);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(false);
-
-        // Deadline condition isn't satisfied
-        await expect(governance.connect(alice).execute(3)).to.be.revertedWith('AGR6');
-
-        // Increase time that is more that deadline and execute the record
-        await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-
-        // the balance of those who voted "NO" is greater, so the record 3 is not fulfilled
-        await expect(governance.connect(alice).execute(3)).to.be.revertedWith('AGR6');
-
-        recordGov = await governance.records(3);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(false);
-
-        // check that the transaction entry has not been activated
-        record = await agreement.records(txId);
-        expect(record.isActive).to.be.equal(false);
-
-        // Check that the result in agreement contract of the AGREEMENT_RESULT variable is zero
-        expect(await agreement.getStorageUint256(hex4Bytes('AGREEMENT_RESULT'))).to.be.equal(0);
-
-        // check that record in agreement can't be executed
-        await expect(agreement.execute(txId)).to.be.revertedWith('AGR1');
-
-        // check that AGREEMENT_RESULT variable's result in the agreement is still zero
-        expect(await agreement.getStorageUint256(hex4Bytes('AGREEMENT_RESULT'))).to.be.equal(0);
-
-        // check that no one can vote anymore because of deadline
-        await expect(governance.connect(bob).execute(2)).to.be.revertedWith('AGR6');
-        await expect(governance.connect(carl).execute(2)).to.be.revertedWith('AGR6');
-        await expect(governance.connect(david).execute(2)).to.be.revertedWith('AGR6');
-        
-      }
-    );
-
-    it(
-      'Voters vote "YES" by minority of the voters' +
-        'BUT they hold the majority of the tokens. ' +
-        'The target Agreement record IS activated.',
-      async () => {
-        // check that the agreement record is not active
-        await expect(agreement.execute(txId)).to.be.revertedWith('AGR13');
-        let record = await agreement.records(txId);
-        expect(record.isActive).to.be.equal(false);
-
-        // 3. Governance voting occurs. If consensus is met -> enable the target record.
-        // check the setRecord data and execution 
-        let recordGov = await governance.records(0);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(false);
-
-        await governance.connect(alice).execute(0); // sets DSL code for the base record
-        recordGov = await governance.records(0);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(true);
-
-        // check that the base record has already been created
-        await expect(governance.connect(alice).execute(0)).to.be.revertedWith('AGR7');
-
-        // filling account wallets
-        await token.connect(alice).transfer(carl.address, 100000);
-        await token.connect(alice).transfer(david.address, 500000);
-
-        // check that account cannot vote with an empty wallet
-        await expect(governance.connect(bob).execute(1)).to.be.revertedWith('AGR6');
-        await token.connect(alice).transfer(bob.address, 100000);
-
-        // accounts make their vote
-        await governance.connect(bob).execute(1); // yes vote
-        await governance.connect(carl).execute(1); // yes vote
-        await governance.connect(david).execute(2); // no vote
-
-        // check the yesRecord data and execution
-        recordGov = await governance.records(1);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(false);
-
-        // check the noRecord data and execution 
-        recordGov = await governance.records(2);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(false);
-
-        // check the checkRecord data and execution
-        recordGov = await governance.records(3);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(false);
-
-        // Deadline condition isn't satisfied
-        await expect(governance.connect(alice).execute(3)).to.be.revertedWith('AGR6');
-
-        // Increase time that is more that deadline and execute the record
-        await ethers.provider.send('evm_increaseTime', [ONE_MONTH]);
-
-        // the balance of those who voted "NO" is greater, so the record 3 is not fulfilled
-        await expect(governance.connect(alice).execute(3)).to.be.revertedWith('AGR6');
-        recordGov = await governance.records(3);
-        expect(recordGov.isActive).to.be.equal(true);
-        expect(recordGov.isExecuted).to.be.equal(false);
-
-        // check that the transaction entry has not been activated
-        record = await agreement.records(txId);
-        expect(record.isActive).to.be.equal(false);
-
-        // Check that the result in agreement contract of the AGREEMENT_RESULT variable is zero
-        expect(await agreement.getStorageUint256(hex4Bytes('AGREEMENT_RESULT'))).to.be.equal(0);
-
-        // check that record in agreement can't be executed
-        await expect(agreement.execute(txId)).to.be.revertedWith('AGR1');
-
-        // check that AGREEMENT_RESULT variable's result in the agreement is still zero
-        expect(await agreement.getStorageUint256(hex4Bytes('AGREEMENT_RESULT'))).to.be.equal(0);
-
-        // check that no one can vote anymore because of deadline
-        await expect(governance.connect(bob).execute(2)).to.be.revertedWith('AGR6');
-        await expect(governance.connect(carl).execute(2)).to.be.revertedWith('AGR6');
-        await expect(governance.connect(david).execute(2)).to.be.revertedWith('AGR6');
-      }
-    );
   });
 });

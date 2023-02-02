@@ -56,7 +56,7 @@ contract Governance is Agreement {
         _verifyRecord(_recordId);
         if (_recordId == 1) {
             // if the user already voted NO he can not vote YES anymore
-            require(!records[2].isExecutedBySignatory[msg.sender], ErrorsGovernance.GOV2);
+            require(!records[2].isExecutedBySignatory[msg.sender], ErrorsGovernance.GOV1);
         } else if (_recordId == 2) {
             // if the user already voted YES he can not vote NO anymore
             require(!records[1].isExecutedBySignatory[msg.sender], ErrorsGovernance.GOV1);
@@ -132,7 +132,8 @@ contract Governance is Agreement {
         uint256 recordId = 1;
         string memory record = 'insert MSG_SENDER into YES_VOTERS';
 
-        string memory _condition = '((balanceOf TOKEN MSG_SENDER) > 0) and (blockTimestamp < DEADLINE)';
+        string
+            memory _condition = '((balanceOf TOKEN MSG_SENDER) > 0) and (blockTimestamp < DEADLINE)';
 
         _setParameters(recordId, record, _condition, 1);
     }
@@ -147,7 +148,8 @@ contract Governance is Agreement {
         uint256 recordId = 2;
         string memory record = 'insert MSG_SENDER into NO_VOTERS';
 
-        string memory _condition = '((balanceOf TOKEN MSG_SENDER) > 0) and (blockTimestamp < DEADLINE)';
+        string
+            memory _condition = '((balanceOf TOKEN MSG_SENDER) > 0) and (blockTimestamp < DEADLINE)';
 
         _setParameters(recordId, record, _condition, 1);
     }
@@ -165,9 +167,8 @@ contract Governance is Agreement {
 
         string memory record = 'enableRecord RECORD_ID at AGREEMENT_ADDR';
 
-        string
-            memory _condition = '((votersBalance TOKEN YES_VOTERS) > (votersBalance TOKEN NO_VOTERS)) '
-            'and (blockTimestamp >= DEADLINE)';
+        string memory _condition = '((votersBalance TOKEN YES_VOTERS) > (votersBalance TOKEN NO_VOTERS)) '
+        'and (blockTimestamp >= DEADLINE)';
 
         _setParameters(recordId, record, _condition, 1);
     }

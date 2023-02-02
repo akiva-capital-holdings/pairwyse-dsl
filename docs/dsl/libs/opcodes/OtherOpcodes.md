@@ -499,4 +499,3 @@ _Returns array's length_
 | ---- | ---- | ----------- |
 | [0] | bytes32 | Array's length in bytecode |
 
-
