@@ -27,7 +27,7 @@ For commit with ID 95709a7f291ce61541bc78189e906ae73c2ffe53
 
 ## Prerequisites
 
-1. **Front End.** Run Front End with `yarn start:stage`
+1. Run Front End with `yarn start:stage`
 2. Open your browser with MetaMask and navigate to http://localhost:3000
 3. Authorize on the website with MetaMask address (creator) that has enough GETH and make sure MetaMask is connected to Goerli network.
 4. Prepare another MetaMask address (investor) with some GETH (about 0.2 GETH) and 100 Goerli USDC (or more)
@@ -47,12 +47,13 @@ Note: to receive Goerli USDC you must use USDC Faucet contract located at [0x754
 
 ### Create and Setup MultiTranche Agreement
 
-1. Click on "Agreement Interaction", you'll be redirected on Agreement creation tab.
-2. On this tab from the dropdown menu select "MultiTranche" option and hit "Create Agreement" button. After this you'll have many MetaMask prompts to send transactions (about 7-10 transaction). Make sure you'll confirm all of the transactions.
-3. After the MultiTranche contract is deployed (you'll see a MultiTranche address in the notification on the rigth of the screen) navigate to the "Definition" tab.
-4. Define a variable `DEPOSITS_DEADLINE` of type "number" with a timestamp in seconds of any time in the future. This variable controls the deadline to control <hr>
+1. Click on "Agreement Interaction" button, and you will be redirected to Agreement `Creation` tab.
+2. On this tab from the dropdown menu select "MultiTranche" option and hit "Create Agreement" button. After this you will have many MetaMask prompts to send transactions (about 7-10 transaction). Make sure you confirm all of the transactions.
+3. After the MultiTranche contract is deployed copy and write down its address (you will see a MultiTranche address in the notification on the rigth of the screen).
+4. Define a variable `DEPOSITS_DEADLINE` of type "number" with a timestamp in seconds of any time in the future. This variable controls the deadline to control.
+   <hr>
 
-   Note: for the demo, the best option would be about 3 minutes. You may use https://www.unixtimestamp.com/ website to find the timestamp of any given time. Make sure that your timestamp is in UTC
+   Note: For the demo purposes, the best option for the deadline would be about 3 minutes ahead from the current block timestamp. You may use [https://www.unixtimestamp.com/](https://www.unixtimestamp.com/) website to find the timestamp of any given time. Make sure that your timestamp is in UTC
 
    <hr>
 
@@ -61,13 +62,18 @@ Note: to receive Goerli USDC you must use USDC Faucet contract located at [0x754
 ### Interact with MultiTranche Contract
 
 1. Connect to the website with the investor address.
-2. Navigate to MultiTranche contract on Goerli and get WUSDC address. You may check [this contract](https://goerli.etherscan.io/address/0xf7322923a414629b9A53422eD64a0874DFF3d8Ec#readContract) as an example.
-3. Add the WUSDC token to investor's MetaMask wallet. Your balance should be 0 WUSDC.
-4. Navigate to `Agreement Interaction` -> `Execution` tab, and copy the MultiTranche address (labeled as `Agreement address`) from the input field.
-5. Open a [Goerli USDC smart contract](https://goerli.etherscan.io/token/0x07865c6E87B9F70255377e024ace6630C1Eaa37F?a=0x127a009e97644e25f4f5f3cb37e5c78bcf5f4c34#writeProxyContract) in block explorer. Use `approve` function to approve 100 USDC (100000000 – with decimals) to be spent by MultiTranche contract address.
-6. Execute the record #1 through `Execution` tab. After transaction is confirmed, your WUSDC balance (you may check in MetaMask) should be increased to <strike>100 WUSDC</strike> 0.0000000001 WUSDC.
-7. After a deadline is in the past – execute the record #2.
-8. If you have set a `LOCK_TIME` variable to a non-zero value, wait until the lock time has passed.
-9. Open a Goerli WUSDC smart contract in [Goerli block explorer](https://goerli.etherscan.io/). Use `approve` function to approve <strike>100 WUSDC</strike> 0.0000000001 WUSDC (100000000 – with decimals) to be spent by MultiTranche contract address.
-10. Execute the record #3. After the transaction is confirmed, the investor's USDC balance should be increased by 100 USDC. The WUSDC balance should become 0 WUSDC.
-11. The Demo is completed!
+2. Navigate to MultiTranche contract on Goerli, call WUSDC() function to obtain WUSDC address and write it down. You may check [this contract](https://goerli.etherscan.io/address/0xd06B2f1fA0D60148a5E97E6D230f14426e3587Ed#readContract) as an example.
+3. Add the WUSDC token to investor's MetaMask wallet by its address (from the previous step). Your balance should be 0 WUSDC.
+4. Open a [Goerli USDC smart contract](https://goerli.etherscan.io/token/0x07865c6E87B9F70255377e024ace6630C1Eaa37F?a=0x127a009e97644e25f4f5f3cb37e5c78bcf5f4c34#writeProxyContract) in Goerli block explorer. Use `approve` function to approve 100 USDC (100000000 – with decimals) to be spent by MultiTranche contract address.
+5. Note your USDC balance. It should be greater than 100 USDC. Now go back to the Pairwyse DSL website navigate to `Execution` tab, select `1` in `ID` dropdown (this is the record #1), and hit the `Execute` button. After the transaction is confirmed, your WUSDC balance (you may check in MetaMask) should be 100 WUSDC, while your USDC balance should be decreased by 100 USDC.
+   <hr>
+
+   Note: if the transaction fails, make sure that the deadline that you have set is still some time in the future.
+
+   <hr>
+
+6. After the deadline is in the past – execute the record #2. To do that, you should use the same `Execution` tab, select `2` from the `ID` dropdown, and hit the `Execute` button.
+7. If you have set a `LOCK_TIME` variable to a non-zero value, wait until the lock time has passed.
+8. Open a Goerli WUSDC smart contract in [Goerli block explorer](https://goerli.etherscan.io/) by searching the contract by its address. Use the `approve` function to approve 100 WUSDC to be spent by MultiTranche contract address.
+9. Note your WUSDC and USDC balances in MetaMask. After the record #3 is executed you'll have them different. On `Execution` screen execute the record #3. After the transaction is confirmed, the investor's USDC balance should be increased by 100 USDC. The WUSDC balance should become 0 WUSDC.
+10. You have received all your USDC back. The Demo is completed!
