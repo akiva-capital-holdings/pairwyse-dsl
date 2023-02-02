@@ -104,12 +104,6 @@ string AGR16
 string GOV1
 ```
 
-### GOV2
-
-```solidity
-string GOV2
-```
-
 ## ErrorsContext
 
 ### CTX1

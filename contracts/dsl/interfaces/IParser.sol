@@ -115,6 +115,12 @@ interface IParser {
         address
     ) external returns (bytes memory newProgram);
 
+    function asmVotersbalance(
+        bytes memory _program,
+        address,
+        address
+    ) external returns (bytes memory newProgram);
+
     function asmSumOf(
         bytes memory _program,
         address,

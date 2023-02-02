@@ -278,6 +278,20 @@ Example of a command:
 lengthOf ARR_NAME
 ```_
 
+### asmVotersbalance
+
+```solidity
+function asmVotersbalance(bytes _program, address, address) public returns (bytes newProgram)
+```
+
+_Updates previous `program` with getting the sum of voters tokens
+The `TOKEN`, `ARRAY` address parameters should be stored in smart contract
+
+Example of a command:
+```
+votersBalance TOKEN ARRAY_NAME
+```_
+
 ### asmSumOf
 
 ```solidity

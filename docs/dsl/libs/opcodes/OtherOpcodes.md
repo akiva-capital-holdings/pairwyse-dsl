@@ -131,6 +131,21 @@ _Sums uin256 elements from the array (array name should be provided)_
 | _ctxProgram | address | ProgramContext contract address |
 | _ctxDSL | address | DSLContext contract instance address |
 
+### opVotersBalance
+
+```solidity
+function opVotersBalance(address _ctxProgram, address) public
+```
+
+_Finds a sum of all tokens of users in the array_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+|  | address |  |
+
 ### opSumThroughStructs
 
 ```solidity

@@ -149,6 +149,34 @@ library OtherOpcodes {
     }
 
     /**
+     * @dev Finds a sum of all tokens of users in the array
+     * @param _ctxProgram ProgramContext contract address
+     */
+    function opVotersBalance(address _ctxProgram, address) public {
+        uint256 total;
+        address payable token = payable(
+            address(uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))))
+        );
+        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
+        bytes32 _length = _getArrLength(_ctxProgram, _arrNameB32);
+        require(uint256(_length) > 0, ErrorsGeneralOpcodes.OP6);
+        for (uint256 i = 0; i < uint256(_length); i++) {
+            bytes memory data = OpcodeHelpers.mustCall(
+                IProgramContext(_ctxProgram).appAddr(),
+                abi.encodeWithSignature(
+                    'get(uint256,bytes32)',
+                    i, // index of the searched item
+                    _arrNameB32 // array name, ex. INDEX_LIST, PARTNERS
+                )
+            );
+            address voterAddress = address(uint160(bytes20(data)));
+            uint256 balance = IERC20(token).balanceOf(voterAddress);
+            total += balance;
+        }
+        OpcodeHelpers.putToStack(_ctxProgram, total);
+    }
+
+    /**
      * @dev Sums struct variables values from the `struct type` array
      * @param _ctxDSL DSLContext contract instance address
      * @param _ctxProgram ProgramContext contract address
@@ -197,22 +225,26 @@ library OtherOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opPush(address _ctxProgram, address) public {
-        bytes32 _varValue = _getParam(_ctxProgram, 32);
-        bytes32 _arrNameB32 = _getParam(_ctxProgram, 4);
+        bytes32 MSG_SENDER = 0x9ddd6a8100000000000000000000000000000000000000000000000000000000;
+        bytes32 _varValue = OpcodeHelpers.getNextBytes(_ctxProgram, 32);
+        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
+
         // check if the array exists
         bytes memory data = OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),
             abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
         );
         require(bytes1(data) != bytes1(0x0), ErrorsGeneralOpcodes.OP4);
-        OpcodeHelpers.mustCall(
-            IProgramContext(_ctxProgram).appAddr(),
-            abi.encodeWithSignature(
-                'addItem(bytes32,bytes32)',
-                _varValue, // value that pushes to the array
-                _arrNameB32 // array name, ex. INDEX_LIST, PARTNERS
-            )
-        );
+
+        // if pushed MSG_SENDER to array of address, will push address of msg.sender in bytes32
+        if (bytes1(data) == bytes1(0x03) && _varValue == MSG_SENDER) {
+            bytes32 addressInBytes32 = bytes32(
+                uint256(uint160(IProgramContext(_ctxProgram).msgSender())) << 96
+            );
+            OpcodeHelpers.addItemToArray(_ctxProgram, addressInBytes32, _arrNameB32);
+        } else {
+            OpcodeHelpers.addItemToArray(_ctxProgram, _varValue, _arrNameB32);
+        }
     }
 
     /**
@@ -376,7 +408,10 @@ library OtherOpcodes {
             );
         }
 
-        result = bytes32(data);
+        // Convert bytes to bytes32
+        assembly {
+            result := mload(add(data, 0x20))
+        }
     }
 
     function opAddressGet(address _ctxProgram, address) public returns (address) {

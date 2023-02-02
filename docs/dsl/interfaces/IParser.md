@@ -114,6 +114,12 @@ function asmAllowanceMintBurn(bytes _program, address, address) external returns
 function asmLengthOf(bytes _program, address, address) external returns (bytes newProgram)
 ```
 
+### asmVotersbalance
+
+```solidity
+function asmVotersbalance(bytes _program, address, address) external returns (bytes newProgram)
+```
+
 ### asmSumOf
 
 ```solidity

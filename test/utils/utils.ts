@@ -129,24 +129,6 @@ export async function checkStackTail(
 }
 
 /**
- * Creates different votes for governance
- * @param governance: Governance
- * @param accounts: SignerWithAddress[]
- */
-export const createBulkVotes = async (governance: Governance, accounts: SignerWithAddress[]) => {
-  await governance.connect(accounts[0]).execute(1);
-  await governance.connect(accounts[1]).execute(1);
-  await governance.connect(accounts[2]).execute(2);
-  await governance.connect(accounts[3]).execute(1);
-  await governance.connect(accounts[4]).execute(1);
-  await governance.connect(accounts[5]).execute(2);
-  await governance.connect(accounts[6]).execute(1);
-  await governance.connect(accounts[7]).execute(1);
-  await governance.connect(accounts[8]).execute(2);
-  await governance.connect(accounts[9]).execute(2);
-};
-
-/**
  * Test stack with two values that combines into a single value after the
  * operation. Ex. 1 > 2 = 0
  * @param ST Stack: Stack__factory
