@@ -575,7 +575,7 @@ contract DSLContext is IDSLContext {
         // Ex. `votersBalance TOKEN_ADDRESS ADDRESSES_ARRAY`
         _addOpcode(
             'votersBalance',
-            0x42,
+            0x46,
             OtherOpcodes.opVotersBalance.selector,
             IParser.asmVotersbalance.selector,
             OpcodeLibNames.OtherOpcodes,

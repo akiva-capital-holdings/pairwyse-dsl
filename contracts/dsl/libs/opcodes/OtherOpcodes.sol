@@ -159,14 +159,9 @@ library OtherOpcodes {
         );
         bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
         bytes32 _length = _getArrLength(_ctxProgram, _arrNameB32);
-        require(uint256(_length) > 0, 'no array');
+        require(uint256(_length) > 0, ErrorsGeneralOpcodes.OP6);
         for (uint256 i = 0; i < uint256(_length); i++) {
-            bytes memory data = OpcodeHelpers.mustCall(
-                IProgramContext(_ctxProgram).appAddr(),
-                abi.encodeWithSignature('getType(bytes32)', _arrNameB32)
-            );
-            require(bytes1(data) == bytes1(0x03), ErrorsGeneralOpcodes.OP2);
-            (data) = OpcodeHelpers.mustCall(
+            (bytes memory data) = OpcodeHelpers.mustCall(
                 IProgramContext(_ctxProgram).appAddr(),
                 abi.encodeWithSignature(
                     'get(uint256,bytes32)',

@@ -20,36 +20,6 @@ event Approval(address owner, address spender, uint256 value)
 _Emitted when the allowance of a `spender` for an `owner` is set by
 a call to {approve}. `value` is the new allowance._
 
-### _balances
-
-```solidity
-mapping(address => uint256) _balances
-```
-
-### _allowances
-
-```solidity
-mapping(address => mapping(address => uint256)) _allowances
-```
-
-### _totalSupply
-
-```solidity
-uint256 _totalSupply
-```
-
-### _name
-
-```solidity
-string _name
-```
-
-### _symbol
-
-```solidity
-string _symbol
-```
-
 ### constructor
 
 ```solidity

@@ -132,7 +132,7 @@ contract Governance is Agreement {
         uint256 recordId = 1;
         string memory record = 'insert MSG_SENDER into YES_VOTERS';
 
-        string memory _condition = 'blockTimestamp < DEADLINE';
+        string memory _condition = '((balanceOf TOKEN MSG_SENDER) > 0) and (blockTimestamp < DEADLINE)';
 
         _setParameters(recordId, record, _condition, 1);
     }
@@ -147,7 +147,7 @@ contract Governance is Agreement {
         uint256 recordId = 2;
         string memory record = 'insert MSG_SENDER into NO_VOTERS';
 
-        string memory _condition = 'blockTimestamp < DEADLINE';
+        string memory _condition = '((balanceOf TOKEN MSG_SENDER) > 0) and (blockTimestamp < DEADLINE)';
 
         _setParameters(recordId, record, _condition, 1);
     }
@@ -166,7 +166,8 @@ contract Governance is Agreement {
         string memory record = 'enableRecord RECORD_ID at AGREEMENT_ADDR';
 
         string
-            memory _condition = '((votersBalance TOKEN YES_VOTERS) > (votersBalance TOKEN NO_VOTERS)) and (blockTimestamp >= DEADLINE)';
+            memory _condition = '((votersBalance TOKEN YES_VOTERS) > (votersBalance TOKEN NO_VOTERS)) '
+            'and (blockTimestamp >= DEADLINE)';
 
         _setParameters(recordId, record, _condition, 1);
     }
