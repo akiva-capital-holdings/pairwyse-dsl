@@ -27,8 +27,8 @@ For commit with ID 95709a7f291ce61541bc78189e906ae73c2ffe53
 
 ## Prerequisites
 
-1. Run Front End with `yarn start:stage`
-2. Open your browser with MetaMask and navigate to http://localhost:3000
+1. Connect to Pritunl using the instuctions [in the Confluence](https://consideritdone.atlassian.net/wiki/spaces/AKIVA/pages/2462810127/devops+How+to+connect+a+client+to+the+open-source+Pritunl+VPN).
+2. Open your browser with MetaMask and navigate to [https://dsl.qa.akiva.capital/](https://dsl.qa.akiva.capital/)
 3. Authorize the website with a MetaMask address (creator) that has enough GETH and make sure MetaMask is connected to the Goerli network.
 4. Prepare another MetaMask address (investor) with some GETH (about 0.2 GETH) and 100 Goerli USDC (or more)
 
