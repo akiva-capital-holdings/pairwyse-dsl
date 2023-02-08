@@ -28,7 +28,7 @@ contract MultiTranche is Agreement {
         address _dslContext
     ) Agreement(_parser, _ownerAddr, _dslContext) {
         _setBaseRecords();
-        WUSDC = new ERC20Mintable('Wrapped USDC', 'WUSDC');
+        WUSDC = new ERC20Mintable('Wrapped USDC', 'WUSDC', 6);
         _setDefaultVariables();
     }
 
