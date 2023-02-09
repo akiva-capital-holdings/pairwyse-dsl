@@ -151,6 +151,7 @@ export const deployAgreement = async (
     branchingOpcodesLibAddr,
     logicalOpcodesLibAddr,
     otherOpcodesLibAddr,
+    complexOpcodesLibAddr,
   ] = await deployOpcodeLibs(hre);
 
   const contextDSL = await (
@@ -159,7 +160,8 @@ export const deployAgreement = async (
     comparisonOpcodesLibAddr,
     branchingOpcodesLibAddr,
     logicalOpcodesLibAddr,
-    otherOpcodesLibAddr
+    otherOpcodesLibAddr,
+    complexOpcodesLibAddr
   );
   const [parserAddr, executorLibAddr] = await deployBase(hre, stringUtilsAddr);
 
