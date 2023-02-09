@@ -52,6 +52,7 @@ describe('Other opcodes', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
+      complexOpcodesLibAddr,
     ] = await deployOpcodeLibs(hre);
     StackCont = await ethers.getContractFactory('Stack');
     ctxDSL = await (
@@ -60,7 +61,8 @@ describe('Other opcodes', () => {
       comparisonOpcodesLibAddr,
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
-      otherOpcodesLibAddr
+      otherOpcodesLibAddr,
+      complexOpcodesLibAddr
     );
     ctxDSLAddr = ctxDSL.address;
     ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();

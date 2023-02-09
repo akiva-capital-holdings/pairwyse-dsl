@@ -53,6 +53,7 @@ describe('Governance', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
+      complexOpcodesLibAddr,
     ] = await deployOpcodeLibs(hre);
     [parserAddr, executorLibAddr, preprAddr] = await deployBaseMock(hre);
     const GovernanceContract = await hre.ethers.getContractFactory('Governance', {
@@ -67,7 +68,8 @@ describe('Governance', () => {
       comparisonOpcodesLibAddr,
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
-      otherOpcodesLibAddr
+      otherOpcodesLibAddr,
+      complexOpcodesLibAddr
     );
     await DSLctx.deployed();
     governance = await GovernanceContract.deploy(

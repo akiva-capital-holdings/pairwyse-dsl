@@ -50,6 +50,7 @@ describe('DSL: basic', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
+      complexOpcodesLibAddr,
     ] = await deployOpcodeLibs(hre);
 
     const stringUtilsAddr = await deployStringUtils(hre);
@@ -68,7 +69,8 @@ describe('DSL: basic', () => {
       comparisonOpcodesLibAddr,
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
-      otherOpcodesLibAddr
+      otherOpcodesLibAddr,
+      complexOpcodesLibAddr
     );
     ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
 

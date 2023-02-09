@@ -3,7 +3,7 @@
 ### constructor
 
 ```solidity
-constructor(address _comparisonOpcodes, address _branchingOpcodes, address _logicalOpcodes, address _otherOpcodes) public
+constructor(address _comparisonOpcodes, address _branchingOpcodes, address _logicalOpcodes, address _otherOpcodes, address _complexOpcodes) public
 ```
 
 ### addOpcode

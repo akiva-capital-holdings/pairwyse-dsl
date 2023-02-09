@@ -28,6 +28,7 @@ describe('Parser', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
+      complexOpcodesLibAddr,
     ] = await deployOpcodeLibs(hre);
     ctxDSL = await (
       await ethers.getContractFactory('DSLContextMock')
@@ -35,7 +36,8 @@ describe('Parser', () => {
       comparisonOpcodesLibAddr,
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
-      otherOpcodesLibAddr
+      otherOpcodesLibAddr,
+      complexOpcodesLibAddr
     );
     ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
     ctxDSLAddr = ctxDSL.address;

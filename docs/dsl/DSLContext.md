@@ -6,16 +6,22 @@ One of the core contracts of the project. It contains opcodes and aliases for co
 During creating Context contract executes the `initOpcodes` function that provides
 basic working opcodes_
 
+### branchingOpcodes
+
+```solidity
+address branchingOpcodes
+```
+
 ### comparisonOpcodes
 
 ```solidity
 address comparisonOpcodes
 ```
 
-### branchingOpcodes
+### complexOpcodes
 
 ```solidity
-address branchingOpcodes
+address complexOpcodes
 ```
 
 ### logicalOpcodes
@@ -105,7 +111,7 @@ modifier nonZeroAddress(address _addr)
 ### constructor
 
 ```solidity
-constructor(address _comparisonOpcodes, address _branchingOpcodes, address _logicalOpcodes, address _otherOpcodes) public
+constructor(address _comparisonOpcodes, address _branchingOpcodes, address _logicalOpcodes, address _otherOpcodes, address _complexOpcodes) public
 ```
 
 ### initOpcodes

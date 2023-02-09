@@ -45,6 +45,7 @@ describe('Multi Tranche', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
+      complexOpcodesLibAddr,
     ] = await deployOpcodeLibs(hre);
 
     const DSLContext = await (
@@ -53,7 +54,8 @@ describe('Multi Tranche', () => {
       comparisonOpcodesLibAddr,
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
-      otherOpcodesLibAddr
+      otherOpcodesLibAddr,
+      complexOpcodesLibAddr
     );
     await DSLContext.deployed();
 

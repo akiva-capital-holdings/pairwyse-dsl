@@ -113,4 +113,53 @@ library OpcodeHelpers {
             varNameB32 := mload(add(varName, 0x20))
         }
     }
+
+    /**
+     * @dev This is a wrapper function for getNextBytes() that is returning the slice of the program that
+     *      we're working with
+     * @param _ctxProgram ProgramContext contract address
+     * @param _slice Slice size
+     * @return the slice of the program
+     */
+    function getParam(address _ctxProgram, uint256 _slice) public returns (bytes32) {
+        return getNextBytes(_ctxProgram, _slice);
+    }
+
+    /**
+     * @dev Reads a variable of type `address`
+     * @param _ctxProgram ProgramContext contract address
+     * @return result The address value
+     */
+    function getAddress(address _ctxProgram) public returns (address result) {
+        result = address(
+            uint160(uint256(opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)')))
+        );
+    }
+
+    function opUint256Get(address _ctxProgram, address) public returns (uint256) {
+        return uint256(getParam(_ctxProgram, 32));
+    }
+
+    function opLoadLocalGet(
+        address _ctxProgram,
+        string memory funcSignature
+    ) public returns (bytes32 result) {
+        bytes32 MSG_SENDER = 0x9ddd6a8100000000000000000000000000000000000000000000000000000000;
+        bytes memory data;
+        bytes32 varNameB32 = getParam(_ctxProgram, 4);
+        if (varNameB32 == MSG_SENDER) {
+            data = abi.encode(IProgramContext(_ctxProgram).msgSender());
+        } else {
+            // Load local variable by it's hex
+            data = mustCall(
+                IProgramContext(_ctxProgram).appAddr(),
+                abi.encodeWithSignature(funcSignature, varNameB32)
+            );
+        }
+
+        // Convert bytes to bytes32
+        assembly {
+            result := mload(add(data, 0x20))
+        }
+    }
 }

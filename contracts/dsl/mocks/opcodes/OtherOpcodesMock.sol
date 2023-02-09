@@ -6,10 +6,6 @@ import { OtherOpcodes } from '../../libs/opcodes/OtherOpcodes.sol';
 contract OtherOpcodesMock {
     receive() external payable {}
 
-    function opLoadRemoteAny(address _ctxProgram, address _ctxDSL) public {
-        OtherOpcodes.opLoadRemoteAny(_ctxProgram, _ctxDSL);
-    }
-
     function opBlockNumber(address _ctxProgram, address) public {
         OtherOpcodes.opBlockNumber(_ctxProgram, address(0));
     }
@@ -66,22 +62,6 @@ contract OtherOpcodesMock {
         OtherOpcodes.opLoadLocalUint256(_ctxProgram, address(0));
     }
 
-    function opLoadRemoteUint256(address _ctxProgram, address) public {
-        OtherOpcodes.opLoadRemoteUint256(_ctxProgram, address(0));
-    }
-
-    function opLoadRemoteBytes32(address _ctxProgram, address) public {
-        OtherOpcodes.opLoadRemoteBytes32(_ctxProgram, address(0));
-    }
-
-    function opLoadRemoteBool(address _ctxProgram, address) public {
-        OtherOpcodes.opLoadRemoteBool(_ctxProgram, address(0));
-    }
-
-    function opLoadRemoteAddress(address _ctxProgram, address) public {
-        OtherOpcodes.opLoadRemoteAddress(_ctxProgram, address(0));
-    }
-
     function opBool(address _ctxProgram, address) public {
         OtherOpcodes.opBool(_ctxProgram, address(0));
     }
@@ -102,55 +82,12 @@ contract OtherOpcodesMock {
         OtherOpcodes.opTransferFrom(_ctxProgram, address(0));
     }
 
-    function opUint256Get(address _ctxProgram, address) public returns (uint256) {
-        return OtherOpcodes.opUint256Get(_ctxProgram, address(0));
-    }
-
-    function opLoadLocalGet(
-        address _ctxProgram,
-        string memory funcSignature
-    ) public returns (bytes32 result) {
-        return OtherOpcodes.opLoadLocalGet(_ctxProgram, funcSignature);
-    }
-
     function opAddressGet(address _ctxProgram, address) public returns (address) {
         return OtherOpcodes.opAddressGet(_ctxProgram, address(0));
     }
 
     function opLoadLocal(address _ctxProgram, string memory funcSignature) public {
         OtherOpcodes.opLoadLocal(_ctxProgram, funcSignature);
-    }
-
-    function opLoadRemote(address _ctxProgram, string memory funcSignature) public {
-        OtherOpcodes.opLoadRemote(_ctxProgram, funcSignature);
-    }
-
-    function opDeclare(address _ctxProgram, address) public {
-        OtherOpcodes.opDeclare(_ctxProgram, address(0));
-    }
-
-    function opPush(address _ctxProgram, address) public {
-        OtherOpcodes.opPush(_ctxProgram, address(0));
-    }
-
-    function opGet(address _ctxProgram, address) public {
-        OtherOpcodes.opGet(_ctxProgram, address(0));
-    }
-
-    function opSumOf(address _ctxProgram, address _ctxDSL) public {
-        OtherOpcodes.opSumOf(_ctxProgram, _ctxDSL);
-    }
-
-    function opSumThroughStructs(address _ctxProgram, address _ctxDSL) public {
-        OtherOpcodes.opSumThroughStructs(_ctxProgram, _ctxDSL);
-    }
-
-    function opStruct(address _ctxProgram, address) public {
-        OtherOpcodes.opStruct(_ctxProgram, address(0));
-    }
-
-    function opLengthOf(address _ctxProgram, address) public {
-        OtherOpcodes.opLengthOf(_ctxProgram, address(0));
     }
 
     function opEnableRecord(address _ctxProgram, address) public {

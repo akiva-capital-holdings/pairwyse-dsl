@@ -115,3 +115,57 @@ _Check .delegatecall() function and returns data_
 function getNextBytes(address _ctxProgram, uint256 _bytesNum) public returns (bytes32 varNameB32)
 ```
 
+### getParam
+
+```solidity
+function getParam(address _ctxProgram, uint256 _slice) public returns (bytes32)
+```
+
+_This is a wrapper function for getNextBytes() that is returning the slice of the program that
+     we're working with_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+| _slice | uint256 | Slice size |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes32 | the slice of the program |
+
+### getAddress
+
+```solidity
+function getAddress(address _ctxProgram) public returns (address result)
+```
+
+_Reads a variable of type `address`_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| result | address | The address value |
+
+### opUint256Get
+
+```solidity
+function opUint256Get(address _ctxProgram, address) public returns (uint256)
+```
+
+### opLoadLocalGet
+
+```solidity
+function opLoadLocalGet(address _ctxProgram, string funcSignature) public returns (bytes32 result)
+```
+
