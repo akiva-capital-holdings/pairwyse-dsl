@@ -12,6 +12,10 @@ import { StringUtils } from '../dsl/libs/StringUtils.sol';
 import { ERC20Mintable } from '../dsl/helpers/ERC20Mintable.sol';
 import { Agreement } from '../agreement/Agreement.sol';
 
+/**
+ * This is a type of Agreement designed to perform a Nivaura Demo Phase II
+ * https://docs.google.com/document/d/1wwEOXKa0cmmS0jM0p9q9rkltvEPmSuK3PuwPK-tapcs/edit
+ */
 contract MultiTranche is Agreement {
     using UnstructuredStorage for bytes32;
 
