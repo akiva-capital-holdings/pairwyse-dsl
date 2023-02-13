@@ -100,9 +100,9 @@ describe('Other opcodes', () => {
     await network.provider.send('evm_revert', [snapshotId]);
   });
 
-  it('opLoadLocalGet', async () => {
+  it('getLocalVar', async () => {
     await ctxProgram.setProgram('0x1a000000');
-    await expect(app.opLoadLocalGet(ctxProgramAddr, 'hey()')).to.be.revertedWith('OPH1');
+    await expect(app.getLocalVar(ctxProgramAddr, 'hey()')).to.be.revertedWith('OPH1');
   });
 
   describe('block', () => {
@@ -547,7 +547,7 @@ describe('Other opcodes', () => {
     await checkStackTail(stack, [1]);
   });
 
-  it('opLoadLocalGet', async () => {
+  it('getLocalVar', async () => {
     const testValue = hex4Bytes('TEST_VALUE');
     const bytes32TestValueName = hex4Bytes('BYTES32');
     const testSignature = 'getStorageBytes32(bytes32)';
@@ -557,7 +557,7 @@ describe('Other opcodes', () => {
     const bytes = bytes32TestValueName.substring(2, 10);
     await ctxProgram.setProgram(`0x${bytes}`);
 
-    const result = await app.callStatic.opLoadLocalGet(ctxProgramAddr, testSignature);
+    const result = await app.callStatic.getLocalVar(ctxProgramAddr, testSignature);
 
     expect(result).to.be.equal(testValue);
   });

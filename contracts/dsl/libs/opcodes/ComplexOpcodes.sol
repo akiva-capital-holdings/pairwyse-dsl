@@ -5,8 +5,6 @@ import { IDSLContext } from '../../interfaces/IDSLContext.sol';
 import { IProgramContext } from '../../interfaces/IProgramContext.sol';
 import { IERC20 } from '../../interfaces/IERC20.sol';
 import { IcToken } from '../../interfaces/IcToken.sol';
-// import { IERC20Mintable } from '../../interfaces/IERC20Mintable.sol';
-// import { StringUtils } from '../StringUtils.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
@@ -49,8 +47,8 @@ library ComplexOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opDeclare(address _ctxProgram, address) public {
-        bytes32 _arrType = OpcodeHelpers.getParam(_ctxProgram, 1);
-        bytes32 _arrName = OpcodeHelpers.getParam(_ctxProgram, 4);
+        bytes32 _arrType = OpcodeHelpers.getNextBytes32(_ctxProgram, 1);
+        bytes32 _arrName = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
 
         OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),
@@ -68,8 +66,8 @@ library ComplexOpcodes {
      */
     function opPush(address _ctxProgram, address) public {
         bytes32 MSG_SENDER = 0x9ddd6a8100000000000000000000000000000000000000000000000000000000;
-        bytes32 _varValue = OpcodeHelpers.getNextBytes(_ctxProgram, 32);
-        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
+        bytes32 _varValue = OpcodeHelpers.getNextBytes32(_ctxProgram, 32);
+        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
 
         // check if the array exists
         bytes memory data = OpcodeHelpers.mustCall(
@@ -94,8 +92,8 @@ library ComplexOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opGet(address _ctxProgram, address) public {
-        uint256 _index = OpcodeHelpers.opUint256Get(_ctxProgram, address(0));
-        bytes32 _arrNameB32 = OpcodeHelpers.getParam(_ctxProgram, 4);
+        uint256 _index = OpcodeHelpers.getUint256(_ctxProgram, address(0));
+        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
 
         // check if the array exists
         bytes memory data = OpcodeHelpers.mustCall(
@@ -119,7 +117,7 @@ library ComplexOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opLengthOf(address _ctxProgram, address) public {
-        uint256 _length = uint256(OpcodeHelpers.opLoadLocalGet(_ctxProgram, 'getLength(bytes32)'));
+        uint256 _length = uint256(OpcodeHelpers.getLocalVar(_ctxProgram, 'getLength(bytes32)'));
         OpcodeHelpers.putToStack(_ctxProgram, _length);
     }
 
@@ -129,7 +127,7 @@ library ComplexOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opSumOf(address _ctxProgram, address _ctxDSL) public {
-        bytes32 _arrNameB32 = OpcodeHelpers.getParam(_ctxProgram, 4);
+        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
 
         _checkArrType(_ctxDSL, _ctxProgram, _arrNameB32, 'uint256');
         bytes32 _length = _getArrLength(_ctxProgram, _arrNameB32);
@@ -144,8 +142,8 @@ library ComplexOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opSumThroughStructs(address _ctxProgram, address _ctxDSL) public {
-        bytes32 _arrNameB32 = OpcodeHelpers.getParam(_ctxProgram, 4);
-        bytes32 _varNameB32 = OpcodeHelpers.getParam(_ctxProgram, 4);
+        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
 
         _checkArrType(_ctxDSL, _ctxProgram, _arrNameB32, 'struct');
         bytes32 _length = _getArrLength(_ctxProgram, _arrNameB32);
@@ -163,11 +161,11 @@ library ComplexOpcodes {
         address payable token = payable(
             address(
                 uint160(
-                    uint256(OpcodeHelpers.opLoadLocalGet(_ctxProgram, 'getStorageAddress(bytes32)'))
+                    uint256(OpcodeHelpers.getLocalVar(_ctxProgram, 'getStorageAddress(bytes32)'))
                 )
             )
         );
-        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
+        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
         bytes32 _length = _getArrLength(_ctxProgram, _arrNameB32);
         require(uint256(_length) > 0, ErrorsGeneralOpcodes.OP6);
         for (uint256 i = 0; i < uint256(_length); i++) {
@@ -199,12 +197,12 @@ library ComplexOpcodes {
      */
     function opStruct(address _ctxProgram, address) public {
         // get the first variable name
-        bytes32 _varNameB32 = OpcodeHelpers.getParam(_ctxProgram, 4);
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
 
         // till found the `endStruct` opcode
         while (bytes4(_varNameB32) != 0xcb398fe1) {
             // get a variable value for current _varNameB32
-            bytes32 _value = OpcodeHelpers.getParam(_ctxProgram, 32);
+            bytes32 _value = OpcodeHelpers.getNextBytes32(_ctxProgram, 32);
             OpcodeHelpers.mustCall(
                 IProgramContext(_ctxProgram).appAddr(),
                 abi.encodeWithSignature(
@@ -214,7 +212,7 @@ library ComplexOpcodes {
                 )
             );
             // get the next variable name in struct
-            _varNameB32 = OpcodeHelpers.getParam(_ctxProgram, 4);
+            _varNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
         }
     }
 
@@ -222,10 +220,19 @@ library ComplexOpcodes {
      * Compound Integration *
      ***********************/
 
+    /**
+     * @dev Master opcode to interact with Compound V2. Needs sub-commands to be executed
+     * @param _ctxProgram ProgramContext contract address
+     * @param _ctxDSL DSLContext contract address
+     */
     function opCompound(address _ctxProgram, address _ctxDSL) public {
         _mustDelegateCall(_ctxProgram, _ctxDSL, 'compound');
     }
 
+    /**
+     * Sub-command of Compound V2. Makes a deposit of funds to Compound V2
+     * @param _ctxProgram ProgramContext contract address
+     */
     function opCompoundDeposit(address _ctxProgram) public {
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
         bytes memory data = OpcodeHelpers.mustCall(
@@ -242,6 +249,10 @@ library ComplexOpcodes {
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
+    /**
+     * Sub-command of Compound V2. Makes a withdrawal of funds to Compound V2
+     * @param _ctxProgram ProgramContext contract address
+     */
     function opCompoundWithdraw(address _ctxProgram) public {
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
         // `token` can be used in the future for more different underluing tokens
@@ -290,9 +301,14 @@ library ComplexOpcodes {
         }
     }
 
-    function _opLoadRemote(address _ctxProgram, string memory funcSignature) internal {
-        bytes32 varNameB32 = OpcodeHelpers.getParam(_ctxProgram, 4);
-        bytes32 contractAddrB32 = OpcodeHelpers.getParam(_ctxProgram, 20);
+    /**
+     * @dev Loads a variable value from another smart contract
+     * @param _ctxProgram ProgramContext contract address
+     * @param _funcSignature Signature of the "read" function
+     */
+    function _opLoadRemote(address _ctxProgram, string memory _funcSignature) internal {
+        bytes32 varNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
+        bytes32 contractAddrB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 20);
 
         /**
          * Shift bytes to the left so that
@@ -308,7 +324,7 @@ library ComplexOpcodes {
         // Load local value by it's hex
         bytes memory data = OpcodeHelpers.mustCall(
             contractAddr,
-            abi.encodeWithSignature(funcSignature, varNameB32)
+            abi.encodeWithSignature(_funcSignature, varNameB32)
         );
 
         OpcodeHelpers.putToStack(_ctxProgram, uint256(bytes32(data)));

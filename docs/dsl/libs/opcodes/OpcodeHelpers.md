@@ -10,17 +10,47 @@ _Opcode libraries are: ComparisonOpcodes, BranchingOpcodes, LogicalOpcodes, and 
 function putToStack(address _ctxProgram, uint256 _value) public
 ```
 
-### nextBytes
+### getNextBytes
 
 ```solidity
-function nextBytes(address _ctxProgram, uint256 size) public returns (bytes out)
+function getNextBytes(address _ctxProgram, uint256 _size) public returns (bytes out)
 ```
 
-### nextBytes1
+_Gets next {size} bytes from the program_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | Context contract address |
+| _size | uint256 | Size of the chunk |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| out | bytes | Resulting chunk of type bytes |
+
+### getNextBytes32
 
 ```solidity
-function nextBytes1(address _ctxProgram) public returns (bytes1)
+function getNextBytes32(address _ctxProgram, uint256 _size) public returns (bytes32)
 ```
+
+_Get next parameter from the program that is executing now_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+| _size | uint256 | Size of the chunk |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes32 | The bytes32-sized slice of the program |
 
 ### addItemToArray
 
@@ -109,34 +139,6 @@ _Check .delegatecall() function and returns data_
 | ---- | ---- | ----------- |
 | [0] | bytes | delegateCallData returns data from call |
 
-### getNextBytes
-
-```solidity
-function getNextBytes(address _ctxProgram, uint256 _bytesNum) public returns (bytes32 varNameB32)
-```
-
-### getParam
-
-```solidity
-function getParam(address _ctxProgram, uint256 _slice) public returns (bytes32)
-```
-
-_This is a wrapper function for getNextBytes() that is returning the slice of the program that
-     we're working with_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _ctxProgram | address | ProgramContext contract address |
-| _slice | uint256 | Slice size |
-
-#### Return Values
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes32 | the slice of the program |
-
 ### getAddress
 
 ```solidity
@@ -157,15 +159,45 @@ _Reads a variable of type `address`_
 | ---- | ---- | ----------- |
 | result | address | The address value |
 
-### opUint256Get
+### getUint256
 
 ```solidity
-function opUint256Get(address _ctxProgram, address) public returns (uint256)
+function getUint256(address _ctxProgram, address) public returns (uint256)
 ```
 
-### opLoadLocalGet
+_Reads a uint256 number from the program_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+|  | address |  |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | uint256 value from the program |
+
+### getLocalVar
 
 ```solidity
-function opLoadLocalGet(address _ctxProgram, string funcSignature) public returns (bytes32 result)
+function getLocalVar(address _ctxProgram, string _funcSignature) public returns (bytes32 result)
 ```
+
+_Read local variable by delegatecalling a "read" function by its signature_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+| _funcSignature | string | Signature of the "read" function |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| result | bytes32 | Local variable value |
 

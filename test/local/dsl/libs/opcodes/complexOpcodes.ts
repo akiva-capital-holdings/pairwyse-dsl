@@ -150,10 +150,10 @@ describe('Complex opcodes', () => {
     await checkStackTail(stack, [testValue]);
   });
 
-  it('opUint256Get', async () => {
+  it('getUint256', async () => {
     await ctxProgram.setProgram(`0x${uint256StrToHex(testAmount)}`);
 
-    const result = await app.callStatic.opUint256Get(ctxProgramAddr, ethers.constants.AddressZero);
+    const result = await app.callStatic.getUint256(ctxProgramAddr, ethers.constants.AddressZero);
 
     expect(result).to.be.equal(testAmount);
   });

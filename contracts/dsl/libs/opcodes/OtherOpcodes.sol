@@ -49,8 +49,8 @@ library OtherOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opSetLocalBool(address _ctxProgram, address) public {
-        bytes32 _varNameB32 = OpcodeHelpers.getParam(_ctxProgram, 4);
-        bytes memory data = OpcodeHelpers.nextBytes(_ctxProgram, 1);
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
+        bytes memory data = OpcodeHelpers.getNextBytes(_ctxProgram, 1);
         bool _boolVal = uint8(data[0]) == 1;
         // Set local variable by it's hex
         OpcodeHelpers.mustCall(
@@ -65,7 +65,7 @@ library OtherOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opSetUint256(address _ctxProgram, address) public {
-        bytes32 _varNameB32 = OpcodeHelpers.getParam(_ctxProgram, 4);
+        bytes32 _varNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
         uint256 _val = IProgramContext(_ctxProgram).stack().pop();
 
         // Set local variable by it's hex
@@ -85,17 +85,17 @@ library OtherOpcodes {
     }
 
     function opBool(address _ctxProgram, address) public {
-        bytes memory data = OpcodeHelpers.nextBytes(_ctxProgram, 1);
+        bytes memory data = OpcodeHelpers.getNextBytes(_ctxProgram, 1);
         OpcodeHelpers.putToStack(_ctxProgram, uint256(uint8(data[0])));
     }
 
     function opUint256(address _ctxProgram, address) public {
-        OpcodeHelpers.putToStack(_ctxProgram, OpcodeHelpers.opUint256Get(_ctxProgram, address(0)));
+        OpcodeHelpers.putToStack(_ctxProgram, OpcodeHelpers.getUint256(_ctxProgram, address(0)));
     }
 
     function opSendEth(address _ctxProgram, address) public {
         address payable recipient = payable(OpcodeHelpers.getAddress(_ctxProgram));
-        uint256 amount = OpcodeHelpers.opUint256Get(_ctxProgram, address(0));
+        uint256 amount = OpcodeHelpers.getUint256(_ctxProgram, address(0));
         recipient.transfer(amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
@@ -111,7 +111,7 @@ library OtherOpcodes {
     function opTransfer(address _ctxProgram, address) public {
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
         address payable recipient = payable(OpcodeHelpers.getAddress(_ctxProgram));
-        uint256 amount = OpcodeHelpers.opUint256Get(_ctxProgram, address(0));
+        uint256 amount = OpcodeHelpers.getUint256(_ctxProgram, address(0));
         IERC20(token).transfer(recipient, amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
@@ -120,7 +120,7 @@ library OtherOpcodes {
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
         address payable recipient = payable(OpcodeHelpers.getAddress(_ctxProgram));
         uint256 amount = uint256(
-            OpcodeHelpers.opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)')
+            OpcodeHelpers.getLocalVar(_ctxProgram, 'getStorageUint256(bytes32)')
         );
         IERC20(token).transfer(recipient, amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
@@ -130,7 +130,7 @@ library OtherOpcodes {
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
         address payable from = payable(OpcodeHelpers.getAddress(_ctxProgram));
         address payable to = payable(OpcodeHelpers.getAddress(_ctxProgram));
-        uint256 amount = OpcodeHelpers.opUint256Get(_ctxProgram, address(0));
+        uint256 amount = OpcodeHelpers.getUint256(_ctxProgram, address(0));
         IERC20(token).transferFrom(from, to, amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
@@ -140,7 +140,7 @@ library OtherOpcodes {
         address payable from = payable(OpcodeHelpers.getAddress(_ctxProgram));
         address payable to = payable(OpcodeHelpers.getAddress(_ctxProgram));
         uint256 amount = uint256(
-            OpcodeHelpers.opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)')
+            OpcodeHelpers.getLocalVar(_ctxProgram, 'getStorageUint256(bytes32)')
         );
 
         IERC20(token).transferFrom(from, to, amount);
@@ -165,7 +165,7 @@ library OtherOpcodes {
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
         address payable to = payable(OpcodeHelpers.getAddress(_ctxProgram));
         uint256 amount = uint256(
-            OpcodeHelpers.opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)')
+            OpcodeHelpers.getLocalVar(_ctxProgram, 'getStorageUint256(bytes32)')
         );
         IERC20Mintable(token).mint(to, amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
@@ -175,7 +175,7 @@ library OtherOpcodes {
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
         address payable to = payable(OpcodeHelpers.getAddress(_ctxProgram));
         uint256 amount = uint256(
-            OpcodeHelpers.opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)')
+            OpcodeHelpers.getLocalVar(_ctxProgram, 'getStorageUint256(bytes32)')
         );
         IERC20Mintable(token).burn(to, amount);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
@@ -186,7 +186,7 @@ library OtherOpcodes {
      *******************/
 
     function opAddressGet(address _ctxProgram, address) public returns (address) {
-        bytes32 contractAddrB32 = OpcodeHelpers.getParam(_ctxProgram, 20);
+        bytes32 contractAddrB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 20);
         /**
          * Shift bytes to the left so that
          * 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512000000000000000000000000
@@ -200,14 +200,14 @@ library OtherOpcodes {
     }
 
     function opLoadLocal(address _ctxProgram, string memory funcSignature) public {
-        bytes32 result = OpcodeHelpers.opLoadLocalGet(_ctxProgram, funcSignature);
+        bytes32 result = OpcodeHelpers.getLocalVar(_ctxProgram, funcSignature);
 
         OpcodeHelpers.putToStack(_ctxProgram, uint256(result));
     }
 
     function opEnableRecord(address _ctxProgram, address) public {
         uint256 recordId = uint256(
-            OpcodeHelpers.opLoadLocalGet(_ctxProgram, 'getStorageUint256(bytes32)')
+            OpcodeHelpers.getLocalVar(_ctxProgram, 'getStorageUint256(bytes32)')
         );
         address payable contractAddr = payable(OpcodeHelpers.getAddress(_ctxProgram));
 
