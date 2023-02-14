@@ -34,7 +34,7 @@ _Gets next {size} bytes from the program_
 ### getNextBytes32
 
 ```solidity
-function getNextBytes32(address _ctxProgram, uint256 _size) public returns (bytes32)
+function getNextBytes32(address _ctxProgram, uint256 _size) public returns (bytes32 result)
 ```
 
 _Get next parameter from the program that is executing now_
@@ -50,7 +50,7 @@ _Get next parameter from the program that is executing now_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bytes32 | The bytes32-sized slice of the program |
+| result | bytes32 | The bytes32-sized slice of the program |
 
 ### addItemToArray
 
@@ -71,7 +71,7 @@ _add value in bytes32 to array_
 ### readBytesSlice
 
 ```solidity
-function readBytesSlice(address _ctxProgram, uint256 _start, uint256 _end) public view returns (bytes32 res)
+function readBytesSlice(address _ctxProgram, uint256 _start, uint256 _end) public view returns (bytes32 result)
 ```
 
 _Reads the slice of bytes from the raw program
@@ -89,12 +89,12 @@ Warning! The maximum slice size can only be 32 bytes!_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| res | bytes32 | Bytes32 slice of the raw program |
+| result | bytes32 | Bytes32 slice of the raw program |
 
 ### nextBranchSelector
 
 ```solidity
-function nextBranchSelector(address _ctxDSL, address _ctxProgram, string baseOpName) public returns (bytes4)
+function nextBranchSelector(address _ctxDSL, address _ctxProgram, string baseOpName) public returns (bytes4 result)
 ```
 
 ### mustCall
@@ -162,7 +162,7 @@ _Reads a variable of type `address`_
 ### getUint256
 
 ```solidity
-function getUint256(address _ctxProgram, address) public returns (uint256)
+function getUint256(address _ctxProgram, address) public returns (uint256 result)
 ```
 
 _Reads a uint256 number from the program_
@@ -178,7 +178,7 @@ _Reads a uint256 number from the program_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | uint256 value from the program |
+| result | uint256 | uint256 value from the program |
 
 ### getLocalVar
 

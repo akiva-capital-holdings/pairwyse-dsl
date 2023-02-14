@@ -353,14 +353,18 @@ library ComplexOpcodes {
      * @dev Returns array's length
      * @param _ctxProgram ProgramContext contract address
      * @param _arrNameB32 Array's name in bytecode
-     * @return Array's length in bytecode
+     * @return result Array's length in bytecode
      */
-    function _getArrLength(address _ctxProgram, bytes32 _arrNameB32) internal returns (bytes32) {
-        bytes memory data = OpcodeHelpers.mustCall(
-            IProgramContext(_ctxProgram).appAddr(),
-            abi.encodeWithSignature('getLength(bytes32)', _arrNameB32)
+    function _getArrLength(
+        address _ctxProgram,
+        bytes32 _arrNameB32
+    ) internal returns (bytes32 result) {
+        result = bytes32(
+            OpcodeHelpers.mustCall(
+                IProgramContext(_ctxProgram).appAddr(),
+                abi.encodeWithSignature('getLength(bytes32)', _arrNameB32)
+            )
         );
-        return bytes32(data);
     }
 
     /**

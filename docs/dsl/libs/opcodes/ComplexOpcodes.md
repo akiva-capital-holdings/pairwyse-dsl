@@ -255,7 +255,7 @@ _Makes a delegate call and ensures it is successful_
 ### _getArrLength
 
 ```solidity
-function _getArrLength(address _ctxProgram, bytes32 _arrNameB32) internal returns (bytes32)
+function _getArrLength(address _ctxProgram, bytes32 _arrNameB32) internal returns (bytes32 result)
 ```
 
 _Returns array's length_
@@ -271,7 +271,7 @@ _Returns array's length_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bytes32 | Array's length in bytecode |
+| result | bytes32 | Array's length in bytecode |
 
 ### _getItem
 

@@ -38,10 +38,10 @@ library OpcodeHelpers {
      * @dev Get next parameter from the program that is executing now
      * @param _ctxProgram ProgramContext contract address
      * @param _size Size of the chunk
-     * @return The bytes32-sized slice of the program
+     * @return result The bytes32-sized slice of the program
      */
-    function getNextBytes32(address _ctxProgram, uint256 _size) public returns (bytes32) {
-        return bytes32(getNextBytes(_ctxProgram, _size));
+    function getNextBytes32(address _ctxProgram, uint256 _size) public returns (bytes32 result) {
+        result = bytes32(getNextBytes(_ctxProgram, _size));
     }
 
     /**
@@ -67,23 +67,23 @@ library OpcodeHelpers {
      * @param _ctxProgram Context contract address
      * @param _start Start position to read
      * @param _end End position to read
-     * @return res Bytes32 slice of the raw program
+     * @return result Bytes32 slice of the raw program
      */
     function readBytesSlice(
         address _ctxProgram,
         uint256 _start,
         uint256 _end
-    ) public view returns (bytes32 res) {
-        return bytes32(IProgramContext(_ctxProgram).programAt(_start, _end - _start));
+    ) public view returns (bytes32 result) {
+        result = bytes32(IProgramContext(_ctxProgram).programAt(_start, _end - _start));
     }
 
     function nextBranchSelector(
         address _ctxDSL,
         address _ctxProgram,
         string memory baseOpName
-    ) public returns (bytes4) {
+    ) public returns (bytes4 result) {
         bytes1 branchCode = bytes1(getNextBytes(_ctxProgram, 1));
-        return IDSLContext(_ctxDSL).branchSelectors(baseOpName, branchCode);
+        result = IDSLContext(_ctxDSL).branchSelectors(baseOpName, branchCode);
     }
 
     /**
@@ -122,10 +122,10 @@ library OpcodeHelpers {
     /**
      * @dev Reads a uint256 number from the program
      * @param _ctxProgram ProgramContext contract address
-     * @return uint256 value from the program
+     * @return result uint256 value from the program
      */
-    function getUint256(address _ctxProgram, address) public returns (uint256) {
-        return uint256(getNextBytes32(_ctxProgram, 32));
+    function getUint256(address _ctxProgram, address) public returns (uint256 result) {
+        result = uint256(getNextBytes32(_ctxProgram, 32));
     }
 
     /**
@@ -151,6 +151,6 @@ library OpcodeHelpers {
             );
         }
 
-        return bytes32(data);
+        result = bytes32(data);
     }
 }
