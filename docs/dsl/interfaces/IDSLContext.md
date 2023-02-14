@@ -4,11 +4,18 @@
 
 ```solidity
 enum OpcodeLibNames {
-  ComparisonOpcodes,
   BranchingOpcodes,
+  ComparisonOpcodes,
+  ComplexOpcodes,
   LogicalOpcodes,
   OtherOpcodes
 }
+```
+
+### branchingOpcodes
+
+```solidity
+function branchingOpcodes() external view returns (address)
 ```
 
 ### comparisonOpcodes
@@ -17,10 +24,10 @@ enum OpcodeLibNames {
 function comparisonOpcodes() external view returns (address)
 ```
 
-### branchingOpcodes
+### complexOpcodes
 
 ```solidity
-function branchingOpcodes() external view returns (address)
+function complexOpcodes() external view returns (address)
 ```
 
 ### logicalOpcodes

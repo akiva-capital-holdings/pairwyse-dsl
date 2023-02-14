@@ -6,16 +6,16 @@
 function putToStack(address _ctxProgram, uint256 _value) public
 ```
 
-### nextBytes
+### getNextBytes
 
 ```solidity
-function nextBytes(address _ctxProgram, uint256 _size) public returns (bytes)
+function getNextBytes(address _ctxProgram, uint256 _size) public returns (bytes)
 ```
 
-### nextBytes1
+### getNextBytes32
 
 ```solidity
-function nextBytes1(address _ctxProgram) public returns (bytes1)
+function getNextBytes32(address _ctxProgram, uint256 _size) public returns (bytes32)
 ```
 
 ### nextBranchSelector
@@ -34,11 +34,5 @@ function mustCall(address _addr, bytes _data) public
 
 ```solidity
 function mustDelegateCall(address _addr, bytes _data) public
-```
-
-### getNextBytes
-
-```solidity
-function getNextBytes(address _ctxProgram, uint256 _bytesNum) public returns (bytes32)
 ```
 

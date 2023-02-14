@@ -8,12 +8,12 @@ contract OpcodeHelpersMock {
         OpcodeHelpers.putToStack(_ctxProgram, _value);
     }
 
-    function nextBytes(address _ctxProgram, uint256 _size) public returns (bytes memory) {
-        return OpcodeHelpers.nextBytes(_ctxProgram, _size);
+    function getNextBytes(address _ctxProgram, uint256 _size) public returns (bytes memory) {
+        return OpcodeHelpers.getNextBytes(_ctxProgram, _size);
     }
 
-    function nextBytes1(address _ctxProgram) public returns (bytes1) {
-        return OpcodeHelpers.nextBytes1(_ctxProgram);
+    function getNextBytes32(address _ctxProgram, uint256 _size) public returns (bytes32) {
+        return OpcodeHelpers.getNextBytes32(_ctxProgram, _size);
     }
 
     function nextBranchSelector(
@@ -30,9 +30,5 @@ contract OpcodeHelpersMock {
 
     function mustDelegateCall(address _addr, bytes memory _data) public {
         OpcodeHelpers.mustDelegateCall(_addr, _data);
-    }
-
-    function getNextBytes(address _ctxProgram, uint256 _bytesNum) public returns (bytes32) {
-        return OpcodeHelpers.getNextBytes(_ctxProgram, _bytesNum);
     }
 }

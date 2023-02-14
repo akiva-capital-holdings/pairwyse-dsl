@@ -8,8 +8,17 @@ contract DSLContextMock is DSLContext {
         address _comparisonOpcodes,
         address _branchingOpcodes,
         address _logicalOpcodes,
-        address _otherOpcodes
-    ) DSLContext(_comparisonOpcodes, _branchingOpcodes, _logicalOpcodes, _otherOpcodes) {}
+        address _otherOpcodes,
+        address _complexOpcodes
+    )
+        DSLContext(
+            _comparisonOpcodes,
+            _branchingOpcodes,
+            _logicalOpcodes,
+            _otherOpcodes,
+            _complexOpcodes
+        )
+    {}
 
     function addOpcode(
         string memory _name,

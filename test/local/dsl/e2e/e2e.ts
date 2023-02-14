@@ -56,6 +56,7 @@ describe('End-to-end', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
+      complexOpcodesLibAddr,
     ] = await deployOpcodeLibs(hre);
 
     const [parserAddr, executorLibAddr, preprAddr] = await deployBaseMock(hre);
@@ -67,7 +68,8 @@ describe('End-to-end', () => {
       comparisonOpcodesLibAddr,
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
-      otherOpcodesLibAddr
+      otherOpcodesLibAddr,
+      complexOpcodesLibAddr
     );
     ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
     ctxAddr = ctx.address;

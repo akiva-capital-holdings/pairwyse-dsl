@@ -23,6 +23,7 @@ describe('DSLContext', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
+      complexOpcodesLibAddr,
     ] = await deployOpcodeLibs(hre);
     app = await (
       await ethers.getContractFactory('DSLContextMock')
@@ -30,7 +31,8 @@ describe('DSLContext', () => {
       comparisonOpcodesLibAddr,
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
-      otherOpcodesLibAddr
+      otherOpcodesLibAddr,
+      complexOpcodesLibAddr
     );
   });
 

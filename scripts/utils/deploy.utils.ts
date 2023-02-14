@@ -39,11 +39,21 @@ export const deployOpcodeLibs = async (hre: HardhatRuntimeEnvironment) => {
       },
     })
   ).deploy();
+
+  const complexOpcodesLib = await (
+    await hre.ethers.getContractFactory('ComplexOpcodes', {
+      libraries: {
+        OpcodeHelpers: opcodeHelpersLib.address,
+      },
+    })
+  ).deploy();
+
   return [
     comparisonOpcodesLib.address,
     branchingOpcodesLib.address,
     logicalOpcodesLib.address,
     otherOpcodesLib.address,
+    complexOpcodesLib.address,
   ];
 };
 
@@ -53,6 +63,7 @@ export const deployContextDSL = async (hre: HardhatRuntimeEnvironment) => {
     branchingOpcodesLibAddr,
     logicalOpcodesLibAddr,
     otherOpcodesLibAddr,
+    complexOpcodesLibAddr,
   ] = await deployOpcodeLibs(hre);
 
   console.log({
@@ -60,6 +71,7 @@ export const deployContextDSL = async (hre: HardhatRuntimeEnvironment) => {
     branchingOpcodesLibAddr,
     logicalOpcodesLibAddr,
     otherOpcodesLibAddr,
+    complexOpcodesLibAddr,
   });
 
   const DSLContext = await hre.ethers.getContractFactory('DSLContext');
@@ -67,7 +79,8 @@ export const deployContextDSL = async (hre: HardhatRuntimeEnvironment) => {
     comparisonOpcodesLibAddr,
     branchingOpcodesLibAddr,
     logicalOpcodesLibAddr,
-    otherOpcodesLibAddr
+    otherOpcodesLibAddr,
+    complexOpcodesLibAddr
   );
   await DSLctx.deployed();
   return DSLctx.address;
@@ -138,6 +151,7 @@ export const deployAgreement = async (
     branchingOpcodesLibAddr,
     logicalOpcodesLibAddr,
     otherOpcodesLibAddr,
+    complexOpcodesLibAddr,
   ] = await deployOpcodeLibs(hre);
 
   const contextDSL = await (
@@ -146,7 +160,8 @@ export const deployAgreement = async (
     comparisonOpcodesLibAddr,
     branchingOpcodesLibAddr,
     logicalOpcodesLibAddr,
-    otherOpcodesLibAddr
+    otherOpcodesLibAddr,
+    complexOpcodesLibAddr
   );
   const [parserAddr, executorLibAddr] = await deployBase(hre, stringUtilsAddr);
 

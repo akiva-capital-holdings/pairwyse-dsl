@@ -28,6 +28,7 @@ describe('Boolean Algebra', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
+      complexOpcodesLibAddr,
     ] = await deployOpcodeLibs(hre);
 
     const stringUtilsAddr = await deployStringUtils(hre);
@@ -40,7 +41,8 @@ describe('Boolean Algebra', () => {
       comparisonOpcodesLibAddr,
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
-      otherOpcodesLibAddr
+      otherOpcodesLibAddr,
+      complexOpcodesLibAddr
     );
     ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
 

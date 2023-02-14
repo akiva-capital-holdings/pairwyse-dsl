@@ -5,15 +5,18 @@ import '../helpers/Stack.sol';
 
 interface IDSLContext {
     enum OpcodeLibNames {
-        ComparisonOpcodes,
         BranchingOpcodes,
+        ComparisonOpcodes,
+        ComplexOpcodes,
         LogicalOpcodes,
         OtherOpcodes
     }
 
+    function branchingOpcodes() external view returns (address);
+
     function comparisonOpcodes() external view returns (address);
 
-    function branchingOpcodes() external view returns (address);
+    function complexOpcodes() external view returns (address);
 
     function logicalOpcodes() external view returns (address);
 

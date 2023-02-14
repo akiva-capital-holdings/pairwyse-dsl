@@ -67,7 +67,7 @@ library BranchingOpcodes {
      */
     function opForLoop(address _ctxProgram, address) external {
         IProgramContext(_ctxProgram).incPc(4); // skip loop's temporary variable name. It will be used later in opStartLoop
-        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes(_ctxProgram, 4);
+        bytes32 _arrNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
 
         // check if the array exists
         bytes memory data1 = OpcodeHelpers.mustCall(
@@ -137,7 +137,7 @@ library BranchingOpcodes {
     }
 
     function getUint16(address _ctxProgram) public returns (uint16) {
-        bytes memory data = OpcodeHelpers.nextBytes(_ctxProgram, 2);
+        bytes memory data = OpcodeHelpers.getNextBytes(_ctxProgram, 2);
 
         // Convert bytes to bytes8
         bytes2 result;

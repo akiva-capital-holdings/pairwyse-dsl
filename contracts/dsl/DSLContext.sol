@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 import { IDSLContext } from './interfaces/IDSLContext.sol';
 import { IParser } from './interfaces/IParser.sol';
 import { IStorageUniversal } from './interfaces/IStorageUniversal.sol';
-import { ComparisonOpcodes } from './libs/opcodes/ComparisonOpcodes.sol';
 import { BranchingOpcodes } from './libs/opcodes/BranchingOpcodes.sol';
+import { ComparisonOpcodes } from './libs/opcodes/ComparisonOpcodes.sol';
+import { ComplexOpcodes } from './libs/opcodes/ComplexOpcodes.sol';
 import { LogicalOpcodes } from './libs/opcodes/LogicalOpcodes.sol';
 import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
 import { ErrorsContext } from './libs/Errors.sol';
@@ -20,8 +21,9 @@ import { ErrorsContext } from './libs/Errors.sol';
  * basic working opcodes
  */
 contract DSLContext is IDSLContext {
-    address public comparisonOpcodes; // an address for ComparisonOpcodes library, can be changed
     address public branchingOpcodes; // an address for BranchingOpcodes library, can be changed
+    address public comparisonOpcodes; // an address for ComparisonOpcodes library, can be changed
+    address public complexOpcodes; // an address for ComplexOpcodes library, can be changed
     address public logicalOpcodes; // an address for LogicalOpcodes library (AND, OR, XOR), can be changed
     address public otherOpcodes; // an address for OtherOpcodes library, can be changed
 
@@ -57,13 +59,15 @@ contract DSLContext is IDSLContext {
         address _comparisonOpcodes,
         address _branchingOpcodes,
         address _logicalOpcodes,
-        address _otherOpcodes
+        address _otherOpcodes,
+        address _complexOpcodes
     ) {
         require(
             _comparisonOpcodes != address(0) &&
                 _branchingOpcodes != address(0) &&
                 _logicalOpcodes != address(0) &&
-                _otherOpcodes != address(0),
+                _otherOpcodes != address(0) &&
+                _complexOpcodes != address(0),
             ErrorsContext.CTX1
         );
 
@@ -73,6 +77,7 @@ contract DSLContext is IDSLContext {
         branchingOpcodes = _branchingOpcodes;
         logicalOpcodes = _logicalOpcodes;
         otherOpcodes = _otherOpcodes;
+        complexOpcodes = _complexOpcodes;
     }
 
     /**
@@ -240,7 +245,9 @@ contract DSLContext is IDSLContext {
             3
         );
 
-        // Branching
+        /*************
+         * Branching *
+         ************/
 
         /**
             bool true
@@ -307,7 +314,9 @@ contract DSLContext is IDSLContext {
             true
         );
 
-        // Simple Opcodes
+        /******************
+         * Simple Opcodes *
+         *****************/
         _addOpcode(
             'blockNumber',
             0x15,
@@ -523,14 +532,46 @@ contract DSLContext is IDSLContext {
             true
         );
 
+        /**********
+         * Arrays *
+         *********/
+
+        // Ex. `declareArr uint256 BALANCES`
+        string memory name = 'declareArr';
+        _addOpcode(
+            name,
+            0x31,
+            ComplexOpcodes.opDeclare.selector,
+            IParser.asmDeclare.selector,
+            OpcodeLibNames.ComplexOpcodes,
+            2,
+            true
+        );
+        // types of arrays for declaration
+        _addOpcodeBranch(name, 'uint256', 0x01, IStorageUniversal.setStorageUint256.selector);
+        _addOpcodeBranch(name, 'struct', 0x02, bytes4(0x0));
+        _addOpcodeBranch(name, 'address', 0x03, IStorageUniversal.setStorageAddress.selector);
+
         // Push to array
         // Ex. `push 0xe7f8a90ede3d84c7c0166bd84a4635e4675accfc USERS`
         _addOpcode(
             'push',
             0x33,
-            OtherOpcodes.opPush.selector,
+            ComplexOpcodes.opPush.selector,
             IParser.asmPush.selector,
-            OpcodeLibNames.OtherOpcodes,
+            OpcodeLibNames.ComplexOpcodes,
+            2,
+            true
+        );
+
+        // Get element by index in the array
+        // Ex. `get 3 USERS`
+        _addOpcode(
+            'get',
+            0x35,
+            ComplexOpcodes.opGet.selector,
+            IParser.asmGet.selector,
+            OpcodeLibNames.ComplexOpcodes,
             2,
             true
         );
@@ -540,22 +581,10 @@ contract DSLContext is IDSLContext {
         _addOpcode(
             'lengthOf',
             0x34,
-            OtherOpcodes.opLengthOf.selector,
+            ComplexOpcodes.opLengthOf.selector,
             IParser.asmLengthOf.selector,
-            OpcodeLibNames.OtherOpcodes,
+            OpcodeLibNames.ComplexOpcodes,
             1,
-            true
-        );
-
-        // Get element by index in the array
-        // Ex. `get 3 USERS`
-        _addOpcode(
-            'get',
-            0x35,
-            OtherOpcodes.opGet.selector,
-            IParser.asmGet.selector,
-            OpcodeLibNames.OtherOpcodes,
-            2,
             true
         );
 
@@ -564,22 +593,10 @@ contract DSLContext is IDSLContext {
         _addOpcode(
             'sumOf',
             0x40,
-            OtherOpcodes.opSumOf.selector,
+            ComplexOpcodes.opSumOf.selector,
             IParser.asmSumOf.selector,
-            OpcodeLibNames.OtherOpcodes,
+            OpcodeLibNames.ComplexOpcodes,
             1,
-            true
-        );
-
-        // Sums all balances in array of account address
-        // Ex. `votersBalance TOKEN_ADDRESS ADDRESSES_ARRAY`
-        _addOpcode(
-            'votersBalance',
-            0x46,
-            OtherOpcodes.opVotersBalance.selector,
-            IParser.asmVotersbalance.selector,
-            OpcodeLibNames.OtherOpcodes,
-            2,
             true
         );
 
@@ -614,9 +631,21 @@ contract DSLContext is IDSLContext {
         _addOpcode(
             'sumThroughStructs',
             0x38,
-            OtherOpcodes.opSumThroughStructs.selector,
+            ComplexOpcodes.opSumThroughStructs.selector,
             IParser.asmSumThroughStructs.selector,
-            OpcodeLibNames.OtherOpcodes,
+            OpcodeLibNames.ComplexOpcodes,
+            2,
+            true
+        );
+
+        // Sums all balances in array of account address
+        // Ex. `votersBalance TOKEN_ADDRESS ADDRESSES_ARRAY`
+        _addOpcode(
+            'votersBalance',
+            0x46,
+            ComplexOpcodes.opVotersBalance.selector,
+            IParser.asmVotersbalance.selector,
+            OpcodeLibNames.ComplexOpcodes,
             2,
             true
         );
@@ -627,9 +656,9 @@ contract DSLContext is IDSLContext {
         _addOpcode(
             'struct',
             0x36,
-            OtherOpcodes.opStruct.selector,
+            ComplexOpcodes.opStruct.selector,
             IParser.asmStruct.selector,
-            OpcodeLibNames.OtherOpcodes,
+            OpcodeLibNames.ComplexOpcodes,
             1,
             true
         );
@@ -711,37 +740,21 @@ contract DSLContext is IDSLContext {
             true
         );
 
-        string memory name = 'loadRemote';
+        name = 'loadRemote';
         _addOpcode(
             name,
             0x1c,
-            OtherOpcodes.opLoadRemoteAny.selector,
+            ComplexOpcodes.opLoadRemoteAny.selector,
             IParser.asmLoadRemote.selector,
-            OpcodeLibNames.OtherOpcodes,
+            OpcodeLibNames.ComplexOpcodes,
             3,
             true
         );
         // types that 'loadRemote' have for loading data
-        _addOpcodeBranch(name, 'uint256', 0x01, OtherOpcodes.opLoadRemoteUint256.selector);
-        _addOpcodeBranch(name, 'bool', 0x02, OtherOpcodes.opLoadRemoteBool.selector);
-        _addOpcodeBranch(name, 'address', 0x03, OtherOpcodes.opLoadRemoteAddress.selector);
-        _addOpcodeBranch(name, 'bytes32', 0x04, OtherOpcodes.opLoadRemoteBytes32.selector);
-
-        // Ex. `declareArr uint256 BALANCES`
-        name = 'declareArr';
-        _addOpcode(
-            name,
-            0x31,
-            OtherOpcodes.opDeclare.selector,
-            IParser.asmDeclare.selector,
-            OpcodeLibNames.OtherOpcodes,
-            2,
-            true
-        );
-        // types of arrays for declaration
-        _addOpcodeBranch(name, 'uint256', 0x01, IStorageUniversal.setStorageUint256.selector);
-        _addOpcodeBranch(name, 'struct', 0x02, bytes4(0x0));
-        _addOpcodeBranch(name, 'address', 0x03, IStorageUniversal.setStorageAddress.selector);
+        _addOpcodeBranch(name, 'uint256', 0x01, ComplexOpcodes.opLoadRemoteUint256.selector);
+        _addOpcodeBranch(name, 'bool', 0x02, ComplexOpcodes.opLoadRemoteBool.selector);
+        _addOpcodeBranch(name, 'address', 0x03, ComplexOpcodes.opLoadRemoteAddress.selector);
+        _addOpcodeBranch(name, 'bytes32', 0x04, ComplexOpcodes.opLoadRemoteBytes32.selector);
 
         // Ex.
         // `compound deposit USDC` - deposits all USDC tokens to compound, receives cUSDC
@@ -750,15 +763,15 @@ contract DSLContext is IDSLContext {
         _addOpcode(
             name,
             0x45,
-            OtherOpcodes.opCompound.selector,
+            ComplexOpcodes.opCompound.selector,
             IParser.asmCompound.selector,
-            OpcodeLibNames.OtherOpcodes,
+            OpcodeLibNames.ComplexOpcodes,
             2,
             true
         );
         // types that 'compound' have for loading data
-        _addOpcodeBranch(name, 'deposit', 0x01, OtherOpcodes.opCompoundDeposit.selector);
-        _addOpcodeBranch(name, 'withdraw', 0x02, OtherOpcodes.opCompoundWithdraw.selector);
+        _addOpcodeBranch(name, 'deposit', 0x01, ComplexOpcodes.opCompoundDeposit.selector);
+        _addOpcodeBranch(name, 'withdraw', 0x02, ComplexOpcodes.opCompoundWithdraw.selector);
 
         /***********
          * Aliases *

@@ -27,6 +27,7 @@ describe('Preprocessor', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
+      complexOpcodesLibAddr,
     ] = await deployOpcodeLibs(hre);
     const ctx = await (
       await ethers.getContractFactory('DSLContextMock')
@@ -34,7 +35,8 @@ describe('Preprocessor', () => {
       comparisonOpcodesLibAddr,
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
-      otherOpcodesLibAddr
+      otherOpcodesLibAddr,
+      complexOpcodesLibAddr
     );
     ctxAddr = ctx.address;
 

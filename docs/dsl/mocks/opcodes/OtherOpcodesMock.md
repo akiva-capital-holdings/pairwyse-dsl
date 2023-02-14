@@ -6,12 +6,6 @@
 receive() external payable
 ```
 
-### opLoadRemoteAny
-
-```solidity
-function opLoadRemoteAny(address _ctxProgram, address _ctxDSL) public
-```
-
 ### opBlockNumber
 
 ```solidity
@@ -96,30 +90,6 @@ function opBurn(address _ctxProgram, address) public
 function opLoadLocalUint256(address _ctxProgram, address) public
 ```
 
-### opLoadRemoteUint256
-
-```solidity
-function opLoadRemoteUint256(address _ctxProgram, address) public
-```
-
-### opLoadRemoteBytes32
-
-```solidity
-function opLoadRemoteBytes32(address _ctxProgram, address) public
-```
-
-### opLoadRemoteBool
-
-```solidity
-function opLoadRemoteBool(address _ctxProgram, address) public
-```
-
-### opLoadRemoteAddress
-
-```solidity
-function opLoadRemoteAddress(address _ctxProgram, address) public
-```
-
 ### opBool
 
 ```solidity
@@ -150,18 +120,6 @@ function opTransfer(address _ctxProgram, address) public
 function opTransferFrom(address _ctxProgram, address) public
 ```
 
-### opUint256Get
-
-```solidity
-function opUint256Get(address _ctxProgram, address) public returns (uint256)
-```
-
-### opLoadLocalGet
-
-```solidity
-function opLoadLocalGet(address _ctxProgram, string funcSignature) public returns (bytes32 result)
-```
-
 ### opAddressGet
 
 ```solidity
@@ -172,54 +130,6 @@ function opAddressGet(address _ctxProgram, address) public returns (address)
 
 ```solidity
 function opLoadLocal(address _ctxProgram, string funcSignature) public
-```
-
-### opLoadRemote
-
-```solidity
-function opLoadRemote(address _ctxProgram, string funcSignature) public
-```
-
-### opDeclare
-
-```solidity
-function opDeclare(address _ctxProgram, address) public
-```
-
-### opPush
-
-```solidity
-function opPush(address _ctxProgram, address) public
-```
-
-### opGet
-
-```solidity
-function opGet(address _ctxProgram, address) public
-```
-
-### opSumOf
-
-```solidity
-function opSumOf(address _ctxProgram, address _ctxDSL) public
-```
-
-### opSumThroughStructs
-
-```solidity
-function opSumThroughStructs(address _ctxProgram, address _ctxDSL) public
-```
-
-### opStruct
-
-```solidity
-function opStruct(address _ctxProgram, address) public
-```
-
-### opLengthOf
-
-```solidity
-function opLengthOf(address _ctxProgram, address) public
 ```
 
 ### opEnableRecord

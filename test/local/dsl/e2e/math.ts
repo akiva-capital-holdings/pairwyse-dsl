@@ -21,6 +21,7 @@ describe('DSL: math', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
+      complexOpcodesLibAddr,
     ] = await deployOpcodeLibs(hre);
 
     const [parserAddr, executorLibAddr, preprAddr] = await deployBaseMock(hre);
@@ -32,7 +33,8 @@ describe('DSL: math', () => {
       comparisonOpcodesLibAddr,
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
-      otherOpcodesLibAddr
+      otherOpcodesLibAddr,
+      complexOpcodesLibAddr
     );
     ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
     // Deploy BaseApplication

@@ -23,13 +23,25 @@ library OpcodeHelpers {
         IProgramContext(_ctxProgram).stack().push(_value);
     }
 
-    function nextBytes(address _ctxProgram, uint256 size) public returns (bytes memory out) {
-        out = IProgramContext(_ctxProgram).programAt(IProgramContext(_ctxProgram).pc(), size);
-        IProgramContext(_ctxProgram).incPc(size);
+    /**
+     * @dev Gets next {size} bytes from the program
+     * @param _ctxProgram Context contract address
+     * @param _size Size of the chunk
+     * @return out Resulting chunk of type bytes
+     */
+    function getNextBytes(address _ctxProgram, uint256 _size) public returns (bytes memory out) {
+        out = IProgramContext(_ctxProgram).programAt(IProgramContext(_ctxProgram).pc(), _size);
+        IProgramContext(_ctxProgram).incPc(_size);
     }
 
-    function nextBytes1(address _ctxProgram) public returns (bytes1) {
-        return nextBytes(_ctxProgram, 1)[0];
+    /**
+     * @dev Get next parameter from the program that is executing now
+     * @param _ctxProgram ProgramContext contract address
+     * @param _size Size of the chunk
+     * @return result The bytes32-sized slice of the program
+     */
+    function getNextBytes32(address _ctxProgram, uint256 _size) public returns (bytes32 result) {
+        result = bytes32(getNextBytes(_ctxProgram, _size));
     }
 
     /**
@@ -55,27 +67,23 @@ library OpcodeHelpers {
      * @param _ctxProgram Context contract address
      * @param _start Start position to read
      * @param _end End position to read
-     * @return res Bytes32 slice of the raw program
+     * @return result Bytes32 slice of the raw program
      */
     function readBytesSlice(
         address _ctxProgram,
         uint256 _start,
         uint256 _end
-    ) public view returns (bytes32 res) {
-        bytes memory slice = IProgramContext(_ctxProgram).programAt(_start, _end - _start);
-        // Convert bytes to bytes32
-        assembly {
-            res := mload(add(slice, 0x20))
-        }
+    ) public view returns (bytes32 result) {
+        result = bytes32(IProgramContext(_ctxProgram).programAt(_start, _end - _start));
     }
 
     function nextBranchSelector(
         address _ctxDSL,
         address _ctxProgram,
         string memory baseOpName
-    ) public returns (bytes4) {
-        bytes1 branchCode = nextBytes1(_ctxProgram);
-        return IDSLContext(_ctxDSL).branchSelectors(baseOpName, branchCode);
+    ) public returns (bytes4 result) {
+        bytes1 branchCode = bytes1(getNextBytes(_ctxProgram, 1));
+        result = IDSLContext(_ctxDSL).branchSelectors(baseOpName, branchCode);
     }
 
     /**
@@ -102,15 +110,47 @@ library OpcodeHelpers {
         return delegateCallData;
     }
 
-    function getNextBytes(
-        address _ctxProgram,
-        uint256 _bytesNum
-    ) public returns (bytes32 varNameB32) {
-        bytes memory varName = nextBytes(_ctxProgram, _bytesNum);
+    /**
+     * @dev Reads a variable of type `address`
+     * @param _ctxProgram ProgramContext contract address
+     * @return result The address value
+     */
+    function getAddress(address _ctxProgram) public returns (address result) {
+        result = address(uint160(uint256(getLocalVar(_ctxProgram, 'getStorageAddress(bytes32)'))));
+    }
 
-        // Convert bytes to bytes32
-        assembly {
-            varNameB32 := mload(add(varName, 0x20))
+    /**
+     * @dev Reads a uint256 number from the program
+     * @param _ctxProgram ProgramContext contract address
+     * @return result uint256 value from the program
+     */
+    function getUint256(address _ctxProgram, address) public returns (uint256 result) {
+        result = uint256(getNextBytes32(_ctxProgram, 32));
+    }
+
+    /**
+     * @dev Read local variable by delegatecalling a "read" function by its signature
+     * @param _ctxProgram ProgramContext contract address
+     * @param _funcSignature Signature of the "read" function
+     * @return result Local variable value
+     */
+    function getLocalVar(
+        address _ctxProgram,
+        string memory _funcSignature
+    ) public returns (bytes32 result) {
+        bytes32 MSG_SENDER = 0x9ddd6a8100000000000000000000000000000000000000000000000000000000;
+        bytes memory data;
+        bytes32 varNameB32 = getNextBytes32(_ctxProgram, 4);
+        if (varNameB32 == MSG_SENDER) {
+            data = abi.encode(IProgramContext(_ctxProgram).msgSender());
+        } else {
+            // Load local variable by it's hex
+            data = mustCall(
+                IProgramContext(_ctxProgram).appAddr(),
+                abi.encodeWithSignature(_funcSignature, varNameB32)
+            );
         }
+
+        result = bytes32(data);
     }
 }

@@ -32,6 +32,7 @@ export const deployAgreementMock = async (hre: HardhatRuntimeEnvironment, multis
     branchingOpcodesLibAddr,
     logicalOpcodesLibAddr,
     otherOpcodesLibAddr,
+    complexOpcodesLibAddr,
   ] = await deployOpcodeLibs(hre);
 
   const contextDSL = await (
@@ -40,7 +41,8 @@ export const deployAgreementMock = async (hre: HardhatRuntimeEnvironment, multis
     comparisonOpcodesLibAddr,
     branchingOpcodesLibAddr,
     logicalOpcodesLibAddr,
-    otherOpcodesLibAddr
+    otherOpcodesLibAddr,
+    complexOpcodesLibAddr
   );
   const [parserAddr, executorLibAddr, preprocessorAddr] = await deployBaseMock(hre);
 

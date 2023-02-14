@@ -30,6 +30,7 @@ describe('Executor', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
+      complexOpcodesLibAddr,
     ] = await deployOpcodeLibs(hre);
     const stringUtilsAddr = await deployStringUtils(hre);
     const [, executorLibAddr] = await deployBase(hre, stringUtilsAddr);
@@ -48,7 +49,8 @@ describe('Executor', () => {
       comparisonOpcodesLibAddr,
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
-      otherOpcodesLibAddr
+      otherOpcodesLibAddr,
+      complexOpcodesLibAddr
     );
     ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
     ctxDSLAddr = ctxDSL.address;
