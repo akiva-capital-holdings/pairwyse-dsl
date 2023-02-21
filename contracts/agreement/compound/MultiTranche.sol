@@ -1,25 +1,24 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IParser } from '../dsl/interfaces/IParser.sol';
-import { IProgramContext } from '../dsl/interfaces/IProgramContext.sol';
-import { IERC20Mintable } from '../dsl/interfaces/IERC20Mintable.sol';
-import { ProgramContext } from '../dsl/ProgramContext.sol';
-import { ErrorsAgreement, ErrorsGovernance } from '../dsl/libs/Errors.sol';
-import { UnstructuredStorage } from '../dsl/libs/UnstructuredStorage.sol';
-import { Executor } from '../dsl/libs/Executor.sol';
-import { StringUtils } from '../dsl/libs/StringUtils.sol';
-import { ERC20Mintable } from '../dsl/helpers/ERC20Mintable.sol';
-import { Agreement } from '../agreement/Agreement.sol';
+import { IParser } from '../../dsl/interfaces/IParser.sol';
+import { IProgramContext } from '../../dsl/interfaces/IProgramContext.sol';
+import { IERC20Mintable } from '../../dsl/interfaces/IERC20Mintable.sol';
+import { ProgramContext } from '../../dsl/ProgramContext.sol';
+import { ErrorsAgreement, ErrorsGovernance } from '../../dsl/libs/Errors.sol';
+import { UnstructuredStorage } from '../../dsl/libs/UnstructuredStorage.sol';
+import { Executor } from '../../dsl/libs/Executor.sol';
+import { StringUtils } from '../../dsl/libs/StringUtils.sol';
+import { ERC20Mintable } from '../../dsl/helpers/ERC20Mintable.sol';
+import { Agreement } from '../../agreement/Agreement.sol';
 
 /**
- * This is a type of Agreement designed to perform a Nivaura Demo Phase II
+ * This is a type of Agreement designed to perform a Nivaura Demo Phase I
  * https://docs.google.com/document/d/1wwEOXKa0cmmS0jM0p9q9rkltvEPmSuK3PuwPK-tapcs/edit
  */
 contract MultiTranche is Agreement {
     using UnstructuredStorage for bytes32;
 
-    uint256 public deadline;
     IERC20Mintable public WUSDC; // WUSDC
     mapping(address => address) public compounds; // token => cToken
 

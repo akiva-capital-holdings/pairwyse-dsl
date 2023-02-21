@@ -1,13 +1,7 @@
 ## MultiTranche
 
-This is a type of Agreement designed to perform a Nivaura Demo Phase II
+This is a type of Agreement designed to perform a Nivaura Demo Phase I
 https://docs.google.com/document/d/1wwEOXKa0cmmS0jM0p9q9rkltvEPmSuK3PuwPK-tapcs/edit
-
-### deadline
-
-```solidity
-uint256 deadline
-```
 
 ### WUSDC
 
