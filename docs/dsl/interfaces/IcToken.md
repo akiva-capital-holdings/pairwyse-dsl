@@ -102,3 +102,44 @@ _This will overwrite the approval amount for `spender`
 | ---- | ---- | ----------- |
 | [0] | bool | Whether or not the approval succeeded |
 
+### borrow
+
+```solidity
+function borrow(uint256 borrowAmount) external returns (uint256)
+```
+
+Sender borrows assets from the protocol to their own address
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| borrowAmount | uint256 | The amount of the underlying asset to borrow |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | uint 0=success, otherwise a failure (see ErrorReporter.sol for details) |
+
+### repayBorrow
+
+```solidity
+function repayBorrow(uint256 repayAmount) external returns (uint256)
+```
+
+Sender repays their own borrow
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| repayAmount | uint256 | The amount to repay, or -1 for the full outstanding amount |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | uint 0=success, otherwise a failure (see ErrorReporter.sol for details) |
+
+

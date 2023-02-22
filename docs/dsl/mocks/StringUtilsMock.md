@@ -54,3 +54,4 @@ function parseScientificNotation(string _s) public pure returns (string)
 function mayBeNumber(string _s) public pure returns (bool isNumber)
 ```
 
+

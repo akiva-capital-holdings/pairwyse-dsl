@@ -176,7 +176,21 @@ _Master opcode to interact with Compound V2. Needs sub-commands to be executed_
 function opCompoundDeposit(address _ctxProgram) public
 ```
 
-Sub-command of Compound V2. Makes a deposit of funds to Compound V2
+Sub-command of Compound V2. Makes a deposit funds to Compound V2
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+
+### opCompoundWithdrawMax
+
+```solidity
+function opCompoundWithdrawMax(address _ctxProgram) public
+```
+
+Sub-command of Compound V2. Makes a withdrawal of all funds to Compound V2
 
 #### Parameters
 
@@ -190,13 +204,53 @@ Sub-command of Compound V2. Makes a deposit of funds to Compound V2
 function opCompoundWithdraw(address _ctxProgram) public
 ```
 
-Sub-command of Compound V2. Makes a withdrawal of funds to Compound V2
+Sub-command of Compound V2. Makes a withdrawal funds to Compound V2
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _ctxProgram | address | ProgramContext contract address |
+
+### opCompoundBorrowMax
+
+```solidity
+function opCompoundBorrowMax(address _ctxProgram) public
+```
+
+Sub-command of Compound V2. Makes a barrow of all USDC on cUSDC
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+
+### opCompoundBorrow
+
+```solidity
+function opCompoundBorrow(address _ctxProgram) public
+```
+
+Sub-command of Compound V2. Makes a barrow USDC on cUSDC
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+
+### opCompoundRepayMax
+
+```solidity
+function opCompoundRepayMax(address _ctxProgram) public
+```
+
+### opCompoundRepay
+
+```solidity
+function opCompoundRepay(address _ctxProgram) public
+```
 
 ### _sumOfStructVars
 
@@ -333,4 +387,5 @@ _Checks the type for array_
 | _ctxProgram | address | ProgramContext contract address |
 | _arrNameB32 | bytes32 | Array's name in bytecode |
 | _typeName | string | Type of the array, ex. `uint256`, `address`, `struct` |
+
 

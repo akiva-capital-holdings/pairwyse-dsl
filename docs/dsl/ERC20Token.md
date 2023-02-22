@@ -1,4 +1,4 @@
-## ERC20Premint
+## ERC20Token
 
 ### constructor
 

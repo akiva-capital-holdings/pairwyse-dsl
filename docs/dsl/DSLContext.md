@@ -152,7 +152,7 @@ _Adds the opcode for the DSL command_
 | ---- | ---- | ----------- |
 | _name | string | is the name of the command |
 | _opcode | bytes1 | is the opcode of the command |
-| _opSelector | bytes4 | is the selector of the function for this opcode        from onle of library in `contracts/libs/opcodes/*` |
+| _opSelector | bytes4 | is the selector of the function for this opcode        from onle of library in `contracts/libs/opcodes/*` |
 | _asmSelector | bytes4 | is the selector of the function from the Parser for that opcode |
 | _libName | enum IDSLContext.OpcodeLibNames | is the name of library that is used fot the opcode |
 | _numOfArgs | uint8 | The number of arguments for this opcode |
@@ -172,7 +172,7 @@ _Adds the opcode for the operator_
 | ---- | ---- | ----------- |
 | _name | string | is the name of the operator |
 | _opcode | bytes1 | is the opcode of the operator |
-| _opSelector | bytes4 | is the selector of the function for this operator        from onle of library in `contracts/libs/opcodes/*` |
+| _opSelector | bytes4 | is the selector of the function for this operator        from onle of library in `contracts/libs/opcodes/*` |
 | _asmSelector | bytes4 | is the selector of the function from the Parser for this operator |
 | _libName | enum IDSLContext.OpcodeLibNames | is the name of library that is used fot the operator |
 | _priority | uint256 | is the priority for the opcode |
@@ -225,4 +225,5 @@ _Adds an alias to the already existing DSL command_
 | ---- | ---- | ----------- |
 | _baseCmd | string | is the name of the command |
 | _alias | string | is the alias command name for the base command |
+
 

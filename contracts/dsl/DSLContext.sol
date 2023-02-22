@@ -758,7 +758,13 @@ contract DSLContext is IDSLContext {
 
         // Ex.
         // `compound deposit USDC` - deposits all USDC tokens to compound, receives cUSDC
-        // `compound withdraw USDC` - withdtaw all USDC tokens from compound in exchange on cUSDC
+        // `compound withdrawMax USDC` - withdtaw all USDC tokens from compound in exchange on cUSDC
+        // `compound withdraw USDC WITHDRAW_VALUE` - withdtaw VALUE USDC tokens from compound in exchange on cUSDC
+        // `compound borrowMax USDC` - borrow all USDC on cUSDC
+        // `compound borrow USDC BARROW_VALUE` - borrow VALUE USDC on VALUE cUSDC
+        // `compound repayMax USDC` - repay all borrowed cUSDC on USDC
+        // `compound repay USDC BARROW_VALUE` - repay borrowed cUSDC on USDC
+
         name = 'compound';
         _addOpcode(
             name,
@@ -771,7 +777,12 @@ contract DSLContext is IDSLContext {
         );
         // types that 'compound' have for loading data
         _addOpcodeBranch(name, 'deposit', 0x01, ComplexOpcodes.opCompoundDeposit.selector);
-        _addOpcodeBranch(name, 'withdraw', 0x02, ComplexOpcodes.opCompoundWithdraw.selector);
+        _addOpcodeBranch(name, 'withdrawMax', 0x02, ComplexOpcodes.opCompoundWithdrawMax.selector);
+        _addOpcodeBranch(name, 'withdraw', 0x03, ComplexOpcodes.opCompoundWithdraw.selector);
+        _addOpcodeBranch(name, 'borrowMax', 0x04, ComplexOpcodes.opCompoundBorrowMax.selector);
+        _addOpcodeBranch(name, 'borrow', 0x05, ComplexOpcodes.opCompoundBorrow.selector);
+        _addOpcodeBranch(name, 'repayMax', 0x06, ComplexOpcodes.opCompoundRepayMax.selector);
+        _addOpcodeBranch(name, 'repay', 0x07, ComplexOpcodes.opCompoundRepay.selector);
 
         /***********
          * Aliases *

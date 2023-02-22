@@ -201,3 +201,4 @@ _Read local variable by delegatecalling a "read" function by its signature_
 | ---- | ---- | ----------- |
 | result | bytes32 | Local variable value |
 
+

@@ -50,3 +50,4 @@ function setStorageAddress(bytes32 position, address data) public
 function setStorageBool(bytes32 position, bool data) public
 ```
 
+

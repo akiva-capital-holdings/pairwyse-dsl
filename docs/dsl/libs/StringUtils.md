@@ -260,3 +260,4 @@ _Checks is string is a valid DSL variable name (matches regexp /^([A-Z_$][A-Z\d_
 | ---- | ---- | ----------- |
 | [0] | bool | isCapital whether the string is a valid DSL variable name or not |
 
+

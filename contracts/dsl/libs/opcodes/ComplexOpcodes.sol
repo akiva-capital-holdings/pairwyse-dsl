@@ -230,7 +230,7 @@ library ComplexOpcodes {
     }
 
     /**
-     * Sub-command of Compound V2. Makes a deposit of funds to Compound V2
+     * Sub-command of Compound V2. Makes a deposit funds to Compound V2
      * @param _ctxProgram ProgramContext contract address
      */
     function opCompoundDeposit(address _ctxProgram) public {
@@ -250,10 +250,10 @@ library ComplexOpcodes {
     }
 
     /**
-     * Sub-command of Compound V2. Makes a withdrawal of funds to Compound V2
+     * Sub-command of Compound V2. Makes a withdrawal of all funds to Compound V2
      * @param _ctxProgram ProgramContext contract address
      */
-    function opCompoundWithdraw(address _ctxProgram) public {
+    function opCompoundWithdrawMax(address _ctxProgram) public {
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
         // `token` can be used in the future for more different underluing tokens
         bytes memory data = OpcodeHelpers.mustCall(
@@ -265,6 +265,123 @@ library ComplexOpcodes {
         // redeems cTokens in exchange for the underlying asset (USDC)
         // amount - amount of cTokens
         IcToken(cToken).redeem(IcToken(cToken).balanceOf(address(this)));
+
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    /**
+     * Sub-command of Compound V2. Makes a withdrawal funds to Compound V2
+     * @param _ctxProgram ProgramContext contract address
+     */
+    function opCompoundWithdraw(address _ctxProgram) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        // `token` can be used in the future for more different underluing tokens
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+        bytes32 withdrawNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
+        bytes memory withdrawValue = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature(
+                'getStorageUint(bytes32)',
+                withdrawNameB32 // withdraw value name
+            )
+        );
+        address cToken = address(uint160(uint256(bytes32(data))));
+
+        // redeems cTokens in exchange for the underlying asset (USDC)
+        // amount - amount of cTokens
+        IcToken(cToken).redeem(uint256(bytes32(withdrawValue)));
+
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    /**
+     * Sub-command of Compound V2. Makes a barrow of all USDC on cUSDC
+     * @param _ctxProgram ProgramContext contract address
+     */
+    function opCompoundBorrowMax(address _ctxProgram) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        // `token` can be used in the future for more different underluing tokens
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+        address cToken = address(uint160(uint256(bytes32(data))));
+
+        // redeems cTokens in exchange for the underlying asset (USDC)
+        // amount - amount of cTokens
+        IcToken(cToken).borrow(IcToken(cToken).balanceOf(address(this)));
+
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    /**
+     * Sub-command of Compound V2. Makes a barrow USDC on cUSDC
+     * @param _ctxProgram ProgramContext contract address
+     */
+    function opCompoundBorrow(address _ctxProgram) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        // `token` can be used in the future for more different underluing tokens
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+
+        bytes32 borrowNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
+        bytes memory borrowValue = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature(
+                'getStorageUint(bytes32)',
+                borrowNameB32 // withdraw value name
+            )
+        );
+        address cToken = address(uint160(uint256(bytes32(data))));
+
+        // redeems cTokens in exchange for the underlying asset (USDC)
+        // amount - amount of cTokens
+        IcToken(cToken).borrow(uint256(bytes32(borrowValue)));
+
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    function opCompoundRepayMax(address _ctxProgram) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        // `token` can be used in the future for more different underluing tokens
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+        address cToken = address(uint160(uint256(bytes32(data))));
+        uint256 balance = IcToken(cToken).balanceOf(address(this));
+        // approve simple token to use it into the market
+        IcToken(cToken).approve(token, balance);
+        IcToken(token).repayBorrow(balance);
+
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    function opCompoundRepay(address _ctxProgram) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        // `token` can be used in the future for more different underluing tokens
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+
+        bytes32 repayNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
+        bytes memory repayValue = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature(
+                'getStorageUint(bytes32)',
+                repayNameB32 // withdraw value name
+            )
+        );
+        address cToken = address(uint160(uint256(bytes32(data))));
+        // approve simple token to use it into the market
+        IcToken(cToken).approve(token, uint256(bytes32(repayValue)));
+        IcToken(token).repayBorrow(uint256(bytes32(repayValue)));
 
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
