@@ -158,7 +158,7 @@ _Parse DSL code and set the program bytecode in Agreement contract_
 | _recordId | uint256 | Record ID |
 | _preProc | address | Preprocessor address |
 | _code | string | DSL code for the record of the condition |
-| _isRecord | bool | a flag that shows if provided _code is a record or not (a condition then) |
+| _isRecord | bool | a flag that shows if provided _code is a record or not (a condition then) |
 
 ### update
 

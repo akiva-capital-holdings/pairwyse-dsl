@@ -78,4 +78,16 @@ function opStruct(address _ctxProgram, address) public
 function opLengthOf(address _ctxProgram, address) public
 ```
 
+### opCompound
+
+```solidity
+function opCompound(address _ctxProgram, address _ctxDSL) public
+```
+
+### opCompoundDeposit
+
+```solidity
+function opCompoundDeposit(address _ctxProgram, address) public
+```
+
 

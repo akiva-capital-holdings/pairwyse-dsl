@@ -173,7 +173,7 @@ _Master opcode to interact with Compound V2. Needs sub-commands to be executed_
 ### opCompoundDeposit
 
 ```solidity
-function opCompoundDeposit(address _ctxProgram) public
+function opCompoundDeposit(address _ctxProgram, address) public
 ```
 
 Sub-command of Compound V2. Makes a deposit funds to Compound V2
@@ -183,6 +183,7 @@ Sub-command of Compound V2. Makes a deposit funds to Compound V2
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _ctxProgram | address | ProgramContext contract address |
+|  | address |  |
 
 ### opCompoundWithdrawMax
 

@@ -53,4 +53,12 @@ contract ComplexOpcodesMock {
     function opLengthOf(address _ctxProgram, address) public {
         ComplexOpcodes.opLengthOf(_ctxProgram, address(0));
     }
+
+    function opCompound(address _ctxProgram, address _ctxDSL) public {
+        ComplexOpcodes.opCompound(_ctxProgram, _ctxDSL);
+    }
+
+    function opCompoundDeposit(address _ctxProgram, address) public {
+        ComplexOpcodes.opCompoundDeposit(_ctxProgram, address(0));
+    }
 }

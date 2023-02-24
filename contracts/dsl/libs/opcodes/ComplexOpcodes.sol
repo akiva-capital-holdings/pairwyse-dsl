@@ -9,7 +9,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev You should add to this file opcodes for some complex structures. These may be arrays, structs and others
@@ -233,13 +233,23 @@ library ComplexOpcodes {
      * Sub-command of Compound V2. Makes a deposit funds to Compound V2
      * @param _ctxProgram ProgramContext contract address
      */
-    function opCompoundDeposit(address _ctxProgram) public {
+    function opCompoundDeposit(address _ctxProgram, address) public {
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        console.logAddress(token);
+        // bytes memory data = OpcodeHelpers.mustCall(
+        //     IProgramContext(_ctxProgram).appAddr(),
+        //     abi.encodeWithSignature('compounds(address)', token)
+        // );
+        bytes32 ctokenNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
         bytes memory data = OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),
-            abi.encodeWithSignature('compounds(address)', token)
+            abi.encodeWithSignature(
+                'getStorageAddress(bytes32)',
+                ctokenNameB32 // withdraw value name
+            )
         );
         address cToken = address(uint160(uint256(bytes32(data))));
+        console.logAddress(cToken);
         uint256 balance = IcToken(token).balanceOf(address(this));
         // approve simple token to use it into the market
         IERC20(token).approve(cToken, balance);
