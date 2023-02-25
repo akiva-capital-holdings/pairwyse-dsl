@@ -87,7 +87,6 @@ function opCompound(address _ctxProgram, address _ctxDSL) public
 ### opCompoundDeposit
 
 ```solidity
-function opCompoundDeposit(address _ctxProgram, address) public
+function opCompoundDeposit(address _ctxProgram, address _ctxDSL) public
 ```
-
 

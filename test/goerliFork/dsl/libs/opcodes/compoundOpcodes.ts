@@ -9,7 +9,7 @@ import {
   IcToken,
   ERC20Mintable,
   ComplexOpcodesMock,
-  BaseStorage,
+  CompoundMock,
   ProgramContextMock,
 } from '../../../../../typechain-types';
 import { deployBaseMock } from '../../../../../scripts/utils/deploy.utils.mock';
@@ -23,14 +23,14 @@ const { ethers, network } = hre;
  * `yarn test --network hardhat`
  * another block can change rewards and expected results in tests
  */
-describe('Multi Tranche', () => {
+describe.only('Multi Tranche', () => {
   let app: ComplexOpcodesMock;
-  let clientApp: BaseStorage;
+  let clientApp: CompoundMock;
   let ctxProgram: ProgramContextMock;
   let ctxProgramAddr: string;
   let snapshotId: number;
   let creator: SignerWithAddress;
-  let investor1: SignerWithAddress;
+  let alice: SignerWithAddress;
   let investor2: SignerWithAddress;
   let investor3: SignerWithAddress;
   let preprocessorAddr: string;
@@ -41,7 +41,7 @@ describe('Multi Tranche', () => {
   let DSLContextAddress: string;
 
   before(async () => {
-    [creator, investor1, investor2, investor3] = await ethers.getSigners();
+    [creator, alice, investor2, investor3] = await ethers.getSigners();
     const opcodeHelpersLib = await (await hre.ethers.getContractFactory('OpcodeHelpers')).deploy();
     const [
       comparisonOpcodesLibAddr,
@@ -65,9 +65,7 @@ describe('Multi Tranche', () => {
 
     ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
     ctxProgramAddr = ctxProgram.address;
-    console.log('flag1');
-    // Deploy Storage contract to simulate another app (needed for testing loadRemote opcodes)
-    clientApp = await (await ethers.getContractFactory('BaseStorage')).deploy();
+    clientApp = await (await ethers.getContractFactory('CompoundMock')).deploy();
     app = await (
       await ethers.getContractFactory('ComplexOpcodesMock', {
         libraries: { ComplexOpcodes: complexOpcodesLibAddr },
@@ -75,7 +73,6 @@ describe('Multi Tranche', () => {
     ).deploy();
     // Setup
     await ctxProgram.setAppAddress(clientApp.address);
-    console.log('flag2');
     // Note: these addresses are for Goerli testnet
     const USDC_ADDR = '0x07865c6E87B9F70255377e024ace6630C1Eaa37F';
     const CUSDC_ADDR = '0x73506770799Eb04befb5AaE4734e58C2C624F493';
@@ -86,49 +83,32 @@ describe('Multi Tranche', () => {
     const bytes32WUSDC = hex4Bytes('WUSDC');
 
     await clientApp['setStorageAddress(bytes32,address)'](bytes32USDC, USDC_ADDR);
-    await clientApp['setStorageAddress(bytes32,address)'](bytes32CUSDC, CUSDC_ADDR);
-    await clientApp['setStorageAddress(bytes32,address)'](bytes32WUSDC, USDC_WHALE_ADDR);
-    console.log('flag3');
+
     USDC = (await ethers.getContractAt('IERC20', USDC_ADDR)) as ERC20Mintable; // 6 decimals
     CUSDC = (await ethers.getContractAt('IcToken', CUSDC_ADDR)) as IcToken; // 8 decimals
-    // WUSDC = await ethers.getContractAt('ERC20Mintable', await multiTranche.WUSDC());
 
     // send usdc to investors
     USDCwhale = await ethers.getImpersonatedSigner(USDC_WHALE_ADDR);
     expect(await USDC.balanceOf(USDC_WHALE_ADDR)).above('1000000000000000');
 
-    // // Get rid of extra balance on investor's accounts
-    // await USDC.connect(investor1).transfer(
-    //   creator.address,
-    //   await USDC.balanceOf(investor1.address)
-    // );
-    // await USDC.connect(investor2).transfer(
-    //   creator.address,
-    //   await USDC.balanceOf(investor2.address)
-    // );
-    // await USDC.connect(investor3).transfer(
-    //   creator.address,
-    //   await USDC.balanceOf(investor3.address)
-    // );
-    console.log('flag4');
-    await USDC.connect(USDCwhale).transfer(clientApp.address, parseUnits('10000', 6));
-    expect(await USDC.balanceOf(clientApp.address)).to.equal(parseUnits('10000', 6));
-    console.log('flag5');
+    let currentBalance = await USDC.balanceOf(alice.address);
+    expect(currentBalance).is.equal(38e7);
+
+    // Get rid of extra balance on investor's accounts
+    await USDC.connect(USDCwhale).transfer(alice.address, 1e10);
+    currentBalance = await USDC.balanceOf(alice.address);
+    expect(currentBalance).is.equal(1038e7);
   });
 
   beforeEach(async () => {
-    // Make a snapshot
     snapshotId = await network.provider.send('evm_snapshot');
-    console.log('flagbeforeeach');
   });
 
   afterEach(async () => {
-    // Return to the snapshot
     await network.provider.send('evm_revert', [snapshotId]);
-    console.log('flagaftereach');
   });
 
-  it.only('compound deposit', async () => {
+  it('compound deposit', async () => {
     const DEPOSIT = hex4Bytes('deposit');
     const BYTECODE_USDC = hex4Bytes('USDC');
     const BYTECODE_CUSDC = hex4Bytes('CUSDC');
@@ -143,13 +123,22 @@ describe('Multi Tranche', () => {
     // '0f5ad092' + // CUSDC
     console.log('starttest');
     await ctxProgram.setProgram(
-      '0x' +
-        'd6aca1be' + // USDC
-        '0f5ad092'
+      '0x' + 'd6aca1be' // USDC
     );
-    console.log('setprogram');
-    await app.opCompoundDeposit(ctxProgramAddr, clientApp.address);
-    console.log('opcodesrun');
-    expect(await CUSDC.balanceOf(clientApp.address)).to.equal(parseUnits('10000', 6));
+    expect(await CUSDC.balanceOf(app.address)).to.equal(0);
+    await USDC.connect(alice).transfer(app.address, 10e6);
+    expect(await USDC.balanceOf(app.address)).to.equal(10e6);
+    /*
+      the second parameter is DSLContextAddress,
+      use it whenewer you need it. opCompoundDeposit opcode does not use
+      DSLContextAddress parameter
+    */
+    await app.connect(alice).opCompoundDeposit(ctxProgramAddr, ethers.constants.AddressZero);
+    // check that the user have no USDC tokens
+    expect(await USDC.balanceOf(app.address)).to.equal(0);
+    // some amount of cToken that were minted to the `app`
+    expect(await CUSDC.balanceOf(app.address)).to.equal(49944380727);
   });
+
+  // TODO: enter/exit market opcodes = https://goerli.etherscan.io/address/0x3cBe63aAcF6A064D32072a630A3eab7545C54d78#writeProxyContract
 });

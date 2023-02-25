@@ -48,4 +48,3 @@ function addRecordTransaction(uint256 _recordId, string _recordString) public
 function fulfill(uint256 _recordId, uint256 _msgValue, address _signatory) external returns (bool)
 ```
 
-

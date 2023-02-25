@@ -235,21 +235,13 @@ library ComplexOpcodes {
      */
     function opCompoundDeposit(address _ctxProgram, address) public {
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
-        console.logAddress(token);
-        // bytes memory data = OpcodeHelpers.mustCall(
-        //     IProgramContext(_ctxProgram).appAddr(),
-        //     abi.encodeWithSignature('compounds(address)', token)
-        // );
-        bytes32 ctokenNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
         bytes memory data = OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),
-            abi.encodeWithSignature(
-                'getStorageAddress(bytes32)',
-                ctokenNameB32 // withdraw value name
-            )
+            abi.encodeWithSignature('compounds(address)', token)
         );
         address cToken = address(uint160(uint256(bytes32(data))));
-        console.logAddress(cToken);
+        console.log('------');
+        console.log(address(this));
         uint256 balance = IcToken(token).balanceOf(address(this));
         // approve simple token to use it into the market
         IERC20(token).approve(cToken, balance);

@@ -43,4 +43,3 @@ function stackLength(string[] _stack) public pure returns (uint256)
 function seeLastInStack(string[] _stack) public pure returns (string)
 ```
 
-

@@ -58,7 +58,7 @@ contract ComplexOpcodesMock {
         ComplexOpcodes.opCompound(_ctxProgram, _ctxDSL);
     }
 
-    function opCompoundDeposit(address _ctxProgram, address) public {
+    function opCompoundDeposit(address _ctxProgram, address _ctxDSL) public {
         ComplexOpcodes.opCompoundDeposit(_ctxProgram, address(0));
     }
 }
