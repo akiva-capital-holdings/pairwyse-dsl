@@ -185,6 +185,22 @@ Sub-command of Compound V2. Makes a deposit funds to Compound V2
 | _ctxProgram | address | ProgramContext contract address |
 |  | address |  |
 
+### opCompoundDepositNative
+
+```solidity
+function opCompoundDepositNative(address _ctxProgram, address) public
+```
+
+Sub-command of Compound V2. Makes a deposit funds to Compound V2
+for native coin
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ctxProgram | address | ProgramContext contract address |
+|  | address |  |
+
 ### opCompoundWithdrawMax
 
 ```solidity

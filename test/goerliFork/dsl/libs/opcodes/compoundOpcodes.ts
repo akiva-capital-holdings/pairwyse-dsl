@@ -23,7 +23,7 @@ const { ethers, network } = hre;
  * `yarn test --network hardhat`
  * another block can change rewards and expected results in tests
  */
-describe.only('Multi Tranche', () => {
+describe.only('Compound opcodes', () => {
   let app: ComplexOpcodesMock;
   let clientApp: CompoundMock;
   let ctxProgram: ProgramContextMock;
@@ -36,6 +36,7 @@ describe.only('Multi Tranche', () => {
   let preprocessorAddr: string;
   let USDC: ERC20Mintable;
   let CUSDC: IcToken;
+  let CETH: IcTokenNative;
   let WUSDC: ERC20Mintable;
   let USDCwhale: SignerWithAddress;
   let DSLContextAddress: string;
@@ -76,6 +77,7 @@ describe.only('Multi Tranche', () => {
     // Note: these addresses are for Goerli testnet
     const USDC_ADDR = '0x07865c6E87B9F70255377e024ace6630C1Eaa37F';
     const CUSDC_ADDR = '0x73506770799Eb04befb5AaE4734e58C2C624F493';
+    const CETH_ADDR = '0x64078a6189Bf45f80091c6Ff2fCEe1B15Ac8dbde';
     const USDC_WHALE_ADDR = '0x75c0c372da875a4fc78e8a37f58618a6d18904e8';
 
     const bytes32USDC = hex4Bytes('USDC');
@@ -86,6 +88,7 @@ describe.only('Multi Tranche', () => {
 
     USDC = (await ethers.getContractAt('IERC20', USDC_ADDR)) as ERC20Mintable; // 6 decimals
     CUSDC = (await ethers.getContractAt('IcToken', CUSDC_ADDR)) as IcToken; // 8 decimals
+    CETH = (await ethers.getContractAt('IcTokenNative', CETH_ADDR)) as IcTokenNative; // 8 decimals
 
     // send usdc to investors
     USDCwhale = await ethers.getImpersonatedSigner(USDC_WHALE_ADDR);
@@ -113,15 +116,17 @@ describe.only('Multi Tranche', () => {
     const BYTECODE_USDC = hex4Bytes('USDC');
     const BYTECODE_CUSDC = hex4Bytes('CUSDC');
 
-    console.log(DEPOSIT);
-    console.log(BYTECODE_USDC);
-    console.log(BYTECODE_CUSDC);
+    // console.log(DEPOSIT);
+    // console.log(BYTECODE_USDC);
+    // console.log(BYTECODE_CUSDC);
+    // console.log(hex4Bytes('CETH'));
+    // console.log(hex4Bytes('WETH'));
 
     // '2b05eae2' + // compound
     // '48c73f6' + // deposit
     // 'd6aca1be' + // USDC
     // '0f5ad092' + // CUSDC
-    console.log('starttest');
+    // console.log('starttest');
     await ctxProgram.setProgram(
       '0x' + 'd6aca1be' // USDC
     );
@@ -137,7 +142,26 @@ describe.only('Multi Tranche', () => {
     // check that the user have no USDC tokens
     expect(await USDC.balanceOf(app.address)).to.equal(0);
     // some amount of cToken that were minted to the `app`
+    // TODO: check if expected value can be parsed from the contract
+    // https://docs.compound.finance/v2/#networks
     expect(await CUSDC.balanceOf(app.address)).to.equal(49944380727);
+  });
+
+  it('native compound deposit', async () => {
+    await ctxProgram.setProgram(
+      '0x' + '0f8a193f' // WETH
+    );
+    expect(await CETH.balanceOf(app.address)).to.equal(0);
+    expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+    await alice.sendTransaction({ to: app.address, value: parseEther('10') });
+    expect(await ethers.provider.getBalance(app.address)).to.equal(parseEther('10'));
+    await app.connect(alice).opCompoundDepositNative(ctxProgramAddr, ethers.constants.AddressZero);
+    // check that the user have no USDC tokens
+    expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+    // some amount of cToken that were minted to the `app`
+    // TODO: check if expected value can be parsed from the contract
+    // https://docs.compound.finance/v2/#networks
+    expect(await CETH.balanceOf(app.address)).to.equal(48478005526);
   });
 
   // TODO: enter/exit market opcodes = https://goerli.etherscan.io/address/0x3cBe63aAcF6A064D32072a630A3eab7545C54d78#writeProxyContract

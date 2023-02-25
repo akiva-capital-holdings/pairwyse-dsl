@@ -5,6 +5,7 @@ import { IDSLContext } from '../../interfaces/IDSLContext.sol';
 import { IProgramContext } from '../../interfaces/IProgramContext.sol';
 import { IERC20 } from '../../interfaces/IERC20.sol';
 import { IcToken } from '../../interfaces/IcToken.sol';
+import { IcTokenNative } from '../../interfaces/IcTokenNative.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
@@ -240,13 +241,34 @@ library ComplexOpcodes {
             abi.encodeWithSignature('compounds(address)', token)
         );
         address cToken = address(uint160(uint256(bytes32(data))));
-        console.log('------');
-        console.log(address(this));
         uint256 balance = IcToken(token).balanceOf(address(this));
         // approve simple token to use it into the market
         IERC20(token).approve(cToken, balance);
         // supply assets into the market and receives cTokens in exchange
         IcToken(cToken).mint(balance);
+
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    /**
+     * Sub-command of Compound V2. Makes a deposit funds to Compound V2
+     * for native coin
+     * @param _ctxProgram ProgramContext contract address
+     */
+    function opCompoundDepositNative(address _ctxProgram, address) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+        address cToken = address(uint160(uint256(bytes32(data))));
+        // TODO: check with Misha the architechture.
+        // Native coin does not have underling token
+        // tx example: https://goerli.etherscan.io/tx/0x961e5af434ef2804d4dc63f13ddee418b520884bffe383e3591610299ef9807e
+        // adresses: https://docs.compound.finance/v2/#networks
+
+        // supply assets into the market and receives cTokens in exchange
+        IcTokenNative(cToken).mint{ value: address(this).balance }();
 
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
