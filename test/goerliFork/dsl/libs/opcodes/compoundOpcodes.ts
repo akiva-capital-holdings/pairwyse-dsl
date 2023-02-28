@@ -8,9 +8,10 @@ import {
   MultiTranche,
   IcToken,
   ERC20Mintable,
-  ComplexOpcodesMock,
+  CompoundOpcodesMock,
   CompoundMock,
   ProgramContextMock,
+  IcTokenNative,
 } from '../../../../../typechain-types';
 import { deployBaseMock } from '../../../../../scripts/utils/deploy.utils.mock';
 import { parse } from '../../../../../scripts/utils/update.record';
@@ -24,7 +25,7 @@ const { ethers, network } = hre;
  * another block can change rewards and expected results in tests
  */
 describe.only('Compound opcodes', () => {
-  let app: ComplexOpcodesMock;
+  let app: CompoundOpcodesMock;
   let clientApp: CompoundMock;
   let ctxProgram: ProgramContextMock;
   let ctxProgramAddr: string;
@@ -50,6 +51,7 @@ describe.only('Compound opcodes', () => {
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
       complexOpcodesLibAddr,
+      compoundOpcodesLibAddr,
     ] = await deployOpcodeLibs(hre);
 
     const DSLContext = await (
@@ -59,7 +61,8 @@ describe.only('Compound opcodes', () => {
       branchingOpcodesLibAddr,
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
-      complexOpcodesLibAddr
+      complexOpcodesLibAddr,
+      compoundOpcodesLibAddr
     );
     await DSLContext.deployed();
     DSLContextAddress = DSLContext.address;
@@ -68,8 +71,8 @@ describe.only('Compound opcodes', () => {
     ctxProgramAddr = ctxProgram.address;
     clientApp = await (await ethers.getContractFactory('CompoundMock')).deploy();
     app = await (
-      await ethers.getContractFactory('ComplexOpcodesMock', {
-        libraries: { ComplexOpcodes: complexOpcodesLibAddr },
+      await ethers.getContractFactory('CompoundOpcodesMock', {
+        libraries: { CompoundOpcodes: compoundOpcodesLibAddr },
       })
     ).deploy();
     // Setup
@@ -81,8 +84,6 @@ describe.only('Compound opcodes', () => {
     const USDC_WHALE_ADDR = '0x75c0c372da875a4fc78e8a37f58618a6d18904e8';
 
     const bytes32USDC = hex4Bytes('USDC');
-    const bytes32CUSDC = hex4Bytes('CUSDC');
-    const bytes32WUSDC = hex4Bytes('WUSDC');
 
     await clientApp['setStorageAddress(bytes32,address)'](bytes32USDC, USDC_ADDR);
 
@@ -163,6 +164,64 @@ describe.only('Compound opcodes', () => {
     // https://docs.compound.finance/v2/#networks
     expect(await CETH.balanceOf(app.address)).to.equal(48478005526);
   });
+
+  it.only('compound borrow', async () => {
+    // await ctxProgram.setProgram(
+    //   '0x' + '0f8a193f' // WETH
+    // );
+    expect(await CETH.balanceOf(app.address)).to.equal(0);
+    expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+    await alice.sendTransaction({ to: app.address, value: parseEther('10') });
+    expect(await ethers.provider.getBalance(app.address)).to.equal(parseEther('10'));
+    // await app.connect(alice).opCompoundDepositNative(ctxProgramAddr, ethers.constants.AddressZero);
+    // // check that the user have no USDC tokens
+    // expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+    // // some amount of cToken that were minted to the `app`
+    // // TODO: check if expected value can be parsed from the contract
+    // // https://docs.compound.finance/v2/#networks
+    // expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
+    // console.log(hex4Bytes('CETH'));
+    // console.log(hex4Bytes('WETH'));
+
+    // '2b05eae2' + // compound
+    // '48c73f6' + // deposit
+    // '4f943907' + // borrow
+    // 'd6aca1be' + // USDC
+    // '0f5ad092' + // CUSDC
+    // '1896092e'+ // WUSDC
+    await ctxProgram.setProgram(
+      '0x' + '0f8a193f' // WETH
+    );
+    await app.connect(alice).opCompoundBorrowMax(ctxProgramAddr, ethers.constants.AddressZero);
+
+    // check that the user have no USDC tokens
+    // const wusdcBal = await WUSDC.balanceOf(alice.address);
+    // console.log(wusdcBal);
+    // expect(await balanceOf(alice.address)).to.equal(0);
+    // expect(await CUSDC.balanceOf(app.address)).to.equal(49944380727);
+  });
+
+  // it.only('native withdraw', async () => {
+  //   await ctxProgram.setProgram(
+  //     '0x' + 'd6aca1be' // USDC
+  //   );
+  //   CUSDC.connect(app.address).mint(10e6);
+  //   expect(await CUSDC.balanceOf(app.address)).to.equal(0);
+  //   await USDC.connect(alice).transfer(app.address, 10e6);
+  //   expect(await USDC.balanceOf(app.address)).to.equal(10e6);
+  //   /*
+  //     the second parameter is DSLContextAddress,
+  //     use it whenewer you need it. opCompoundDeposit opcode does not use
+  //     DSLContextAddress parameter
+  //   */
+  //   await app.connect(alice).opCompoundDeposit(ctxProgramAddr, ethers.constants.AddressZero);
+  //   // check that the user have no USDC tokens
+  //   expect(await USDC.balanceOf(app.address)).to.equal(0);
+  //   // some amount of cToken that were minted to the `app`
+  //   // TODO: check if expected value can be parsed from the contract
+  //   // https://docs.compound.finance/v2/#networks
+  //   expect(await CUSDC.balanceOf(app.address)).to.equal(49944380727);
+  // });
 
   // TODO: enter/exit market opcodes = https://goerli.etherscan.io/address/0x3cBe63aAcF6A064D32072a630A3eab7545C54d78#writeProxyContract
 });

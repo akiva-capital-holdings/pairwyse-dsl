@@ -120,3 +120,25 @@ Sender repays their own borrow
 | ---- | ---- | ----------- |
 | [0] | uint256 | uint 0=success, otherwise a failure (see ErrorReporter.sol for details) |
 
+### borrowBalanceCurrent
+
+```solidity
+function borrowBalanceCurrent(address account) external returns (uint256)
+```
+
+Accrue interest to updated borrowIndex and 
+then calculate account's borrow balance using the updated borrowIndex
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| account | address | The address whose balance should be calculated after updating borrowIndex |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | The calculated balance |
+
+

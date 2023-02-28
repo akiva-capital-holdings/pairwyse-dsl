@@ -3,7 +3,7 @@
 ### constructor
 
 ```solidity
-constructor(address _comparisonOpcodes, address _branchingOpcodes, address _logicalOpcodes, address _otherOpcodes, address _complexOpcodes) public
+constructor(address _comparisonOpcodes, address _branchingOpcodes, address _logicalOpcodes, address _otherOpcodes, address _complexOpcodes, address _compoundOpcodes) public
 ```
 
 ### addOpcode
@@ -29,4 +29,5 @@ function addOperatorExt(string _op, uint256 _priority) external
 ```solidity
 function addOpcodeForOperatorExt(string _name, bytes1 _opcode, bytes4 _opSelector, bytes4 _asmSelector, enum IDSLContext.OpcodeLibNames _libName, uint256 _priority) external
 ```
+
 

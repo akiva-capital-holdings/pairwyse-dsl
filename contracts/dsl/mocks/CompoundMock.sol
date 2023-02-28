@@ -2,17 +2,29 @@
 pragma solidity ^0.8.0;
 
 import { BaseStorage } from '../test/BaseStorage.sol';
+import { IERC20Mintable } from '../interfaces/IERC20Mintable.sol';
+import { ERC20Mintable } from '../helpers/ERC20Mintable.sol';
 
 contract CompoundMock is BaseStorage {
     // using UnstructuredStorage for bytes32;
-
+    IERC20Mintable public WUSDC; // WUSDC
     mapping(address => address) public compounds; // token => cToken
 
     constructor() {
+        WUSDC = new ERC20Mintable('Wrapped USDC', 'WUSDC', 6);
         _setDefaultVariables();
     }
 
+    function WUSDCAddress() external view returns (address) {
+        return (address(WUSDC));
+    }
+
     function _setDefaultVariables() internal {
+        // Set WUSDC variable
+        setStorageAddress(
+            0x1896092e00000000000000000000000000000000000000000000000000000000,
+            address(WUSDC)
+        );
         // Set USDC variable
         address USDC_ADDR = 0x07865c6E87B9F70255377e024ace6630C1Eaa37F;
         setStorageAddress(

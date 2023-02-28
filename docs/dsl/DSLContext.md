@@ -36,6 +36,12 @@ address logicalOpcodes
 address otherOpcodes
 ```
 
+### compoundOpcodes
+
+```solidity
+address compoundOpcodes
+```
+
 ### opCodeByName
 
 ```solidity
@@ -111,7 +117,7 @@ modifier nonZeroAddress(address _addr)
 ### constructor
 
 ```solidity
-constructor(address _comparisonOpcodes, address _branchingOpcodes, address _logicalOpcodes, address _otherOpcodes, address _complexOpcodes) public
+constructor(address _comparisonOpcodes, address _branchingOpcodes, address _logicalOpcodes, address _otherOpcodes, address _complexOpcodes, address _compoundOpcodes) public
 ```
 
 ### initOpcodes
@@ -225,4 +231,5 @@ _Adds an alias to the already existing DSL command_
 | ---- | ---- | ----------- |
 | _baseCmd | string | is the name of the command |
 | _alias | string | is the alias command name for the base command |
+
 
