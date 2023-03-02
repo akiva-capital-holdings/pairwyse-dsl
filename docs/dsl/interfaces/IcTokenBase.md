@@ -126,7 +126,7 @@ Sender repays their own borrow
 function borrowBalanceCurrent(address account) external returns (uint256)
 ```
 
-Accrue interest to updated borrowIndex and 
+Accrue interest to updated borrowIndex and
 then calculate account's borrow balance using the updated borrowIndex
 
 #### Parameters

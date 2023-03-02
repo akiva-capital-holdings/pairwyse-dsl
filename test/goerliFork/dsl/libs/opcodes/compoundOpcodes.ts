@@ -1,21 +1,20 @@
 import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { BigNumber } from 'ethers';
 import { parseEther, parseUnits } from 'ethers/lib/utils';
 import { mine } from '@nomicfoundation/hardhat-network-helpers';
 import { deployOpcodeLibs, deployPreprocessor } from '../../../../../scripts/utils/deploy.utils';
 import {
-  MultiTranche,
   IcToken,
   ERC20Mintable,
   CompoundOpcodesMock,
-  CompoundMock,
+  TestCompoundMock,
   ProgramContextMock,
   IcTokenNative,
+  Stack,
 } from '../../../../../typechain-types';
-import { deployBaseMock } from '../../../../../scripts/utils/deploy.utils.mock';
-import { parse } from '../../../../../scripts/utils/update.record';
-import { hex4Bytes } from '../../../../utils/utils';
+import { hex4Bytes, checkStack } from '../../../../utils/utils';
 
 const { ethers, network } = hre;
 /**
@@ -26,7 +25,7 @@ const { ethers, network } = hre;
  */
 describe.only('Compound opcodes', () => {
   let app: CompoundOpcodesMock;
-  let clientApp: CompoundMock;
+  let clientApp: TestCompoundMock;
   let ctxProgram: ProgramContextMock;
   let ctxProgramAddr: string;
   let snapshotId: number;
@@ -34,7 +33,7 @@ describe.only('Compound opcodes', () => {
   let alice: SignerWithAddress;
   let investor2: SignerWithAddress;
   let investor3: SignerWithAddress;
-  let preprocessorAddr: string;
+  let stack: Stack;
   let USDC: ERC20Mintable;
   let CUSDC: IcToken;
   let CETH: IcTokenNative;
@@ -69,7 +68,10 @@ describe.only('Compound opcodes', () => {
 
     ctxProgram = await (await ethers.getContractFactory('ProgramContextMock')).deploy();
     ctxProgramAddr = ctxProgram.address;
-    clientApp = await (await ethers.getContractFactory('CompoundMock')).deploy();
+    // Create Stack instance
+    const stackAddr = await ctxProgram.stack();
+    stack = await ethers.getContractAt('Stack', stackAddr);
+    clientApp = await (await ethers.getContractFactory('TestCompoundMock')).deploy();
     app = await (
       await ethers.getContractFactory('CompoundOpcodesMock', {
         libraries: { CompoundOpcodes: compoundOpcodesLibAddr },
@@ -111,117 +113,122 @@ describe.only('Compound opcodes', () => {
   afterEach(async () => {
     await network.provider.send('evm_revert', [snapshotId]);
   });
-
-  it('compound deposit', async () => {
-    const DEPOSIT = hex4Bytes('deposit');
-    const BYTECODE_USDC = hex4Bytes('USDC');
-    const BYTECODE_CUSDC = hex4Bytes('CUSDC');
-
-    // console.log(DEPOSIT);
-    // console.log(BYTECODE_USDC);
-    // console.log(BYTECODE_CUSDC);
-    // console.log(hex4Bytes('CETH'));
-    // console.log(hex4Bytes('WETH'));
-
-    // '2b05eae2' + // compound
-    // '48c73f6' + // deposit
-    // 'd6aca1be' + // USDC
-    // '0f5ad092' + // CUSDC
-    // console.log('starttest');
-    await ctxProgram.setProgram(
-      '0x' + 'd6aca1be' // USDC
-    );
-    expect(await CUSDC.balanceOf(app.address)).to.equal(0);
-    await USDC.connect(alice).transfer(app.address, 10e6);
-    expect(await USDC.balanceOf(app.address)).to.equal(10e6);
-    /*
-      the second parameter is DSLContextAddress,
-      use it whenewer you need it. opCompoundDeposit opcode does not use
-      DSLContextAddress parameter
-    */
-    await app.connect(alice).opCompoundDeposit(ctxProgramAddr, ethers.constants.AddressZero);
-    // check that the user have no USDC tokens
-    expect(await USDC.balanceOf(app.address)).to.equal(0);
-    // some amount of cToken that were minted to the `app`
-    // TODO: check if expected value can be parsed from the contract
-    // https://docs.compound.finance/v2/#networks
-    expect(await CUSDC.balanceOf(app.address)).to.equal(49944380727);
+  describe('deposit', () => {
+    it('native compound deposit', async () => {
+      await ctxProgram.setProgram(
+        '0x' + '0f8a193f' // WETH
+      );
+      expect(await CETH.balanceOf(app.address)).to.equal(0);
+      expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+      await alice.sendTransaction({ to: app.address, value: parseEther('10') });
+      expect(await ethers.provider.getBalance(app.address)).to.equal(parseEther('10'));
+      await app
+        .connect(alice)
+        .opCompoundDepositNative(ctxProgramAddr, ethers.constants.AddressZero);
+      // check that the user have no USDC tokens
+      expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+      // some amount of cToken that were minted to the `app`
+      // TODO: check if expected value can be parsed from the contract
+      // https://docs.compound.finance/v2/#networks
+      expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
+    });
+  });
+  describe('withdraw', () => {
+    it('native compound withdrawMax', async () => {
+      await ctxProgram.setProgram(
+        '0x' + '0f8a193f' // WETH
+      );
+      expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+      await alice.sendTransaction({ to: app.address, value: parseEther('10') });
+      await app
+        .connect(alice)
+        .opCompoundDepositNative(ctxProgramAddr, ethers.constants.AddressZero);
+      await ctxProgram.setProgram(
+        '0x' + '0f8a193f' // WETH
+      );
+      expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+      expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
+      await app.connect(alice).opCompoundWithdrawMax(ctxProgramAddr, ethers.constants.AddressZero);
+      expect(await CETH.balanceOf(app.address)).to.equal(1);
+      expect(await ethers.provider.getBalance(app.address)).to.equal('10000000881975243307');
+    });
   });
 
-  it('native compound deposit', async () => {
-    await ctxProgram.setProgram(
-      '0x' + '0f8a193f' // WETH
-    );
-    expect(await CETH.balanceOf(app.address)).to.equal(0);
-    expect(await ethers.provider.getBalance(app.address)).to.equal(0);
-    await alice.sendTransaction({ to: app.address, value: parseEther('10') });
-    expect(await ethers.provider.getBalance(app.address)).to.equal(parseEther('10'));
-    await app.connect(alice).opCompoundDepositNative(ctxProgramAddr, ethers.constants.AddressZero);
-    // check that the user have no USDC tokens
-    expect(await ethers.provider.getBalance(app.address)).to.equal(0);
-    // some amount of cToken that were minted to the `app`
-    // TODO: check if expected value can be parsed from the contract
-    // https://docs.compound.finance/v2/#networks
-    expect(await CETH.balanceOf(app.address)).to.equal(48478005526);
+  describe('borrow', () => {
+    it('native compound borrowMax', async () => {
+      await ctxProgram.setProgram(
+        '0x' + '0f8a193f' // WETH
+      );
+      await alice.sendTransaction({ to: app.address, value: parseEther('10') });
+      await app
+        .connect(alice)
+        .opCompoundDepositNative(ctxProgramAddr, ethers.constants.AddressZero);
+      expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+      expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
+      await ctxProgram.setProgram(
+        '0x' + '0f8a193f' // WETH
+      );
+      await app.connect(alice).opCompoundBorrowMax(ctxProgramAddr, ethers.constants.AddressZero);
+      expect(await ethers.provider.getBalance(app.address)).to.equal(3878240263);
+      expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
+    });
   });
-
-  it.only('compound borrow', async () => {
-    // await ctxProgram.setProgram(
-    //   '0x' + '0f8a193f' // WETH
-    // );
-    expect(await CETH.balanceOf(app.address)).to.equal(0);
-    expect(await ethers.provider.getBalance(app.address)).to.equal(0);
-    await alice.sendTransaction({ to: app.address, value: parseEther('10') });
-    expect(await ethers.provider.getBalance(app.address)).to.equal(parseEther('10'));
-    // await app.connect(alice).opCompoundDepositNative(ctxProgramAddr, ethers.constants.AddressZero);
-    // // check that the user have no USDC tokens
-    // expect(await ethers.provider.getBalance(app.address)).to.equal(0);
-    // // some amount of cToken that were minted to the `app`
-    // // TODO: check if expected value can be parsed from the contract
-    // // https://docs.compound.finance/v2/#networks
-    // expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
-    // console.log(hex4Bytes('CETH'));
-    // console.log(hex4Bytes('WETH'));
-
-    // '2b05eae2' + // compound
-    // '48c73f6' + // deposit
-    // '4f943907' + // borrow
-    // 'd6aca1be' + // USDC
-    // '0f5ad092' + // CUSDC
-    // '1896092e'+ // WUSDC
-    await ctxProgram.setProgram(
-      '0x' + '0f8a193f' // WETH
-    );
-    await app.connect(alice).opCompoundBorrowMax(ctxProgramAddr, ethers.constants.AddressZero);
-
-    // check that the user have no USDC tokens
-    // const wusdcBal = await WUSDC.balanceOf(alice.address);
-    // console.log(wusdcBal);
-    // expect(await balanceOf(alice.address)).to.equal(0);
-    // expect(await CUSDC.balanceOf(app.address)).to.equal(49944380727);
+  describe('repay', () => {
+    it('native compound repayMax', async () => {
+      await ctxProgram.setProgram(
+        '0x' + '0f8a193f' // WETH
+      );
+      await alice.sendTransaction({ to: app.address, value: parseEther('10') });
+      await app
+        .connect(alice)
+        .opCompoundDepositNative(ctxProgramAddr, ethers.constants.AddressZero);
+      await ctxProgram.setProgram(
+        '0x' + '0f8a193f' // WETH
+      );
+      await app.connect(alice).opCompoundBorrowMax(ctxProgramAddr, ethers.constants.AddressZero);
+      await ctxProgram.setProgram(
+        '0x' + '0f8a193f' // WETH
+      );
+      expect(await ethers.provider.getBalance(app.address)).to.equal(3878240263);
+      expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
+      await app.connect(alice).opCompoundRepayMax(ctxProgramAddr, ethers.constants.AddressZero);
+      expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+      expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
+    });
   });
-
-  // it.only('native withdraw', async () => {
-  //   await ctxProgram.setProgram(
-  //     '0x' + 'd6aca1be' // USDC
-  //   );
-  //   CUSDC.connect(app.address).mint(10e6);
-  //   expect(await CUSDC.balanceOf(app.address)).to.equal(0);
-  //   await USDC.connect(alice).transfer(app.address, 10e6);
-  //   expect(await USDC.balanceOf(app.address)).to.equal(10e6);
-  //   /*
-  //     the second parameter is DSLContextAddress,
-  //     use it whenewer you need it. opCompoundDeposit opcode does not use
-  //     DSLContextAddress parameter
-  //   */
-  //   await app.connect(alice).opCompoundDeposit(ctxProgramAddr, ethers.constants.AddressZero);
-  //   // check that the user have no USDC tokens
-  //   expect(await USDC.balanceOf(app.address)).to.equal(0);
-  //   // some amount of cToken that were minted to the `app`
-  //   // TODO: check if expected value can be parsed from the contract
-  //   // https://docs.compound.finance/v2/#networks
-  //   expect(await CUSDC.balanceOf(app.address)).to.equal(49944380727);
-  // });
-
-  // TODO: enter/exit market opcodes = https://goerli.etherscan.io/address/0x3cBe63aAcF6A064D32072a630A3eab7545C54d78#writeProxyContract
+  describe('compound livecycle', () => {
+    it('livecycle', async () => {
+      await ctxProgram.setProgram(
+        '0x' + '0f8a193f' // WETH
+      );
+      expect(await CETH.balanceOf(app.address)).to.equal(0);
+      expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+      await alice.sendTransaction({ to: app.address, value: parseEther('10') });
+      expect(await ethers.provider.getBalance(app.address)).to.equal(parseEther('10'));
+      await app
+        .connect(alice)
+        .opCompoundDepositNative(ctxProgramAddr, ethers.constants.AddressZero);
+      await ctxProgram.setProgram(
+        '0x' + '0f8a193f' // WETH
+      );
+      expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+      expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
+      await app.connect(alice).opCompoundBorrowMax(ctxProgramAddr, ethers.constants.AddressZero);
+      await checkStack(stack, 2, 3878240263);
+      await ctxProgram.setProgram(
+        '0x' + '0f8a193f' // WETH
+      );
+      expect(await ethers.provider.getBalance(app.address)).to.equal(3878240263);
+      expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
+      await app.connect(alice).opCompoundRepayMax(ctxProgramAddr, ethers.constants.AddressZero);
+      expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+      expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
+      await ctxProgram.setProgram(
+        '0x' + '0f8a193f' // WETH
+      );
+      await app.connect(alice).opCompoundWithdrawMax(ctxProgramAddr, ethers.constants.AddressZero);
+      expect(await CETH.balanceOf(app.address)).to.equal(1);
+      expect(await ethers.provider.getBalance(app.address)).to.equal('10000002646391712567');
+    });
+  });
 });

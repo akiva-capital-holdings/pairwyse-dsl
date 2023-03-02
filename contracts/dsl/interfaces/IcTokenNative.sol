@@ -13,4 +13,12 @@ interface IcTokenNative is IcTokenBase {
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
      */
     function mint() external payable;
+
+    /**
+     * @notice Sender redeems cTokens in exchange for a specified amount of underlying asset
+     * @dev Accrues interest whether or not the operation succeeds, unless reverted
+     * @param redeemAmount The amount of underlying to redeem
+     * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
+     */
+    function redeemUnderlying(uint redeemAmount) external returns (uint);
 }

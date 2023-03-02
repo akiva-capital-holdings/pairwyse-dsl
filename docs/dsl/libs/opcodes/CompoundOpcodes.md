@@ -108,7 +108,7 @@ Sub-command of Compound V2. Makes a barrow USDC on cUSDC
 ### opCompoundRepayMax
 
 ```solidity
-function opCompoundRepayMax(address _ctxProgram) public
+function opCompoundRepayMax(address _ctxProgram, address) public
 ```
 
 ### opCompoundRepay

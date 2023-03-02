@@ -24,6 +24,12 @@ function opCompoundDeposit(address _ctxProgram, address) public
 function opCompoundDepositNative(address _ctxProgram, address) public
 ```
 
+### opCompoundWithdrawMax
+
+```solidity
+function opCompoundWithdrawMax(address _ctxProgram, address) public
+```
+
 ### opCompoundBorrowMax
 
 ```solidity
@@ -34,6 +40,12 @@ function opCompoundBorrowMax(address _ctxProgram, address) public
 
 ```solidity
 function opCompoundBorrow(address _ctxProgram, address) public
+```
+
+### opCompoundRepayMax
+
+```solidity
+function opCompoundRepayMax(address _ctxProgram, address) public
 ```
 
 

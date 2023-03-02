@@ -18,11 +18,19 @@ contract CompoundOpcodesMock {
         CompoundOpcodes.opCompoundDepositNative(_ctxProgram, address(0));
     }
 
+    function opCompoundWithdrawMax(address _ctxProgram, address) public {
+        CompoundOpcodes.opCompoundWithdrawMax(_ctxProgram, address(0));
+    }
+
     function opCompoundBorrowMax(address _ctxProgram, address) public {
         CompoundOpcodes.opCompoundBorrowMax(_ctxProgram, address(0));
     }
 
     function opCompoundBorrow(address _ctxProgram, address) public {
         CompoundOpcodes.opCompoundBorrow(_ctxProgram, address(0));
+    }
+
+    function opCompoundRepayMax(address _ctxProgram, address) public {
+        CompoundOpcodes.opCompoundRepayMax(_ctxProgram, address(0));
     }
 }

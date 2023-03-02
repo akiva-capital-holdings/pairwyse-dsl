@@ -6,13 +6,14 @@ import { IProgramContext } from '../../interfaces/IProgramContext.sol';
 import { IERC20 } from '../../interfaces/IERC20.sol';
 import { IcToken } from '../../interfaces/IcToken.sol';
 import { IComptroller } from '../../interfaces/IComptroller.sol';
+import { IMaximillion } from '../../interfaces/IMaximillion.sol';
 import { IcTokenNative } from '../../interfaces/IcTokenNative.sol';
 import { IERC20Mintable } from '../../interfaces/IERC20Mintable.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 library CompoundOpcodes {
     /************************
@@ -65,7 +66,6 @@ library CompoundOpcodes {
 
         // supply assets into the market and receives cTokens in exchange
         IcTokenNative(cToken).mint{ value: address(this).balance }();
-
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
@@ -80,11 +80,8 @@ library CompoundOpcodes {
             abi.encodeWithSignature('compounds(address)', token)
         );
         address cToken = address(uint160(uint256(bytes32(data))));
-
-        // redeems cTokens in exchange for the underlying asset (USDC)
-        // amount - amount of cTokens
-        IcToken(cToken).redeem(IcToken(cToken).balanceOf(address(this)));
-
+        uint256 balance = IcTokenNative(cToken).balanceOf(address(this));
+        IcTokenNative(cToken).redeem(balance - 1);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
@@ -121,8 +118,6 @@ library CompoundOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opCompoundBorrowMax(address _ctxProgram, address) public {
-        address _comptrollerAddr = 0x05Df6C772A563FfB37fD3E04C1A279Fb30228621;
-        IComptroller comptroller = IComptroller(_comptrollerAddr);
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
         // `token` can be used in the future for more different underluing tokens
         bytes memory data = OpcodeHelpers.mustCall(
@@ -130,38 +125,14 @@ library CompoundOpcodes {
             abi.encodeWithSignature('compounds(address)', token)
         );
         address cToken = address(uint160(uint256(bytes32(data))));
-        // Enter the market so you can borrow another type of asset
-        address[] memory cTokens = new address[](1);
-        cTokens[0] = cToken;
-        uint256[] memory errors = comptroller.enterMarkets(cTokens);
-        for (uint i = 0; i <= errors.length; i++) {
-            console.log(errors[0]);
-        }
-        if (errors[0] != 0) {
-            revert('Comptroller.enterMarkets failed.');
-        }
-
-        // Get my account's total liquidity value in Compound
-        (uint256 error2, uint256 liquidity, uint256 shortfall) = comptroller.getAccountLiquidity(
-            address(this)
-        );
-        console.log('liquidity');
-        console.log(liquidity);
-        if (error2 != 0) {
-            revert('Comptroller.getAccountLiquidity failed.');
-        }
-        require(shortfall == 0, 'account underwater');
-        require(liquidity > 0, 'account has excess collateral');
 
         // Borrow a fixed amount of ETH below our maximum borrow amount
-        uint256 numWeiToBorrow = 2000000000000000; // 0.002 ETH
-
+        uint256 cTokenBalance = IcTokenNative(cToken).balanceOf(address(this));
+        uint256 numWeiToBorrow = (cTokenBalance * 8) / 100; // 80% of balance
         // Borrow, then check the underlying balance for this contract's address
         IcTokenNative(cToken).borrow(numWeiToBorrow);
-
         uint256 borrows = IcTokenNative(cToken).borrowBalanceCurrent(address(this));
-        console.log(borrows);
-        OpcodeHelpers.putToStack(_ctxProgram, 1);
+        OpcodeHelpers.putToStack(_ctxProgram, borrows);
     }
 
     /**
@@ -193,19 +164,11 @@ library CompoundOpcodes {
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
-    function opCompoundRepayMax(address _ctxProgram) public {
-        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+    function opCompoundRepayMax(address _ctxProgram, address) public {
+        address _MaximillionAddr = 0xD4936082B4F93D9D2B79418765854A00f320Defb;
         // `token` can be used in the future for more different underluing tokens
-        bytes memory data = OpcodeHelpers.mustCall(
-            IProgramContext(_ctxProgram).appAddr(),
-            abi.encodeWithSignature('compounds(address)', token)
-        );
-        address cToken = address(uint160(uint256(bytes32(data))));
-        uint256 balance = IcToken(cToken).balanceOf(address(this));
         // approve simple token to use it into the market
-        IcToken(cToken).approve(token, balance);
-        IcToken(token).repayBorrow(balance);
-
+        IMaximillion(_MaximillionAddr).repayBehalf{ value: address(this).balance }(address(this));
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 

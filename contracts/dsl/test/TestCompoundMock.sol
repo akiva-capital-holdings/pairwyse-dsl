@@ -5,7 +5,7 @@ import { BaseStorage } from '../test/BaseStorage.sol';
 import { IERC20Mintable } from '../interfaces/IERC20Mintable.sol';
 import { ERC20Mintable } from '../helpers/ERC20Mintable.sol';
 
-contract CompoundMock is BaseStorage {
+contract TestCompoundMock is BaseStorage {
     // using UnstructuredStorage for bytes32;
     IERC20Mintable public WUSDC; // WUSDC
     mapping(address => address) public compounds; // token => cToken
