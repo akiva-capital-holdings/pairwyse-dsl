@@ -154,7 +154,7 @@ describe.only('Compound opcodes', () => {
     });
   });
 
-  describe('borrow', () => {
+  describe.only('borrow', () => {
     it('native compound borrowMax', async () => {
       await ctxProgram.setProgram(
         '0x' + '0f8a193f' // WETH
@@ -171,6 +171,23 @@ describe.only('Compound opcodes', () => {
       await app.connect(alice).opCompoundBorrowMax(ctxProgramAddr, ethers.constants.AddressZero);
       expect(await ethers.provider.getBalance(app.address)).to.equal(3878240263);
       expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
+    });
+    it.only('not native compound borrowMax', async () => {
+      await ctxProgram.setProgram(
+        '0x' + '0f8a193f' // WETH
+      );
+      await alice.sendTransaction({ to: app.address, value: parseEther('10') });
+      await app
+        .connect(alice)
+        .opCompoundDepositNative(ctxProgramAddr, ethers.constants.AddressZero);
+      expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+      expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
+      console.log('dep');
+      await ctxProgram.setProgram(
+        '0x' + '0f8a193f' + 'd6aca1be' // WETH USDC
+      );
+      await app.connect(alice).opCompoundBorrowMax(ctxProgramAddr, ethers.constants.AddressZero);
+      expect(await CUSDC.balanceOf(app.address)).to.equal(48478003296);
     });
   });
   describe('repay', () => {

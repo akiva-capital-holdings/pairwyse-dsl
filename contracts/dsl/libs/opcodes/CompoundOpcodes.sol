@@ -13,7 +13,7 @@ import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 library CompoundOpcodes {
     /************************
@@ -118,20 +118,40 @@ library CompoundOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opCompoundBorrowMax(address _ctxProgram, address) public {
+        address comptrl = 0x05Df6C772A563FfB37fD3E04C1A279Fb30228621;
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        address payable borrowToken = payable(OpcodeHelpers.getAddress(_ctxProgram));
         // `token` can be used in the future for more different underluing tokens
         bytes memory data = OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),
             abi.encodeWithSignature('compounds(address)', token)
         );
+        bytes memory borrowCTokendata = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', borrowToken)
+        );
         address cToken = address(uint160(uint256(bytes32(data))));
-
-        // Borrow a fixed amount of ETH below our maximum borrow amount
-        uint256 cTokenBalance = IcTokenNative(cToken).balanceOf(address(this));
-        uint256 numWeiToBorrow = (cTokenBalance * 8) / 100; // 80% of balance
+        address borrowCToken = address(uint160(uint256(bytes32(borrowCTokendata))));
+        console.log('token');
+        console.log(token);
+        console.log('borrowToken');
+        console.log(borrowToken);
+        console.log('cToken');
+        console.log(cToken);
+        console.log('borrowCToken');
+        console.log(borrowCToken);
+        uint256 balance = IcToken(cToken).balanceOf(address(this));
+        // approve simple token to use it into the market
+        IcToken(cToken).approve(borrowCToken, balance);
+        uint256 numWeiToBorrow = (balance * 8) / 100; // 80% of balance
         // Borrow, then check the underlying balance for this contract's address
-        IcTokenNative(cToken).borrow(numWeiToBorrow);
-        uint256 borrows = IcTokenNative(cToken).borrowBalanceCurrent(address(this));
+        address[] memory cTokens = new address[](2);
+        cTokens[0] = cToken;
+        cTokens[1] = borrowCToken;
+        IComptroller(comptrl).enterMarkets(cTokens);
+        uint256 kkk = IcToken(borrowCToken).balanceOf(address(this));
+        console.log(kkk);
+        uint256 borrows = IcToken(borrowCToken).borrowBalanceCurrent(address(this));
         OpcodeHelpers.putToStack(_ctxProgram, borrows);
     }
 
