@@ -35,12 +35,6 @@ address contextDSL
 address ownerAddr
 ```
 
-### nextParseIndex
-
-```solidity
-uint256 nextParseIndex
-```
-
 ### records
 
 ```solidity

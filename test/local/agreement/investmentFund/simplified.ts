@@ -2,7 +2,7 @@ import * as hre from 'hardhat';
 import { parseUnits } from 'ethers/lib/utils';
 import { Suite } from 'mocha';
 import dotenv from 'dotenv';
-import { addSteps, businessCaseTest } from '../../../utils/utils';
+import { addStepsWithMultisig, businessCaseTest } from '../../../utils/utils';
 import { businessCaseStepsSimplified } from '../../../../scripts/data/agreement';
 import {
   deployAgreement,
@@ -37,7 +37,7 @@ const parentSuite = describe('Agreement: Investment Fund Simplified', () => {
 
     // Add all necessary Records
     // `base = 5` - steps for businessCases with multiple LPs
-    await addSteps(
+    await addStepsWithMultisig(
       preprocessorAddr,
       businessCaseStepsSimplified(
         dynamicTestData.GP.address,

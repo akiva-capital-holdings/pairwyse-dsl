@@ -217,6 +217,35 @@ export const addSteps = async (
     console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
     console.log('\nTerm Conditions');
 
+    const tx = await agreement.update(
+      step.txId,
+      step.requiredTxs,
+      step.signatories,
+      step.transaction,
+      step.conditions
+    );
+
+    // Activate records
+    await activateRecord(agreement, multisig, Number(step.txId));
+
+    console.log(`\nAgreement update transaction hash: \n\t\x1b[35m${tx.hash}\x1b[0m`);
+    console.log('\nTerm transaction');
+    console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
+  }
+  await parse(agreement, preprocessorAddr);
+};
+
+export const addStepsWithMultisig = async (
+  preprocessorAddr: string,
+  steps: TxObject[],
+  agreementAddress: string,
+  multisig: MultisigMock
+) => {
+  const agreement = await ethers.getContractAt('Agreement', agreementAddress);
+  for await (const step of steps) {
+    console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
+    console.log('\nTerm Conditions');
+
     // Create Raw transaction
     const { data } = await agreement.populateTransaction.update(
       step.txId,

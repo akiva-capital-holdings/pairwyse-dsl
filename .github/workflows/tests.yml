@@ -27,7 +27,6 @@ jobs:
         env:
           TENDERLY_FORK_URL: ${{ secrets.TENDERLY_FORK_URL }}
       - name: Running tests on a Goerli fork
-        run: echo "The GOERLI_URL is:${{ secrets.GOERLI_URL }}"
         run: yarn test:fork
         env:
           GOERLI_URL: ${{ secrets.GOERLI_URL }}
