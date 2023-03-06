@@ -66,6 +66,13 @@ library ErrorsGeneralOpcodes {
 }
 
 /**
+ * @title List of OtherOpcodes errors
+ */
+library ErrorsCompoundOpcodes {
+    string constant COP1 = 'COP1'; // CompoundOpcodes: The desired value is zero
+}
+
+/**
  * @title List of BranchingOpcodes errors
  */
 library ErrorsBranchingOpcodes {

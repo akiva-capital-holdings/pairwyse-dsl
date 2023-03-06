@@ -158,23 +158,71 @@ describe.only('Compound opcodes', () => {
     });
   });
   describe('withdraw', () => {
-    it('native compound withdrawMax', async () => {
-      await ctxProgram.setProgram(
-        '0x' + '0f8a193f' // WETH
-      );
-      expect(await ethers.provider.getBalance(app.address)).to.equal(0);
-      await alice.sendTransaction({ to: app.address, value: parseEther('10') });
-      await app
-        .connect(alice)
-        .opCompoundDepositNative(ctxProgramAddr, ethers.constants.AddressZero);
-      await ctxProgram.setProgram(
-        '0x' + '0f8a193f' // WETH
-      );
-      expect(await ethers.provider.getBalance(app.address)).to.equal(0);
-      expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
-      await app.connect(alice).opCompoundWithdrawMax(ctxProgramAddr, ethers.constants.AddressZero);
-      expect(await CETH.balanceOf(app.address)).to.equal(1);
-      expect(await ethers.provider.getBalance(app.address)).to.equal('10000000881975243307');
+    describe('withdrawMax', () => {
+      it('compound withdrawMax ETH', async () => {
+        await ctxProgram.setProgram(
+          '0x' + '0f8a193f' // WETH
+        );
+        await alice.sendTransaction({ to: app.address, value: parseEther('10') });
+        await app
+          .connect(alice)
+          .opCompoundDepositNative(ctxProgramAddr, ethers.constants.AddressZero);
+        expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+        expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
+
+        await ctxProgram.setProgram(
+          '0x' + '0f8a193f' // WETH
+        );
+        await app
+          .connect(alice)
+          .opCompoundWithdrawMax(ctxProgramAddr, ethers.constants.AddressZero);
+        expect(await ethers.provider.getBalance(app.address)).to.equal('10000000881975243307');
+        expect(await CETH.balanceOf(app.address)).to.equal(1);
+      });
+      it('compound withdrawMax ETH with zero balance', async () => {
+        expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+        expect(await CETH.balanceOf(app.address)).to.equal(0);
+
+        await ctxProgram.setProgram(
+          '0x' + '0f8a193f' // WETH
+        );
+        await expect(
+          app.connect(alice).opCompoundWithdrawMax(ctxProgramAddr, ethers.constants.AddressZero)
+        ).to.be.revertedWith('COP1');
+        expect(await CETH.balanceOf(app.address)).to.equal(0);
+      });
+      it('compound withdtawMax USDC', async () => {
+        await ctxProgram.setProgram(
+          '0x' + 'd6aca1be' // USDC
+        );
+        await USDC.connect(USDCwhale).transfer(app.address, '100000000'); // 100 USDC
+        await app.connect(alice).opCompoundDeposit(ctxProgramAddr, ethers.constants.AddressZero);
+        expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+        expect(await CUSDC.balanceOf(app.address)).to.equal(499443807273);
+
+        await ctxProgram.setProgram(
+          '0x' + 'd6aca1be' // USDC
+        );
+        await app
+          .connect(alice)
+          .opCompoundWithdrawMax(ctxProgramAddr, ethers.constants.AddressZero);
+        expect(await ethers.provider.getBalance(app.address)).to.equal(0); // did not change
+        expect(await CUSDC.balanceOf(app.address)).to.equal(1);
+        expect(await USDC.balanceOf(app.address)).to.equal(99999999);
+      });
+      it('compound withdtawMax USDC with tero balance', async () => {
+        expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+        expect(await CUSDC.balanceOf(app.address)).to.equal(0);
+
+        await ctxProgram.setProgram(
+          '0x' + 'd6aca1be' // USDC
+        );
+        await expect(
+          app.connect(alice).opCompoundWithdrawMax(ctxProgramAddr, ethers.constants.AddressZero)
+        ).to.be.revertedWith('COP1');
+        expect(await ethers.provider.getBalance(app.address)).to.equal(0); // did not change
+        expect(await CUSDC.balanceOf(app.address)).to.equal(0);
+      });
     });
   });
 

@@ -11,7 +11,7 @@ import { IcTokenNative } from '../../interfaces/IcTokenNative.sol';
 import { IERC20Mintable } from '../../interfaces/IERC20Mintable.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
-import { ErrorsGeneralOpcodes } from '../Errors.sol';
+import { ErrorsGeneralOpcodes, ErrorsCompoundOpcodes } from '../Errors.sol';
 
 import 'hardhat/console.sol';
 
@@ -80,8 +80,9 @@ library CompoundOpcodes {
             abi.encodeWithSignature('compounds(address)', token)
         );
         address cToken = address(uint160(uint256(bytes32(data))));
-        uint256 balance = IcTokenNative(cToken).balanceOf(address(this));
-        IcTokenNative(cToken).redeem(balance - 1);
+        uint256 balance = IcToken(cToken).balanceOf(address(this));
+        require(balance > 0, ErrorsCompoundOpcodes.COP1);
+        IcToken(cToken).redeem(balance - 1);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
@@ -176,6 +177,7 @@ library CompoundOpcodes {
         // address unitroller = address(uint160(uint256(bytes32(data))));
 
         address unitroller = 0x3cBe63aAcF6A064D32072a630A3eab7545C54d78;
+
         // `token` can be used in the future for more different underluing tokens
         bytes memory data = OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),
