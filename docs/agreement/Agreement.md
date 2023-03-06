@@ -61,6 +61,26 @@ Sets parser address, creates new contextProgram instance, and setups contextProg
 receive() external payable
 ```
 
+### hex4Bytes
+
+```solidity
+function hex4Bytes(string _str) external pure returns (bytes4)
+```
+
+Apply keccak256 to `_str`, cut the result to the first 4 bytes
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _str | string | Input string |
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes4 | bytes4(keccak256(str)) |
+
 ### archiveRecord
 
 ```solidity
