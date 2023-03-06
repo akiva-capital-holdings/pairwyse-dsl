@@ -30,4 +30,3 @@ function WUSDCAddress() external view returns (address)
 function _setDefaultVariables() internal
 ```
 
-

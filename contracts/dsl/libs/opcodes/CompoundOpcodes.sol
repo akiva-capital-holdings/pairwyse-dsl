@@ -29,7 +29,7 @@ library CompoundOpcodes {
     }
 
     /**
-     * Sub-command of Compound V2. Makes a deposit funds to Compound V2
+     * Sub-command of Compound V2. Makes a deposit tokens to Compound V2
      * @param _ctxProgram ProgramContext contract address
      */
     function opCompoundDeposit(address _ctxProgram, address) public {
@@ -39,7 +39,7 @@ library CompoundOpcodes {
             abi.encodeWithSignature('compounds(address)', token)
         );
         address cToken = address(uint160(uint256(bytes32(data))));
-        uint256 balance = IcToken(token).balanceOf(address(this));
+        uint256 balance = IERC20(token).balanceOf(address(this));
         // approve simple token to use it into the market
         IERC20(token).approve(cToken, balance);
         // supply assets into the market and receives cTokens in exchange

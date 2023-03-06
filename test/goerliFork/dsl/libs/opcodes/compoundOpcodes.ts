@@ -113,7 +113,7 @@ describe.only('Compound opcodes', () => {
   afterEach(async () => {
     await network.provider.send('evm_revert', [snapshotId]);
   });
-  describe('deposit', () => {
+  describe.only('deposit', () => {
     it('native compound deposit', async () => {
       await ctxProgram.setProgram(
         '0x' + '0f8a193f' // WETH
@@ -131,6 +131,23 @@ describe.only('Compound opcodes', () => {
       // TODO: check if expected value can be parsed from the contract
       // https://docs.compound.finance/v2/#networks
       expect(await CETH.balanceOf(app.address)).to.equal(48478003296);
+    });
+
+    it('simple token compound deposit', async () => {
+      await ctxProgram.setProgram(
+        '0x' + 'd6aca1be' // USDC
+      );
+      expect(await CETH.balanceOf(app.address)).to.equal(0);
+      expect(await USDC.balanceOf(app.address)).to.equal(0);
+      await USDC.connect(USDCwhale).transfer(app.address, '100000000'); // 100 USDC
+      expect(await USDC.balanceOf(app.address)).to.equal('100000000');
+      await app.connect(alice).opCompoundDeposit(ctxProgramAddr, ethers.constants.AddressZero);
+      // check that the user have no USDC tokens
+      expect(await USDC.balanceOf(app.address)).to.equal(0);
+      // some amount of cToken that were minted to the `app`
+      // TODO: check if expected value can be parsed from the contract
+      // https://docs.compound.finance/v2/#networks
+      expect(await CUSDC.balanceOf(app.address)).to.equal(499443807273);
     });
   });
   describe('withdraw', () => {

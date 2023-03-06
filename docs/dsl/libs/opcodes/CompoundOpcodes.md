@@ -21,7 +21,7 @@ _Master opcode to interact with Compound V2. Needs sub-commands to be executed_
 function opCompoundDeposit(address _ctxProgram, address) public
 ```
 
-Sub-command of Compound V2. Makes a deposit funds to Compound V2
+Sub-command of Compound V2. Makes a deposit tokens to Compound V2
 
 #### Parameters
 
@@ -132,5 +132,4 @@ _Makes a delegate call and ensures it is successful_
 | _ctxProgram | address | ProgramContext contract address |
 | _ctxDSL | address | DSLContext contract address |
 | _opcode | string | Opcode string |
-
 

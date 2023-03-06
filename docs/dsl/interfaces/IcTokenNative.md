@@ -35,4 +35,3 @@ _Accrues interest whether or not the operation succeeds, unless reverted_
 | ---- | ---- | ----------- |
 | [0] | uint256 | uint 0=success, otherwise a failure (see ErrorReporter.sol for details) |
 
-
