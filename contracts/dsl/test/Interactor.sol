@@ -5,8 +5,9 @@ import { BaseStorage } from '../test/BaseStorage.sol';
 import { IERC20Mintable } from '../interfaces/IERC20Mintable.sol';
 import { ERC20Mintable } from '../helpers/ERC20Mintable.sol';
 
-contract TestCompoundMock is BaseStorage {
-    // using UnstructuredStorage for bytes32;
+contract Interactor is BaseStorage {
+    // address public unitroller = 0x3cBe63aAcF6A064D32072a630A3eab7545C54d78;
+    // https://goerli.etherscan.io/address/0x3cBe63aAcF6A064D32072a630A3eab7545C54d78#code
     IERC20Mintable public WUSDC; // WUSDC
     mapping(address => address) public compounds; // token => cToken
 
@@ -20,6 +21,12 @@ contract TestCompoundMock is BaseStorage {
     }
 
     function _setDefaultVariables() internal {
+        // Set DAI variable
+        address DAI_ADDR = 0x2899a03ffDab5C90BADc5920b4f53B0884EB13cC;
+        setStorageAddress(
+            0xa5e92f3e00000000000000000000000000000000000000000000000000000000,
+            DAI_ADDR
+        );
         // Set WUSDC variable
         setStorageAddress(
             0x1896092e00000000000000000000000000000000000000000000000000000000,
@@ -53,6 +60,14 @@ contract TestCompoundMock is BaseStorage {
             CETH_ADDR
         );
 
+        // Set cDAI variable
+        address CDAI_ADDR = 0x0545a8eaF7ff6bB6F708CbB544EA55DBc2ad7b2a;
+        setStorageAddress(
+            0xaafc769300000000000000000000000000000000000000000000000000000000,
+            CDAI_ADDR
+        );
+
+        compounds[DAI_ADDR] = CDAI_ADDR;
         compounds[USDC_ADDR] = CUSDC_ADDR;
         compounds[WETH_ADDR] = CETH_ADDR;
     }

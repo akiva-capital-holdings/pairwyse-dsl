@@ -81,6 +81,7 @@ Sub-command of Compound V2. Makes a withdrawal funds to Compound V2
 function opCompoundBorrowMax(address _ctxProgram, address) public
 ```
 
+TODO: might need to be removed
 Sub-command of Compound V2. Makes a barrow of all USDC on cUSDC
 
 #### Parameters
@@ -96,7 +97,7 @@ Sub-command of Compound V2. Makes a barrow of all USDC on cUSDC
 function opCompoundBorrow(address _ctxProgram, address) public
 ```
 
-Sub-command of Compound V2. Makes a barrow USDC on cUSDC
+Sub-command of Compound V2. Makes a borrow from market
 
 #### Parameters
 

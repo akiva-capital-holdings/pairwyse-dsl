@@ -1,11 +1,5 @@
 ## Interactor
 
-### unitroller
-
-```solidity
-address unitroller
-```
-
 ### WUSDC
 
 ```solidity

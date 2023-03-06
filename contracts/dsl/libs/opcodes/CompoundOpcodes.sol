@@ -114,10 +114,12 @@ library CompoundOpcodes {
     }
 
     /**
+     * TODO: might need to be removed
      * Sub-command of Compound V2. Makes a barrow of all USDC on cUSDC
      * @param _ctxProgram ProgramContext contract address
      */
     function opCompoundBorrowMax(address _ctxProgram, address) public {
+        /*
         address comptrl = 0x05Df6C772A563FfB37fD3E04C1A279Fb30228621;
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
         address payable borrowToken = payable(OpcodeHelpers.getAddress(_ctxProgram));
@@ -152,34 +154,46 @@ library CompoundOpcodes {
         uint256 kkk = IcToken(borrowCToken).balanceOf(address(this));
         console.log(kkk);
         uint256 borrows = IcToken(borrowCToken).borrowBalanceCurrent(address(this));
-        OpcodeHelpers.putToStack(_ctxProgram, borrows);
+        */
+        OpcodeHelpers.putToStack(_ctxProgram, 1 /* borrows*/);
     }
 
     /**
-     * Sub-command of Compound V2. Makes a barrow USDC on cUSDC
+     * Sub-command of Compound V2. Makes a borrow from market
      * @param _ctxProgram ProgramContext contract address
      */
     function opCompoundBorrow(address _ctxProgram, address) public {
+        // address compt = 0x3cBe63aAcF6A064D32072a630A3eab7545C54d78;
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        address payable borrowToken = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        uint256 borrowAmount = OpcodeHelpers.getUint256(_ctxProgram, address(0));
+
+        // fixme: OH1 error occured
+        // bytes memory data = OpcodeHelpers.mustCall(
+        //     IProgramContext(_ctxProgram).appAddr(),
+        //     abi.encodeWithSignature('unitroller')
+        // );
+        // address unitroller = address(uint160(uint256(bytes32(data))));
+
+        address unitroller = 0x3cBe63aAcF6A064D32072a630A3eab7545C54d78;
         // `token` can be used in the future for more different underluing tokens
         bytes memory data = OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),
             abi.encodeWithSignature('compounds(address)', token)
         );
-
-        bytes32 borrowNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
-        bytes memory borrowValue = OpcodeHelpers.mustCall(
-            IProgramContext(_ctxProgram).appAddr(),
-            abi.encodeWithSignature(
-                'getStorageUint(bytes32)',
-                borrowNameB32 // withdraw value name
-            )
-        );
         address cToken = address(uint160(uint256(bytes32(data))));
-
-        // redeems cTokens in exchange for the underlying asset (USDC)
-        // amount - amount of cTokens
-        IcToken(cToken).borrow(uint256(bytes32(borrowValue)));
+        data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', borrowToken)
+        );
+        address borrowCToken = address(uint160(uint256(bytes32(data))));
+        // Borrow, then check the underlying balance for this contract's address
+        address[] memory cTokens = new address[](1);
+        cTokens[0] = cToken;
+        // fixme: no need to enter more then one time. check with `markets.isListed`
+        IComptroller(unitroller).enterMarkets(cTokens);
+        IcToken(borrowCToken).borrow(borrowAmount); // < should be 80% of borrow token
+        // Attention!!! borrowAmount is NOT cTOKEN
 
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
