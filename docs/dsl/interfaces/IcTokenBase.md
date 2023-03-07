@@ -26,6 +26,12 @@ function decimals() external view returns (uint8)
 function exchangeRateStored() external view returns (uint256)
 ```
 
+### exchangeRateCurrent
+
+```solidity
+function exchangeRateCurrent() external returns (uint256)
+```
+
 ### balanceOf
 
 ```solidity
@@ -119,6 +125,12 @@ Sender repays their own borrow
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint256 | uint 0=success, otherwise a failure (see ErrorReporter.sol for details) |
+
+### repayBorrow
+
+```solidity
+function repayBorrow() external payable
+```
 
 ### borrowBalanceCurrent
 

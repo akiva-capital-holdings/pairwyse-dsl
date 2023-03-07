@@ -22,6 +22,10 @@ contract CompoundOpcodesMock {
         CompoundOpcodes.opCompoundWithdrawMax(_ctxProgram, address(0));
     }
 
+    function opCompoundWithdraw(address _ctxProgram, address) public {
+        CompoundOpcodes.opCompoundWithdraw(_ctxProgram, address(0));
+    }
+
     function opCompoundBorrowMax(address _ctxProgram, address) public {
         CompoundOpcodes.opCompoundBorrowMax(_ctxProgram, address(0));
     }

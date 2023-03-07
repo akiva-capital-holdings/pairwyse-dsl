@@ -1,7 +1,12 @@
 ## IComptroller
 
 _Base Interface of the Comptroller
- https://github.com/compound-finance/compound-protocol/blob/master/contracts/Comptroller.sol
+ 
+ Proxy:
+ https://github.com/compound-finance/compound-protocol/blob/master/contracts/Unitroller.sol
+	
+	Comptroller:
+https://github.com/compound-finance/compound-protocol/blob/master/contracts/Comptroller.sol
  goerli 0x05Df6C772A563FfB37fD3E04C1A279Fb30228621_
 
 ### markets

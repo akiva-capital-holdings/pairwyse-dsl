@@ -13,6 +13,8 @@ interface IcTokenBase {
 
     function exchangeRateStored() external view returns (uint256);
 
+    function exchangeRateCurrent() external returns (uint);
+
     /**
      * @dev Returns the amount of tokens owned by `account`.
      */
@@ -49,6 +51,8 @@ interface IcTokenBase {
      * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
      */
     function repayBorrow(uint repayAmount) external returns (uint);
+
+    function repayBorrow() external payable;
 
     /**
      * @notice Accrue interest to updated borrowIndex and

@@ -7,6 +7,7 @@ import { getChainId, getPrettyDateTime } from '../../utils/utils';
 
 export const deployOpcodeLibs = async (hre: HardhatRuntimeEnvironment) => {
   const opcodeHelpersLib = await (await hre.ethers.getContractFactory('OpcodeHelpers')).deploy();
+  // TODO: do we need this console?
   console.log({ opcodeHelpersLib: opcodeHelpersLib.address });
   const comparisonOpcodesLib = await (
     await hre.ethers.getContractFactory('ComparisonOpcodes', {

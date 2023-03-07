@@ -6,7 +6,6 @@ import { IProgramContext } from '../../interfaces/IProgramContext.sol';
 import { IERC20 } from '../../interfaces/IERC20.sol';
 import { IcToken } from '../../interfaces/IcToken.sol';
 import { IComptroller } from '../../interfaces/IComptroller.sol';
-import { IMaximillion } from '../../interfaces/IMaximillion.sol';
 import { IcTokenNative } from '../../interfaces/IcTokenNative.sol';
 import { IERC20Mintable } from '../../interfaces/IERC20Mintable.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
@@ -82,7 +81,18 @@ library CompoundOpcodes {
         address cToken = address(uint160(uint256(bytes32(data))));
         uint256 balance = IcToken(cToken).balanceOf(address(this));
         require(balance > 0, ErrorsCompoundOpcodes.COP1);
-        IcToken(cToken).redeem(balance - 1);
+
+        // fixme: all balance of Ctokens should be redeem by maximum value
+        /*
+        address unitroller = 0x3cBe63aAcF6A064D32072a630A3eab7545C54d78;
+
+
+        uint256 rate = IcToken(cToken).exchangeRateCurrent();
+        (uint256 a, uint b, uint256 c) = IComptroller(unitroller).getAccountLiquidity(address(this));
+        console.log(b, rate);
+        console.log(balance);
+        */
+        IcToken(cToken).redeem(balance);
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
@@ -90,26 +100,22 @@ library CompoundOpcodes {
      * Sub-command of Compound V2. Makes a withdrawal funds to Compound V2
      * @param _ctxProgram ProgramContext contract address
      */
-    function opCompoundWithdraw(address _ctxProgram) public {
+    function opCompoundWithdraw(address _ctxProgram, address) public {
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
         // `token` can be used in the future for more different underluing tokens
         bytes memory data = OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),
             abi.encodeWithSignature('compounds(address)', token)
         );
-        bytes32 withdrawNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
-        bytes memory withdrawValue = OpcodeHelpers.mustCall(
-            IProgramContext(_ctxProgram).appAddr(),
-            abi.encodeWithSignature(
-                'getStorageUint(bytes32)',
-                withdrawNameB32 // withdraw value name
-            )
-        );
-        address cToken = address(uint160(uint256(bytes32(data))));
 
+        address cToken = address(uint160(uint256(bytes32(data))));
+        uint256 amount = OpcodeHelpers.getUint256(_ctxProgram, address(0));
         // redeems cTokens in exchange for the underlying asset (USDC)
         // amount - amount of cTokens
-        IcToken(cToken).redeem(uint256(bytes32(withdrawValue)));
+
+        uint256 balance = IcToken(cToken).balanceOf(address(this));
+        require(balance > 0, ErrorsCompoundOpcodes.COP1);
+        IcToken(cToken).redeem(amount);
 
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
@@ -164,7 +170,6 @@ library CompoundOpcodes {
      * @param _ctxProgram ProgramContext contract address
      */
     function opCompoundBorrow(address _ctxProgram, address) public {
-        // address compt = 0x3cBe63aAcF6A064D32072a630A3eab7545C54d78;
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
         address payable borrowToken = payable(OpcodeHelpers.getAddress(_ctxProgram));
         uint256 borrowAmount = OpcodeHelpers.getUint256(_ctxProgram, address(0));
@@ -201,30 +206,27 @@ library CompoundOpcodes {
     }
 
     function opCompoundRepayNativeMax(address _ctxProgram, address) public {
-        address maximillion = 0xD4936082B4F93D9D2B79418765854A00f320Defb;
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
 
-        // fixme: OH1 error occured
-        // bytes memory data = OpcodeHelpers.mustCall(
-        //     IProgramContext(_ctxProgram).appAddr(),
-        //     abi.encodeWithSignature('maximillion')
-        // );
-        // address maximillion = address(uint160(uint256(bytes32(data))));
-
-        IMaximillion(maximillion).repayBehalf{ value: address(this).balance }(address(this));
+        address cToken = address(uint160(uint256(bytes32(data))));
+        IcToken(cToken).repayBorrow{ value: address(this).balance }();
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
     function opCompoundRepayNative(address _ctxProgram, address) public {
-        address maximillion = 0xD4936082B4F93D9D2B79418765854A00f320Defb;
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
 
-        // fixme: OH1 error occured
-        // bytes memory data = OpcodeHelpers.mustCall(
-        //     IProgramContext(_ctxProgram).appAddr(),
-        //     abi.encodeWithSignature('maximillion')
-        // );
-        // address maximillion = address(uint160(uint256(bytes32(data))));
+        address cToken = address(uint160(uint256(bytes32(data))));
         uint256 repayAmount = OpcodeHelpers.getUint256(_ctxProgram, address(0));
-        IMaximillion(maximillion).repayBehalf{ value: repayAmount }(address(this));
+        IcToken(cToken).repayBorrow{ value: repayAmount }();
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 

@@ -64,7 +64,7 @@ Sub-command of Compound V2. Makes a withdrawal of all funds to Compound V2
 ### opCompoundWithdraw
 
 ```solidity
-function opCompoundWithdraw(address _ctxProgram) public
+function opCompoundWithdraw(address _ctxProgram, address) public
 ```
 
 Sub-command of Compound V2. Makes a withdrawal funds to Compound V2
@@ -74,6 +74,7 @@ Sub-command of Compound V2. Makes a withdrawal funds to Compound V2
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _ctxProgram | address | ProgramContext contract address |
+|  | address |  |
 
 ### opCompoundBorrowMax
 
