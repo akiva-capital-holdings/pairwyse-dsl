@@ -174,17 +174,15 @@ library CompoundOpcodes {
         address payable borrowToken = payable(OpcodeHelpers.getAddress(_ctxProgram));
         uint256 borrowAmount = OpcodeHelpers.getUint256(_ctxProgram, address(0));
 
-        // fixme: OH1 error occured
-        // bytes memory data = OpcodeHelpers.mustCall(
-        //     IProgramContext(_ctxProgram).appAddr(),
-        //     abi.encodeWithSignature('unitroller')
-        // );
-        // address unitroller = address(uint160(uint256(bytes32(data))));
-
-        address unitroller = 0x3cBe63aAcF6A064D32072a630A3eab7545C54d78;
+        // fixme: OPH1 error occured
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('unitroller()')
+        );
+        address unitroller = address(uint160(uint256(bytes32(data))));
 
         // `token` can be used in the future for more different underluing tokens
-        bytes memory data = OpcodeHelpers.mustCall(
+        data = OpcodeHelpers.mustCall(
             IProgramContext(_ctxProgram).appAddr(),
             abi.encodeWithSignature('compounds(address)', token)
         );
@@ -199,6 +197,14 @@ library CompoundOpcodes {
         cTokens[0] = cToken;
         // fixme: no need to enter more then one time. check with `markets.isListed`
         IComptroller(unitroller).enterMarkets(cTokens);
+        bool accountMembership = IComptroller(unitroller).checkMembership(
+            address(this),
+            IcToken(cToken)
+        );
+        require(accountMembership == true, ErrorsCompoundOpcodes.COP2);
+        uint256 balance = IcToken(cToken).balanceOf(address(this));
+        uint256 numWeiToBorrow = (balance * 8) / 100; // 80% of balance
+        require(borrowAmount <= numWeiToBorrow, ErrorsCompoundOpcodes.COP3);
         IcToken(borrowCToken).borrow(borrowAmount); // < should be 80% of borrow token
         // Attention!!! borrowAmount is NOT cTOKEN
 

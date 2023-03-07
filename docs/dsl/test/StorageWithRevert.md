@@ -12,3 +12,4 @@ function setStorageBool(bytes32, uint256) public pure
 function setStorageUint256(bytes32, uint256) public pure
 ```
 
+

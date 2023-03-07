@@ -325,7 +325,7 @@ describe('Compound opcodes', () => {
     });
 
     it('supply USDC borrow ETH', async () => {
-      const _borrowAmount = parseEther('0.01'); // 1e17
+      const _borrowAmount = parseEther('0.00000001'); // 1e17
       const borrowAmount = new Array(65 - 17).join('0') + _borrowAmount;
       await ctxProgram.setProgram(
         '0x' + 'd6aca1be' // USDC
@@ -363,6 +363,62 @@ describe('Compound opcodes', () => {
       expect(await CUSDC.balanceOf(app.address)).to.equal(499443807273);
       expect(await CETH.balanceOf(app.address)).to.equal(0);
       expect(await USDC.balanceOf(app.address)).to.equal(0);
+    });
+
+    it('supply USDC borrow ETH with error', async () => {
+      const _borrowAmount = parseEther('0.00000001'); // 1e17
+      const borrowAmount = new Array(65 - 17).join('0') + _borrowAmount;
+      await ctxProgram.setProgram(
+        '0x' + 'd6aca1be' // USDC
+      );
+      await USDC.connect(USDCwhale).transfer(app.address, '100000000'); // 100 USDC
+      await app.connect(alice).opCompoundDeposit(ctxProgramAddr, ethers.constants.AddressZero);
+      expect(await ethers.provider.getBalance(app.address)).to.equal(0);
+      expect(await CUSDC.balanceOf(app.address)).to.equal(499443807273);
+      expect(await USDC.balanceOf(app.address)).to.equal(0);
+
+      await ctxProgram.setProgram(
+        '0x' +
+          'd6aca1be' + // make collateral USDC
+          '0f8a193f' + // ETH - borrow token
+          `${uint256StrToHex(borrowAmount)}` // borrow amount in ETH
+      );
+      await app.connect(alice).opCompoundBorrow(ctxProgramAddr, ethers.constants.AddressZero);
+      expect(await ethers.provider.getBalance(app.address)).to.equal(_borrowAmount);
+      // did not change
+      expect(await CUSDC.balanceOf(app.address)).to.equal(499443807273);
+      expect(await CETH.balanceOf(app.address)).to.equal(0);
+      expect(await USDC.balanceOf(app.address)).to.equal(0);
+
+      // check if you can borrow more than the balance
+      const _borrowBigAmount = parseEther('0.0000001'); // 1e17
+      const borrowBigAmount = new Array(65 - 17).join('0') + _borrowBigAmount;
+      await ctxProgram.setProgram(
+        '0x' +
+          'd6aca1be' + // make collateral USDC
+          '0f8a193f' + // ETH - borrow token
+          `${uint256StrToHex(borrowBigAmount)}` // borrow amount in ETH
+      );
+      await expect(
+        app.connect(alice).opCompoundBorrow(ctxProgramAddr, ethers.constants.AddressZero)
+      ).to.be.revertedWith('COP3');
+      // did not change
+      expect(await ethers.provider.getBalance(app.address)).to.equal(_borrowAmount);
+      // did not change
+      expect(await CUSDC.balanceOf(app.address)).to.equal(499443807273);
+      expect(await CETH.balanceOf(app.address)).to.equal(0);
+      expect(await USDC.balanceOf(app.address)).to.equal(0);
+
+      // check that borrow from not listed token will return error
+      await ctxProgram.setProgram(
+        '0x' +
+          '48ebcbd3' + // ETH - borrow token
+          'd6aca1be' + // borrow token USDC
+          `${uint256StrToHex(borrowBigAmount)}` // borrow amount in ETH
+      );
+      await expect(
+        app.connect(alice).opCompoundBorrow(ctxProgramAddr, ethers.constants.AddressZero)
+      ).to.be.revertedWith('COP2');
     });
 
     it('supply USDC borrow DAI', async () => {
@@ -411,8 +467,8 @@ describe('Compound opcodes', () => {
     const repayAmountUSDC = '3000';
 
     it('supply USDC borrow ETH repay ETH', async () => {
-      const _borrowAmount = parseEther('0.01'); // 1e17
-      const _repayAmount = parseEther('0.002'); // 2e16
+      const _borrowAmount = parseEther('0.00000001'); // 1e17
+      const _repayAmount = parseEther('0.000000002'); // 2e16
       const borrowAmount = new Array(65 - 17).join('0') + _borrowAmount;
       const repayAmount = new Array(65 - 16).join('0') + _repayAmount;
       await ctxProgram.setProgram(
@@ -513,8 +569,8 @@ describe('Compound opcodes', () => {
 
   describe('compound livecycle', () => {
     it('native coins', async () => {
-      const _borrowAmount = parseEther('0.01'); // 1e17
-      const _repayAmount = parseEther('0.002'); // 2e16
+      const _borrowAmount = parseEther('0.00000001'); // 1e17
+      const _repayAmount = parseEther('0.000000002'); // 2e16
       const borrowAmount = new Array(65 - 17).join('0') + _borrowAmount;
       const repayAmount = new Array(65 - 16).join('0') + _repayAmount;
       const expectedCUSDC = 499443807273;

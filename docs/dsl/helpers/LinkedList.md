@@ -163,3 +163,4 @@ to the next object in array_
 | data | bytes32 | is a current data stored in the _position |
 | nextPosition | bytes32 | is a next position to the next item in the array |
 
+
