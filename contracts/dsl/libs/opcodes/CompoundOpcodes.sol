@@ -200,15 +200,35 @@ library CompoundOpcodes {
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
-    function opCompoundRepayMax(address _ctxProgram, address) public {
-        address _MaximillionAddr = 0xD4936082B4F93D9D2B79418765854A00f320Defb;
-        // `token` can be used in the future for more different underluing tokens
-        // approve simple token to use it into the market
-        IMaximillion(_MaximillionAddr).repayBehalf{ value: address(this).balance }(address(this));
+    function opCompoundRepayNativeMax(address _ctxProgram, address) public {
+        address maximillion = 0xD4936082B4F93D9D2B79418765854A00f320Defb;
+
+        // fixme: OH1 error occured
+        // bytes memory data = OpcodeHelpers.mustCall(
+        //     IProgramContext(_ctxProgram).appAddr(),
+        //     abi.encodeWithSignature('maximillion')
+        // );
+        // address maximillion = address(uint160(uint256(bytes32(data))));
+
+        IMaximillion(maximillion).repayBehalf{ value: address(this).balance }(address(this));
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
-    function opCompoundRepay(address _ctxProgram) public {
+    function opCompoundRepayNative(address _ctxProgram, address) public {
+        address maximillion = 0xD4936082B4F93D9D2B79418765854A00f320Defb;
+
+        // fixme: OH1 error occured
+        // bytes memory data = OpcodeHelpers.mustCall(
+        //     IProgramContext(_ctxProgram).appAddr(),
+        //     abi.encodeWithSignature('maximillion')
+        // );
+        // address maximillion = address(uint160(uint256(bytes32(data))));
+        uint256 repayAmount = OpcodeHelpers.getUint256(_ctxProgram, address(0));
+        IMaximillion(maximillion).repayBehalf{ value: repayAmount }(address(this));
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    function opCompoundRepayMax(address _ctxProgram, address) public {
         address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
         // `token` can be used in the future for more different underluing tokens
         bytes memory data = OpcodeHelpers.mustCall(
@@ -216,18 +236,26 @@ library CompoundOpcodes {
             abi.encodeWithSignature('compounds(address)', token)
         );
 
-        bytes32 repayNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
-        bytes memory repayValue = OpcodeHelpers.mustCall(
-            IProgramContext(_ctxProgram).appAddr(),
-            abi.encodeWithSignature(
-                'getStorageUint(bytes32)',
-                repayNameB32 // withdraw value name
-            )
-        );
         address cToken = address(uint160(uint256(bytes32(data))));
-        // approve simple token to use it into the market
-        IcToken(cToken).approve(token, uint256(bytes32(repayValue)));
-        IcToken(token).repayBorrow(uint256(bytes32(repayValue)));
+        uint256 repayAmount = IERC20(token).balanceOf(address(this));
+        IERC20(token).approve(cToken, repayAmount);
+        IcToken(cToken).repayBorrow(repayAmount);
+
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    function opCompoundRepay(address _ctxProgram, address) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        // `token` can be used in the future for more different underluing tokens
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+
+        uint256 repayAmount = OpcodeHelpers.getUint256(_ctxProgram, address(0));
+        address cToken = address(uint160(uint256(bytes32(data))));
+        IERC20(token).approve(cToken, repayAmount);
+        IcToken(cToken).repayBorrow(repayAmount);
 
         OpcodeHelpers.putToStack(_ctxProgram, 1);
     }

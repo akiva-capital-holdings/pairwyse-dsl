@@ -48,4 +48,3 @@ function setStorageBytes32(bytes32 position, bytes32 data) external
 function setStorageUint256(bytes32 position, uint256 data) external
 ```
 
-

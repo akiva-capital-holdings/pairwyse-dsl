@@ -48,4 +48,21 @@ function opCompoundBorrow(address _ctxProgram, address) public
 function opCompoundRepayMax(address _ctxProgram, address) public
 ```
 
+### opCompoundRepay
+
+```solidity
+function opCompoundRepay(address _ctxProgram, address) public
+```
+
+### opCompoundRepayNativeMax
+
+```solidity
+function opCompoundRepayNativeMax(address _ctxProgram, address) public
+```
+
+### opCompoundRepayNative
+
+```solidity
+function opCompoundRepayNative(address _ctxProgram, address) public
+```
 

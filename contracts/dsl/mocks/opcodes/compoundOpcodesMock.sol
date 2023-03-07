@@ -33,4 +33,16 @@ contract CompoundOpcodesMock {
     function opCompoundRepayMax(address _ctxProgram, address) public {
         CompoundOpcodes.opCompoundRepayMax(_ctxProgram, address(0));
     }
+
+    function opCompoundRepay(address _ctxProgram, address) public {
+        CompoundOpcodes.opCompoundRepay(_ctxProgram, address(0));
+    }
+
+    function opCompoundRepayNativeMax(address _ctxProgram, address) public {
+        CompoundOpcodes.opCompoundRepayNativeMax(_ctxProgram, address(0));
+    }
+
+    function opCompoundRepayNative(address _ctxProgram, address) public {
+        CompoundOpcodes.opCompoundRepayNative(_ctxProgram, address(0));
+    }
 }

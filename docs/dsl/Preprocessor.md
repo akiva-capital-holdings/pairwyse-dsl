@@ -749,4 +749,3 @@ Ex. nonEmptyArrLen['h', 'e', 'l', 'l', 'o', '', '', '']) == 5 (not 8)_
 | ---- | ---- | ----------- |
 | i | uint256 | The legth of the array excluding empty elements |
 
-

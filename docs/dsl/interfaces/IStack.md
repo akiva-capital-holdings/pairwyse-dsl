@@ -24,4 +24,3 @@ function push(uint256 data) external
 function pop() external returns (uint256)
 ```
 
-

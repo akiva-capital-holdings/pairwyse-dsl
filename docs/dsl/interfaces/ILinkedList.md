@@ -18,4 +18,3 @@ function getLength(bytes32 _arrName) external view returns (uint256)
 function get(uint256 _index, bytes32 _arrName) external view returns (bytes32 data)
 ```
 
-

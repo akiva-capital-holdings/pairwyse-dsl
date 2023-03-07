@@ -106,6 +106,18 @@ Sub-command of Compound V2. Makes a borrow from market
 | _ctxProgram | address | ProgramContext contract address |
 |  | address |  |
 
+### opCompoundRepayNativeMax
+
+```solidity
+function opCompoundRepayNativeMax(address _ctxProgram, address) public
+```
+
+### opCompoundRepayNative
+
+```solidity
+function opCompoundRepayNative(address _ctxProgram, address) public
+```
+
 ### opCompoundRepayMax
 
 ```solidity
@@ -115,7 +127,7 @@ function opCompoundRepayMax(address _ctxProgram, address) public
 ### opCompoundRepay
 
 ```solidity
-function opCompoundRepay(address _ctxProgram) public
+function opCompoundRepay(address _ctxProgram, address) public
 ```
 
 ### _mustDelegateCall
@@ -133,5 +145,4 @@ _Makes a delegate call and ensures it is successful_
 | _ctxProgram | address | ProgramContext contract address |
 | _ctxDSL | address | DSLContext contract address |
 | _opcode | string | Opcode string |
-
 

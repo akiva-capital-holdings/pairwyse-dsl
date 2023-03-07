@@ -16,4 +16,3 @@ _The provided Ether is applied towards the borrow balance, any excess is refunde
 | ---- | ---- | ----------- |
 | borrower | address | The address of the borrower account to repay on behalf of |
 
-
