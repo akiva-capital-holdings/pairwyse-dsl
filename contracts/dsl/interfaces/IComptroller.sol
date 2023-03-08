@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { IcToken } from './IcToken.sol';
-
 /**
  * @dev Base Interface of the Comptroller
  *
@@ -15,8 +13,6 @@ import { IcToken } from './IcToken.sol';
  */
 interface IComptroller {
     function markets(address) external returns (bool, uint256);
-
-    function checkMembership(address account, IcToken cToken) external view returns (bool);
 
     function enterMarkets(address[] calldata) external returns (uint256[] memory);
 

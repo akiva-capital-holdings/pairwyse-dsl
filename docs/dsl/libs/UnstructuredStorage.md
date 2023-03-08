@@ -66,4 +66,3 @@ function setStorageUint256(bytes32 position, bytes32 data) internal
 function setStorageUint256(bytes32 position, uint256 data) internal
 ```
 
-

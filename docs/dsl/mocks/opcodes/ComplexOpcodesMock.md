@@ -78,4 +78,3 @@ function opStruct(address _ctxProgram, address) public
 function opLengthOf(address _ctxProgram, address) public
 ```
 
-

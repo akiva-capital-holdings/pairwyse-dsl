@@ -232,4 +232,3 @@ _Adds an alias to the already existing DSL command_
 | _baseCmd | string | is the name of the command |
 | _alias | string | is the alias command name for the base command |
 
-

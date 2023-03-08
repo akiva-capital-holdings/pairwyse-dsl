@@ -1,11 +1,5 @@
 ## Interactor
 
-### unitroller
-
-```solidity
-address unitroller
-```
-
 ### WUSDC
 
 ```solidity
@@ -35,5 +29,4 @@ function WUSDCAddress() external view returns (address)
 ```solidity
 function _setDefaultVariables() internal
 ```
-
 

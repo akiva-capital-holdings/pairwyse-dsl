@@ -96,7 +96,6 @@ string AGR15
 string AGR16
 ```
 
-
 ## ErrorsGovernance
 
 ### GOV1
@@ -104,7 +103,6 @@ string AGR16
 ```solidity
 string GOV1
 ```
-
 
 ## ErrorsContext
 
@@ -150,7 +148,6 @@ string CTX6
 string CTX7
 ```
 
-
 ## ErrorsStack
 
 ### STK1
@@ -176,7 +173,6 @@ string STK3
 ```solidity
 string STK4
 ```
-
 
 ## ErrorsGeneralOpcodes
 
@@ -222,7 +218,6 @@ string OP6
 string OP8
 ```
 
-
 ## ErrorsCompoundOpcodes
 
 ### COP1
@@ -230,19 +225,6 @@ string OP8
 ```solidity
 string COP1
 ```
-
-### COP2
-
-```solidity
-string COP2
-```
-
-### COP3
-
-```solidity
-string COP3
-```
-
 
 ## ErrorsBranchingOpcodes
 
@@ -264,7 +246,6 @@ string BR2
 string BR3
 ```
 
-
 ## ErrorsParser
 
 ### PRS1
@@ -278,7 +259,6 @@ string PRS1
 ```solidity
 string PRS2
 ```
-
 
 ## ErrorsPreprocessor
 
@@ -294,7 +274,6 @@ string PRP1
 string PRP2
 ```
 
-
 ## ErrorsOpcodeHelpers
 
 ### OPH1
@@ -308,7 +287,6 @@ string OPH1
 ```solidity
 string OPH2
 ```
-
 
 ## ErrorsByteUtils
 
@@ -336,7 +314,6 @@ string BUT3
 string BUT4
 ```
 
-
 ## ErrorsExecutor
 
 ### EXC1
@@ -362,7 +339,6 @@ string EXC3
 ```solidity
 string EXC4
 ```
-
 
 ## ErrorsStringUtils
 
@@ -407,5 +383,4 @@ string SUT7
 ```solidity
 string SUT9
 ```
-
 

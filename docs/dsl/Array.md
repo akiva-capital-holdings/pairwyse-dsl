@@ -23,4 +23,3 @@ function setStorage(string arrName, bool isArray, uint8 elemsType, bytes4 nextPt
 function getStorage(string arrName) external view returns (bool isArray, uint8 elemsType, bytes4 nextPrt)
 ```
 
-

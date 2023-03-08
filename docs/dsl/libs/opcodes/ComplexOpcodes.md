@@ -291,4 +291,3 @@ _Checks the type for array_
 | _arrNameB32 | bytes32 | Array's name in bytecode |
 | _typeName | string | Type of the array, ex. `uint256`, `address`, `struct` |
 
-
