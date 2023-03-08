@@ -6,7 +6,7 @@ import { IERC20Mintable } from '../interfaces/IERC20Mintable.sol';
 import { ERC20Mintable } from '../helpers/ERC20Mintable.sol';
 
 contract Interactor is BaseStorage {
-    // address public unitroller = 0x3cBe63aAcF6A064D32072a630A3eab7545C54d78;
+    address public unitroller = 0x3cBe63aAcF6A064D32072a630A3eab7545C54d78;
     // https://goerli.etherscan.io/address/0x3cBe63aAcF6A064D32072a630A3eab7545C54d78#code
     IERC20Mintable public WUSDC; // WUSDC
     mapping(address => address) public compounds; // token => cToken

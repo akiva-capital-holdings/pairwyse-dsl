@@ -120,3 +120,4 @@ _Sets the record as base record for the Governance contract_
 | ---- | ---- | ----------- |
 | _recordId | uint256 | is the record ID |
 
+

@@ -70,6 +70,8 @@ library ErrorsGeneralOpcodes {
  */
 library ErrorsCompoundOpcodes {
     string constant COP1 = 'COP1'; // CompoundOpcodes: The desired value is zero
+    string constant COP2 = 'COP2'; // CompoundOpcodes: The market is not currently listed by the comptroller
+    string constant COP3 = 'COP3'; // CompoundOpcodes: There are not enough funds on the account
 }
 
 /**
