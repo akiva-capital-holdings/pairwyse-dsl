@@ -153,4 +153,3 @@ then calculate account's borrow balance using the updated borrowIndex
 | ---- | ---- | ----------- |
 | [0] | uint256 | The calculated balance |
 
-
