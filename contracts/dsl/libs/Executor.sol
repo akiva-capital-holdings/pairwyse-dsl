@@ -36,6 +36,8 @@ library Executor {
                 _lib = IDSLContext(_dslContext).branchingOpcodes();
             } else if (_libName == IDSLContext.OpcodeLibNames.LogicalOpcodes) {
                 _lib = IDSLContext(_dslContext).logicalOpcodes();
+            } else if (_libName == IDSLContext.OpcodeLibNames.ComplexOpcodes) {
+                _lib = IDSLContext(_dslContext).complexOpcodes();
             } else {
                 _lib = IDSLContext(_dslContext).otherOpcodes();
             }

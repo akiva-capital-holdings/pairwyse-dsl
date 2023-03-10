@@ -878,7 +878,7 @@ describe('DSL: basic', () => {
     // Deploy test ERC20 and mint some to ctx
     const testERC20: ERC20Mintable = await (
       await ethers.getContractFactory('ERC20Mintable')
-    ).deploy('Test', 'TST');
+    ).deploy('Test', 'TST', 18);
     // mint tokens to users
     await testERC20.mint(alice.address, '100');
     await testERC20.mint(bob.address, '200');

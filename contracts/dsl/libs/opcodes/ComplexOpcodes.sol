@@ -341,7 +341,7 @@ library ComplexOpcodes {
         address _ctxDSL,
         string memory _opcode
     ) internal {
-        address libAddr = IDSLContext(_ctxDSL).otherOpcodes();
+        address libAddr = IDSLContext(_ctxDSL).complexOpcodes();
         bytes4 _selector = OpcodeHelpers.nextBranchSelector(_ctxDSL, _ctxProgram, _opcode);
         OpcodeHelpers.mustDelegateCall(
             libAddr,

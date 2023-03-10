@@ -53,4 +53,8 @@ contract ComplexOpcodesMock {
     function opLengthOf(address _ctxProgram, address) public {
         ComplexOpcodes.opLengthOf(_ctxProgram, address(0));
     }
+
+    function opLoadRemote(address _ctxProgram, string memory _funcSignature) public {
+        ComplexOpcodes._opLoadRemote(_ctxProgram, _funcSignature);
+    }
 }
