@@ -140,65 +140,6 @@ describe('Agreement: Alice, Bob, Carl', () => {
     expect(falseResult.isActive).to.equal(false);
   });
 
-  it('smoke test, no multisig', async () => {
-    const txId = '2';
-    const signatories = [alice.address];
-    const conditions = ['bool true'];
-    const transaction = 'bool true';
-    const owner = alice;
-
-    const steps = [{ txId, requiredTxs: [], signatories, conditions, transaction }];
-
-    // Deploy Agreement
-    const [
-      comparisonOpcodesLibAddr,
-      branchingOpcodesLibAddr,
-      logicalOpcodesLibAddr,
-      otherOpcodesLibAddr,
-      complexOpcodesLibAddr,
-    ] = await deployOpcodeLibs(hre);
-
-    const contextDSL = await (
-      await hre.ethers.getContractFactory('DSLContext')
-    ).deploy(
-      comparisonOpcodesLibAddr,
-      branchingOpcodesLibAddr,
-      logicalOpcodesLibAddr,
-      otherOpcodesLibAddr,
-      complexOpcodesLibAddr
-    );
-    const [parserAddr, executorLibAddr] = await deployBase(hre, stringUtilsAddr);
-
-    const AgreementContract = await hre.ethers.getContractFactory('Agreement', {
-      libraries: { Executor: executorLibAddr },
-    });
-    agreement = await AgreementContract.deploy(parserAddr, owner.address, contextDSL.address);
-
-    // Add a record
-    for await (const step of steps) {
-      console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
-      console.log('\nTerm Conditions');
-
-      const tx = await agreement
-        .connect(owner)
-        .update(step.txId, step.requiredTxs, step.signatories, step.transaction, step.conditions);
-
-      console.log(`\nAgreement update transaction hash: \n\t\x1b[35m${tx.hash}\x1b[0m`);
-      console.log('\nTerm transaction');
-      console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
-    }
-
-    // Parse new record
-    let parseFinished = await agreement.parseFinished();
-    while (!parseFinished) {
-      await agreement.parse(preprocessorAddr);
-      parseFinished = await agreement.parseFinished();
-    }
-
-    // Expect not to fail
-    await agreement.connect(owner).execute(txId);
-  });
-
   it('one condition', async () => {
     // Set variables
     await agreement.setStorageAddress(hex4Bytes('RECEIVER'), bob.address);
@@ -468,5 +409,66 @@ describe('Agreement: Alice, Bob, Carl', () => {
     await expect(result)
       .to.emit(updateAgreement, 'RecordExecuted')
       .withArgs(alice.address, txId, 0, 'uint256 10');
+  });
+
+  // Note: this test should only be the last one in the file!!! Otherwise the tests after this one
+  //       would freeze!
+  it('smoke test, no multisig', async () => {
+    const txId = '2';
+    const signatories = [alice.address];
+    const conditions = ['bool true'];
+    const transaction = 'bool true';
+    const owner = alice;
+
+    const steps = [{ txId, requiredTxs: [], signatories, conditions, transaction }];
+
+    // Deploy Agreement
+    const [
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr,
+      complexOpcodesLibAddr,
+    ] = await deployOpcodeLibs(hre);
+
+    const contextDSL = await (
+      await hre.ethers.getContractFactory('DSLContext')
+    ).deploy(
+      comparisonOpcodesLibAddr,
+      branchingOpcodesLibAddr,
+      logicalOpcodesLibAddr,
+      otherOpcodesLibAddr,
+      complexOpcodesLibAddr
+    );
+    const [parserAddr, executorLibAddr] = await deployBase(hre, stringUtilsAddr);
+
+    const AgreementContract = await hre.ethers.getContractFactory('Agreement', {
+      libraries: { Executor: executorLibAddr },
+    });
+    agreement = await AgreementContract.deploy(parserAddr, owner.address, contextDSL.address);
+
+    // Add a record
+    for await (const step of steps) {
+      console.log(`\n---\n\n🧩 Adding Term #${step.txId} to Agreement`);
+      console.log('\nTerm Conditions');
+
+      const tx = await agreement
+        .connect(owner)
+        .update(step.txId, step.requiredTxs, step.signatories, step.transaction, step.conditions);
+
+      console.log(`\nAgreement update transaction hash: \n\t\x1b[35m${tx.hash}\x1b[0m`);
+      console.log('\nTerm transaction');
+      console.log(`\t\x1b[33m${step.transaction}\x1b[0m`);
+    }
+
+    // Parse new record
+    let parseFinished = await agreement.parseFinished();
+    while (!parseFinished) {
+      await agreement.parse(preprocessorAddr);
+      parseFinished = await agreement.parseFinished();
+    }
+
+    // Expect not to fail
+    await agreement.connect(owner).execute(txId);
   });
 });
