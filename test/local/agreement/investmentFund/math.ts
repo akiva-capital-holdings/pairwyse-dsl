@@ -4,7 +4,11 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { formatEther, parseUnits } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
 import dotenv from 'dotenv';
-import { addSteps, changeTokenBalanceAndGetTxHash, hex4Bytes } from '../../../utils/utils';
+import {
+  addStepsWithMultisig,
+  changeTokenBalanceAndGetTxHash,
+  hex4Bytes,
+} from '../../../utils/utils';
 import { businessCaseSteps } from '../../../../scripts/data/agreement';
 import { Token, Agreement, MultisigMock } from '../../../../typechain-types';
 import {
@@ -558,7 +562,7 @@ describe('Agreement: Investment Fund tests math', () => {
     [alice, GP, ...LPs] = await ethers.getSigners();
 
     // `base = 6` - steps for businessCases with multiple LPs
-    await addSteps(
+    await addStepsWithMultisig(
       preprocessorAddr,
       businessCaseSteps(GP.address, [LPs[0].address, LPs[1].address], '6'),
       agreementAddr,

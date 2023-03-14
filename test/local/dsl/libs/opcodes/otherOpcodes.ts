@@ -1,7 +1,6 @@
 import * as hre from 'hardhat';
 import { expect } from 'chai';
 /* eslint-disable camelcase */
-import { BigNumber } from 'ethers';
 import { parseEther } from 'ethers/lib/utils';
 import {
   Stack__factory,
@@ -42,6 +41,7 @@ describe('Other opcodes', () => {
   let branchingOpcodesLibAddr: string;
   let logicalOpcodesLibAddr: string;
   let otherOpcodesLibAddr: string;
+  let complexOpcodesLibAddr: string;
   const testAmount = '1000';
   const zero32bytes = `0x${new Array(65).join('0')}`;
 
@@ -83,7 +83,7 @@ describe('Other opcodes', () => {
     await ctxProgram.setAppAddress(clientApp.address);
 
     // Deploy test ERC20 and mint some to ctxProgram
-    testERC20 = await (await ethers.getContractFactory('ERC20Mintable')).deploy('Test', 'TST');
+    testERC20 = await (await ethers.getContractFactory('ERC20Mintable')).deploy('Test', 'TST', 18);
 
     uint256type = await ctxDSL.branchCodes('declareArr', 'uint256');
     addressType = await ctxDSL.branchCodes('declareArr', 'address');
@@ -98,11 +98,6 @@ describe('Other opcodes', () => {
   afterEach(async () => {
     // Return to the snapshot
     await network.provider.send('evm_revert', [snapshotId]);
-  });
-
-  it('getLocalVar', async () => {
-    await ctxProgram.setProgram('0x1a000000');
-    await expect(app.getLocalVar(ctxProgramAddr, 'hey()')).to.be.revertedWith('OPH1');
   });
 
   describe('block', () => {
@@ -545,21 +540,6 @@ describe('Other opcodes', () => {
     await app.opBurn(ctxProgramAddr, ethers.constants.AddressZero);
     expect(await testERC20.balanceOf(to.address)).to.equal(0);
     await checkStackTail(stack, [1]);
-  });
-
-  it('getLocalVar', async () => {
-    const testValue = hex4Bytes('TEST_VALUE');
-    const bytes32TestValueName = hex4Bytes('BYTES32');
-    const testSignature = 'getStorageBytes32(bytes32)';
-
-    await clientApp.setStorageBytes32(bytes32TestValueName, testValue);
-
-    const bytes = bytes32TestValueName.substring(2, 10);
-    await ctxProgram.setProgram(`0x${bytes}`);
-
-    const result = await app.callStatic.getLocalVar(ctxProgramAddr, testSignature);
-
-    expect(result).to.be.equal(testValue);
   });
 
   it('opAddressGet', async () => {

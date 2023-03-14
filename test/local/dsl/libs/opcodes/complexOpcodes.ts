@@ -31,7 +31,8 @@ describe('Complex opcodes', () => {
   let branchingOpcodesLibAddr: string;
   let logicalOpcodesLibAddr: string;
   let otherOpcodesLibAddr: string;
-  const testAmount = '1000';
+  let complexOpcodesLibAddr: string;
+  let opcodeHelpersLibAddr: string;
   const zero32bytes = `0x${new Array(65).join('0')}`;
 
   before(async () => {
@@ -42,6 +43,7 @@ describe('Complex opcodes', () => {
       logicalOpcodesLibAddr,
       otherOpcodesLibAddr,
       complexOpcodesLibAddr,
+      opcodeHelpersLibAddr,
     ] = await deployOpcodeLibs(hre);
     ctxDSL = await (
       await ethers.getContractFactory('DSLContextMock')
@@ -64,7 +66,7 @@ describe('Complex opcodes', () => {
     clientApp = await (await ethers.getContractFactory('BaseStorage')).deploy();
     app = await (
       await ethers.getContractFactory('ComplexOpcodesMock', {
-        libraries: { OtherOpcodes: otherOpcodesLibAddr },
+        libraries: { ComplexOpcodes: complexOpcodesLibAddr, OpcodeHelpers: opcodeHelpersLibAddr },
       })
     ).deploy();
     // Setup
@@ -83,12 +85,6 @@ describe('Complex opcodes', () => {
   afterEach(async () => {
     // Return to the snapshot
     await network.provider.send('evm_revert', [snapshotId]);
-  });
-
-  it('opLoadRemote', async () => {
-    const ctxAddrCut = ctxProgramAddr.substring(2);
-    await ctxProgram.setProgram(`0x1a000000${ctxAddrCut}`);
-    await expect(app.opLoadRemote(ctxProgramAddr, 'hey()')).to.be.revertedWith('OPH1');
   });
 
   it('opLoadRemoteAny', async () => {
@@ -148,14 +144,6 @@ describe('Complex opcodes', () => {
     await checkStackTail(stack, []);
     await app.opLoadRemoteAddress(ctxProgramAddr, ethers.constants.AddressZero);
     await checkStackTail(stack, [testValue]);
-  });
-
-  it('getUint256', async () => {
-    await ctxProgram.setProgram(`0x${uint256StrToHex(testAmount)}`);
-
-    const result = await app.callStatic.getUint256(ctxProgramAddr, ethers.constants.AddressZero);
-
-    expect(result).to.be.equal(testAmount);
   });
 
   it('opLoadRemote', async () => {

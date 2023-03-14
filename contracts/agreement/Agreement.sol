@@ -30,7 +30,6 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
     address public contextProgram;
     address public contextDSL;
     address public ownerAddr;
-    uint256 public nextParseIndex;
     mapping(uint256 => Record) public records; // recordId => Record struct
 
     modifier onlyOwner() {
@@ -53,6 +52,15 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
+
+    /**
+     * Apply keccak256 to `_str`, cut the result to the first 4 bytes
+     * @param _str Input string
+     * @return bytes4(keccak256(str))
+     */
+    function hex4Bytes(string memory _str) external pure returns (bytes4) {
+        return bytes4(keccak256(abi.encodePacked(_str)));
+    }
 
     /**
      * @dev archive any of the existing records by recordId.
