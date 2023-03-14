@@ -8,6 +8,7 @@ interface IDSLContext {
         BranchingOpcodes,
         ComparisonOpcodes,
         ComplexOpcodes,
+        CompoundOpcodes,
         LogicalOpcodes,
         OtherOpcodes
     }
@@ -17,6 +18,8 @@ interface IDSLContext {
     function comparisonOpcodes() external view returns (address);
 
     function complexOpcodes() external view returns (address);
+
+    function compoundOpcodes() external view returns (address);
 
     function logicalOpcodes() external view returns (address);
 

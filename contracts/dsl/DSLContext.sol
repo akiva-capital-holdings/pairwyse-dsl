@@ -7,6 +7,7 @@ import { IStorageUniversal } from './interfaces/IStorageUniversal.sol';
 import { BranchingOpcodes } from './libs/opcodes/BranchingOpcodes.sol';
 import { ComparisonOpcodes } from './libs/opcodes/ComparisonOpcodes.sol';
 import { ComplexOpcodes } from './libs/opcodes/ComplexOpcodes.sol';
+import { CompoundOpcodes } from './libs/opcodes/CompoundOpcodes.sol';
 import { LogicalOpcodes } from './libs/opcodes/LogicalOpcodes.sol';
 import { OtherOpcodes } from './libs/opcodes/OtherOpcodes.sol';
 import { ErrorsContext } from './libs/Errors.sol';
@@ -26,6 +27,7 @@ contract DSLContext is IDSLContext {
     address public complexOpcodes; // an address for ComplexOpcodes library, can be changed
     address public logicalOpcodes; // an address for LogicalOpcodes library (AND, OR, XOR), can be changed
     address public otherOpcodes; // an address for OtherOpcodes library, can be changed
+    address public compoundOpcodes; // an address for CompoundOpcodes library, can be changed
 
     mapping(string => bytes1) public opCodeByName; // name => opcode (hex)
     mapping(bytes1 => bytes4) public selectorByOpcode; // opcode (hex) => selector (hex)
@@ -60,14 +62,16 @@ contract DSLContext is IDSLContext {
         address _branchingOpcodes,
         address _logicalOpcodes,
         address _otherOpcodes,
-        address _complexOpcodes
+        address _complexOpcodes,
+        address _compoundOpcodes
     ) {
         require(
             _comparisonOpcodes != address(0) &&
                 _branchingOpcodes != address(0) &&
                 _logicalOpcodes != address(0) &&
                 _otherOpcodes != address(0) &&
-                _complexOpcodes != address(0),
+                _complexOpcodes != address(0) &&
+                _compoundOpcodes != address(0),
             ErrorsContext.CTX1
         );
 
@@ -78,6 +82,7 @@ contract DSLContext is IDSLContext {
         logicalOpcodes = _logicalOpcodes;
         otherOpcodes = _otherOpcodes;
         complexOpcodes = _complexOpcodes;
+        compoundOpcodes = _compoundOpcodes;
     }
 
     /**
@@ -758,20 +763,31 @@ contract DSLContext is IDSLContext {
 
         // Ex.
         // `compound deposit USDC` - deposits all USDC tokens to compound, receives cUSDC
-        // `compound withdraw USDC` - withdtaw all USDC tokens from compound in exchange on cUSDC
+        // `compound withdrawMax USDC` - withdtaw all USDC tokens from compound in exchange on cUSDC
+        // `compound withdraw USDC WITHDRAW_VALUE` - withdtaw VALUE USDC tokens from compound in exchange on cUSDC
+        // `compound borrowMax USDC` - borrow all USDC on cUSDC
+        // `compound borrow USDC BARROW_VALUE` - borrow VALUE USDC on VALUE cUSDC
+        // `compound repayMax USDC` - repay all borrowed cUSDC on USDC
+        // `compound repay USDC BARROW_VALUE` - repay borrowed cUSDC on USDC
+
         name = 'compound';
         _addOpcode(
             name,
             0x45,
-            ComplexOpcodes.opCompound.selector,
+            CompoundOpcodes.opCompound.selector,
             IParser.asmCompound.selector,
-            OpcodeLibNames.ComplexOpcodes,
+            OpcodeLibNames.CompoundOpcodes,
             2,
             true
         );
         // types that 'compound' have for loading data
-        _addOpcodeBranch(name, 'deposit', 0x01, ComplexOpcodes.opCompoundDeposit.selector);
-        _addOpcodeBranch(name, 'withdraw', 0x02, ComplexOpcodes.opCompoundWithdraw.selector);
+        _addOpcodeBranch(name, 'deposit', 0x01, CompoundOpcodes.opCompoundDeposit.selector);
+        _addOpcodeBranch(name, 'withdrawMax', 0x02, CompoundOpcodes.opCompoundWithdrawMax.selector);
+        _addOpcodeBranch(name, 'withdraw', 0x03, CompoundOpcodes.opCompoundWithdraw.selector);
+        _addOpcodeBranch(name, 'borrowMax', 0x04, CompoundOpcodes.opCompoundBorrowMax.selector);
+        _addOpcodeBranch(name, 'borrow', 0x05, CompoundOpcodes.opCompoundBorrow.selector);
+        _addOpcodeBranch(name, 'repayMax', 0x06, CompoundOpcodes.opCompoundRepayMax.selector);
+        _addOpcodeBranch(name, 'repay', 0x07, CompoundOpcodes.opCompoundRepay.selector);
 
         /***********
          * Aliases *

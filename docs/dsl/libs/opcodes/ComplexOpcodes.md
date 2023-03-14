@@ -155,49 +155,6 @@ the structs parameters_
 | _ctxProgram | address | ProgramContext contract address |
 |  | address |  |
 
-### opCompound
-
-```solidity
-function opCompound(address _ctxProgram, address _ctxDSL) public
-```
-
-_Master opcode to interact with Compound V2. Needs sub-commands to be executed_
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _ctxProgram | address | ProgramContext contract address |
-| _ctxDSL | address | DSLContext contract address |
-
-### opCompoundDeposit
-
-```solidity
-function opCompoundDeposit(address _ctxProgram) public
-```
-
-Sub-command of Compound V2. Makes a deposit of funds to Compound V2
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _ctxProgram | address | ProgramContext contract address |
-
-### opCompoundWithdraw
-
-```solidity
-function opCompoundWithdraw(address _ctxProgram) public
-```
-
-Sub-command of Compound V2. Makes a withdrawal of funds to Compound V2
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _ctxProgram | address | ProgramContext contract address |
-
 ### _sumOfStructVars
 
 ```solidity
