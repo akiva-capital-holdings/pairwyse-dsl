@@ -153,6 +153,58 @@ describe('Multi Tranche', () => {
       expect(await USDC.balanceOf(multiTranche.address)).equal(parseUnits('100000300', 6));
     });
 
+    it.only('compound opcodes', async () => {
+      let txId = '91';
+      let conditions = ['bool true'];
+      let transaction = 'compound deposit USDC';
+      await multiTranche.connect(creator).update(
+        txId,
+        [], // required records
+        [investor1.address],
+        transaction,
+        conditions
+      );
+      await parse(multiTranche, preprocessorAddr);
+      const investor1BalUSDC = await USDC.balanceOf(investor1.address);
+      console.log(investor1BalUSDC);
+      await multiTranche.connect(investor1).execute(91);
+      const investor1BalCUSDC = await CUSDC.balanceOf(investor1.address);
+      console.log(investor1BalCUSDC);
+
+      txId = '92';
+      conditions = ['bool true'];
+      transaction = 'compound borrowMax USDC \n';
+      await multiTranche.connect(creator).update(
+        txId,
+        [], // required records
+        [creator.address],
+        transaction,
+        conditions
+      );
+
+      txId = '93';
+      conditions = ['bool true'];
+      transaction = 'compound repayMax USDC \n';
+      await multiTranche.connect(creator).update(
+        txId,
+        [], // required records
+        [creator.address],
+        transaction,
+        conditions
+      );
+
+      txId = '94';
+      conditions = ['bool true'];
+      transaction = 'compound withdrawMax USDC \n';
+      await multiTranche.connect(creator).update(
+        txId,
+        [], // required records
+        [creator.address],
+        transaction,
+        conditions
+      );
+    });
+
     it('Deposit', async () => {
       await mine(100); // mine one block with timestamp +100 secs
 

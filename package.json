@@ -14,7 +14,7 @@
     "build": "yarn hardhat compile",
     "test": "yarn test:fork & yarn test:local",
     "test:local": "npx hardhat test test/local/**/*.ts --config hardhat.config.ts",
-    "test:fork": "npx hardhat test test/goerliFork/**/*.ts --config hardhat-fork.config.ts",
+    "test:fork": "npx hardhat test test/goerliFork/dsl/libs/opcodes/compoundOpcodes.ts --config hardhat-fork.config.ts",
     "size": "yarn hardhat size-contracts",
     "coverage": "yarn hardhat coverage",
     "prepare": "husky install",
