@@ -1,0 +1,286 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.0;
+
+import { IDSLContext } from '../../interfaces/IDSLContext.sol';
+import { IProgramContext } from '../../interfaces/IProgramContext.sol';
+import { IERC20 } from '../../interfaces/IERC20.sol';
+import { IcToken } from '../../interfaces/IcToken.sol';
+import { IComptroller } from '../../interfaces/IComptroller.sol';
+import { IcTokenNative } from '../../interfaces/IcTokenNative.sol';
+import { IERC20Mintable } from '../../interfaces/IERC20Mintable.sol';
+import { UnstructuredStorage } from '../UnstructuredStorage.sol';
+import { OpcodeHelpers } from './OpcodeHelpers.sol';
+import { ErrorsGeneralOpcodes, ErrorsCompoundOpcodes } from '../Errors.sol';
+
+import 'hardhat/console.sol';
+
+library CompoundOpcodes {
+    /************************
+     * Compound Integration *
+     ***********************/
+    /**
+     * @dev Master opcode to interact with Compound V2. Needs sub-commands to be executed
+     * @param _ctxProgram ProgramContext contract address
+     * @param _ctxDSL DSLContext contract address
+     */
+    function opCompound(address _ctxProgram, address _ctxDSL) public {
+        _mustDelegateCall(_ctxProgram, _ctxDSL, 'compound');
+    }
+
+    /**
+     * Sub-command of Compound V2. Makes a deposit tokens to Compound V2
+     * @param _ctxProgram ProgramContext contract address
+     */
+    function opCompoundDeposit(address _ctxProgram, address) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+        address cToken = address(uint160(uint256(bytes32(data))));
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        // approve simple token to use it into the market
+        IERC20(token).approve(cToken, balance);
+        // supply assets into the market and receives cTokens in exchange
+        IcToken(cToken).mint(balance);
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    /**
+     * Sub-command of Compound V2. Makes a deposit funds to Compound V2
+     * for native coin
+     * @param _ctxProgram ProgramContext contract address
+     */
+    function opCompoundDepositNative(address _ctxProgram, address) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+        address cToken = address(uint160(uint256(bytes32(data))));
+        // TODO: check with Misha the architechture.
+        // Native coin does not have underling token
+        // tx example: https://goerli.etherscan.io/tx/0x961e5af434ef2804d4dc63f13ddee418b520884bffe383e3591610299ef9807e
+        // adresses: https://docs.compound.finance/v2/#networks
+
+        // supply assets into the market and receives cTokens in exchange
+        IcTokenNative(cToken).mint{ value: address(this).balance }();
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    /**
+     * Sub-command of Compound V2. Makes a withdrawal of all funds to Compound V2
+     * @param _ctxProgram ProgramContext contract address
+     */
+    function opCompoundWithdrawMax(address _ctxProgram, address) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+        address cToken = address(uint160(uint256(bytes32(data))));
+        uint256 balance = IcToken(cToken).balanceOf(address(this));
+        require(balance > 0, ErrorsCompoundOpcodes.COP1);
+
+        // fixme: all balance of Ctokens should be redeem by maximum value
+        /*
+        address unitroller = 0x3cBe63aAcF6A064D32072a630A3eab7545C54d78;
+
+
+        uint256 rate = IcToken(cToken).exchangeRateCurrent();
+        (uint256 a, uint b, uint256 c) = IComptroller(unitroller).getAccountLiquidity(address(this));
+        console.log(b, rate);
+        console.log(balance);
+        */
+        IcToken(cToken).redeem(balance);
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    /**
+     * Sub-command of Compound V2. Makes a withdrawal funds to Compound V2
+     * @param _ctxProgram ProgramContext contract address
+     */
+    function opCompoundWithdraw(address _ctxProgram, address) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        // `token` can be used in the future for more different underluing tokens
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+
+        address cToken = address(uint160(uint256(bytes32(data))));
+        uint256 amount = OpcodeHelpers.getUint256(_ctxProgram, address(0));
+        // redeems cTokens in exchange for the underlying asset (USDC)
+        // amount - amount of cTokens
+
+        uint256 balance = IcToken(cToken).balanceOf(address(this));
+        require(balance > 0, ErrorsCompoundOpcodes.COP1);
+        IcToken(cToken).redeem(amount);
+
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    /**
+     * TODO: might need to be removed
+     * Sub-command of Compound V2. Makes a barrow of all USDC on cUSDC
+     * @param _ctxProgram ProgramContext contract address
+     */
+    function opCompoundBorrowMax(address _ctxProgram, address) public {
+        /*
+        address comptrl = 0x05Df6C772A563FfB37fD3E04C1A279Fb30228621;
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        address payable borrowToken = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        // `token` can be used in the future for more different underluing tokens
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+        bytes memory borrowCTokendata = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', borrowToken)
+        );
+        address cToken = address(uint160(uint256(bytes32(data))));
+        address borrowCToken = address(uint160(uint256(bytes32(borrowCTokendata))));
+        console.log('token');
+        console.log(token);
+        console.log('borrowToken');
+        console.log(borrowToken);
+        console.log('cToken');
+        console.log(cToken);
+        console.log('borrowCToken');
+        console.log(borrowCToken);
+        uint256 balance = IcToken(cToken).balanceOf(address(this));
+        // approve simple token to use it into the market
+        IcToken(cToken).approve(borrowCToken, balance);
+        uint256 numWeiToBorrow = (balance * 8) / 100; // 80% of balance
+        // Borrow, then check the underlying balance for this contract's address
+        address[] memory cTokens = new address[](2);
+        cTokens[0] = cToken;
+        cTokens[1] = borrowCToken;
+        IComptroller(comptrl).enterMarkets(cTokens);
+        uint256 kkk = IcToken(borrowCToken).balanceOf(address(this));
+        console.log(kkk);
+        uint256 borrows = IcToken(borrowCToken).borrowBalanceCurrent(address(this));
+        */
+        OpcodeHelpers.putToStack(_ctxProgram, 1 /* borrows*/);
+    }
+
+    /**
+     * Sub-command of Compound V2. Makes a borrow from market
+     * @param _ctxProgram ProgramContext contract address
+     */
+    function opCompoundBorrow(address _ctxProgram, address) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        address payable borrowToken = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        uint256 borrowAmount = OpcodeHelpers.getUint256(_ctxProgram, address(0));
+
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('unitroller()')
+        );
+        address unitroller = address(uint160(uint256(bytes32(data))));
+
+        // `token` can be used in the future for more different underluing tokens
+        data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+        address cToken = address(uint160(uint256(bytes32(data))));
+        data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', borrowToken)
+        );
+        address borrowCToken = address(uint160(uint256(bytes32(data))));
+        // Borrow, then check the underlying balance for this contract's address
+        address[] memory cTokens = new address[](1);
+        cTokens[0] = cToken;
+        bool accountMembership = IComptroller(unitroller).checkMembership(
+            address(this),
+            IcToken(cToken)
+        );
+        if (!accountMembership) {
+            uint[] memory errors = IComptroller(unitroller).enterMarkets(cTokens);
+            for (uint256 i = 0; i < errors.length; i++) {
+                require(errors[i] == 0, ErrorsCompoundOpcodes.COP2);
+            }
+        }
+        IcToken(borrowCToken).borrow(borrowAmount);
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    function opCompoundRepayNativeMax(address _ctxProgram, address) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+
+        address cToken = address(uint160(uint256(bytes32(data))));
+        IcToken(cToken).repayBorrow{ value: address(this).balance }();
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    function opCompoundRepayNative(address _ctxProgram, address) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+
+        address cToken = address(uint160(uint256(bytes32(data))));
+        uint256 repayAmount = OpcodeHelpers.getUint256(_ctxProgram, address(0));
+        IcToken(cToken).repayBorrow{ value: repayAmount }();
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    function opCompoundRepayMax(address _ctxProgram, address) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        // `token` can be used in the future for more different underluing tokens
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+
+        address cToken = address(uint160(uint256(bytes32(data))));
+        uint256 repayAmount = IERC20(token).balanceOf(address(this));
+        IERC20(token).approve(cToken, repayAmount);
+        IcToken(cToken).repayBorrow(repayAmount);
+
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    function opCompoundRepay(address _ctxProgram, address) public {
+        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
+        // `token` can be used in the future for more different underluing tokens
+        bytes memory data = OpcodeHelpers.mustCall(
+            IProgramContext(_ctxProgram).appAddr(),
+            abi.encodeWithSignature('compounds(address)', token)
+        );
+
+        uint256 repayAmount = OpcodeHelpers.getUint256(_ctxProgram, address(0));
+        address cToken = address(uint160(uint256(bytes32(data))));
+        IERC20(token).approve(cToken, repayAmount);
+        IcToken(cToken).repayBorrow(repayAmount);
+
+        OpcodeHelpers.putToStack(_ctxProgram, 1);
+    }
+
+    /**
+     * @dev Makes a delegate call and ensures it is successful
+     * @param _ctxProgram ProgramContext contract address
+     * @param _ctxDSL DSLContext contract address
+     * @param _opcode Opcode string
+     */
+    function _mustDelegateCall(
+        address _ctxProgram,
+        address _ctxDSL,
+        string memory _opcode
+    ) internal {
+        address libAddr = IDSLContext(_ctxDSL).otherOpcodes();
+        bytes4 _selector = OpcodeHelpers.nextBranchSelector(_ctxDSL, _ctxProgram, _opcode);
+        OpcodeHelpers.mustDelegateCall(
+            libAddr,
+            abi.encodeWithSelector(_selector, _ctxProgram, _ctxDSL)
+        );
+    }
+}

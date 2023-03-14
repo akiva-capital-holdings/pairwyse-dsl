@@ -9,14 +9,16 @@ contract DSLContextMock is DSLContext {
         address _branchingOpcodes,
         address _logicalOpcodes,
         address _otherOpcodes,
-        address _complexOpcodes
+        address _complexOpcodes,
+        address _compoundOpcodes
     )
         DSLContext(
             _comparisonOpcodes,
             _branchingOpcodes,
             _logicalOpcodes,
             _otherOpcodes,
-            _complexOpcodes
+            _complexOpcodes,
+            _compoundOpcodes
         )
     {}
 

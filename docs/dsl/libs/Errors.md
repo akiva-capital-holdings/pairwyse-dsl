@@ -218,6 +218,26 @@ string OP6
 string OP8
 ```
 
+## ErrorsCompoundOpcodes
+
+### COP1
+
+```solidity
+string COP1
+```
+
+### COP2
+
+```solidity
+string COP2
+```
+
+### COP3
+
+```solidity
+string COP3
+```
+
 ## ErrorsBranchingOpcodes
 
 ### BR1

@@ -7,6 +7,7 @@ enum OpcodeLibNames {
   BranchingOpcodes,
   ComparisonOpcodes,
   ComplexOpcodes,
+  CompoundOpcodes,
   LogicalOpcodes,
   OtherOpcodes
 }
@@ -28,6 +29,12 @@ function comparisonOpcodes() external view returns (address)
 
 ```solidity
 function complexOpcodes() external view returns (address)
+```
+
+### compoundOpcodes
+
+```solidity
+function compoundOpcodes() external view returns (address)
 ```
 
 ### logicalOpcodes

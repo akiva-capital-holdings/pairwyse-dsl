@@ -5,11 +5,12 @@ import { IDSLContext } from '../../interfaces/IDSLContext.sol';
 import { IProgramContext } from '../../interfaces/IProgramContext.sol';
 import { IERC20 } from '../../interfaces/IERC20.sol';
 import { IcToken } from '../../interfaces/IcToken.sol';
+import { IcTokenNative } from '../../interfaces/IcTokenNative.sol';
 import { UnstructuredStorage } from '../UnstructuredStorage.sol';
 import { OpcodeHelpers } from './OpcodeHelpers.sol';
 import { ErrorsGeneralOpcodes } from '../Errors.sol';
 
-// import 'hardhat/console.sol';
+import 'hardhat/console.sol';
 
 /**
  * @dev You should add to this file opcodes for some complex structures. These may be arrays, structs and others
@@ -214,59 +215,6 @@ library ComplexOpcodes {
             // get the next variable name in struct
             _varNameB32 = OpcodeHelpers.getNextBytes32(_ctxProgram, 4);
         }
-    }
-
-    /************************
-     * Compound Integration *
-     ***********************/
-
-    /**
-     * @dev Master opcode to interact with Compound V2. Needs sub-commands to be executed
-     * @param _ctxProgram ProgramContext contract address
-     * @param _ctxDSL DSLContext contract address
-     */
-    function opCompound(address _ctxProgram, address _ctxDSL) public {
-        _mustDelegateCall(_ctxProgram, _ctxDSL, 'compound');
-    }
-
-    /**
-     * Sub-command of Compound V2. Makes a deposit of funds to Compound V2
-     * @param _ctxProgram ProgramContext contract address
-     */
-    function opCompoundDeposit(address _ctxProgram) public {
-        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
-        bytes memory data = OpcodeHelpers.mustCall(
-            IProgramContext(_ctxProgram).appAddr(),
-            abi.encodeWithSignature('compounds(address)', token)
-        );
-        address cToken = address(uint160(uint256(bytes32(data))));
-        uint256 balance = IcToken(token).balanceOf(address(this));
-        // approve simple token to use it into the market
-        IERC20(token).approve(cToken, balance);
-        // supply assets into the market and receives cTokens in exchange
-        IcToken(cToken).mint(balance);
-
-        OpcodeHelpers.putToStack(_ctxProgram, 1);
-    }
-
-    /**
-     * Sub-command of Compound V2. Makes a withdrawal of funds to Compound V2
-     * @param _ctxProgram ProgramContext contract address
-     */
-    function opCompoundWithdraw(address _ctxProgram) public {
-        address payable token = payable(OpcodeHelpers.getAddress(_ctxProgram));
-        // `token` can be used in the future for more different underluing tokens
-        bytes memory data = OpcodeHelpers.mustCall(
-            IProgramContext(_ctxProgram).appAddr(),
-            abi.encodeWithSignature('compounds(address)', token)
-        );
-        address cToken = address(uint160(uint256(bytes32(data))));
-
-        // redeems cTokens in exchange for the underlying asset (USDC)
-        // amount - amount of cTokens
-        IcToken(cToken).redeem(IcToken(cToken).balanceOf(address(this)));
-
-        OpcodeHelpers.putToStack(_ctxProgram, 1);
     }
 
     /**********************
