@@ -54,6 +54,15 @@ contract Agreement is IAgreement, AgreementStorage, LinkedList {
     receive() external payable {}
 
     /**
+     * Apply keccak256 to `_str`, cut the result to the first 4 bytes
+     * @param _str Input string
+     * @return bytes4(keccak256(str))
+     */
+    function hex4Bytes(string memory _str) external pure returns (bytes4) {
+        return bytes4(keccak256(abi.encodePacked(_str)));
+    }
+
+    /**
      * @dev archive any of the existing records by recordId.
      * @param _recordId Record ID
      */

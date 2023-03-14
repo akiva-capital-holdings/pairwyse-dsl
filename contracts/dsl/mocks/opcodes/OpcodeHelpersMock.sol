@@ -31,4 +31,12 @@ contract OpcodeHelpersMock {
     function mustDelegateCall(address _addr, bytes memory _data) public {
         OpcodeHelpers.mustDelegateCall(_addr, _data);
     }
+
+    function getLocalVar(address _ctxProgram, string memory _funcSignature) public {
+        OpcodeHelpers.getLocalVar(_ctxProgram, _funcSignature);
+    }
+
+    function getUint256(address _ctxProgram, address x) public returns (uint256 result) {
+        OpcodeHelpers.getUint256(_ctxProgram, x);
+    }
 }
