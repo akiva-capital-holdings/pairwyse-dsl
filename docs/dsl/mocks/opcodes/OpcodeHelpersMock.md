@@ -36,3 +36,15 @@ function mustCall(address _addr, bytes _data) public
 function mustDelegateCall(address _addr, bytes _data) public
 ```
 
+### getLocalVar
+
+```solidity
+function getLocalVar(address _ctxProgram, string _funcSignature) public
+```
+
+### getUint256
+
+```solidity
+function getUint256(address _ctxProgram, address x) public returns (uint256 result)
+```
+

@@ -2,7 +2,7 @@ import * as hre from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { parseEther } from 'ethers/lib/utils';
-import { addSteps, addStepsWithMultisig, hex4Bytes } from '../../utils/utils';
+import { addStepsWithMultisig, hex4Bytes } from '../../utils/utils';
 import {
   deployAgreement,
   deployPreprocessor,

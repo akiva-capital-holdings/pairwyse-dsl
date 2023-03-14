@@ -54,6 +54,7 @@ export const deployOpcodeLibs = async (hre: HardhatRuntimeEnvironment) => {
     logicalOpcodesLib.address,
     otherOpcodesLib.address,
     complexOpcodesLib.address,
+    opcodeHelpersLib.address,
   ];
 };
 
