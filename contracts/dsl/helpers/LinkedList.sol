@@ -1,7 +1,13 @@
-// SPDX-License-Identifier: MIT
-
+/**
+ * (c) 2023 Pairwyse Foundation.  All Rights Reserved.
+ * 
+ * For LICENSE details, please visit:
+ * https://github.com/akiva-capital-holdings/pairwyse-dsl/blob/master/LICENSE
+ *
+ */
+ 
 pragma solidity ^0.8.0;
-
+ 
 import { ILinkedList } from '../interfaces/ILinkedList.sol';
 
 // import 'hardhat/console.sol';

@@ -1,6 +1,13 @@
-// SPDX-License-Identifier: UNLICENSED
+/**
+ * (c) 2023 Pairwyse Foundation.  All Rights Reserved.
+ * 
+ * For LICENSE details, please visit:
+ * https://github.com/akiva-capital-holdings/pairwyse-dsl/blob/master/LICENSE
+ *
+ */
+ 
 pragma solidity ^0.8.0;
-
+ 
 import { ErrorsAgreement } from '../dsl/libs/Errors.sol';
 import { UnstructuredStorage } from '../dsl/libs/UnstructuredStorage.sol';
 import { StringUtils } from '../dsl/libs/StringUtils.sol';
