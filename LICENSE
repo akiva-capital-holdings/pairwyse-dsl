@@ -1,0 +1,64 @@
+IP Pledge of Smart Contract Compiler 
+
+We at The Pairwyse Foundation are committed to promoting innovation regarding blockchain technology, smart contracts, domain specific languages and the Solidity programming language to further the overall growth and advancement of Decentralized Finance (DeFi) and broader economic adoption of Web3 technologies.  We believe that the development and usage of the Smart Contract Compiler Software and protocol is very important for fostering innovation and expediting no-code smart contract generation and implementation at scale.  We are therefore pledging the reasonable and fair use of certain of our Smart Contract Compiler Software, patents and IP on the following terms.
+Definitions
+
+“Free Software” means any software that is licensed or otherwise distributed to the public in such a way that satisfies any version of “The Free Software Definition” provided by the Free Software Foundation at gnu.org/philosophy/free-sw.html.
+
+“Open Source Software” means any software that is licensed or otherwise distributed to the public in such a way that satisfies any version of “The Open Source Definition” provided by the Open Source Initiative at opensource.org/osd.
+
+“Free or Open Source Software” means Free Software or Open Source Software.
+
+“Smart Contract Compiler Software” means any and all proprietary software, and Free or Open Source Software, of the Pledger presently entitled Smart Contract Compiler and available at https://github.com/akiva-capital-holdings/pairwyse-dsl.
+
+“Pledged Patents” means the specific patent(s) and patent application(s) of the Pledger, as listed in Schedule A, as well as any patents issuing from said patent applications, including any foreign counterparts, continuations, continuations in part, or divisional applications issuing therefrom and any new patent applications of the Pledger specifically referencing such applications as prior art in the specification.  The Pledger may supplement the Pledged Patents from time to time at its sole discretion.
+
+“Pledge” means the promises and pledges set forth herein.
+
+“Pledger” means The Pairwyse Foundation and its affiliates, successors, assigns, controlling entities and controlled entities.
+
+“Pledge Recipient” means each and any person or entity that develops, manufactures, uses, sells, offers for sale, leases, licenses, exports, imports or distributes the Smart Contract Compiler Software, and their affiliates, successors, assigns, controlling entities and controlled entities and each and any person or entity that benefits from, or is a customer, beneficial recipient, or licensee of, the development, manufacture, use, sale, offer for sale, lease, license, exportation, importation or distribution of the Smart Contract Compiler Software by a Pledge Recipient or any other party, and their affiliates, successors, assigns, controlling entities and controlled entities. For clarity, an entity includes but is not limited to an arrangement, a partnership, a trust, an association, a joint venture, a Decentralized Autonomous Organization (DAO), a Decentralized Autonomous Corporation (DAC), or other legal entity.
+
+
+Our Pledge
+
+The Pledger promises to any Pledge Recipient which has Assets Under Management (AUM) of at least $100,000,000 USD or equivalent, that the Pledger will grant a worldwide intellectual property license of the Pledged Patents to such a Pledge Recipient, for the benefit, beneficial gain from, development, manufacture, use, sale, offer for sale, lease, license, exportation, importation or distribution of any of the Smart Contract Compiler Software, in original form or modified, or in standalone form or combined with hardware or with any other software, in which such a Pledge Recipient shall pay to the Pledger an annual royalty of 0.2 % (per cent) of the AUM. The worldwide intellectual property license will be formalized between the Pledger and such a Pledge Recipient by way of formal contract and/or smart contract.
+
+
+The Pledger promises to any Pledge Recipient which has AUM of less than $100,000,000 USD or equivalent, that the Pledger will not bring a lawsuit or other legal proceeding against such a Pledge Recipient, for patent infringement under any Pledged Patents based on such a Pledge Recipient’s benefit, beneficial gain from, development, manufacture, use, sale, offer for sale, lease, license, exportation, importation or distribution of any of the Smart Contract Compiler Software, in original form or modified, or in standalone form or combined with hardware or with any other software. 
+
+It is the understanding of the Pledger that the Pledge be legally binding, irrevocable (except as otherwise provided under “Defensive Termination” below) and enforceable against the Pledger, and their successors and assigns. Thus, the Pledger will require any person or entity to whom the Pledger sells or transfers any of the Smart Contract Compiler Software or Pledged Patents, or any legal rights to sue for infringement thereof, to agree, in writing, to abide by the Pledge and to place a similar requirement on any subsequent transferees to do the same.
+
+The Pledge is not an assurance that any of the Pledged Patents cover any particular software or hardware or are enforceable, that the Pledged Patents are all patents that do or may cover the Smart Contract Compiler Software or any particular Free or Open Source Software, that the Pledged Patents are valid or will be found valid by a body or court of competent jurisdiction, that any activities covered by the Pledge will not infringe patents or other intellectual property rights of a third party, or that Pledger will add any other patents to the list of Pledged Patents. Except as expressly stated in the Pledge, no other rights are waived or granted by Pledger or received by a Pledge Recipient, whether by implication, estoppel, or otherwise.
+
+
+Defensive Termination
+
+Because our Pledge is a promise to license or not to assert the Pledged Patents of the Pledger under certain conditions, for reasons of fairness the Pledge is conditioned upon the Pledge Recipient not asserting or profiting from the assertion of patents against the Pledger, or products or services of the Pledger.  Accordingly, the Pledger reserves the right to terminate the Pledge, to the extent the Pledger deem necessary to protect itself or its products and services (“Defensive Termination”) with respect to any Pledge Recipient who files a lawsuit or other legal proceeding for patent infringement or who has a direct financial interest in such lawsuit or other legal proceeding (an “Asserting Party”) against the Pledger, or against any third party based in whole or in part on any product or service developed by or on behalf of the Pledger.
+
+Any Defensive Termination by the Pledger with respect to an Asserting Party shall have the same effect as if the Pledge was never extended to such Asserting Party in the first instance. The Pledger, in its sole discretion, shall determine the manner and terms, if any, by which rights under Pledged Patents may be extended to an Asserting Party after that Asserting Party’s lawsuit or other legal proceeding is permanently dismissed, terminated or withdrawn in writing.
+
+
+Mistaken Assertion
+
+Should the Pledger ever initiate a lawsuit or other legal proceeding for patent infringement based on the Pledged Patents which is not consist with the Pledge, and then receives written notice from the party against whom such lawsuit or other legal proceeding has been filed providing sufficient information for the Pledger to reasonably determine that such software in fact satisfies the requirements of the Pledge, then the Pledger will use reasonable efforts to withdraw such lawsuit (or the applicable claims therein) or move to terminate such other legal proceeding (or the applicable portions thereof) within sixty (60) days after receiving such written notice.
+
+
+Jurisdiction
+
+This Pledge and any contracts arising therefrom will be governed by and construed in accordance with the laws of the province of Ontario, Canada applicable therein without reference to any rules of conflicts of laws.
+
+
+
+Schedule A
+
+10202204876V
+SMART CONTRACT COMPILER
+Appl.Date 10.05.2022
+Appl.No SG10202204876V
+Applicant AKIVA CAPITAL HOLDINGS LLC
+Assignee  Pairwyse Foundation
+Notice of Allowance:  Jan 6, 2023
+Pub.Date N/A (expected publication in 2023)
+
+
