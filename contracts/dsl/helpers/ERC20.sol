@@ -1,5 +1,3 @@
-pragma solidity ^0.8.0;
-
 /**
  * (c) 2023 Akiva Capital Holdings, LLC.  All Rights Reserved.
  * 
@@ -7,6 +5,8 @@ pragma solidity ^0.8.0;
  * https://github.com/akiva-capital-holdings/pairwyse-dsl/blob/master/LICENSE
  *
  */
+ 
+pragma solidity ^0.8.0;
  
 import { IERC20 } from '../interfaces/IERC20.sol';
 
