@@ -40,20 +40,13 @@
 
 [![]()]() 
 
-
-
 ## Business Workshop - DAO Capital Instrument Basics
 
 [![]()]() 
 
-
-
-
 ## Risk Workshop - Scope Enforcement Basics
 
 [![]()]()
-
-
 
 ## BFT DAO genesis Workshop
 
