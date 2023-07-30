@@ -1,6 +1,6 @@
 # Pairwyse Workshops
 
-## Contract-to-Contract bylaw governance workshop
+## 1.  Contract-to-Contract bylaw governance workshop
 
 ### Prelim 1 - Deploy Pairwyse development sandbox
 
@@ -31,7 +31,7 @@ Step 10 -
 Step 11 - 
 
 
-## Technical Workshop - DAO charter instrumentation
+## 2.  Technical Workshop - DAO charter instrumentation
 
 ![]()
 
@@ -40,15 +40,15 @@ Step 11 -
 
 [![]()]() 
 
-## Business Workshop - DAO Capital Instrument Basics
+## 3.  Business Workshop - DAO Capital Instrument Basics
 
 [![]()]() 
 
-## Risk Workshop - Scope Enforcement Basics
+## 4.  Risk Workshop - Scope Enforcement Basics
 
 [![]()]()
 
-## BFT DAO genesis Workshop
+## 5.  BFT DAO genesis Workshop
 
 ![]()
 
