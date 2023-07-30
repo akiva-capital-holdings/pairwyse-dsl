@@ -1,10 +1,12 @@
-# Contract-to-Contract governance 
+# Pairwyse Workshops
 
-## Deploy Pairwyse development sandbox
+## Contract-to-Contract bylaw governance workshop
 
-## Deploy demo currency
+### Prelim 1 - Deploy Pairwyse development sandbox
 
-## Demo - treasury to governance contract interfacing
+### Prelim 2 - Deploy demo currency token
+
+### Demo - treasury to governance agreement interfacing
 
 ### Step 1 - 
 
@@ -28,7 +30,8 @@
 
 ### Step 11 - 
 
-# BFT DAO genesis sequence
+
+## Technical Workshop - DAO charter instrumentation
 
 ![]()
 
@@ -37,3 +40,23 @@
 
 [![]()]() 
 
+
+
+## Business Workshop - DAO Capital Instrument Basics
+
+[![]()]() 
+
+
+
+
+## Risk Workshop - Scope Enforcement Basics
+
+[![]()]()
+
+
+
+## BFT DAO genesis Workshop
+
+![]()
+
+[![]()]() 
