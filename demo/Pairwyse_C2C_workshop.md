@@ -229,7 +229,7 @@ contract DAO is Agreement {
             )) 
         );
 
-        /* Constitution:  A record of negative votes will be registered will be registered before the deadline */
+        /* Constitution:  A record of negative votes will be registered before the deadline */
         _setVoteParameters(
             vote_bylaw_id_3, // RECORD ID
             _voting_conditon, // CONDITIONS
@@ -245,7 +245,7 @@ contract DAO is Agreement {
             _bylaw_activation_transaction, // TRANSACTION
         );
 
-        /* emit DAOVoteInitiated() // optional:  public notice of vote initiation */
+        /* emit DAOVoteInitiated(...) // optional:  public on-chain notices of vote initiation */
     }
 
     function _uintToString(uint256 number) internal pure returns (string) { /* method or library of choice */ }
@@ -260,7 +260,7 @@ contract DAO is Agreement {
     ) internal {	
         /* can follow constitutional pattern of _setParameters in Governance.sol */
         /* optional:  rights protection and scope enforcement implementations */
-        /* optional:  invoke votes for other token holder classes (e.g. users, depositors, creditors, etc)
+        /* optional:  invoke consent votes for other user classes (e.g. users, depositors, creditors, etc)
     }
     /* optional:  governance contract ownership transfer protocol * /
     /* optional:  definition restrictions * /
