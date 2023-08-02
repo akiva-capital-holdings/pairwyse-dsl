@@ -12,6 +12,7 @@
 
 ### Prelim 3 - Wallet addresses for ALICE, BOB, CHARLES, DIANA, ELAINE and FARUK
 
+![]()
 
 ### Demo - DAO token-to-treasury-to-governance agreement interfacing
 
