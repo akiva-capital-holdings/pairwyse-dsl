@@ -285,7 +285,7 @@ contract DAO is Agreement {
 import { Agreement } from "../agreement/Agreement.sol"
 import { LibString } from "../dsl/libs/LibString.sol"
 
-contract ScopeEnforcedAgreement is Agreement{
+contract ScopeEnforcedAgreement is Agreement {
 
     string[] public restrictedScope;
     
