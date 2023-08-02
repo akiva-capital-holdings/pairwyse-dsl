@@ -299,6 +299,7 @@ contract ScopeEnforcedAgreement is Agreement{
             if (restrictedScope[i] != _enabledScope) {
                 updatedScope.push(restrictedScope[i]);
             }
+	}
         restrictedScope = updatedScope;
     }
     
