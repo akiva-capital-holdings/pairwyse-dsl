@@ -2,11 +2,11 @@
 
 ## 1.  Contract-to-Contract bylaw governance workshop
 
-Prelim 1 - Deploy Pairwyse development sandbox
+### Prelim 1 - Deploy Pairwyse development sandbox
 
 [Follow instructions for smart contract and UI test dApp setup](https://github.com/akiva-capital-holdings/pairwyse-dsl/blob/workshops/demo/v2/FE-demo-v2.md)
 
-Prelim 2 - Deploy mock currency token for the demo
+### Prelim 2 - Deploy mock currency token for the demo
 
 ![]()
 
@@ -14,7 +14,7 @@ Prelim 3 - Wallet addresses for ALICE, BOB, CHARLES, DIANA, ELAINE and FARUK
 
 ### Demo - DAO token-to-treasury-to-governance agreement interfacing
 
-Step 1 - ALICE Deploys GOV token with 200000e18 supply
+[Step 1] - ALICE Deploys GOV token with 200000e18 supply
 
 Step 2 - BOB Deploys FOUNDRY token with 5e1 supply
 
