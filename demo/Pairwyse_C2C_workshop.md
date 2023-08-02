@@ -26,10 +26,10 @@
 
 		Definitions:
 
-		USDC token address (mock currency)
-		GOV token address
-		FOUNDRY token address
-		TREASURY agreement address
+		`USDC` token address (mock currency)
+		`GOV` token address
+		`FOUNDRY` token address
+		`TREASURY` agreement address
 
 		Update:
 
@@ -39,85 +39,86 @@
 		transaction:  `(transferFrom USDC MSG_SENDER TREASURY 1e18) and (transfer GOV MSG_SENDER 1e18)`
 
 
-[Step 4] - DIANA deploys GOVERNANCE agreement with the following state
+	[Step 4] - DIANA deploys GOVERNANCE agreement with the following state
 
-Definitions:
+		Definitions:
 
-`TREASURY` as address (agreement)
-`GOV` as address (token)
-
-
-[Step 5] - CHARLES transfers ownership of TREASURY agreement to the GOVERNANCE agreement
-
-```
-agreement = await ethers.getContractAt('Agreement', '<enter treasury agreement address here>');
-await agreement.transferOwnership('<enter governance agreement address here>')
-await agreement.ownerAddr() // confirm new owner
-```
-
-[Step 6] - ELAINE makes an on-chain bylaw proposal for the TREASURY agreement
-
-Definitions:
-
-`SPECIAL_EXPIRY` as number (first deadline as UTC seconds)
-`FUNDING_EXPIRY` as number (second deadline as UTC seconds)
-
-Bylaw Update Proposal:
-
-record id:    `2`
-signatory:    `0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF`
-condition:    `(((balanceOf GOV MSG_SENDER) > 0) and (time < SPECIAL_EXPIRY)) or (((balanceOf USDC) > 100000e18) and (time > SPECIAL_EXPIRY) and (time < FUNDING_EXPIRY))`
-transaction:  `((allowance USDC MSG_SENDER TREASURY) setUint256 ALLOWANCE) and (transferFromVar USDC MSG_SENDER TREASURY ALLOWANCE) and (transferVar GOV MSG_SENDER ALLOWANCE)`
+		`TREASURY` as address (agreement)
+		`GOV` as address (token)
 
 
-[Step 7] - DIANA creates the governance vote for ELAINE's treasury bylaw proposal
+	[Step 5] - CHARLES transfers ownership of TREASURY agreement to the GOVERNANCE agreement
 
-Definitions:
-`DEADLINE` as number (UTC in seconds)
-`1` as number with value 1 (certain bylaw transactions require explicit definitions)
+		```
+		agreement = await ethers.getContractAt('Agreement', '<enter treasury agreement address here>');
+		await agreement.transferOwnership('<enter governance agreement address here>')
+		await agreement.ownerAddr() // confirm new owner
+		```
 
-Governance bylaw update:
+	[Step 6] - ELAINE makes an on-chain bylaw proposal for the TREASURY agreement
 
-record id:    `1`
-signatory:    `0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF`
-condition:    `((balanceOf GOV MSG_SENDER) > 0) and (time < DEADLINE)`
-transaction:  `declareArr address YES declareArr address NO`
+		Definitions:
 
-record id:    `2`
-signatory:    `0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF`
-condition:    `((balanceOf GOV MSG_SENDER) > 0) and (time < DEADLINE)`
-transaction:  `insert MSG_SENDER into YES`
+		`SPECIAL_EXPIRY` as number (first deadline as UTC seconds)
+		`FUNDING_EXPIRY` as number (second deadline as UTC seconds)
 
-record id:    `3`
-signatory:    `0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF`
-condition:    `((balanceOf GOV MSG_SENDER) > 0) and (time < DEADLINE)`
-transaction:  `insert MSG_SENDER into NO`
+		Bylaw Update Proposal:
 
-record id:    `4`
-signatory:    `0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF`
-condition:    `((votersBalance GOV YES) > (votersBalance GOV NO)) and (time > DEADLINE)`
-transaction:  `enableRecords 2 at TREASURY`
+		record id:    `2`
+		signatory:    `0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF`
+		condition:    `(((balanceOf GOV MSG_SENDER) > 0) and (time < SPECIAL_EXPIRY)) or (((balanceOf USDC) > 100000e18) and (time > SPECIAL_EXPIRY) and (time < FUNDING_EXPIRY))`
+		transaction:  `((allowance USDC MSG_SENDER TREASURY) setUint256 ALLOWANCE) and (transferFromVar USDC MSG_SENDER TREASURY ALLOWANCE) and (transferVar GOV MSG_SENDER ALLOWANCE)`
 
 
-[Step 8] - BOB sends 1e1 FOUNDRY tokens each to ALICE, CHARLES, DIANA, ELAINE
+	[Step 7] - DIANA creates the governance vote for ELAINE's treasury bylaw proposal
 
-* This enables the peers to receive early purchase rights once the DAO is fully activated
+		Definitions:
+
+		`DEADLINE` as number (UTC in seconds)
+		`1` as number with value 1 (certain bylaw transactions require explicit definitions)
+
+		Governance bylaw update:
+
+		record id:    `1`
+		signatory:    `0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF`
+		condition:    `((balanceOf GOV MSG_SENDER) > 0) and (time < DEADLINE)`
+		transaction:  `declareArr address YES declareArr address NO`
+		
+		record id:    `2`
+		signatory:    `0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF`
+		condition:    `((balanceOf GOV MSG_SENDER) > 0) and (time < DEADLINE)`
+		transaction:  `insert MSG_SENDER into YES`
+		
+		record id:    `3`
+		signatory:    `0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF`
+		condition:    `((balanceOf GOV MSG_SENDER) > 0) and (time < DEADLINE)`
+		transaction:  `insert MSG_SENDER into NO`
+		
+		record id:    `4`
+		signatory:    `0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF`
+		condition:    `((votersBalance GOV YES) > (votersBalance GOV NO)) and (time > DEADLINE)`
+		transaction:  `enableRecords 2 at TREASURY`
 
 
-[Step 9] - ALICE sends 200000e18 to ASTRO_PROTOCOL
+	[Step 8] - BOB sends 1e1 FOUNDRY tokens each to ALICE, CHARLES, DIANA, ELAINE
 
-* The mock DAO is not officially activated until ALICE sends all GOV tokens to the treasury contract
-
-
-[Step 10] - ALICE, BOB, CHARLES, DIANA, ELAINE claim their early bird status
-
-* Each peer executes bylaw 1 on the TREASURY agreement making them the first ceremonial DAO members
-* One peer executes bylaw 1 on the GOVERNANCE agreement to activate the vote
-* Each peer votes to approve or reject the activation of record 2 on the TREASURY agreement
-* If the vote is affirmative, a general GOV token sale will be activate with the peers receiving earlybird purchase rights
+	* This enables the peers to receive early purchase rights once the DAO is fully activated
 
 
-[Step 11] - Assuming an affirmative vote, the founding peers make one-time token purchases is various amounts. After passage of the special expiry, FARUK purchases the remaining tokens to become the new DAO's sixth member
+	[Step 9] - ALICE sends 200000e18 to ASTRO_PROTOCOL
+
+	* The mock DAO is not officially activated until ALICE sends all GOV tokens to the treasury contract
+
+
+	[Step 10] - ALICE, BOB, CHARLES, DIANA, ELAINE claim their early bird status
+
+	* Each peer executes bylaw 1 on the TREASURY agreement making them the first ceremonial DAO members
+	* One peer executes bylaw 1 on the GOVERNANCE agreement to activate the vote
+	* Each peer votes to approve or reject the activation of record 2 on the TREASURY agreement
+	* If the vote is affirmative, a general GOV token sale will be activate with the peers receiving earlybird purchase rights
+
+
+	[Step 11] - Assuming an affirmative vote, the founding peers make one-time token purchases is various amounts. After passage of the special expiry, FARUK purchases the remaining tokens to become the new DAO's sixth member
 
 
 
