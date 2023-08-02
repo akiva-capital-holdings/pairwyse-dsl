@@ -16,27 +16,27 @@
 ### Demo - DAO token-to-treasury-to-governance agreement interfacing
 
 
-[Step 1] - ALICE Deploys GOV token with 200000e18 supply
+	[Step 1] - ALICE Deploys GOV token with 200000e18 supply
 
 
-[Step 2] - BOB Deploys FOUNDRY token with 5e1 supply
+	[Step 2] - BOB Deploys FOUNDRY token with 5e1 supply
 
 
-[Step 3] - CHARLES Deploys TREASURY agreement with the following logic and state
+	[Step 3] - CHARLES Deploys TREASURY agreement with the following logic and state
 
-Definitions:
+		Definitions:
 
-USDC token address (mock currency)
-GOV token address
-FOUNDRY token address
-TREASURY agreement address
+		USDC token address (mock currency)
+		GOV token address
+		FOUNDRY token address
+		TREASURY agreement address
 
-Update:
+		Update:
 
-record id:    `1`
-signatory:    `0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF`
-condition:    `(balanceOf FOUNDRY MSG_SENDER) > 0`
-transaction:  `(transferFrom USDC MSG_SENDER TREASURY 1e18) and (transfer GOV MSG_SENDER 1e18)`
+		record id:    `1`
+		signatory:    `0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF`
+		condition:    `(balanceOf FOUNDRY MSG_SENDER) > 0`
+		transaction:  `(transferFrom USDC MSG_SENDER TREASURY 1e18) and (transfer GOV MSG_SENDER 1e18)`
 
 
 [Step 4] - DIANA deploys GOVERNANCE agreement with the following state
