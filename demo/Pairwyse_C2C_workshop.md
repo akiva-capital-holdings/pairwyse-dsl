@@ -279,6 +279,61 @@ contract DAO is Agreement {
 
 [![]()]()
 
+```
+// https://github.com/Vectorized/solady/blob/2c7fa305e443b0e69abff24810dc814a9202f966/src/utils/LibString.sol
+
+import { Agreement } from "../agreement/Agreement.sol"
+import { LibString } from "../dsl/libs/LibString.sol"
+
+contract ScopeEnforcedAgreement is Agreement{
+
+    string[] public restrictedScope;
+    
+    function setScopeRestriction(string memory _restrictedScope) onlyOwner {
+        restrictedScope.push(_restrictedScope);
+    }
+    
+    function removeScopeRestriction(string memory _enabledScope) onlyOwner {
+        string[] memory updatedScope;
+        for (uint i=0; i<restrictedScope.length; i++) {
+            if (restrictedScope[i] != _enabledScope) {
+                updatedScope.push(restrictedScope[i]);
+            }
+        restrictedScope = updatedScope;
+    }
+    
+    function scopeValidation(string memory _instructionString) public returns (bool success) {
+        for (uint i=0; i<restrictedScope.length; i++) {
+            uint256 search_result = LibString.indexOf(_instructionString, restrictedScope[i]);
+            if (search_result != type(uint256).max) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function update(
+        uint256 _recordId,
+        uint256[] memory _requiredRecords,
+        address[] memory _signatories,
+        string memory _recordString,
+        string[] memory _conditionStrings
+    ) public {
+        _addRecordBlueprint(_recordId, _requiredRecords, _signatories);
+        for (uint256 i = 0; i < _conditionStrings.length; i++) {
+            _addRecordCondition(_recordId, _conditionStrings[i]);
+        }
+        require( _scopeValidation(_recordString), "Update blocked, check scope restrictions" );
+        _addRecordTransaction(_recordId, _recordString);
+        if (msg.sender == ownerAddr) {
+            records[_recordId].isActive = true;
+        }
+
+        emit NewRecord(_recordId, _requiredRecords, _signatories, _recordString, _conditionStrings);
+    }
+}
+```
+
 ## 5.  BFT DAO genesis Workshop
 
 ![]()
