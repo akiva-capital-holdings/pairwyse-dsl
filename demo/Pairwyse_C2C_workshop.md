@@ -4,7 +4,7 @@
 
 ### Prelim 1 - Deploy Pairwyse development sandbox
 
-[Follow instructions for smart contract and UI test dApp setup](https://github.com/akiva-capital-holdings/pairwyse-dsl/blob/workshops/demo/v2/FE-demo-v2.md)
+[Follow instructions for smart contract and web3 test IDE setup](https://github.com/akiva-capital-holdings/pairwyse-dsl/blob/workshops/demo/v2/FE-demo-v2.md)
 
 ### Prelim 2 - Deploy mock currency token for the demo
 
