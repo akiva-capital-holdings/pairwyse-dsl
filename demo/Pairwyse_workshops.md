@@ -164,7 +164,7 @@ Private Key: 0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba
 
 Pairwyse smart contracts maintain a dual layer architecture, a fixed solidity charter atop which turing computable bylaw programs (turing bylaws in the form of DSL-mediated on-chain contract upgrades)
 
-![]()
+![Pairwyse Anatomy](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Fig.5.png)
 
 The goal of this workshop is crafting a governance contract with a solidity charter with heightened security features (e.g. ownerless governance contract) and constitutionally-enforced governance votes on upgrade proposals to smart contracts owned by the governance contract
 
@@ -306,11 +306,11 @@ contract DAO is Agreement {
 }
 ```
 
-[![]()]() 
+![on-chain charter governance](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Fig.6-1.png) 
 
 ## 3.  Business Workshop - DAO Capital Instrument Basics
 
-[![]()]() 
+![Simple Capital Instruments](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Instrument+Primatives.png)
 
 The first part of the workshop will cover basics of implementing terms and conditions for primative capital instruments (e.g. RSUs, Warrants, Convertible notes, etc). ([See workshop notes](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Pairwyse+Workshop+-+Simple+Capital+Stack+demo.pdf))
 
