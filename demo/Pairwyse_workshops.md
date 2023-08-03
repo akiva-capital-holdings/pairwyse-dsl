@@ -158,7 +158,8 @@ Private Key: 0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba
 
 	[Step 11] - Assuming an affirmative vote, the founding peers make one-time token purchases is various amounts. After passage of the special expiry, FARUK purchases the remaining tokens to become the new DAO's sixth member
 
-
+```
+```
 
 ## 2.  Technical Workshop - DAO constitutional charter instrumentation
 
@@ -308,6 +309,9 @@ contract DAO is Agreement {
 
 ![on-chain charter governance](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Fig.6-1.png) 
 
+```
+```
+
 ## 3.  Business Workshop - DAO Capital Instrument Basics
 
 ![Simple Capital Instruments](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Instrument+Primatives.png)
@@ -325,6 +329,9 @@ The third part of the workshop will cover a simple example of translating GP/LP 
 The fourth part of the workshop will cover on-chain DAO-to-DAO executable agreements under on-chain P2P negotiation and governance.
 
 ![D2D Agreements](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Fig.8.png)
+
+```
+```
 
 ## 4.  Risk Workshop - Scope Enforcement Basics
 
@@ -402,6 +409,8 @@ contract ScopeEnforcedAgreement is Agreement {
         emit NewRecord(_recordId, _requiredRecords, _signatories, _recordString, _conditionStrings);
     }
 }
+```
+```
 ```
 
 ## 5.  BFT DAO genesis Workshop
