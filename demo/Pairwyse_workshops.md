@@ -1,5 +1,9 @@
 # Pairwyse Workshops
 
+![Segregated Governance due to Blockchain Trilema](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/FIg.2.png)
+
+```
+```
 ## 1.  Contract-to-Contract bylaw governance workshop
 
 ### Prelim 1 - Deploy Pairwyse development sandbox
