@@ -318,10 +318,12 @@ The second part of the workshop will cover the multi-tranching of pairwyse smart
 
 The third part of the workshop will cover a simple example of translating GP/LP terms and conditions on paper into an executable smart contract agreement
 
-[![Traditional Contract](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Traditional_Contract_img.png)]() 
+[![Traditional Contract](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Traditional_Contract_img.png)](https://drive.google.com/file/d/1-_Bu9pnrFF60Vfx7jlcQfipnBZQ12b48/view) 
 
-[![Pairwyse Contract](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/GP_LP_video_img.png)]() 
+[![Pairwyse Contract](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/GP_LP_video_img.png)](https://drive.google.com/file/d/16VvjKBT1PxSnSDXyQfdQ7FYuYkKN2G-f/view) 
 
+The fourth part of the workshop will cover on-chain DAO-to-DAO executable agreements
+![D2D Agreements](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Fig.8.png)
 
 ## 4.  Risk Workshop - Scope Enforcement Basics
 
