@@ -316,12 +316,14 @@ The first part of the workshop will cover basics of implementing terms and condi
 
 The second part of the workshop will cover a simple example of translating GP/LP terms and conditions on paper into an executable smart contract agreement
 
-[![]()]() 
+[![Traditional Contract](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Traditional_Contract_img.png)]() 
 
-[![]()]() 
+[![Pairwyse Contract](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/GP_LP_video_img.png)]() 
 
 
 ## 4.  Risk Workshop - Scope Enforcement Basics
+
+This workshop covers more advanced Pairwyse features around on-chain recourse and scope enforcement of contracts.  This template can be expanded to escalation pathways for on-chain incremental recourse, mediation, arbitration and adjudication facilities.
 
 ```
 Term:          ECONOMIC_RECOURSE
