@@ -12,12 +12,12 @@
 
 ### Prelim 3 - Wallet addresses for ALICE, BOB, CHARLES, DIANA, ELAINE and FARUK
 
-Account #0 = ALICE
-Account #1 = BOB
-Account #2 = CHARLES
-Account #3 = DIANA
-Account #4 = ELAINE
-Account #5 = FARUK
+`Account #0 = ALICE`
+`Account #1 = BOB`
+`Account #2 = CHARLES`
+`Account #3 = DIANA`
+`Account #4 = ELAINE`
+`Account #5 = FARUK`
 
 ```
 % yarn hardhat node
