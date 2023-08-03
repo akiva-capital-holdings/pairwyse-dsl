@@ -326,7 +326,23 @@ The second part of the workshop will cover a simple example of translating GP/LP
 
 ## 4.  Risk Workshop - Scope Enforcement Basics
 
-[![]()]()
+```
+Term:          ECONOMIC_RECOURSE
+Signature:     ANYONE  
+Condition:     (var CONTRACT_VALUE < sumOf TERM_DEPOSITS) and ((balanceOf CLAIM_USDC_TERM) > 0) 
+Transaction:   ((sumOf DEPOSITS) - (var CONTRACT_VALUE)) setUint256 LOST_VALUE
+               ((var LOST_VALUE) / (var GOVERNANCE_TOKEN_PRICE)) setUint256 RECOURSE_AMOUNT
+               mint GOVERNANCE_TOKEN ESCROW_CONTRACT RECOURSE_AMOUNT 
+```
+
+```
+Term:          OPERATIONAL_RECOURSE
+Signature:     ANYONE  
+Condition:     (var CONTRACT_VALUE < sumOf TERM_DEPOSITS) and ((balanceOf CLAIM_USDC_TERM) > 0) 
+Transaction:   (disable upgrade burn GOVERNANCE_TOKEN) and               
+               (disable upgrade transfer GOVERNANCE_TOKEN) and
+               (disable upgrade transferVar GOVERNANCE_TOKEN) 
+```
 
 ```
 // https://github.com/Vectorized/solady/blob/2c7fa305e443b0e69abff24810dc814a9202f966/src/utils/LibString.sol
