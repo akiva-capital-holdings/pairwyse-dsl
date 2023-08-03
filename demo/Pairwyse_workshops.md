@@ -415,6 +415,8 @@ contract ScopeEnforcedAgreement is Agreement {
 
 ## 5.  BFT DAO genesis Workshop
 
+This workshop covers Byzantine Fault Tolerant on-chain DAO genesis and operationalization using concepts, learnings and product outputs from previous workshops.  
+
 ![BFT on-chain DAO Genesis](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Fig.9.png)
 
 
