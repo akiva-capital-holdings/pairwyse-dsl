@@ -8,7 +8,7 @@
 
 ### Prelim 2 - Deploy mock currency token for the demo
 
-
+![Create Token](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Workshop+-+Token+Deployment+-+Annotated.png)
 
 ### Prelim 3 - Wallet addresses for ALICE, BOB, CHARLES, DIANA, ELAINE and FARUK
 
