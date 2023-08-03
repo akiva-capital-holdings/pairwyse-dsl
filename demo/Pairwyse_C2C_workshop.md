@@ -314,7 +314,9 @@ contract DAO is Agreement {
 
 The first part of the workshop will cover basics of implementing terms and conditions for primative capital instruments (e.g. RSUs, Warrants, Convertible notes, etc). (See workshop notes)
 
-The second part of the workshop will cover a simple example of translating GP/LP terms and conditions on paper into an executable smart contract agreement
+The second part of the workshop will cover the multi-tranching of pairwyse smart contracts along with composition with external DeFi protocols (See testnet demo)
+
+The third part of the workshop will cover a simple example of translating GP/LP terms and conditions on paper into an executable smart contract agreement
 
 [![Traditional Contract](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Traditional_Contract_img.png)]() 
 
