@@ -166,7 +166,7 @@ Pairwyse smart contracts maintain a dual layer architecture, a fixed solidity ch
 
 ![]()
 
-The goal of this workshop is crafting a governance contract with a solidity charter possessing elevated security (ownerless governance contract) and constitutionally-enforced governance votes on upgrade proposals to smart contracts owned by the governance contract
+The goal of this workshop is crafting a governance contract with a solidity charter with heightened security features (e.g. ownerless governance contract) and constitutionally-enforced governance votes on upgrade proposals to smart contracts owned by the governance contract
 
 ```
 contract DAO is Agreement {
@@ -312,9 +312,9 @@ contract DAO is Agreement {
 
 [![]()]() 
 
-The first part of the workshop will cover basics of implementing terms and conditions for primative capital instruments (e.g. RSUs, Warrants, Convertible notes, etc). (See workshop notes)
+The first part of the workshop will cover basics of implementing terms and conditions for primative capital instruments (e.g. RSUs, Warrants, Convertible notes, etc). ([See workshop notes](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Pairwyse+Workshop+-+Simple+Capital+Stack+demo.pdf))
 
-The second part of the workshop will cover the multi-tranching of pairwyse smart contracts along with composition with external DeFi protocols (See testnet demo)
+The second part of the workshop will cover the multi-tranching of pairwyse smart contracts along with composition with external DeFi protocols ([See testnet demo](https://github.com/akiva-capital-holdings/pairwyse-dsl/blob/master/demo/nivaura/NIVAURA_DEMO.md))
 
 The third part of the workshop will cover a simple example of translating GP/LP terms and conditions on paper into an executable smart contract agreement
 
