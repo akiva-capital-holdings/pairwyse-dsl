@@ -322,7 +322,8 @@ The third part of the workshop will cover a simple example of translating GP/LP 
 
 [![Pairwyse Contract](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/GP_LP_video_img.png)](https://drive.google.com/file/d/16VvjKBT1PxSnSDXyQfdQ7FYuYkKN2G-f/view) 
 
-The fourth part of the workshop will cover on-chain DAO-to-DAO executable agreements
+The fourth part of the workshop will cover on-chain DAO-to-DAO executable agreements under on-chain P2P negotiation and governance.
+
 ![D2D Agreements](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Fig.8.png)
 
 ## 4.  Risk Workshop - Scope Enforcement Basics
@@ -405,6 +406,6 @@ contract ScopeEnforcedAgreement is Agreement {
 
 ## 5.  BFT DAO genesis Workshop
 
-![]()
+![BFT on-chain DAO Genesis](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Fig.9.png)
 
-[![]()]() 
+
