@@ -7,6 +7,9 @@
 
 ## 1.  Contract-to-Contract bylaw governance workshop
 
+```
+```
+
 ### Prelim 1 - Deploy Pairwyse development sandbox
 
 [Follow instructions for smart contract and web3 test IDE setup](https://github.com/akiva-capital-holdings/pairwyse-dsl/blob/workshops/demo/v2/FE-demo-v2.md)
@@ -17,12 +20,16 @@ As a "hello world" exercise, implement the ALICE and BOB [asset exchange demo](h
 
 ![ALICE and BOB Demo](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/ALICE_and_BOB_exchange_demo_analysis.png)
 
-
+```
+```
 
 
 ### Prelim 2 - Deploy mock currency token for the demo
 
 ![Create Token](https://s3.ap-southeast-1.amazonaws.com/pairwyse.io/Workshop+-+Token+Deployment+-+Annotated.png)
+
+```
+```
 
 ### Prelim 3 - Wallet addresses for ALICE, BOB, CHARLES, DIANA, ELAINE and FARUK
 
